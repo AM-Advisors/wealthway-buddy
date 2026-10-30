@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   classAssignmentError,
+  recordedArbitrationVenue,
   classErrors,
   economicsErrors,
   effectiveEconomics,
@@ -23,6 +24,10 @@ const base: SetupFacts = {
 };
 
 describe("fund setup canonical rules", () => {
+  it("reads back both recorded arbitration fields without substituting the formation state", () => {
+    expect(recordedArbitrationVenue({ arbitration_city: "Dallas", arbitration_state: "Texas" })).toEqual({ arbitrationCity: "Dallas", arbitrationState: "Texas" });
+    expect(recordedArbitrationVenue({ arbitration_city: null, arbitration_state: null })).toEqual({ arbitrationCity: "", arbitrationState: "" });
+  });
   it("does not force a fund term on an SPV", () => {
     expect(termApplies("SPV")).toBe(false);
     expect(termApplies("Venture capital")).toBe(true);

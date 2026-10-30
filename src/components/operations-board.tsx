@@ -1,5 +1,6 @@
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { Ss4RequestPanel } from "@/components/ss4-request";
+import { needsEinApplication } from "@/lib/fund-setup-phase3";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { FundSignoffQueue } from "@/components/signoff-board";
 import { useMemo, useRef, useState } from "react";
@@ -356,7 +357,9 @@ export function OperationsSs4({ fundId }: { fundId?: string }) {
         data: {
           offeringId: input.offeringId,
           einStatus: input.status,
-          ss4Status: input.status,
+          ss4Status: q.data?.entities.find((e) => e.offeringId === input.offeringId)?.hasEin
+            ? (q.data.entities.find((e) => e.offeringId === input.offeringId)?.ss4Status ?? "pending") as "approved" | "rejected" | "pending"
+            : input.status,
           note: notes[input.offeringId] ?? "",
         },
       }),
@@ -399,7 +402,7 @@ export function OperationsSs4({ fundId }: { fundId?: string }) {
             <CardContent className="space-y-3">
               <p className="text-sm">
                 EIN: {e.hasEin && e.ein ? e.ein : "not provided yet"} · Form SS-4:{" "}
-                {e.hasSs4File ? `generated ${when(e.ss4GeneratedAt)}` : "not generated"}
+                {!needsEinApplication(e.hasEin) ? "Not required, EIN already recorded" : e.hasSs4File ? `generated ${when(e.ss4GeneratedAt)}` : "not generated"}
               </p>
               {e.reviewNote ? (
                 <p className="text-sm text-muted-foreground">
