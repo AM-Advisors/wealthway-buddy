@@ -23,7 +23,7 @@ export function waitingLabel(since: string | null | undefined, now: Date): strin
 }
 
 /** Exact next action and who owns it for an investor stuck at a stage. */
-export const STAGE_ACTION: Record<string, { action: string; owner: "Investor" | "Fund manager" }> = {
+export const STAGE_ACTION: Record<string, { action: string; owner: "Investor" | "Fund manager" | "Harmonious" }> = {
   profile_selected: { action: "Investor needs to finish About You", owner: "Investor" },
   eligibility: { action: "Investor needs to answer the eligibility questions", owner: "Investor" },
   verification: { action: "Investor needs to finish the ID check", owner: "Investor" },
