@@ -14,6 +14,7 @@ import {
   revokeAccessRole,
   saveRoleDefinition,
   setAccountState,
+  changeAccountEmail,
 } from "@/lib/access-admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,8 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
   const grant = useServerFn(grantAccessPermission);
   const revokeGrant = useServerFn(revokeAccessPermission);
   const setState = useServerFn(setAccountState);
+  const changeEmail = useServerFn(changeAccountEmail);
+  const [newEmail, setNewEmail] = useState("");
 
   const [reason, setReason] = useState("");
   const [roleKey, setRoleKey] = useState("");
@@ -211,6 +214,15 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
         <Button size="sm" variant={canonical.suspended ? "default" : "destructive"} disabled={run.isPending || self} onClick={() => run.mutate(() => setState({ data: { targetUserId: userId, suspended: !canonical.suspended, reason } }))}>
           {canonical.suspended ? "Restore account" : "Suspend account"}
         </Button>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Change sign-in email</p>
+        <div className="flex flex-wrap gap-2">
+          <Input type="email" className="max-w-xs" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="new@email.com" />
+          <Button size="sm" disabled={!newEmail.includes("@") || run.isPending || self} onClick={() => run.mutate(async () => { await changeEmail({ data: { targetUserId: userId, email: newEmail, reason } }); setNewEmail(""); })}>Update email</Button>
+        </div>
+        <p className="text-xs text-muted-foreground">Their records, investments and verification stay the same. They sign in with the new email from now on.</p>
       </div>
     </div>
   );

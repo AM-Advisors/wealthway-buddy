@@ -248,6 +248,27 @@ export const setAccountState = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Change an account's sign-in email. Same authority and audit as account state; Super Admin targets need a Super Admin. */
+export const changeAccountEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), email: z.string().trim().toLowerCase().email().max(255), reason }).parse(d))
+  .handler(async ({ context, data }) => {
+    const p = await prepare(context);
+    await gate(p, { kind: "account_state", targetUserId: data.targetUserId, suspended: false }, data.reason, { emailChange: true });
+    const target = authzFactsFor(p.b, data.targetUserId);
+    if (target.roles.includes("super_admin") && !p.actor.roles.includes("super_admin")) throw new Error("Only a Super Administrator can change a Super Administrator's email.");
+    const db = await admin();
+    const { data: existing } = await db.from("profiles").select("user_id").ilike("email", data.email).neq("user_id", data.targetUserId).limit(1);
+    if (existing?.length) throw new Error("Another account already uses that email.");
+    const before = p.b.users.find((u: any) => u.id === data.targetUserId)?.email ?? null;
+    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: "Account email changed", previous: { email: before }, next: { email: data.email }, reason: data.reason, correlationId: p.correlationId });
+    const { error } = await db.auth.admin.updateUserById(data.targetUserId, { email: data.email, email_confirm: true });
+    if (error) throw new Error(error.message?.includes("already") ? "Another account already uses that email." : "Could not change the email.");
+    await db.from("profiles").update({ email: data.email }).eq("user_id", data.targetUserId);
+    await db.from("persons").update({ email: data.email }).eq("user_id", data.targetUserId);
+    return { ok: true };
+  });
+
 // ------------------------------------------------------------ role definitions (versioned)
 
 const permList = z.array(z.string()).max(PERMISSIONS.length).refine((l) => l.every((x) => isPermission(x) && !isProtected(x)), "Only standard, non-protected permissions can be put in a role.");
