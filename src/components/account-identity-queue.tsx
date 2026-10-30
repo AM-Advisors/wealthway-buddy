@@ -27,7 +27,7 @@ export function AccountIdentityQueue({ userId }: { userId?: string | undefined }
   const [filter, setFilter] = useState<"review" | "all">("review");
   const m = useMutation({
     mutationFn: (v: { checkId: string; action: "approve" | "decline" | "send_back" }) => decide({ data: { ...v, note: notes[v.checkId]?.trim() || null } }),
-    onSuccess: () => { toast.success("Decision saved."); qc.invalidateQueries({ queryKey: ["account-identity-queue"] }); },
+    onSuccess: () => { toast.success("Decision saved."); qc.invalidateQueries({ queryKey: ["account-identity-queue"] }); qc.invalidateQueries({ queryKey: ["investor-record"] }); qc.invalidateQueries({ queryKey: ["investment-readiness"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const rows = (q.data ?? []).filter((r: any) => (!userId || r.user_id === userId) && (userId ? true : filter === "all" || r.status === "review"));
@@ -36,7 +36,7 @@ export function AccountIdentityQueue({ userId }: { userId?: string | undefined }
     <div className="space-y-2">
       <Textarea rows={2} aria-label={`Review note for ${r.email}`} placeholder="Note (required to decline or send back)" value={notes[r.id] ?? ""} onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })} />
       <div className="flex flex-wrap gap-2">
-        {r.status === "review" && <Button size="sm" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "approve" })}>Approve</Button>}
+        {r.status === "review" && <Button size="sm" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "approve" })}>Approve: it's good</Button>}
         {r.status === "review" && <Button size="sm" variant="destructive" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "decline" })}>Decline</Button>}
         <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "send_back" })}>Ask to verify again</Button>
       </div>
