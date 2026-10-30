@@ -434,20 +434,27 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
           </section>
             </TabsContent>
             <TabsContent value="actions" className="space-y-6">
-          {d.docs !== "Signed" && d.docs !== "Signed (outside platform)" && <section className="rounded-lg border p-3">
-            <h4 className="mb-1 font-medium">Subscription Agreement</h4>
-            <p className="text-muted-foreground">Email the investor a link that opens the signing step of their investment.</p>
-            <Button size="sm" variant="outline" className="mt-2" disabled={sendingSign} onClick={async () => {
-              if (!id) return;
-              setSendingSign(true);
-              try {
-                const r = await sendSign({ data: { fundId, onboardingId: id } });
-                if (r.sent) toast.success("Signing email sent to the investor");
-                else toast.message(r.reason === "recipient_suppressed" ? "This investor has turned off emails, so it wasn't sent." : "The email wasn't sent.");
-              } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
-              finally { setSendingSign(false); }
-            }}>{sendingSign ? "Sending…" : "Email signing link"}</Button>
-          </section>}
+          <section className="rounded-lg border p-3" aria-label="Send documents">
+            <h4 className="mb-1 font-medium">Send a document to this investor</h4>
+            <p className="text-muted-foreground">Each button emails the investor a link to that one item. Sending never signs, approves or certifies anything.</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {([
+                ["subscription", "Subscription Agreement", d.docs === "Signed" || d.docs === "Signed (outside platform)"],
+                ["tax_form", "W-9 / tax form", (d.reviewEvidence?.taxForms ?? []).length > 0],
+                ["accreditation", "Accreditation proof", !!d.reviewEvidence?.accreditation?.verifiedAt],
+                ["fund_documents", "Fund documents", false],
+              ] as const).map(([kind, label, done]) => <Button key={kind} size="lg" variant="outline" className="justify-start text-base" disabled={sendingSign !== false || done} onClick={async () => {
+                if (!id) return;
+                setSendingSign(kind as any);
+                try {
+                  const r = await sendSign({ data: { fundId, onboardingId: id, kind } });
+                  if (r.sent) toast.success(`${label} sent to the investor`);
+                  else toast.message(r.reason === "recipient_suppressed" ? "This investor has turned off emails, so it wasn't sent." : "Already sent today, or the email wasn't sent.");
+                } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
+                finally { setSendingSign(false); }
+              }}>{done ? `${label}: done` : sendingSign === kind ? "Sending…" : `Send ${label}`}</Button>)}
+            </div>
+          </section>
           {id && !embedded && <PersonalInvestmentLinkCard onboardingId={id} />}
           {id && <InvestorEmailHistory onboardingId={id} />}
           {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
