@@ -305,7 +305,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
   const downloadSigned = useServerFn(managerInvestorSignedCopyFn);
   const openTaxForm = useServerFn(managerInvestorTaxFormFn);
   const sendSign = useServerFn(sendSubscriptionSignNoticeFn);
-  const [sendingSign, setSendingSign] = useState(false);
+  const [sendingSign, setSendingSign] = useState<false | string>(false);
   const [termAssociation, setTermAssociation] = useState<"class" | "side_letter" | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [approving, setApproving] = useState(false);
@@ -445,7 +445,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
                 ["fund_documents", "Fund documents", false],
               ] as const).map(([kind, label, done]) => <Button key={kind} size="lg" variant="outline" className="justify-start text-base" disabled={sendingSign !== false || done} onClick={async () => {
                 if (!id) return;
-                setSendingSign(kind as any);
+                setSendingSign(kind);
                 try {
                   const r = await sendSign({ data: { fundId, onboardingId: id, kind } });
                   if (r.sent) toast.success(`${label} sent to the investor`);
