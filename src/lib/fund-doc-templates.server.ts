@@ -284,7 +284,6 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     "Registered Agent": o.registered_agent ?? null,
     "Administrative Manager": COMPANY.adminManagerLegalName,
     "Administrative Manager Email": COMPANY.email,
-    "Administrative Manager Contact": extra.adminContact,
     "Special Manager Entities": specialEntities,
     "Fund Term": fundTermWords(extra.termMonths),
     "Fiscal Year End": fiscalYearEndWords(extra.fiscalYearEnd),
