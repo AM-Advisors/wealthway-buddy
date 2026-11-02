@@ -21,6 +21,12 @@ export function extractDiditDetails(d: any) {
     sessionApproved: approved(d?.status),
     idApproved: approved(id?.status),
     amlStatus,
+    amlCompleted: aml.length > 0 && aml.every((a: any) => ["approved", "in review", "in_review", "review"].includes(String(a?.status ?? "").toLowerCase())),
+    amlHits: aml.flatMap((a: any) => (Array.isArray(a?.hits) ? a.hits : []).map((h: any) => ({
+      caption: s(h?.caption), datasets: [].concat(h?.datasets ?? []).map(String), countries: [].concat(h?.properties?.country ?? []).map(String),
+      birthDates: [].concat(h?.properties?.birthDate ?? []).map(String), matchScore: typeof h?.match_score === "number" ? h.match_score : null,
+      pep: Boolean(h?.pep) || [].concat(h?.datasets ?? []).some((d: any) => /pep/i.test(String(d))), lists: [], summary: null,
+    }))),
     fields: {
       legal_first_name: s(id?.first_name),
       legal_last_name: s(id?.last_name),
@@ -69,6 +75,15 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
     to: merged.update[field],
   }));
   if (person.kyc_status !== "approved") { update.kyc_status = "approved"; update.kyc_verified_at = now; update.identity_verified_at = now; changes.push({ field: "kyc_status", from: person.kyc_status, to: "approved" }); }
+  let amlAuto = false;
+  if (x.amlStatus === "review" && person.aml_status !== "approved") {
+    const { autoScreeningDecision } = await import("@/lib/aml-match-model");
+    const dob = (fields["date_of_birth"] as string | null) ?? person.date_of_birth ?? null;
+    const country = (fields["citizenship_country"] as string | null) ?? person.citizenship_country ?? person.residence_country ?? null;
+    if (autoScreeningDecision({ completed: x.amlCompleted, person: { fullName: null, dateOfBirth: dob, country }, hits: x.amlHits as any }) === "auto_clear") {
+      x.amlStatus = "approved"; amlAuto = true;
+    }
+  }
   if (x.amlStatus && person.aml_status !== x.amlStatus) {
     update.aml_status = x.amlStatus;
     if (x.amlStatus === "approved") update.aml_screened_at = now;
@@ -86,13 +101,19 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   await db().from("person_onboarding_events").insert({
     person_id: person.id, from_state: person.onboarding_state ?? null, to_state: person.onboarding_state ?? "kyc_pending",
     actor_kind: "provider", actor_user_id: actorUserId,
-    reason: "Approved identity check applied automatically",
-    detail: { fields: changes.map((c) => c.field), aml: x.amlStatus },
+    reason: amlAuto ? "Approved identity check applied automatically; screening cleared automatically (no real match)" : "Approved identity check applied automatically",
+    detail: { fields: changes.map((c) => c.field), aml: x.amlStatus, aml_automatic: amlAuto, aml_hits: x.amlHits.length },
   });
   try {
     const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
     await reconcileReadinessForSubjects({ investmentProfileId: ob.investment_profile_id }, "didit_auto_apply");
   } catch (e) { console.error("[didit-auto] readiness", (e as Error).message); }
+  if ((update.aml_status ?? person.aml_status) === "review") {
+    try {
+      const { notifyFundManagers } = await import("@/lib/client-work-notify.server");
+      await notifyFundManagers(ob.offering_id, "information_required", "Investor compliance screening follow-up", `/fund/${encodeURIComponent(ob.offering_id)}?tab=investors`, `aml-review:${person.id}`);
+    } catch (e) { console.error("[didit-auto] manager screening notice", (e as Error).message); }
+  }
   const kycNow = update.kyc_status ?? person.kyc_status;
   const amlNow = update.aml_status ?? person.aml_status;
   if (kycNow === "approved" && amlNow === "approved") {

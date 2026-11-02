@@ -38,3 +38,14 @@ export function unclearedHits(hits: MatchHit[], clearedKeys: Iterable<string>): 
   const done = new Set(clearedKeys);
   return hits.map(hitKey).filter((k) => !done.has(k));
 }
+
+/**
+ * Automatic screening decision. Clears only a completed screening whose every possible
+ * match is a likely different person (birth year differs, not politically exposed).
+ * Anything else stays in review and is routed to Harmonious and the fund manager.
+ */
+export function autoScreeningDecision(input: { completed: boolean; person: Person; hits: MatchHit[] }): "auto_clear" | "review" {
+  if (!input.completed) return "review";
+  if (!input.person.dateOfBirth) return input.hits.length === 0 ? "auto_clear" : "review";
+  return input.hits.every((h) => compareHit(input.person, h).suggestion === "likely_different_person") ? "auto_clear" : "review";
+}
