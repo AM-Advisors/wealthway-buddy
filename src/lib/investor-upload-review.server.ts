@@ -38,3 +38,24 @@ export async function reviewInvestorUpload(userId: string, input: { id: string; 
   // A copy decision never writes identity, accreditation, tax certifications, signatures or money gates.
   return { ok: true };
 }
+/** Pure: who may record a W-9/W-8 as completed outside the platform. */
+export function canCompleteTaxOutside(input: { isStaff: boolean; managesFund: boolean; actorId: string; investorUserId: string | null; docKind: string; status: string | null }) {
+  if (input.docKind !== "tax_form") return { ok: false as const, reason: "Only a signed W-9 or W-8 can be marked completed this way." };
+  if (!["new", "accepted"].includes(input.status ?? "new")) return { ok: false as const, reason: "This copy can't be marked completed. Upload a new signed copy." };
+  if (!input.isStaff && !input.managesFund) return { ok: false as const, reason: "Only Harmonious or this fund's manager can do this." };
+  if (input.investorUserId && input.investorUserId === input.actorId) return { ok: false as const, reason: "You can't complete your own tax form this way." };
+  return { ok: true as const };
+}
+
+/** Records a signed W-9/W-8 completed outside the platform for this exact investment. The original file is retained. */
+export async function completeTaxFormOutside(userId: string, input: { id: string; note?: string | null | undefined }) {
+  const { d, row, actor } = await uploadReviewContext(userId, input.id);
+  const check = canCompleteTaxOutside({ isStaff: actor.isStaff, managesFund: actor.offeringIds.includes(row.offering_id), actorId: userId, investorUserId: row.user_id, docKind: row.doc_kind, status: row.review_status });
+  if (!check.ok) throw new Error(check.reason);
+  const note = input.note?.trim() || "Signed outside the platform";
+  const { data: updated, error } = await d.from("investor_documents").update({ review_status: "completed_outside", review_note: note, reviewed_by: userId, reviewed_at: new Date().toISOString() }).eq("id", row.id).eq("review_status", row.review_status).select("id").maybeSingle();
+  if (error || !updated) throw new Error("This copy changed. Refresh and try again.");
+  await logReviewerActivity(d, { actorId: userId, offeringId: row.offering_id, applicationId: row.application_id, action: "tax_form_completed_outside", area: "tax_form", outcome: "approved", summary: "Signed tax form recorded as completed outside the platform", note, metadata: { documentId: row.id, onboardingId: row.onboarding_id } });
+  try { const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server"); await reconcileReadinessForSubjects({ investmentProfileId: row.investment_profile_id }, "tax_form_completed_outside"); } catch (e) { console.error("[tax-outside] readiness", (e as Error).message); }
+  return { ok: true };
+}

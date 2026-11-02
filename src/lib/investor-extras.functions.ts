@@ -78,3 +78,7 @@ export const managerUploadUrlFn = createServerFn({ method: "POST" }).middleware(
 export const managerReviewUploadFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ id: uuid, status: z.enum(["accepted", "needs_followup"]), note: z.string().trim().max(1000).nullish() }).parse)
   .handler(async ({ data, context }) => (await import("./investor-upload-review.server")).reviewInvestorUpload(context.userId, data));
+
+export const completeTaxFormOutsideFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ id: uuid, note: z.string().trim().max(1000).nullish() }).parse)
+  .handler(async ({ data, context }) => (await import("./investor-upload-review.server")).completeTaxFormOutside(context.userId, data));
