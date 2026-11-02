@@ -16,8 +16,5 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/inves
 });
 function Page() {
   const { fundId } = Route.useParams();
-  return <ManagerFundInvestors fundId={fundId} extraTabs={[
-    { value: "readiness", label: "Readiness", content: <FundReadiness fundId={fundId} /> },
-    { value: "history", label: "History", content: <InvestorStepHistory offeringId={fundId} /> },
-  ]} />;
+  return <ManagerFundInvestors fundId={fundId} moreSections={<><FundReadiness fundId={fundId} /><InvestorStepHistory offeringId={fundId} /></>} />;
 }
