@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { InvestorEconomicsCard } from "@/components/fund-tabs/investor-economics";
 import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";

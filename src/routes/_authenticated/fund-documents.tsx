@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -161,7 +162,7 @@ function FundDocumentsPage() {
                       </p>
                       {(doc as any).version > 0 && (
                         <p className="text-xs text-muted-foreground">
-                          Version {(doc as any).version}
+                          Version {versionLabel((doc as any).version)}
                           {(doc as any).file_updated_at
                             ? ` · updated ${new Date((doc as any).file_updated_at).toLocaleDateString()}`
                             : ""}

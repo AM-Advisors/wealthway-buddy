@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { createFileRoute } from "@tanstack/react-router";
 import { useIsSuperAdmin } from "@/lib/use-is-super-admin";
 import { useServerFn } from "@tanstack/react-start";
@@ -136,7 +137,7 @@ function CreateFromFund({ funds }: { funds: { id: string; name: string }[] }) {
         </select>
         <select className={sel} value={version} disabled={!d} onChange={(e) => setVersion(e.target.value)}>
           <option value="">Choose a version…</option>
-          {d?.versions.map((v) => <option key={v.version} value={v.version}>v{v.version} · {v.fileName} ({v.status.replace(/_/g, " ")})</option>)}
+          {d?.versions.map((v) => <option key={v.version} value={v.version}>v{versionLabel(v.version)} · {v.fileName} ({v.status.replace(/_/g, " ")})</option>)}
         </select>
         <Input placeholder="Template name (optional)" value={title} onChange={(e) => setTitle(e.target.value)} />
         <Button className="sm:col-span-2 sm:w-fit" disabled={busy || !version} onClick={go}>{busy ? "Creating…" : "Create template"}</Button>
@@ -184,7 +185,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
           {t.versions.map((v) => (
             <li key={v.version} className="space-y-2 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span><span className="font-medium">v{v.version}</span> · {v.fileName} <span className="text-muted-foreground">· {v.source} · added by {v.createdBy} {new Date(v.createdAt).toLocaleDateString()}</span></span>
+                <span><span className="font-medium">v{versionLabel(v.version)}</span> · {v.fileName} <span className="text-muted-foreground">· {v.source} · added by {v.createdBy} {new Date(v.createdAt).toLocaleDateString()}</span></span>
                 <span className="flex items-center gap-2">
                   <Badge variant="outline">{STATUS[v.status] ?? v.status}</Badge>
                   <Button size="sm" variant="ghost" onClick={async () => { try { window.open((await dl({ data: { templateId: t.id, version: v.version } })).url, "_blank", "noopener"); } catch (e) { toast.error((e as Error).message); } }}>View</Button>
