@@ -2637,8 +2637,10 @@ export async function fundReadiness(userId: string, offeringId: string, viewerOv
   const { data: people } = ids.length ? await db().from("profiles").select("user_id, legal_name").in("user_id", ids) : { data: [] as any[] };
   const names = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p.legal_name]));
   const out = [] as any[];
+  // One batched load for every row (same loader + compute as the single path) instead of ~20 reads per investor.
+  const inputs = rows.length ? await loadReadinessInputs(rows) : undefined;
   for (const row of rows) {
-    const { result, facts } = await computeReadinessFor(row);
+    const { result, facts } = await computeReadinessFor(row, null, inputs);
     const v = readinessView(result, viewer);
     out.push({
       onboardingId: row.id,

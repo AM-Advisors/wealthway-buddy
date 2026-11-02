@@ -93,9 +93,15 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   const items = records.data?.items ?? [];
   const linkedRecords = linkedInvestorRecords(fundId, items);
   // Invitations: onboarding invites not yet opened + fund-access invitees who haven't started. Never shown as investments.
-  const pendingOnboard = (((board.data as any)?.items ?? []) as any[]).filter((i) => String(i.id).startsWith("invite:"));
-  const pendingAccess = actions.data?.pending ?? [];
-  const legacy = ((home.data?.applications ?? []) as any[]);
+  // Display-only de-duplication: the same person can appear as an investment, an earlier application and an invitation.
+  // Investments are the canonical roster; other rows show only when they don't match an investment already listed.
+  const norm = (v: unknown) => String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  const itemNames = new Set(items.map((i) => norm(i.name)).filter(Boolean));
+  const legacy = ((home.data?.applications ?? []) as any[]).filter((a) => !linkedRecords.has(a.applicationId) && !itemNames.has(norm(a.name)));
+  const knownNames = new Set([...itemNames, ...legacy.map((a) => norm(a.name)).filter(Boolean)]);
+  const pendingOnboard = (((board.data as any)?.items ?? []) as any[]).filter((i) => String(i.id).startsWith("invite:")).filter((i) => !knownNames.has(norm(i.investorName)));
+  const pendingAccess = (actions.data?.pending ?? []).filter((p: any) => !knownNames.has(norm(p.name)));
+  const countsLoading = readiness.isLoading || board.isLoading || actions.isLoading || home.isLoading;
   const summary = fundInvestorsSummary(items.map((i) => i.onboardingId), readinessRows, pendingOnboard.length + pendingAccess.length);
 
   const term = search.trim().toLowerCase();
@@ -202,7 +208,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4" role="group" aria-label="Filter investors">
         {([["all", "Investors", summary.total + legacy.length + pendingCount], ["investor", "Waiting on investor", summary.needsInvestor + summary.invited], ["harmonious", "Waiting on Harmonious", summary.needsHarmonious], ["done", "Ready or funded", summary.ready + summary.funded]] as const).map(([k, l, v]) => (
           <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(filter === k && k !== "all" ? "all" : k)} className={`p-3 text-left transition-colors ${filter === k ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}>
-            <p className={`text-xs ${filter === k ? "" : "text-muted-foreground"}`}>{l}</p><p className="font-heading text-xl font-semibold">{v}</p>
+            <p className={`text-xs ${filter === k ? "" : "text-muted-foreground"}`}>{l}</p><p className="font-heading text-xl font-semibold">{countsLoading ? "…" : v}</p>
           </button>
         ))}
       </div>
