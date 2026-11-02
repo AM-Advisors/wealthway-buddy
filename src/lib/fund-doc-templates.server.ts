@@ -252,12 +252,15 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   ]);
   if (results.some((result: { error?: unknown }) => result.error)) throw new Error("Could not load the recorded parties or fee terms for the document.");
   const [{ data: c }, { data: fee }, { data: sig }] = results;
+  const extra = await recordedFundParties(offeringId, o.client_id);
   const legal = o.legal_entity_name || o.name;
   const ap = (await import("@/lib/address")).parseAddressParts(o.principal_address);
   const manager = o.gp_entity_name || o.signatory_entity_name || c?.legal_name || c?.name || null;
   const signer = fullName(sig);
   const email = sig?.email || c?.primary_contact_email || null;
   const phone = sig?.phone ? formatPhone(String(sig.phone)) : null;
+  const { COMPANY } = await import("@/lib/company-details");
+  const specialEntities = [...new Set([o.signatory_entity_name, o.gp_entity_name, c?.legal_name].filter((x): x is string => !!x && !!String(x).trim()))].join(", ") || null;
   const v: Record<string, string | null> = {
     "Fund Name": legal, "Fund Legal Name": legal, "Legal Fund Name": legal, "Legal Name": legal,
     "Subscription Amount": o.min_investment_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(o.min_investment_cents / 100),
@@ -267,18 +270,58 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     "Minimum Investment": o.min_investment_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(o.min_investment_cents / 100),
     "Investor Subscription Amount": null,
     "Fund Manager": manager, "Fund Manager Name": manager, "Manager Name": manager, "Fund Adviser Name": manager,
+    "Organizer": manager,
     "General Partner Name": o.gp_entity_name || null,
     "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
     "Management Fee Basis": fee?.management_fee_basis ?? null, "Hurdle Percent": pct(fee?.hurdle_pct), "Preferred Return": pct(fee?.hurdle_pct),
-    "address": o.principal_address, "Manager Address": o.principal_address, "email": email, "Manager Email": email,
+    "address": o.principal_address, "Manager Address": o.principal_address, "Principal Office Address": o.principal_address, "email": email, "Manager Email": email,
     "phone": phone, "Manager Phone": phone, "Tel": phone, "Telephone": phone,
     "Address Line 1": ap.addressLine1, "Address Line 2": ap.addressLine2, "Address City": ap.addressCity, "Address State": ap.addressState, "Address ZIP": ap.addressZip,
     "Signatory's Legal Name": signer, "Fund Manager Signatory": signer, "Fund Manager Signatory Name": signer,
     "Signatory's Title": o.signatory_title, "Signatory Title": o.signatory_title, "Fund Manager Signatory Title": o.signatory_title,
     "State": o.state_formed, "Arbitration State": o.arbitration_state || o.state_formed, "Arbitration City": o.arbitration_city, "Country": "United States",
     "Entity Type": o.entity_type ?? null, "State Formed": o.state_formed ?? null,
+    "Registered Agent": o.registered_agent ?? null,
+    "Administrative Manager": COMPANY.adminManagerLegalName,
+    "Administrative Manager Email": COMPANY.email,
+    "Administrative Manager Contact": extra.adminContact,
+    "Special Manager Entities": specialEntities,
+    "Fund Term": fundTermWords(extra.termMonths),
+    "Fiscal Year End": fiscalYearEndWords(extra.fiscalYearEnd),
   };
   return v;
+}
+
+/** Fund term, fiscal year end and the client's assigned Harmonious contact, as recorded on the platform. */
+async function recordedFundParties(offeringId: string, clientId: string | null) {
+  const { data: setup } = await db().from("fund_setups").select("fund_term_months, fiscal_year_end").eq("offering_id", offeringId).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+  let adminContact: string | null = null;
+  if (clientId) {
+    const { data: team } = await db().from("client_team_assignments").select("team_role, user_id, assigned_at").eq("client_id", clientId).in("team_role", ["account_manager", "operations"]).order("assigned_at", { ascending: true });
+    const pick = (team ?? []).find((t: any) => t.team_role === "account_manager") ?? (team ?? [])[0];
+    if (pick?.user_id) {
+      const { data: p } = await db().from("profiles").select("legal_name").eq("user_id", pick.user_id).maybeSingle();
+      adminContact = p?.legal_name?.trim() || null;
+    }
+  }
+  return { termMonths: setup?.fund_term_months ?? null, fiscalYearEnd: setup?.fiscal_year_end ?? null, adminContact };
+}
+
+const NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"];
+/** 120 months reads "ten-year"; 18 months reads "18-month". Unrecorded stays blank for review. */
+export function fundTermWords(months: number | null | undefined) {
+  if (months == null || !(Number(months) > 0)) return null;
+  const m = Number(months);
+  if (m % 12 === 0) { const y = m / 12; return `${NUM_WORDS[y] ?? y}-year`; }
+  return `${m}-month`;
+}
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/** "12-31" reads "December 31". */
+export function fiscalYearEndWords(v: string | null | undefined) {
+  const m = String(v ?? "").match(/^(\d{1,2})-(\d{1,2})$/);
+  if (!m) return null;
+  const name = MONTHS[Number(m[1]) - 1];
+  return name ? `${name} ${Number(m[2])}` : null;
 }
 
 /** Shows which blanks an approved template needs and which the fund already has, without saving anything. */
