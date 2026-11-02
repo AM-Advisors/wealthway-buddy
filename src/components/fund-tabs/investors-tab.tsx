@@ -293,6 +293,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
               )}
             </div>
           )}
+          {d && !d.investorUserId && <p className="mt-2 text-sm text-muted-foreground">Investor has not created an account yet. Open their full record to send an invite.</p>}
         </div>
         <InvestorReviewPanel fundId={fundId} id={id} />
       </SheetContent>
