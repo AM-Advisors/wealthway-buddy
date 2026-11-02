@@ -8,11 +8,10 @@ import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-a
 
 import type { DestinationFields, DistributionType } from "@/lib/distributions-model";
 
-const authed = () => createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]);
 
 // --------------------------------------------------------- destinations
 
-export const requestPaymentInstructionFn = authed()
+export const requestPaymentInstructionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(
     (input: {
       investorUserId?: string | null;
@@ -27,14 +26,14 @@ export const requestPaymentInstructionFn = authed()
     return requestPaymentInstruction(context.userId, data);
   });
 
-export const recordInstructionStepUpFn = authed()
+export const recordInstructionStepUpFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { changeId: string; method: string }) => input)
   .handler(async ({ data, context }) => {
     const { recordInstructionStepUp } = await import("@/lib/distributions.server");
     return recordInstructionStepUp(context.userId, data.changeId, data.method);
   });
 
-export const verifyPaymentInstructionFn = authed()
+export const verifyPaymentInstructionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(
     (input: { changeId: string; method: string; independentNoticeChannel: string }) => input,
   )
@@ -43,14 +42,14 @@ export const verifyPaymentInstructionFn = authed()
     return verifyPaymentInstruction(context.userId, data);
   });
 
-export const reviewPaymentInstructionFn = authed()
+export const reviewPaymentInstructionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { changeId: string }) => input)
   .handler(async ({ data, context }) => {
     const { reviewPaymentInstruction } = await import("@/lib/distributions.server");
     return reviewPaymentInstruction(context.userId, data.changeId);
   });
 
-export const approvePaymentInstructionFn = authed()
+export const approvePaymentInstructionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(
     (input: { changeId: string; waiveCoolingOff?: boolean; waiverReason?: string | null }) => input,
   )
@@ -59,7 +58,7 @@ export const approvePaymentInstructionFn = authed()
     return approvePaymentInstruction(context.userId, data);
   });
 
-export const myPaymentInstructionsFn = authed()
+export const myPaymentInstructionsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { myPaymentInstructions } = await import("@/lib/distributions.server");
     return myPaymentInstructions(context.userId);
@@ -67,7 +66,7 @@ export const myPaymentInstructionsFn = authed()
 
 // ------------------------------------------------------------- batches
 
-export const proposeDistributionFn = authed()
+export const proposeDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(
     (input: {
       offeringId: string;
@@ -90,35 +89,35 @@ export const proposeDistributionFn = authed()
     return proposeDistribution(context.userId, data);
   });
 
-export const requestDistributionFn = authed()
+export const requestDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requestDistribution } = await import("@/lib/distributions.server");
     return requestDistribution(context.userId, data.batchId);
   });
 
-export const reviewDistributionFn = authed()
+export const reviewDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { reviewDistribution } = await import("@/lib/distributions.server");
     return reviewDistribution(context.userId, data.batchId);
   });
 
-export const managerApproveDistributionFn = authed()
+export const managerApproveDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { managerApproveDistribution } = await import("@/lib/distributions.server");
     return managerApproveDistribution(context.userId, data.batchId);
   });
 
-export const investorConfirmDistributionFn = authed()
+export const investorConfirmDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { lineId: string; shareDestination?: string | null }) => ({ lineId: String(input.lineId), shareDestination: input.shareDestination == null ? null : String(input.shareDestination).slice(0, 200) }))
   .handler(async ({ data, context }) => {
     const { investorConfirmDistribution } = await import("@/lib/distributions.server");
     return investorConfirmDistribution(context.userId, data.lineId, data.shareDestination);
   });
 
-export const adjustDistributionLineFn = authed()
+export const adjustDistributionLineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(
     (input: {
       lineId: string;
@@ -133,28 +132,28 @@ export const adjustDistributionLineFn = authed()
     return adjustDistributionLine(context.userId, data);
   });
 
-export const approveStaleBasisFn = authed()
+export const approveStaleBasisFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string; reason: string }) => ({ batchId: String(input.batchId), reason: String(input.reason ?? "").slice(0, 1000) }))
   .handler(async ({ data, context }) => {
     const { approveStaleBasis } = await import("@/lib/distributions.server");
     return approveStaleBasis(context.userId, data.batchId, data.reason);
   });
 
-export const finalApproveDistributionFn = authed()
+export const finalApproveDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { finalApproveDistribution } = await import("@/lib/distributions.server");
     return finalApproveDistribution(context.userId, data.batchId);
   });
 
-export const supersedeDistributionFn = authed()
+export const supersedeDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { supersedeDistribution } = await import("@/lib/distributions.server");
     return supersedeDistribution(context.userId, data.batchId, data.reason);
   });
 
-export const cancelDistributionFn = authed()
+export const cancelDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { cancelDistribution } = await import("@/lib/distributions.server");
@@ -163,14 +162,14 @@ export const cancelDistributionFn = authed()
 
 // ----------------------------------------------------------- execution
 
-export const distributionExecutionCheckFn = authed()
+export const distributionExecutionCheckFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { lineId: string }) => input)
   .handler(async ({ data, context }) => {
     const { distributionExecutionCheck } = await import("@/lib/distributions.server");
     return distributionExecutionCheck(context.userId, data.lineId);
   });
 
-export const executeDistributionPaymentFn = authed()
+export const executeDistributionPaymentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(
     (input: { lineId: string; externalReference: string; providerPaymentId?: string | null; sentOn?: string | null }) => ({
       lineId: String(input.lineId),
@@ -186,56 +185,56 @@ export const executeDistributionPaymentFn = authed()
     return executeDistributionPayment(context.userId, data);
   });
 
-export const reconcileDistributionPaymentFn = authed()
+export const reconcileDistributionPaymentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { paymentId: string; bankTransactionId: string }) => input)
   .handler(async ({ data, context }) => {
     const { reconcileDistributionPayment } = await import("@/lib/distributions.server");
     return reconcileDistributionPayment(context.userId, data);
   });
 
-export const postDistributionPaymentFn = authed()
+export const postDistributionPaymentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { paymentId: string }) => input)
   .handler(async ({ data, context }) => {
     const { postDistributionPayment } = await import("@/lib/distributions.server");
     return postDistributionPayment(context.userId, data.paymentId);
   });
 
-export const reverseDistributionPaymentFn = authed()
+export const reverseDistributionPaymentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { paymentId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { reverseDistributionPayment } = await import("@/lib/distributions.server");
     return reverseDistributionPayment(context.userId, data.paymentId, data.reason);
   });
 
-export const approveDistributionReconciliationFn = authed()
+export const approveDistributionReconciliationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
   .handler(async ({ data, context }) => {
     const { approveDistributionReconciliation } = await import("@/lib/distributions.server");
     return approveDistributionReconciliation(context.userId, data.paymentId);
   });
 
-export const approveDistributionReversalFn = authed()
+export const approveDistributionReversalFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
   .handler(async ({ data, context }) => {
     const { approveDistributionReversal } = await import("@/lib/distributions.server");
     return approveDistributionReversal(context.userId, data.paymentId);
   });
 
-export const reviewDistributionWithholdingFn = authed()
+export const reviewDistributionWithholdingFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string }) => ({ batchId: String(input.batchId) }))
   .handler(async ({ data, context }) => {
     const { reviewDistributionWithholding } = await import("@/lib/distributions.server");
     return reviewDistributionWithholding(context.userId, data.batchId);
   });
 
-export const reissueDistributionPaymentFn = authed()
+export const reissueDistributionPaymentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { paymentId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { reissueDistributionPayment } = await import("@/lib/distributions.server");
     return reissueDistributionPayment(context.userId, data.paymentId, data.reason);
   });
 
-export const recordProviderEventFn = authed()
+export const recordProviderEventFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(
     (input: {
       provider: string;
@@ -256,14 +255,14 @@ export const recordProviderEventFn = authed()
     return recordProviderEvent({ ...data, actorUserId: context.userId });
   });
 
-export const resolveDistributionExceptionFn = authed()
+export const resolveDistributionExceptionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { exceptionId: string; resolution: string }) => input)
   .handler(async ({ data, context }) => {
     const { resolveDistributionException } = await import("@/lib/distributions.server");
     return resolveDistributionException(context.userId, data);
   });
 
-export const publishDistributionNoticeFn = authed()
+export const publishDistributionNoticeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { lineId: string }) => input)
   .handler(async ({ data, context }) => {
     const { publishDistributionNotice } = await import("@/lib/distributions.server");
@@ -272,42 +271,42 @@ export const publishDistributionNoticeFn = authed()
 
 // --------------------------------------------------------------- views
 
-export const myDistributionsFn = authed()
+export const myDistributionsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { investmentProfileId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { myDistributions } = await import("@/lib/distributions.server");
     return myDistributions(context.userId, data);
   });
 
-export const distributionForInvestorFn = authed()
+export const distributionForInvestorFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { lineId: string }) => input)
   .handler(async ({ data, context }) => {
     const { distributionForInvestor } = await import("@/lib/distributions.server");
     return distributionForInvestor(context.userId, data.lineId);
   });
 
-export const distributionsWorkspaceFn = authed()
+export const distributionsWorkspaceFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { offeringId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { distributionsWorkspace } = await import("@/lib/distributions.server");
     return distributionsWorkspace(context.userId, data.offeringId ?? null);
   });
 
-export const managerDistributionBoardFn = authed()
+export const managerDistributionBoardFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { offeringId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { managerDistributionBoard } = await import("@/lib/distributions.server");
     return managerDistributionBoard(context.userId, data.offeringId ?? null);
   });
 
-export const distributionAuditTrailFn = authed()
+export const distributionAuditTrailFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { distributionAuditTrail } = await import("@/lib/distributions.server");
     return distributionAuditTrail(context.userId, data.batchId);
   });
 
-export const setDistributionPaymentSentDateFn = authed()
+export const setDistributionPaymentSentDateFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((input: { paymentId: string; sentOn: string; reason: string }) => ({
     paymentId: String(input.paymentId),
     sentOn: String(input.sentOn),

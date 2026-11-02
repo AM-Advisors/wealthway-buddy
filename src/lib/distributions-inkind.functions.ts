@@ -4,10 +4,9 @@ import { z } from "zod";
 import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 import { DISTRIBUTION_TYPES } from "@/lib/distributions-model";
 
-const authed = () => createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]);
 const cents = z.number().int().nonnegative().nullish();
 
-export const setupDistributionFn = authed()
+export const setupDistributionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({
     offeringId: z.string().uuid(),
     kind: z.enum(["cash", "cash_and_shares", "shares"]),
@@ -27,26 +26,26 @@ export const setupDistributionFn = authed()
   }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).setupDistribution(context.userId, data));
 
-export const fundDistributionsFn = authed()
+export const fundDistributionsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).fundDistributions(context.userId, data.offeringId));
 
-export const distributionSheetFn = authed()
+export const distributionSheetFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ batchId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).distributionSheet(context.userId, data.batchId));
 
-export const approveDistributionFeeFn = authed()
+export const approveDistributionFeeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ batchId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).approveDistributionFee(context.userId, data.batchId));
 
-export const setShareDestinationFn = authed()
+export const setShareDestinationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ lineId: z.string().uuid(), destination: z.string().max(300) }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).setShareDestination(context.userId, data.lineId, data.destination));
 
-export const distributionBankFileFn = authed()
+export const distributionBankFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ batchId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).distributionBankFile(context.userId, data.batchId));
 
-export const recordShareTransferFn = authed()
+export const recordShareTransferFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ lineId: z.string().uuid(), event: z.enum(["instructed", "confirmed", "failed"]), confirmationRef: z.string().max(200).nullish(), note: z.string().max(1000).nullish() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).recordShareTransfer(context.userId, data));
