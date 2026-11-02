@@ -88,15 +88,15 @@ export function AttentionNeeded({ r, viewer, onOpenItem }: { r: any; viewer: Vie
   return (
     <section className="space-y-2" data-testid="attention-needed">
       <h3 className="flex items-center gap-2 text-sm font-semibold"><AlertCircle className="h-4 w-4 text-destructive" />Attention Needed</h3>
-      <ul className="divide-y rounded-lg border-l-4 border-l-destructive/70 bg-muted/40">
+      <ul className="divide-y overflow-hidden rounded-lg border border-l-4 border-l-destructive/70 bg-muted/40">
         {list.map((i: any) => (
-          <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+          <li key={i.key} className="grid grid-cols-1 items-center gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_11rem_12rem] sm:gap-4">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{i.owner ? `${ownerText(i.owner)} action` : "Action"}</p>
-              <p className="text-sm font-medium">{i.action ?? i.label}</p>
+              <p className="truncate text-sm font-medium">{i.action ?? i.label}</p>
             </div>
-            <span className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</span>
-            {onOpenItem ? <Button variant="outline" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : null}
+            <span className={cn("text-xs font-medium sm:text-left", tone(i.status))}>{plainStatus(i.status, viewer)}</span>
+            {onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
         ))}
       </ul>
