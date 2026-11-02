@@ -1,0 +1,3 @@
+ALTER TABLE public.investor_documents DROP CONSTRAINT investor_documents_review_status_check;
+ALTER TABLE public.investor_documents ADD CONSTRAINT investor_documents_review_status_check CHECK (review_status = ANY (ARRAY['new'::text, 'accepted'::text, 'needs_followup'::text, 'completed_outside'::text]));
+ALTER TABLE public.investor_documents ADD CONSTRAINT investor_documents_completed_outside_tax_only CHECK (review_status <> 'completed_outside' OR doc_kind = 'tax_form');
