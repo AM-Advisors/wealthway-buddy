@@ -11,7 +11,8 @@ import { Link as LinkIcon, Plus, X } from "lucide-react";
 import { InvestorActionsMenu } from "@/components/investor-actions-menu";
 import { linkedInvestorRecords } from "@/lib/linked-investor-navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { AddExistingInvestor } from "@/components/add-existing-investor";
 import { BulkAddInvestors } from "@/components/bulk-add-investors";
 import { BulkInvestorRecords } from "@/components/bulk-investor-records";
@@ -29,7 +30,7 @@ import { getFundLinkFn } from "@/lib/fund-onboarding-link.functions";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { managerRowFromApplication } from "@/lib/prepared-investor-workflow";
 import {
-  CLAIM_STATE_LABELS, ROSTER_READINESS_LABELS, fundInvestorsSummary, rosterReadiness, rosterOwner,
+  CLAIM_STATE_LABELS, ROSTER_READINESS_LABELS, fundInvestorsSummary, rosterReadiness, rosterOwner, rosterFilterMatches, rosterProgress, type RosterFilter,
   type ClaimState, type RecordStatus, type RosterReadiness,
 } from "@/lib/investor-record-model";
 import { money, prettyStatus } from "@/lib/status";
@@ -51,11 +52,12 @@ const readinessTone: Record<RosterReadiness, "default" | "secondary" | "outline"
 const claimTone: Record<ClaimState, "outline" | "secondary"> = { prepared: "outline", claimed: "secondary", investor_started: "secondary" };
 
 /** One Fund Investors roster: canonical Person → Profile → Investment rows, plus clearly separate pending invitations. */
-export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; extraTabs?: { value: string; label: string; content: ReactNode }[] | undefined }) {
+export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string; moreSections?: ReactNode }) {
   const recordTo = useInvestorRecordRoute();
   const applicationTo = useApplicationRoute();
   const [chooser, setChooser] = useState(false);
-  const [tab, setTab] = useState("list");
+  const [filter, setFilter] = useState<RosterFilter>("all");
+  const [moreOpen, setMoreOpen] = useState(false);
   const qc = useQueryClient();
   const loadRecords = useServerFn(fundInvestorRecordsFn);
   const loadReadiness = useServerFn(fundReadinessFn);
@@ -82,7 +84,7 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
   const refresh = () => ["fund-investor-records", "fund-readiness", "fund-investor-progress", "fund-investor-actions", "manager-fund-home"].forEach((k) => qc.invalidateQueries({ queryKey: [k, fundId] }));
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } };
   const copyLink = async () => {
-    try { const d = await loadLink({ data: { offeringId: fundId } }); if (d.url) await copyText(d.url, "Onboarding link copied"); else toast.message("No active onboarding link yet. Open the Onboarding Link tab to set one up."); }
+    try { const d = await loadLink({ data: { offeringId: fundId } }); if (d.url) await copyText(d.url, "Onboarding link copied"); else toast.message("No active onboarding link yet. Open More for this fund below the list to set one up."); }
     catch (e) { toast.error((e as Error).message); }
   };
 
@@ -104,8 +106,8 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
     const fact = { onboardingId, offeringId: fundId, fundingStatus: null, intendedCents: null, readiness: rr.readiness };
     return (!drill.stage || funnelStageOf(fact) === drill.stage) && (!drill.bucket || managerBucketOf(fact) === drill.bucket);
   };
-  const shown = items.filter((r) => drillMatch(r.onboardingId)).filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
-  const shownLegacy = legacy.filter(() => !drill.stage && !drill.bucket).filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
+  const shown = items.filter((r) => drillMatch(r.onboardingId)).filter((r) => rosterFilterMatches(filter, readinessById.get(r.onboardingId))).filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
+  const shownLegacy = legacy.filter(() => !drill.stage && !drill.bucket && filter === "all").filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
 
   if (records.isLoading) return <p className="text-sm text-muted-foreground">Loading investors…</p>;
   if (records.error) return <p className="text-sm text-destructive">{(records.error as Error).message}</p>;
@@ -146,8 +148,11 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
     if (r.recordStatus === "missing_information" && rc.st !== "closed") return { label: "Details missing", tone: "outline" as const, rc };
     return { label: rc.label, tone: readinessTone[rc.st], rc };
   };
+  const progressLine = (id: string) => { const p = rosterProgress(readinessById.get(id)); return p ? `Done ${p.done} of ${p.total}` : null; };
   const nextLine = (rc: ReturnType<typeof readinessCell>) => rc.owner && rc.owner !== "-" && rc.next !== "No action needed" ? `${rc.owner}: ${rc.next}` : rc.next;
   const pendingCount = pendingOnboard.length + pendingAccess.length;
+  const showInvites = !drill.stage && !drill.bucket && (filter === "all" || filter === "investor");
+  const shownInvites = showInvites ? pendingCount : 0;
   const addOptions: { p: Panel; title: string; body: string; staff?: boolean }[] = [
     { p: "create", title: "Add one investor", body: "Enter their name and email. We check for an existing record and email them a personal invitation." },
     { p: "records", title: "Upload a list", body: "Add many investors from a spreadsheet. You see a preview before anything is saved." },
@@ -194,26 +199,20 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
         </CardContent>
       </Card>}
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4">
-        {([["Investors", summary.total + legacy.length], ["Waiting on investor", summary.needsInvestor + summary.invited], ["Waiting on Harmonious", summary.needsHarmonious], ["Ready or funded", summary.ready + summary.funded]] as const).map(([l, v]) => (
-          <div key={l} className="bg-card p-3"><p className="text-xs text-muted-foreground">{l}</p><p className="font-heading text-xl font-semibold">{v}</p></div>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4" role="group" aria-label="Filter investors">
+        {([["all", "Investors", summary.total + legacy.length + pendingCount], ["investor", "Waiting on investor", summary.needsInvestor + summary.invited], ["harmonious", "Waiting on Harmonious", summary.needsHarmonious], ["done", "Ready or funded", summary.ready + summary.funded]] as const).map(([k, l, v]) => (
+          <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(filter === k && k !== "all" ? "all" : k)} className={`p-3 text-left transition-colors ${filter === k ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}>
+            <p className={`text-xs ${filter === k ? "" : "text-muted-foreground"}`}>{l}</p><p className="font-heading text-xl font-semibold">{v}</p>
+          </button>
         ))}
       </div>
 
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="list">Investors</TabsTrigger>
-          <TabsTrigger value="invites">Invitations{pendingCount ? ` (${pendingCount})` : ""}</TabsTrigger>
-          {extraTabs?.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list" className="space-y-3">
+        <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Input className="sm:w-64" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search investors" aria-label="Search investors" />
             {drill.stage || drill.bucket ? <p className="text-sm">Showing: <b>{drill.stage ? (FUNNEL_LABELS as any)[drill.stage] ?? drill.stage : (MANAGER_BUCKET_LABELS as any)[drill.bucket!] ?? drill.bucket}</b> · <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="underline">Show all</Link></p> : null}
           </div>
-          {shown.length === 0 && shownLegacy.length === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{term ? "No investors match your search." : "No investors yet. Use Add investor to begin."}</p> :
+          {shown.length === 0 && shownLegacy.length === 0 && shownInvites === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{term ? "No investors match your search." : "No investors yet. Use Add investor to begin."}</p> :
             <ul className="divide-y rounded-md border">
               {shown.map((r) => { const s = oneStatus(r); return (
                 <li key={r.onboardingId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
@@ -221,7 +220,7 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
                     <div className="min-w-0"><p className="truncate font-medium">{r.name}</p>
                       <p className="truncate text-xs text-muted-foreground">{r.profileLabel ?? r.profileType ?? "Profile needed"}{r.claimState === "prepared" ? " · Not signed in yet" : ""}</p></div>
                     <p className="text-sm">{money(r.amountCents)}</p>
-                    <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{nextLine(s.rc)}</p></div>
+                    <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p></div>
                   </Link>{rowMenu(r)}
                 </li>); })}
               {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); const linked = linkedRecords.get(row.applicationId); return (
@@ -232,36 +231,29 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
                     <div className="min-w-0"><Badge variant="outline">{prettyStatus(row.stage)}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{s.nextAction}</p></div>
                   </Link>{linked ? rowMenu(linked) : legacyMenu(row.applicationId, s.investor)}
                 </li>); })}
-            </ul>}
-          {isStaff ? <InvestorRecordsSync fundId={fundId} /> : null}
-        </TabsContent>
-
-        <TabsContent value="invites">
-          <p className="mb-3 text-sm text-muted-foreground">Invited but not started yet. Emails only go out again when you click Resend.</p>
-          {pendingCount === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">No pending invitations.</p> : (
-            <ul className="divide-y rounded-md border">
-              {pendingOnboard.map((i) => (
+              {showInvites && pendingOnboard.filter((i) => !term || String(i.investorName ?? "").toLowerCase().includes(term)).map((i) => (
                 <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-                  <div className="min-w-0"><p className="truncate font-medium">{i.investorName}</p><p className="text-xs text-muted-foreground">Invited{i.requestedAmountCents ? ` · intends ${money(i.requestedAmountCents)}` : ""}</p></div>
+                  <div className="min-w-0"><p className="truncate font-medium">{i.investorName}</p><p className="text-xs text-muted-foreground"><Badge variant="outline" className="mr-1">Invited</Badge>Not started{i.requestedAmountCents ? ` · intends ${money(i.requestedAmountCents)}` : ""}</p></div>
                   <ResendInviteButton target={{ kind: "onboarding", invitationId: String(i.id).slice(7) }} label="Resend invitation" />
                 </li>))}
-              {pendingAccess.map((p) => (
+              {showInvites && pendingAccess.filter((p) => !term || String(p.name ?? "").toLowerCase().includes(term)).map((p) => (
                 <li key={p.userId} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-                  <div className="min-w-0"><p className="truncate font-medium">{p.name}</p><p className="text-xs text-muted-foreground">Has fund access · onboarding not begun</p></div>
+                  <div className="min-w-0"><p className="truncate font-medium">{p.name}</p><p className="text-xs text-muted-foreground"><Badge variant="outline" className="mr-1">Invited</Badge>Has fund access, not started</p></div>
                   <div className="flex gap-2">
                     {p.invitationId ? <ResendInviteButton target={{ kind: "fund", id: p.invitationId }} /> : null}
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (window.confirm(`Revoke ${p.name}'s access to this fund?`)) run(() => revoke({ data: { userId: p.userId, offeringId: fundId, role: "investor" } }), "Fund access revoked"); }}>Revoke</Button>
                   </div>
                 </li>))}
-            </ul>)}
-        </TabsContent>
+            </ul>}
+          {isStaff ? <InvestorRecordsSync fundId={fundId} /> : null}
+        </div>
 
-        {extraTabs?.map((t) => <TabsContent key={t.value} value={t.value}>{tab === t.value ? t.content : null}</TabsContent>)}
-
-        <TabsContent value="settings" className="space-y-5">
-          {tab === "settings" && <><FundOnboardingLinkCard fundId={fundId} /><FundOnboardingSettings fundId={fundId} /><FundEligibilitySetup fundId={fundId} /></>}
-        </TabsContent>
-      </Tabs>
+      <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="rounded-xl border">
+        <CollapsibleTrigger className="flex w-full items-center justify-between p-3 text-left font-medium">More for this fund: link, settings and reports<ChevronDown className={`h-4 w-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} /></CollapsibleTrigger>
+        <CollapsibleContent className="space-y-5 border-t p-3">
+          {moreOpen && <><FundOnboardingLinkCard fundId={fundId} /><FundOnboardingSettings fundId={fundId} /><FundEligibilitySetup fundId={fundId} />{moreSections}</>}
+        </CollapsibleContent>
+      </Collapsible>
     </section>
   );
 }

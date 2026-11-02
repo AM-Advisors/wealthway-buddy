@@ -439,3 +439,20 @@ export function relatedRoleLabel(role: string | null | undefined): string {
   }
   return r.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
+
+/** Roster filter boxes. Each box matches exactly the rows fundInvestorsSummary counts for it; invitations count under "investor". */
+export type RosterFilter = "all" | "investor" | "harmonious" | "done";
+export function rosterFilterMatches(filter: RosterFilter, r: (ReadinessRow & { nextAction?: { owner?: string | null } | null }) | undefined): boolean {
+  if (filter === "all") return true;
+  const st = rosterReadiness(r);
+  const funded = Boolean(r?.readiness?.items?.some((i) => i.key === "funding" && i.status === "complete"));
+  if (filter === "done") return st === "ready" || funded;
+  if (st === "ready" || st === "closed") return false;
+  return rosterOwner(r) === (filter === "investor" ? "Investor" : "Harmonious");
+}
+/** Done X of Y from the already-loaded readiness items. */
+export function rosterProgress(r: ReadinessRow | undefined): { done: number; total: number } | null {
+  const items = r?.readiness?.items ?? [];
+  if (!items.length) return null;
+  return { done: items.filter((i) => i.status === "complete").length, total: items.length };
+}

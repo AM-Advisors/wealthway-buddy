@@ -239,7 +239,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
 
         <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>
 
-        <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<ManagerFundInvestors fundId={fundId} extraTabs={staff ? [{ value: "queue", label: "Work queue", content: <ReadinessQueue offeringId={fundId} initialTab="all" /> }] : undefined} /><CapitalTieReport offeringId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4"><ManagerFundInvestors fundId={fundId} moreSections={<>{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<CapitalTieReport offeringId={fundId} /></>} /></TabsContent>
 
 
         <TabsContent value="accounting"><AccountingWorkspace fundId={fundId} staff={staff} extra={<AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} />} /></TabsContent>
