@@ -607,7 +607,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     email: person.email, phone: person.phone, citizenship: person.citizenship_country,
     addressLine1: person.address_line1, addressLine2: person.address_line2, city: person.city, region: person.region, postalCode: person.postal_code, country: person.country,
     mailingAddress: person.mailing_address ?? null, hasAccount: Boolean(person.user_id), enteredBy: person.entry_source,
-    ...(staff ? { dateOfBirth: person.date_of_birth, taxIdOnFile: Boolean(person.tax_id_last4 || person.tax_id_reference) } : {}),
+    ...(staff ? { dateOfBirth: person.date_of_birth, taxIdOnFile: Boolean(person.tax_id_last4 || person.tax_id_reference), kycStatus: person.kyc_status ?? null, amlStatus: person.aml_status ?? null, identityVerifiedAt: person.identity_verified_at ?? null } : {}),
     verificationLabel: person.identity_verified_at ? "Identity verification complete" : person.kyc_status === "pending" ? "Verification pending" : "Verification not started",
   } : null;
   return {

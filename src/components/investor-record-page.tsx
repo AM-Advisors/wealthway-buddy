@@ -18,7 +18,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
 import { CLAIM_STATE_LABELS, SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
-import { prettyStatus } from "@/lib/status";
+import { prettyStatus, statusTone } from "@/lib/status";
+import { verificationLabel } from "@/lib/verification-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,6 +153,13 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </CardContent></Card> : null}
 
       {tab === "details" && staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} investorName={[p?.firstName, p?.middleName, p?.lastName].filter(Boolean).join(" ")} investorEmail={p?.email ?? undefined} /> : null}
+      {tab === "details" && staff && !data.overview.investorUserId ? <Card><CardHeader><CardTitle className="text-base">Identity & compliance screening</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant={statusTone((p as any)?.kycStatus ?? "not_started")}>Identity: {verificationLabel((p as any)?.kycStatus)}</Badge>
+          <Badge variant={statusTone((p as any)?.amlStatus ?? "not_started")}>Screening: {verificationLabel((p as any)?.amlStatus)}</Badge>
+        </div>
+        <p className="text-muted-foreground">This investor has no portal login yet, so there are no identity checks to review. Verification starts after they accept their invite and sign in.</p>
+      </CardContent></Card> : null}
       {tab === "details" ? <div className="space-y-4">
         {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <Card ref={contactRef} className="scroll-mt-4"><CardHeader><CardTitle className="text-base">Investor details</CardTitle>
