@@ -49,7 +49,7 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
         {!userId && <div className="flex gap-1"><Button size="sm" variant={filter === "review" ? "default" : "outline"} onClick={() => setFilter("review")}>Needs review</Button><Button size="sm" variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>All</Button></div>}
       </CardHeader>
       <CardContent className="space-y-3">
-        {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : !rows.length ? <p className="py-6 text-center text-sm text-muted-foreground">Nothing waiting.</p> : rows.map((r: any) => {
+        {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : !rows.length ? <p className="py-6 text-center text-sm text-muted-foreground">{userId ? "No identity checks recorded for this investor yet. Checks appear here once the investor starts verification." : "Nothing waiting."}</p> : rows.map((r: any) => {
           const d = r.decision_summary ?? {};
           return (
             <div key={r.id} className="space-y-2 rounded-md border p-3 text-sm">
