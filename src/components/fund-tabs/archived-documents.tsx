@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -37,7 +38,7 @@ export function ArchivedDocuments({ fundId }: { fundId: string }) {
                   <div key={k} className="rounded-md border border-border p-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{it.title}</span>
-                      <Badge variant="secondary">v{it.version}</Badge>
+                      <Badge variant="secondary">v{versionLabel(it.version)}</Badge>
                       {it.reason === "archived" ? <Badge variant="outline">Archived</Badge> : <Badge variant="outline">Replaced by v{it.replacedBy}</Badge>}
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">

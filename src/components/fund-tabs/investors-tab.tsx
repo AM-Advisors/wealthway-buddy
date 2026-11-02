@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { InvestorEconomicsCard } from "@/components/fund-tabs/investor-economics";
 import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";
@@ -371,7 +372,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
             <section className="space-y-3" aria-label="Signed fund documents">
               <h4 className="font-medium">Signed fund documents</h4>
               {d.reviewEvidence.signedDocuments.length ? d.reviewEvidence.signedDocuments.map((doc) => <div key={doc.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-                <div className="min-w-0"><p className="break-words font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">{doc.version != null ? `Version ${doc.version}` : "Version not recorded"} · {fmtDate(doc.signedAt)}{doc.replaced ? " · Replaced, retained copy" : " · Signed"}</p></div>
+                <div className="min-w-0"><p className="break-words font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">{doc.version != null ? `Version ${versionLabel(doc.version)}` : "Version not recorded"} · {fmtDate(doc.signedAt)}{doc.replaced ? " · Replaced, retained copy" : " · Signed"}</p></div>
                 {doc.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
                   if (!id) return;
                   setDownloading(doc.id);
@@ -390,7 +391,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
                   finally { setDownloading(null); }
                 }}>{downloading === tf.id ? "Opening…" : `Download ${tf.label}`}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
               </div>)}
-              {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
+              {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {versionLabel(doc.version)} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
             </section>
             {id && <PriorSignedDocuments fundId={fundId} onboardingId={id} />}
             <section aria-label="Investor questionnaire">

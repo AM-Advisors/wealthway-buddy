@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { CountersignTimingCard } from "@/components/countersign-timing-card";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { useIsSuperAdmin } from "@/lib/use-is-super-admin";
@@ -270,7 +271,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
                 </Label>
               </div>
             )}
-            {latest && <p className="text-xs text-muted-foreground">Latest: Version {latest.version} · {latest.fileName ?? "file"}</p>}
+            {latest && <p className="text-xs text-muted-foreground">Latest: Version {versionLabel(latest.version)} · {latest.fileName ?? "file"}</p>}
           </Step>
 
           <Step n={2} title="How it is used and who it applies to" done={!!doc.usage}>
@@ -290,7 +291,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
               <div key={v.version} className="rounded-md bg-muted/40 p-2 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span>
-                    Version {v.version} · {v.fileName ?? "file"} · {new Date(v.uploadedAt).toLocaleDateString()}
+                    Version {versionLabel(v.version)} · {v.fileName ?? "file"} · {new Date(v.uploadedAt).toLocaleDateString()}
                     {v.effectiveDate ? ` · effective ${v.effectiveDate}` : ""}
                   </span>
                   <Badge variant="outline">{v.isActive ? "In use (template)" : v.rolloutScope === "single" && v.approval === "approved" ? "Individual version" : VERSION_STATE_LABELS[v.state]}</Badge>
@@ -397,7 +398,7 @@ function SigningEditor({ doc, version, data, onChanged }: { doc: Doc; version: D
   return (
     <div className="mt-2 space-y-2 border-t pt-2">
       <p className="text-xs font-medium">
-        Signing setup for Version {version.version}
+        Signing setup for Version {versionLabel(version.version)}
         {version.signingStatus === "needs_review" && <span className="text-destructive"> - Signing Setup Needs Review</span>}
       </p>
       {data.canEdit && signers.length === 0 && (
@@ -487,7 +488,7 @@ function RolloutDialog({ version, preview, busy, onCancel, onConfirm }: {
   const [note, setNote] = useState("");
   return (
     <div className="space-y-3 rounded-md border border-primary/40 p-3 text-sm">
-      <p className="font-medium">Who should get Version {version}?</p>
+      <p className="font-medium">Who should get Version {versionLabel(version)}?</p>
       <ScopePicker scope={scope} setScope={setScope} counts={preview.counts} hasActive={preview.hasActive} investors={preview.investors} target={target} setTarget={setTarget} />
       <Input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
       <p className="text-xs text-muted-foreground">Signed documents never change and nothing is emailed or sent automatically.</p>

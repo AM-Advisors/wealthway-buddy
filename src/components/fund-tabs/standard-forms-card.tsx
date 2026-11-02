@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -77,7 +78,7 @@ function UploadDialog({ form, onClose }: { form: { key: string; title: string };
   const [note, setNote] = useState("");
   const m = useMutation({
     mutationFn: () => up({ data: { key: form.key as any, body, note } }),
-    onSuccess: (r) => { toast.success(`Saved as version ${r.version}`); onClose(); },
+    onSuccess: (r) => { toast.success(`Saved as version ${versionLabel(r.version)}`); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
   return (

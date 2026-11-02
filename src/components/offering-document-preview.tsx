@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -45,12 +46,12 @@ export function OfferingDocumentPreview({ offeringId, documentId, version, title
   }, [word, q.data?.url]);
   return <Dialog open onOpenChange={open => { if (!open) onClose(); }}>
     <DialogContent className="flex h-[90dvh] w-[calc(100vw-2rem)] max-w-6xl flex-col overflow-hidden sm:max-w-6xl">
-      <DialogHeader className="shrink-0 pr-6"><DialogTitle className="break-words">{title}</DialogTitle><DialogDescription>Version {version}{q.data?.fileName ? ` · ${q.data.fileName}` : ""}</DialogDescription></DialogHeader>
+      <DialogHeader className="shrink-0 pr-6"><DialogTitle className="break-words">{title}</DialogTitle><DialogDescription>Version {versionLabel(version)}{q.data?.fileName ? ` · ${q.data.fileName}` : ""}</DialogDescription></DialogHeader>
       {q.isPending ? <p className="text-sm text-muted-foreground">Opening document…</p> : q.error ? <div className="space-y-2"><p className="text-sm text-destructive">{q.error.message}</p><Button variant="outline" onClick={() => q.refetch()}>Retry</Button></div> : q.data && <>
         <div className="flex shrink-0 flex-wrap gap-2"><Button asChild size="sm" variant="outline"><a href={q.data.url} target="_blank" rel="noopener noreferrer"><Download className="size-4" /> Open or download</a></Button></div>
         {word && wordState === "loading" && <p className="text-sm text-muted-foreground">Opening document…</p>}
         {word && wordState === "failed" && <p className="text-sm text-destructive">This file could not be displayed. You can still open or download it.</p>}
-        {word ? <div ref={content} className="document-surface min-h-0 min-w-0 flex-1 overflow-auto rounded-md border" /> : <iframe title={`${title} · Version ${version}`} src={q.data.url} className="min-h-0 w-full flex-1 rounded-md border bg-card" />}
+        {word ? <div ref={content} className="document-surface min-h-0 min-w-0 flex-1 overflow-auto rounded-md border" /> : <iframe title={`${title} · Version ${versionLabel(version)}`} src={q.data.url} className="min-h-0 w-full flex-1 rounded-md border bg-card" />}
       </>}
     </DialogContent>
   </Dialog>;

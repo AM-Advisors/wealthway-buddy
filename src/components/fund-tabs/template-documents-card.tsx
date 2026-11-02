@@ -1,3 +1,4 @@
+import { versionLabel } from "@/lib/version-label";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,7 +62,7 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
                     Made {fmtDate(d.usedAt)} · {d.signers.length ? `Signs: ${d.signers.map((r: string, i: number) => `${i + 1}. ${ROLE[r] ?? r}`).join(", ")}` : "No signatures"}
                   </p>
                   {(() => { const st = sq.data?.[d.title]; return st ? <p className="text-xs font-medium text-primary">{st.status === "signed" ? "Signed" : "Sent"} · {st.signer ?? "Fund manager"}{st.sentAt ? ` · ${fmtDate(st.sentAt)}` : ""}{st.status === "sent" ? " · waiting to sign" : ""}</p> : null; })()}
-                  {d.reviewState && <p className="text-xs text-muted-foreground">v{d.version} · {d.reviewState === "approved" ? `Approved ${fmtDate(d.approvedAt)}` : d.reviewState === "returned" ? "Returned, new version required" : "Awaiting independent review"}</p>}
+                  {d.reviewState && <p className="text-xs text-muted-foreground">v{versionLabel(d.version)} · {d.reviewState === "approved" ? `Approved ${fmtDate(d.approvedAt)}` : d.reviewState === "returned" ? "Returned, new version required" : "Awaiting independent review"}</p>}
                   {d.generationIssues?.length > 0 && <p className="text-xs text-destructive">{d.generationIssues.join(" · ")}</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
