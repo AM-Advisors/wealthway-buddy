@@ -5,6 +5,8 @@
 export const COMPANY = {
   name: "Harmonious",
   legalName: "Harmonious Holdings LLC",
+  /** Entity named as "Administrative Manager" in fund documents generated from templates. */
+  adminManagerLegalName: "Harmonious Capital Administration LLC",
   tagline: "Fund administration, onboarding, reporting and payment facilitation",
   website: "harmonious.co",
   email: "operations@harmonious.co",
