@@ -82,7 +82,7 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
           <div><dt className="text-xs text-muted-foreground">Relationship Lead</dt><dd>{lead ?? (isCore ? "Harmonious Support Team" : "To be assigned")}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Next report</dt><dd>{d.nextReport ? `${d.nextReport.title} · ${fmtDate(d.nextReport.due)}` : "None scheduled"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Next major deadline</dt><dd>{nextDeadline ? `${nextDeadline.title} · ${fmtDate(nextDeadline.due)}` : "None scheduled"}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Open items</dt><dd>{d.openCount}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Open fund tasks</dt><dd>{d.openCount}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Approvals / Information</dt><dd>{Math.max(d.counts.CLIENT_APPROVAL_REQUIRED, d.approvalsAwaiting.length)} / {d.counts.CLIENT_INFORMATION_REQUIRED}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Open requests</dt><dd>{onNavigate ? <button className="underline" onClick={() => onNavigate("requests")}>{d.requests.open}</button> : d.requests.open}</dd></div>
         </dl>
