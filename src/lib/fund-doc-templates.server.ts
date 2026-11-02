@@ -284,7 +284,6 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     "Registered Agent": o.registered_agent ?? null,
     "Administrative Manager": COMPANY.adminManagerLegalName,
     "Administrative Manager Email": COMPANY.email,
-    "Administrative Manager Contact": extra.adminContact,
     "Special Manager Entities": specialEntities,
     "Fund Term": fundTermWords(extra.termMonths),
     "Fiscal Year End": fiscalYearEndWords(extra.fiscalYearEnd),
@@ -292,19 +291,10 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   return v;
 }
 
-/** Fund term, fiscal year end and the client's assigned Harmonious contact, as recorded on the platform. */
-async function recordedFundParties(offeringId: string, clientId: string | null) {
+/** Fund term and fiscal year end as recorded in fund setup. */
+async function recordedFundParties(offeringId: string, _clientId: string | null) {
   const { data: setup } = await db().from("fund_setups").select("fund_term_months, fiscal_year_end").eq("offering_id", offeringId).order("updated_at", { ascending: false }).limit(1).maybeSingle();
-  let adminContact: string | null = null;
-  if (clientId) {
-    const { data: team } = await db().from("client_team_assignments").select("team_role, user_id, assigned_at").eq("client_id", clientId).in("team_role", ["account_manager", "operations"]).order("assigned_at", { ascending: true });
-    const pick = (team ?? []).find((t: any) => t.team_role === "account_manager") ?? (team ?? [])[0];
-    if (pick?.user_id) {
-      const { data: p } = await db().from("profiles").select("legal_name").eq("user_id", pick.user_id).maybeSingle();
-      adminContact = p?.legal_name?.trim() || null;
-    }
-  }
-  return { termMonths: setup?.fund_term_months ?? null, fiscalYearEnd: setup?.fiscal_year_end ?? null, adminContact };
+  return { termMonths: setup?.fund_term_months ?? null, fiscalYearEnd: setup?.fiscal_year_end ?? null };
 }
 
 const NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"];
