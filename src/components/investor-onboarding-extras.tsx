@@ -77,7 +77,7 @@ export function OnboardingUploadsCard({ onboardingId }: { onboardingId: string }
             </div>
             {latest ? <p className="break-words text-xs text-muted-foreground">{latest.fileName} · {fmtDate(latest.uploadedAt)} · {STATUS[latest.status] ?? latest.status}{latest.note ? ` · ${latest.note}` : ""}</p> : null}
             {open ? <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="min-w-0 flex-1 space-y-1"><Label htmlFor={`profile-file-${kind}`}>File (up to 15 MB)</Label><Input key={`${kind}-${latest?.id ?? "none"}`} id={`profile-file-${kind}`} type="file" disabled={up.isPending} onChange={(e) => setFiles((prev) => ({ ...prev, [kind]: e.target.files?.[0] }))} /></div>
+              <div className="min-w-0 flex-1 space-y-1"><Label htmlFor={`profile-file-${kind}`}>File (up to 50 MB)</Label><Input key={`${kind}-${latest?.id ?? "none"}`} id={`profile-file-${kind}`} type="file" disabled={up.isPending} onChange={(e) => setFiles((prev) => ({ ...prev, [kind]: e.target.files?.[0] }))} /></div>
               <Button disabled={!files[kind] || up.isPending} onClick={() => up.mutate(kind)}>{up.isPending && up.variables === kind ? "Uploading…" : r.received ? "Save update" : "Upload"}</Button>
             </div> : null}
           </section>;

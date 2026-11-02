@@ -19,7 +19,7 @@ export const ONBOARDING_DOC_KINDS = [
 export type OnboardingDocKind = (typeof ONBOARDING_DOC_KINDS)[number]["value"];
 
 const BUCKET = "investor-uploads";
-const MAX_BYTES = 15 * 1024 * 1024;
+const MAX_BYTES = 50 * 1024 * 1024;
 
 async function ownOnboarding(userId: string, onboardingId: string) {
   const d = await db();
@@ -81,7 +81,7 @@ export async function uploadDoc(userId: string, input: { onboardingId: string; k
   if (!state.requirements.some((r) => r.kind === input.kind)) throw new Error("That document does not apply to this investing profile. Identity checks and tax forms use their dedicated steps.");
   const bytes = Buffer.from(input.base64, "base64");
   if (bytes.length === 0) throw new Error("That file is empty.");
-  if (bytes.length > MAX_BYTES) throw new Error("Files can be up to 15 MB.");
+  if (bytes.length > MAX_BYTES) throw new Error("Files can be up to 50 MB.");
   const safe = input.fileName.replace(/[^\w.\- ]+/g, "_").slice(0, 120);
   const path = `${userId}/onboarding/${ob.id}/${crypto.randomUUID()}-${safe}`;
   const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType: input.contentType || "application/octet-stream" });
@@ -114,7 +114,7 @@ export async function uploadDocFor(userId: string, input: { onboardingId: string
   if (!ob.investment_profile_id) throw new Error("Choose the investing profile first.");
   const bytes = Buffer.from(input.base64, "base64");
   if (bytes.length === 0) throw new Error("That file is empty.");
-  if (bytes.length > MAX_BYTES) throw new Error("Files can be up to 15 MB.");
+  if (bytes.length > MAX_BYTES) throw new Error("Files can be up to 50 MB.");
   const safe = input.fileName.replace(/[^\w.\- ]+/g, "_").slice(0, 120);
   const owner = ob.investor_user_id ?? userId;
   const path = `${owner}/onboarding/${ob.id}/${crypto.randomUUID()}-${safe}`;
