@@ -15,10 +15,12 @@ export function pendingTaxUpload(rows: TaxUpload[], investment: { id: string; in
     && row.onboarding_id === investment.id
     && row.investment_profile_id === investment.investment_profile_id
     && row.user_id === investment.investor_user_id
-    && ["new", "accepted"].includes(row.review_status ?? "new")) ?? null;
+    && ["new", "accepted", "completed_outside"].includes(row.review_status ?? "new")) ?? null;
 }
 
 export function taxStateWithUpload<T extends { state: string; reason?: string }>(state: T, upload: TaxUpload | null) {
-  if (!upload || state.state !== "missing") return state;
+  if (!upload || !["missing", "review_required"].includes(state.state)) return state;
+  if (upload.review_status === "completed_outside") return { state: "valid" as const, reason: "Signed tax form recorded as completed outside the platform." } as unknown as T;
+  if (state.state !== "missing") return state;
   return { state: "review_required" as const, reason: "Your uploaded tax form is on file. Harmonious needs to confirm its tax certification; you do not need to upload it again." };
 }
