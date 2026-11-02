@@ -84,7 +84,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   const refresh = () => ["fund-investor-records", "fund-readiness", "fund-investor-progress", "fund-investor-actions", "manager-fund-home"].forEach((k) => qc.invalidateQueries({ queryKey: [k, fundId] }));
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } };
   const copyLink = async () => {
-    try { const d = await loadLink({ data: { offeringId: fundId } }); if (d.url) await copyText(d.url, "Onboarding link copied"); else toast.message("No active onboarding link yet. Open the Onboarding Link tab to set one up."); }
+    try { const d = await loadLink({ data: { offeringId: fundId } }); if (d.url) await copyText(d.url, "Onboarding link copied"); else toast.message("No active onboarding link yet. Open "More for this fund" below the list to set one up."); }
     catch (e) { toast.error((e as Error).message); }
   };
 
