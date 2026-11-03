@@ -201,6 +201,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(allowedUrls.has("/ops/queue") ? [{ id: "approvals", title: "Approvals inbox", url: "/ops/approvals", icon: "check", badge: approvalsCount }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "stalled", title: "Stalled items", url: "/ops/stalled", icon: "tasks" }] : []),
+    ...(allowedUrls.has("/ops/queue") ? [{ id: "software-issues", title: "Software issues", url: "/ops/software-issues", icon: "tasks" }] : []),
     ...(has("super_admin") ? [{ id: "sealed", title: "Sealed archive", url: "/ops/sealed-archive", icon: "document" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
   ];
