@@ -50483,6 +50483,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      decide_routine_side_letter: {
+        Args: {
+          _actor: string
+          _decision: string
+          _reason: string
+          _request: string
+        }
+        Returns: undefined
+      }
       diligence_access_open: {
         Args: { _offering_id: string }
         Returns: boolean
