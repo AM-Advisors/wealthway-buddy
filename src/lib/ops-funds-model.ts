@@ -37,16 +37,28 @@ export function fundMetrics(offeringId: string, facts: FundOnboardingFact[], tas
   return m;
 }
 
+/**
+ * Fund-level totals: each number counts funds, so it matches the rows the
+ * matching filter shows. Investor counts live separately in `investors`.
+ */
 export function totals(rows: { isOpen: boolean; metrics: FundMetrics }[]) {
+  const has = (n: number) => (n > 0 ? 1 : 0);
   return rows.reduce(
     (t, r) => ({
       activeFunds: t.activeFunds + (r.isOpen ? 1 : 0),
-      onboarding: t.onboarding + r.metrics.onboarding,
-      ready: t.ready + r.metrics.ready,
-      needsHarmonious: t.needsHarmonious + r.metrics.needsHarmonious,
-      blocked: t.blocked + r.metrics.blocked,
+      onboarding: t.onboarding + has(r.metrics.onboarding),
+      ready: t.ready + has(r.metrics.ready),
+      needsHarmonious: t.needsHarmonious + has(r.metrics.needsHarmonious),
+      blocked: t.blocked + has(r.metrics.blocked),
+      investors: {
+        total: t.investors.total + r.metrics.investors,
+        onboarding: t.investors.onboarding + r.metrics.onboarding,
+        ready: t.investors.ready + r.metrics.ready,
+        needsHarmonious: t.investors.needsHarmonious + r.metrics.needsHarmonious,
+        blocked: t.investors.blocked + r.metrics.blocked,
+      },
     }),
-    { activeFunds: 0, onboarding: 0, ready: 0, needsHarmonious: 0, blocked: 0 },
+    { activeFunds: 0, onboarding: 0, ready: 0, needsHarmonious: 0, blocked: 0, investors: { total: 0, onboarding: 0, ready: 0, needsHarmonious: 0, blocked: 0 } },
   );
 }
 

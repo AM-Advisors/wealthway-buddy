@@ -20,7 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "Blocked"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"], ["agreement_follow_up", "Agreement Follow-Up"]];
+const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "With blockers"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"], ["agreement_follow_up", "Agreement Follow-Up"]];
 const fmt = (d: string | null) => (d ? new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-");
 
 function RowActions({ f, canDelete }: { f: any; canDelete?: boolean }) {
@@ -89,7 +89,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
     .filter((r) => owner === "any" || r.owner?.id === owner)
     .filter((r) => manager === "any" || r.managers.some((m: any) => m.id === manager))
     .sort((a, b) => (b.metrics.blocked + b.metrics.needsHarmonious) - (a.metrics.blocked + a.metrics.needsHarmonious));
-  const metric: [string, number, boolean, FundFilter][] = [["Active Funds", t.activeFunds, false, "active"], ["Investors Onboarding", t.onboarding, false, "onboarding"], ["Ready to Close", t.ready, false, "ready"], ["Needs Harmonious", t.needsHarmonious, false, "needs_harmonious"], ["Blocked", t.blocked, true, "blocked"]];
+  const metric: [string, number, boolean, FundFilter][] = [["Active Funds", t.activeFunds, false, "active"], ["Funds Onboarding", t.onboarding, false, "onboarding"], ["Funds Ready to Close", t.ready, false, "ready"], ["Funds Needing Harmonious", t.needsHarmonious, false, "needs_harmonious"], ["Funds with Blockers", t.blocked, true, "blocked"]];
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -160,7 +160,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
           })}
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Counts come from each investment's readiness checklist and open work items. Close Requests will appear here once that feature exists.</p>
+      <p className="text-xs text-muted-foreground">Each count above is a number of funds. Investor counts are on the Investors page. Counts come from each investment's readiness checklist and open work items.</p>
     </div>
   );
 }
