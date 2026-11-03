@@ -49,3 +49,18 @@ export function autoScreeningDecision(input: { completed: boolean; person: Perso
   if (!input.person.dateOfBirth) return input.hits.length === 0 ? "auto_clear" : "review";
   return input.hits.every((h) => compareHit(input.person, h).suggestion === "likely_different_person") ? "auto_clear" : "review";
 }
+
+/**
+ * Provider-resolved look-alikes: the screening service itself marked the hit as not a match
+ * or a false positive. These never hold an investor in review; every other hit still does.
+ */
+export function providerRuledOut(h: any): boolean {
+  if (!h || typeof h !== "object") return false;
+  if (h.match === false) return true;
+  if (h.is_false_positive === true) return true;
+  return /false[\s_-]*positive|not[\s_-]*a?[\s_-]*match/i.test(String(h.review_status ?? ""));
+}
+
+export function unresolvedAmlHits<T>(hits: T[] | null | undefined): T[] {
+  return (Array.isArray(hits) ? hits : []).filter((h) => !providerRuledOut(h));
+}

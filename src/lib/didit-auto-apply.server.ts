@@ -5,6 +5,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { fetchDiditSessionDecision } from "@/lib/didit.server";
 import { mergeVerifiedPersonFields } from "@/lib/kyc-person-backfill";
+import { unresolvedAmlHits } from "@/lib/aml-match-model";
 
 const db = () => supabaseAdmin as any;
 const s = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -14,7 +15,7 @@ export function extractDiditDetails(d: any) {
   const id = (Array.isArray(d?.id_verifications) ? d.id_verifications[0] : d?.id_verification) ?? {};
   const addr = id?.parsed_address ?? {};
   const aml = Array.isArray(d?.aml_screenings) ? d.aml_screenings : d?.aml ? [d.aml] : [];
-  const amlHits = aml.reduce((n: number, a: any) => n + (Array.isArray(a?.hits) ? a.hits.length : 0), 0);
+  const amlHits = aml.reduce((n: number, a: any) => n + unresolvedAmlHits(a?.hits).length, 0);
   const amlStatus = !aml.length ? null : aml.every((a: any) => approved(a?.status)) && amlHits === 0 ? "approved" : "review";
   const iso = (v: unknown) => (s(v) && /^\d{4}-\d{2}-\d{2}/.test(String(v)) ? String(v).slice(0, 10) : null);
   return {
@@ -22,7 +23,7 @@ export function extractDiditDetails(d: any) {
     idApproved: approved(id?.status),
     amlStatus,
     amlCompleted: aml.length > 0 && aml.every((a: any) => ["approved", "in review", "in_review", "review"].includes(String(a?.status ?? "").toLowerCase())),
-    amlHits: aml.flatMap((a: any) => (Array.isArray(a?.hits) ? a.hits : []).map((h: any) => ({
+    amlHits: aml.flatMap((a: any) => unresolvedAmlHits<any>(a?.hits).map((h: any) => ({
       caption: s(h?.caption), datasets: [].concat(h?.datasets ?? []).map(String), countries: [].concat(h?.properties?.country ?? []).map(String),
       birthDates: [].concat(h?.properties?.birthDate ?? []).map(String), matchScore: typeof h?.match_score === "number" ? h.match_score : null,
       pep: Boolean(h?.pep) || [].concat(h?.datasets ?? []).some((d: any) => /pep/i.test(String(d))), lists: [], summary: null,
