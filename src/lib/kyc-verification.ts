@@ -262,10 +262,11 @@ export function normalizeDiditDecision(decision: any): NormalizedVerification {
   const amlSection = pick(d, ["aml", "aml_screening"]) ?? {};
   const screenings = Array.isArray(d["aml_screenings"]) ? d["aml_screenings"] : [];
 
-  const amlHits = [
+  // Look-alikes the screening service itself ruled out never hold an investor in review.
+  const amlHits = unresolvedAmlHits<any>([
     ...(Array.isArray(amlSection?.hits) ? amlSection.hits : []),
     ...screenings.flatMap((s: any) => (Array.isArray(s?.hits) ? s.hits : [])),
-  ];
+  ]);
   const amlStatuses = [amlSection?.status, ...screenings.map((s: any) => s?.status)].filter(Boolean);
   let amlStatus: CheckStatus = amlStatuses.length
     ? amlStatuses.map(providerStatusToCheck).reduce(worst, "approved" as CheckStatus)
