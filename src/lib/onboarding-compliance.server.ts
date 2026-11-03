@@ -359,8 +359,8 @@ async function loadFacts(d: any, ob: any, userId: string) {
     d.from("persons").select("id, legal_first_name, legal_last_name, tax_residency_country, residence_country, citizenship_country, address_line1, city, region, postal_code, date_of_birth").eq("user_id", userId).maybeSingle(),
   ]);
   if (person?.id && !person.citizenship_country) {
-    const { data: k } = await d.from("kyc_verifications").select("document_issuing_country").eq("person_id", person.id).eq("status", "approved").not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(1);
-    (person as any).verified_document_country = k?.[0]?.document_issuing_country ?? null;
+    const { approvedPersonVerification } = await import("@/lib/person-identity.server");
+    (person as any).verified_document_country = (await approvedPersonVerification(person.id))?.documentCountry ?? null;
   }
   return { tax, person };
 }
