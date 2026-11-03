@@ -1,10 +1,11 @@
 # Roadmap
 
 ## Automatic Verification to Sign
-- [ ] Advance completed Verification during canonical reconciliation, not page reads or investor Continue clicks.
-- [ ] Preserve failed, expired and incomplete verification, signatures, funding and admission controls.
-- [ ] Reconcile the four currently parked investors through authorized actions and confirm stored stages.
-- [ ] Test repeat/concurrent advancement and verification blockers; publishing remains separate.
+- [x] Advance completed Verification during canonical reconciliation, not page reads or investor Continue clicks. Person identity fanout reconciles even when no facts changed; open Verification pages refresh and move to Sign.
+- [x] Preserve failed, expired and incomplete verification, signatures, funding and admission controls.
+- [x] Reconciled all four through Alyssa's authorized action: Chris advanced to signature, nextStep=sign, one audit event across repeated reconciliation. Alyssa and Steve lack accreditation; Kimberly lacks trust documents, trustee/authorized signer. No overrides.
+- [x] 44 focused checks passed; conditional current-stage update prevents repeat advancement; stored stages and event counts read back. Preview build OK.
+- [ ] Investor-screen automatic switch and durable concurrent event validation require isolated synthetic QA; live code not published.
 
 ## Manager-led routine fund work and review emails
 - [x] Add explicit exact-fund designated reviewer access without upgrading existing assistants/viewers.

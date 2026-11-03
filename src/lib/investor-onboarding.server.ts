@@ -2555,7 +2555,7 @@ export async function readinessForMany(rows: any[]) {
  * reconcileInvestmentReadiness - the one canonical, idempotent reconciliation.
  * Called after a canonical record changes (mutation completion, provider webhook,
  * or an explicitly authorized staff reconciliation) - never by rendering a page.
- * Writes only readiness history (real transitions) and work items.
+ * Writes readiness history/work items and advances completed Verification to signing.
  */
 export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { actorUserId: string | null; trigger: string }) {
   const { readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
