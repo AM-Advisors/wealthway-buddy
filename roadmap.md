@@ -1,5 +1,10 @@
 # Roadmap
 
+## Old Erebor PPM access removal (2026-11-03)
+- [ ] Remove confirmed obsolete Justin-naming PPM review drafts from ordinary Files and collection access, preserving private retained copies.
+- [ ] Block sealed versions in direct template downloads and authenticated storage reads; retain reason-logged Super Admin archive access.
+- [ ] Verify targeted safeguards, current PPM access and remaining source uncertainty.
+
 ## Team daily-work audit (2026-11-03)
 - [x] Reviewed tasks, handoffs, follow-ups, software issue retests and work-area navigation for missing actions and lost work.
 - [x] Added exact-item alert links, Follow up due, shared task visibility, open-before-history reads, live badge refresh, visible partial-result/retry states and discoverable staff issue links; collapsed new-task, filter and advanced forms. No live assignments or publishing.
