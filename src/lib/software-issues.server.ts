@@ -10,7 +10,7 @@ async function ctx(viewer: string) {
   return { ...s, canWrite };
 }
 
-export async function listIssues(viewer: string, filters: { openOnly?: boolean; issue?: string } = {}) {
+export async function listIssues(viewer: string, filters: { openOnly?: boolean | undefined; issue?: string | undefined } = {}) {
   const { db, staff, canWrite } = await ctx(viewer);
   let query = db.from("software_issues").select("*");
   if (filters.openOnly !== false) query = query.neq("stage", "resolved");

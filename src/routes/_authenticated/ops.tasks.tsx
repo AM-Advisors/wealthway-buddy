@@ -22,7 +22,7 @@ import { invalidateFundWork } from "@/components/fund-approvals";
 import { TaskHandoffPanel } from "@/components/task-handoff-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/tasks")({
-  validateSearch: (s: Record<string, unknown>) => ({ task: typeof s.task === "string" ? s.task : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({ task: typeof s["task"] === "string" ? s["task"] : undefined }),
   head: () => ({ meta: [
     { title: "Tasks | Harmonious" },
     { name: "description", content: "Assign and track tasks for each Harmonious team member." },
@@ -102,7 +102,7 @@ export function TasksPage() {
   const count = (f: (t: any) => boolean) => d?.rows.filter((t: any) => !["done", "cancelled"].includes(t.status) && f(t)).length ?? 0;
 
   return (
-    <AmPage title="Tasks">
+    <AmPage title="Tasks" intro="">
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <LoadError error={q.error} what="Tasks" onRetry={() => q.refetch()} />}
       {d && (<>

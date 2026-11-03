@@ -18,7 +18,7 @@ import { STAGE_LABEL, type IssueStage } from "@/lib/software-issue-model";
 import { getSoftwareIssues, moveSoftwareIssue, reportSoftwareIssue } from "@/lib/software-issues.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/software-issues")({
-  validateSearch: (s: Record<string, unknown>) => ({ issue: typeof s.issue === "string" ? s.issue : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({ issue: typeof s["issue"] === "string" ? s["issue"] : undefined }),
   head: () => ({ meta: [
     { title: "Software issues | Harmonious Operations" },
     { name: "description", content: "Report a platform problem, track the fix and confirm it with a retest." },
@@ -47,7 +47,7 @@ export function SoftwareIssuesPage() {
   useEffect(() => { if (selectedIssue) { setMine(false); setSearch(""); } }, [selectedIssue]);
   const issues = (d?.issues ?? []).filter((i: any) => i.id === selectedIssue || ((!mine || i.technical_owner_user_id === d?.viewer || i.retester_user_id === d?.viewer || i.reporter_user_id === d?.viewer) && (!search || `${i.title} ${i.page ?? ""} ${i.ownerName ?? ""}`.toLowerCase().includes(search.toLowerCase()))));
   return (
-    <AmPage title="Software issues">
+    <AmPage title="Software issues" intro="">
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.isError && <LoadError error={q.error} what="Software issues" onRetry={() => q.refetch()} />}
       {d && (<>
