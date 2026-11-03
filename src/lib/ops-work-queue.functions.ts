@@ -16,6 +16,8 @@ const filters = z
     clientId: z.string().uuid().optional(),
     fundId: z.string().uuid().optional(),
     area: z.enum(OPS_AREAS).optional(),
+    areas: z.array(z.enum(OPS_AREAS)).min(1).max(OPS_AREAS.length).optional(),
+    unassigned: z.boolean().optional(),
     workflowState: z.string().max(40).optional(),
     assignedTo: z.string().uuid().optional(),
     scope: z.enum(["mine", "all"]).optional(),
