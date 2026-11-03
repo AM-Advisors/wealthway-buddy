@@ -5,6 +5,7 @@
  * Tasks never grant access or gate other work.
  */
 import { viewerScope, isLeader, STAFF_ROLE_SET, TEAMS } from "@/lib/staff-directory.server";
+import { canViewTask, actionAlertTarget } from "@/lib/team-work-model";
 
 export const TASK_STATUSES = ["open", "in_progress", "blocked", "done", "cancelled"] as const;
 export const TASK_PRIORITIES = ["low", "normal", "high", "urgent"] as const;
@@ -22,13 +23,29 @@ async function names(db: any, ids: string[]) {
   return new Map<string, string>(((data ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Staff member"]));
 }
 
+function taskVisible(t: any, viewer: string, s: Awaited<ReturnType<typeof ctx>>) {
+  const teams = Object.entries(TEAMS).filter(([, team]) => team.roles.some((r) => s.roles.includes(r))).map(([key]) => key);
+  return canViewTask(t, viewer, s.visible, s.leader || s.roles.includes("leadership"), teams);
+}
+
+async function checkedTask(viewer: string, id: string, s: Awaited<ReturnType<typeof ctx>>) {
+  const { data: task, error } = await s.db.from("staff_tasks").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error("This task couldn't load.");
+  if (!task || !taskVisible(task, viewer, s)) throw new Error("Task not found or outside your work access.");
+  return task;
+}
+
 export async function listTasks(viewer: string) {
-  const { db, staff, visible, leader, roles, canWrite } = await ctx(viewer);
-  const { data, error } = await db.from("staff_tasks").select("*").order("created_at", { ascending: false }).limit(2000);
-  if (error) throw new Error(error.message);
-  const all = (data ?? []) as any[];
+  const scope = await ctx(viewer);
+  const { db, staff, leader, roles, canWrite } = scope;
+  const [open, closed] = await Promise.all([
+    db.from("staff_tasks").select("*").not("status", "in", "(done,cancelled)").order("created_at", { ascending: false }).limit(2000),
+    db.from("staff_tasks").select("*").in("status", ["done", "cancelled"]).order("created_at", { ascending: false }).limit(500),
+  ]);
+  if (open.error || closed.error) throw new Error("Tasks couldn't load.");
+  const all = [...(open.data ?? []), ...(closed.data ?? [])] as any[];
   const seeAll = leader || roles.includes("leadership");
-  const rows = all.filter((t) => seeAll || t.created_by === viewer || t.handoff_to_user_id === viewer || (t.assignee_user_id && visible.has(t.assignee_user_id)) || (!t.assignee_user_id && t.team && ((TEAMS as any)[t.team]?.roles ?? []).some((r: string) => roles.includes(r))));
+  const rows = all.filter((t) => taskVisible(t, viewer, scope));
   const nm = await names(db, [...staff.keys(), ...rows.map((r) => r.created_by), ...rows.map((r) => r.handoff_to_user_id), ...rows.map((r) => r.handoff_from_user_id)]);
   const clientIds = [...new Set(rows.map((r) => r.client_id).filter(Boolean))];
   const { data: cl } = clientIds.length ? await db.from("clients").select("id, name").in("id", clientIds) : { data: [] };
@@ -44,7 +61,7 @@ export async function listTasks(viewer: string) {
   const em = new Map<string, any>(); for (const e of (engs ?? []) as any[]) if (!em.has(e.fund_id)) em.set(e.fund_id, e);
   const im = new Map(((invs ?? []) as any[]).map((i) => [i.id, i.legal_name]));
   return {
-    viewer, canWrite, seeAll,
+    viewer, canWrite, seeAll, partial: (open.data ?? []).length >= 2000 || (closed.data ?? []).length >= 500,
     staff: [...staff.keys()].map((id) => ({ id, name: nm.get(id) ?? "Staff member" })).sort((a, b) => a.name.localeCompare(b.name)),
     rows: rows.map((t) => ({ ...t, assigneeName: t.assignee_user_id ? nm.get(t.assignee_user_id) ?? "Staff member" : null, handoffToName: t.handoff_to_user_id ? nm.get(t.handoff_to_user_id) ?? "Staff member" : null, handoffFromName: t.handoff_from_user_id ? nm.get(t.handoff_from_user_id) ?? "Staff member" : null, creatorName: t.created_by ? nm.get(t.created_by) ?? "" : "", clientName: t.client_id ? cm.get(t.client_id) ?? null : null,
       fundName: t.offering_id ? fm.get(t.offering_id) ?? null : null,
@@ -72,10 +89,10 @@ export async function createTask(viewer: string, d: { title: string; description
 }
 
 export async function updateTask(viewer: string, d: { id: string; status?: string | undefined; priority?: string | undefined; assignee?: string | null | undefined; team?: string | null | undefined; dueDate?: string | null | undefined; note?: string | null | undefined }) {
-  const { db, staff, canWrite, leader } = await ctx(viewer);
+  const scope = await ctx(viewer);
+  const { db, staff, canWrite, leader } = scope;
   if (!canWrite) throw new Error("Your role can view tasks but not change them.");
-  const { data: t } = await db.from("staff_tasks").select("*").eq("id", d.id).maybeSingle();
-  if (!t) throw new Error("Task not found.");
+  const t = await checkedTask(viewer, d.id, scope);
   if (d.status && d.status !== t.status && (d.status === "done" || d.status === "blocked")) throw new Error(d.status === "done" ? "Use Complete and add a short note about what was done." : "Use Blocked and add the next action, target date and follow-up.");
   if (d.assignee !== undefined && t.assignee_user_id && d.assignee !== t.assignee_user_id && !leader) throw new Error("Use Hand off so the receiver can accept the task.");
   const patch: any = { updated_at: new Date().toISOString() };
@@ -101,8 +118,11 @@ export async function updateTask(viewer: string, d: { id: string; status?: strin
 }
 
 export async function taskHistory(viewer: string, id: string) {
-  const { db } = await ctx(viewer);
-  const { data } = await db.from("staff_task_events").select("*").eq("task_id", id).order("created_at");
+  const scope = await ctx(viewer);
+  const { db } = scope;
+  await checkedTask(viewer, id, scope);
+  const { data, error } = await db.from("staff_task_events").select("*").eq("task_id", id).order("created_at");
+  if (error) throw new Error("Task history couldn't load.");
   const rows = (data ?? []) as any[];
   const nm = await names(db, rows.map((r) => r.actor_user_id));
   return rows.map((r) => ({ id: r.id, kind: r.kind, detail: r.detail, at: r.created_at, who: nm.get(r.actor_user_id) ?? "System" }));
@@ -116,15 +136,15 @@ export async function setResponsibility(viewer: string, d: {
   waitingOnType?: string | null | undefined; waitingOnName?: string | null | undefined; relatedInvestorId?: string | null | undefined;
   noteInternal?: string | null | undefined; noteClient?: string | null | undefined; clientVisible?: boolean | undefined; slaDueDate?: string | null | undefined;
 }) {
-  const { db, staff, canWrite } = await ctx(viewer);
+  const scope = await ctx(viewer);
+  const { db, staff, canWrite } = scope;
   if (!canWrite) throw new Error("Only Harmonious staff can change who an item is waiting on.");
   const { asResponsibility } = await import("@/lib/responsibility");
   if (asResponsibility(d.status) !== d.status) throw new Error("Unknown responsibility status.");
   if (d.reason.trim().length < 5) throw new Error("Give a short reason for the change.");
   if (d.responsibleUserId && !staff.has(d.responsibleUserId)) throw new Error("Responsible person must be Harmonious staff.");
   if (d.waitingOnType && !THIRD.includes(d.waitingOnType)) throw new Error("Unknown third-party type.");
-  const { data: t } = await db.from("staff_tasks").select("*").eq("id", d.id).maybeSingle();
-  if (!t) throw new Error("Task not found.");
+  const t = await checkedTask(viewer, d.id, scope);
   if (d.status === "COMPLETED" && !["done", "cancelled"].includes(t.status)) throw new Error("Mark the task Done to complete it.");
   if (d.status !== "COMPLETED" && ["done", "cancelled"].includes(t.status)) throw new Error("Reopen the task before changing who it is waiting on.");
   const patch: any = {
@@ -167,8 +187,10 @@ export const TASK_ACTIONS = ["request_handoff", "accept_handoff", "handoff_issue
 
 /** Handoffs, blockers, next steps and completion. Rules and history are enforced in one database transaction. */
 export async function transitionTask(viewer: string, d: { id: string; action: (typeof TASK_ACTIONS)[number]; payload?: Record<string, unknown> | undefined }) {
-  const { db, staff, canWrite } = await ctx(viewer);
+  const scope = await ctx(viewer);
+  const { db, staff, canWrite } = scope;
   if (!canWrite) throw new Error("Your role can view tasks but not change them.");
+  await checkedTask(viewer, d.id, scope);
   const payload = d.payload ?? {};
   if (d.action === "request_handoff" && !staff.has(String(payload["to"] ?? ""))) throw new Error("Tasks can only be handed to Harmonious staff.");
   if (d.action === "complete") {
@@ -193,10 +215,10 @@ export async function myActionAlerts(viewer: string) {
   if (toMe.error || backToMe.error || retest.error || fix.error) throw new Error("Your alerts couldn't load.");
   const nm = await names(db, [...(toMe.data ?? []).map((t: any) => t.handoff_from_user_id), ...(backToMe.data ?? []).map((t: any) => t.handoff_to_user_id)]);
   const alerts = [
-    ...((toMe.data ?? []) as any[]).map((t) => ({ id: `h:${t.id}`, kind: "handoff", title: t.title, detail: `${nm.get(t.handoff_from_user_id) ?? "A colleague"} handed this to you. Accept it or say what's missing.`, href: "/ops/tasks", at: t.handoff_requested_at })),
-    ...((backToMe.data ?? []) as any[]).map((t) => ({ id: `m:${t.id}`, kind: "handoff_issue", title: t.title, detail: `${nm.get(t.handoff_to_user_id) ?? "The receiver"} needs more: ${t.handoff_issue}`, href: "/ops/tasks", at: t.updated_at })),
-    ...((retest.data ?? []) as any[]).map((i) => ({ id: `r:${i.id}`, kind: "retest", title: i.title, detail: "The fix is live. Retest it and record the result.", href: "/ops/software-issues", at: i.updated_at })),
-    ...((fix.data ?? []) as any[]).map((i) => ({ id: `f:${i.id}`, kind: "fix", title: i.title, detail: i.stage === "retest_failed" ? "Retest failed. It's back with you." : i.stage === "retest_passed" ? "Retest passed. You can resolve it." : "New issue assigned to you.", href: "/ops/software-issues", at: i.updated_at })),
+    ...((toMe.data ?? []) as any[]).map((t) => ({ id: `h:${t.id}`, kind: "handoff", title: t.title, detail: `${nm.get(t.handoff_from_user_id) ?? "A colleague"} handed this to you. Accept it or say what's missing.`, ...actionAlertTarget("handoff", t.id), at: t.handoff_requested_at })),
+    ...((backToMe.data ?? []) as any[]).map((t) => ({ id: `m:${t.id}`, kind: "handoff_issue", title: t.title, detail: `${nm.get(t.handoff_to_user_id) ?? "The receiver"} needs more: ${t.handoff_issue}`, ...actionAlertTarget("handoff_issue", t.id), at: t.updated_at })),
+    ...((retest.data ?? []) as any[]).map((i) => ({ id: `r:${i.id}`, kind: "retest", title: i.title, detail: "The fix is live. Retest it and record the result.", ...actionAlertTarget("retest", i.id), at: i.updated_at })),
+    ...((fix.data ?? []) as any[]).map((i) => ({ id: `f:${i.id}`, kind: "fix", title: i.title, detail: i.stage === "retest_failed" ? "Retest failed. It's back with you." : i.stage === "retest_passed" ? "Retest passed. Resolve it to close the linked task." : "New issue assigned to you.", ...actionAlertTarget("fix", i.id), at: i.updated_at })),
   ].sort((a, b) => String(b.at ?? "").localeCompare(String(a.at ?? "")));
-  return { alerts };
+  return { alerts, partial: [toMe, backToMe, retest, fix].some((r) => (r.data ?? []).length >= 100) };
 }
