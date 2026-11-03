@@ -101,6 +101,45 @@ export async function generateSideLetterForPayment(paymentId: string) {
   return letter.id as string;
 }
 
+/**
+ * Manager-entered amount below the fund minimum: files a minimum-waiver side letter for
+ * this one investment automatically so the investor is never blocked. Idempotent: one open
+ * letter per investment; proposed for approval in the Side Letter Registry like any other.
+ */
+export async function ensureMinimumSideLetter(onboardingId: string, actorUserId: string | null) {
+  const d = await db();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, accepted_amount_cents").eq("id", onboardingId).is("removed_at", null).maybeSingle();
+  if (!ob) return null;
+  const { data: o } = await d.from("offerings").select("name, legal_entity_name, min_investment_cents").eq("id", ob.offering_id).maybeSingle();
+  const commitment = Number(ob.accepted_amount_cents ?? ob.requested_amount_cents ?? 0);
+  if (!o || !sideLetterRequired(commitment, o.min_investment_cents)) return null;
+  const { data: open } = await d.from("side_letters").select("id").eq("onboarding_id", ob.id).in("status", ["proposed", "active"]).limit(1);
+  if ((open ?? []).length) return open[0].id as string;
+  const label = await investorLabel(d, ob);
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: letter, error } = await d.from("side_letters").insert({
+    offering_id: ob.offering_id, onboarding_id: ob.id, person_id: ob.person_id, investor_label: label, status: "proposed", created_by: actorUserId,
+  }).select("id").single();
+  if (error) { console.error("[side letter auto]", error.message); return null; }
+  const bytes = await renderPdf(sideLetterText({ fundName: o.legal_entity_name || o.name, investorName: label, commitmentCents: commitment, minimumCents: Number(o.min_investment_cents), date: today }));
+  const path = `side-letters/${ob.offering_id}/${letter.id}.pdf`;
+  const up = await d.storage.from("offering-files").upload(path, new Blob([bytes as BlobPart], { type: "application/pdf" }), { contentType: "application/pdf", upsert: false });
+  if (up.error) console.error("[side letter auto pdf]", up.error.message);
+  await d.from("side_letters").update({ document_reference: up.error ? null : path }).eq("id", letter.id);
+  const usd = (c: number) => `$${(c / 100).toLocaleString("en-US")}`;
+  const snapshot = {
+    investorLabel: label, mfnEnabled: false, mfnScope: null, effectiveDate: today, expiryDate: null, renewalNote: null,
+    documentReference: up.error ? null : path,
+    terms: [{ id: "minimum", category: "other", description: `Fund minimum of ${usd(Number(o.min_investment_cents))} waived; commitment of ${usd(commitment)} accepted.`, value: null, applicability: null }],
+  };
+  const { data: req } = await d.from("side_letter_change_requests").insert({
+    side_letter_id: letter.id, offering_id: ob.offering_id, kind: "create", before_snapshot: null, after_snapshot: snapshot,
+    reason: "Fund manager entered a commitment below the fund minimum.", proposed_by: actorUserId, proposer_kind: "manager",
+  }).select("id").single();
+  await d.from("side_letter_events").insert({ offering_id: ob.offering_id, side_letter_id: letter.id, event: "proposed_create", actor_id: actorUserId, detail: { change_request_id: req?.id ?? null, automatic: "below_minimum" } });
+  return letter.id as string;
+}
+
 /** Fund manager view: investors below the minimum and the state of their side letter. */
 export async function listSideLetterNeeds(userId: string, offeringId: string) {
   const d = await db();
@@ -111,7 +150,7 @@ export async function listSideLetterNeeds(userId: string, offeringId: string) {
   if (!min) return { minimumCents: 0, feeCents: SIDE_LETTER_FEE_CENTS, investors: [] };
   const { data: obs } = await d.from("investor_onboardings").select("id, person_id, investment_profile_id, requested_amount_cents, accepted_amount_cents").eq("offering_id", offeringId).is("removed_at", null);
   const below = ((obs ?? []) as any[]).filter((r) => sideLetterRequired(Number(r.accepted_amount_cents ?? r.requested_amount_cents ?? 0), min));
-  const { data: letters } = below.length ? await d.from("side_letters").select("id, onboarding_id, status, document_reference").in("onboarding_id", below.map((r) => r.id)).not("fee_payment_id", "is", null) : { data: [] };
+  const { data: letters } = below.length ? await d.from("side_letters").select("id, onboarding_id, status, document_reference").in("onboarding_id", below.map((r) => r.id)) : { data: [] };
   const investors = [];
   for (const r of below) {
     const l = ((letters ?? []) as any[]).find((x) => x.onboarding_id === r.id && x.status !== "declined");

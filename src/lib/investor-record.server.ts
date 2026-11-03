@@ -281,6 +281,7 @@ export async function createInvestor(userId: string, input: {
 
   await logChanges(changes);
   await onbEvent(onboardingId, input.offeringId, "investor_record_created", actor, { source });
+  { const { ensureMinimumSideLetter } = await import("@/lib/side-letter-fee.server"); await ensureMinimumSideLetter(onboardingId!, actor.userId).catch((e) => console.error("[investor-record] side letter", (e as Error).message)); }
   await reconcileAfter([onboardingId], { actorUserId: actor.userId, trigger: "manual_investor_entry" });
   const connect = await import("@/lib/account-connect.server");
   if (input.taxId && profileId) await connect.recordProfileTin(profileId, input.taxId, { offeringId: input.offeringId, onboardingId }).catch((e) => console.error("[investor-record] tax ID match skipped", (e as Error).message));
@@ -434,6 +435,10 @@ export async function updateInvestorRecord(userId: string, input: {
   }
 
   await logChanges(changes);
+  if (changes.some((c) => c.field === "requested_amount_cents" || c.field === "commitment_amount_cents")) {
+    const { ensureMinimumSideLetter } = await import("@/lib/side-letter-fee.server");
+    await ensureMinimumSideLetter(row.id, actor.userId).catch((e) => console.error("[investor-record] side letter", (e as Error).message));
+  }
   if (changes.length) await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "investor_record_updated" });
   return { changed: changes.length, suggested };
 }
