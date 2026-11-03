@@ -652,6 +652,8 @@ export interface ClosingGateInput extends FundingGateInput {
   fundingReconciled: boolean;
   acceptedAt?: string | null;
   acceptedAmountCents?: number | null;
+  /** True when the amount is below the fund minimum and no approved side letter is on file. */
+  minimumSideLetterMissing?: boolean;
 }
 
 /** canCloseInvestment - the final server-side admission gate. */
@@ -666,6 +668,7 @@ export function canCloseInvestment(input: ClosingGateInput): { allowed: boolean;
   if (!input.acceptedAmountCents || input.acceptedAmountCents <= 0) {
     reasons.push("No accepted subscription amount is recorded.");
   }
+  if (input.minimumSideLetterMissing) reasons.push("The amount is below the fund minimum. The fund manager must approve a side letter before close.");
   return { allowed: reasons.length === 0, reasons };
 }
 
