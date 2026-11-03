@@ -1,4 +1,5 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
+import { currentFundMinimum } from "@/lib/fund-minimum";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 import { profileDocumentRequirements, reusableProfileAccreditation } from "./profile-document-requirements";
 import { selectProfileDocumentEvidence } from "./profile-document-evidence.server";
@@ -247,7 +248,7 @@ function requirementsFrom(offering: any, req: any, setup: any, rules: Record<str
     taxDocumentRequired: Boolean(rules['taxDocumentRequired'] ?? true),
     // Platform rule: every investor on every fund completes the investor questionnaire.
     subscriptionQuestionnaireRequired: true,
-    minInvestmentCents: Number(setup?.min_investment_cents ?? offering?.min_investment_cents ?? 0) || null,
+    minInvestmentCents: currentFundMinimum(offering?.min_investment_cents, setup?.min_investment_cents) || null,
     maxInvestmentCents: (rules['maxInvestmentCents'] as number | undefined) ?? null,
     remainingCapacityCents: null,
     permittedJurisdictions: (rules['permittedJurisdictions'] as string[] | undefined) ?? null,
@@ -582,7 +583,7 @@ export async function offeringLanding(slugOrId: string) {
     name: (setup.display_name ?? offering.name) as string,
     legalName: (offering.legal_entity_name ?? setup.legal_fund_name ?? null) as string | null,
     description: (offering.description ?? setup.investment_strategy ?? null) as string | null,
-    minInvestmentCents: Number(setup.min_investment_cents ?? offering.min_investment_cents ?? 0),
+    minInvestmentCents: currentFundMinimum(offering.min_investment_cents, setup.min_investment_cents),
     structure: setup.structure as string,
     targetClose: setup.target_close as string | null,
     onboardingUrl: setup.investor_onboarding_url as string | null,
