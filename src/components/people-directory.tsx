@@ -24,20 +24,25 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["people-directory"], queryFn: useServerFn(getPeopleDirectory), retry: false });
   const cancel = useServerFn(cancelInvitation), flag = useServerFn(setTestDemoFlag);
-  const [tab, setTab] = useState<Tab>(initial);
+  // Test & Demo section is a strict scope: every status filter shows only test records, never real accounts.
+  const testScope = initial === "test";
+  const [tab, setTab] = useState<Tab>(testScope ? "all" : initial);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
   const [attention, setAttention] = useState("all");
   const [, setBusy] = useState(false);
   const s = search.toLowerCase();
   const matchedFunds = useMemo(() => matchFundOptions(q.data?.fundOptions ?? [], s), [q.data, s]);
+  const inScope = (x: any) => (testScope ? !!x.isTestDemo : !x.isTestDemo);
+  const visibleTabs = TABS.filter((t) => t.id !== "test");
 
   const people = useMemo(() => (q.data?.people ?? []).filter((p: any) =>
-    matchesPerson({ name: p.name, email: p.email, funds: p.funds }, s, { matchAllFundsMarker: matchedFunds.length > 0 }) && (type === "all" || p.types.includes(type)) && (attention === "all" || attention === "never" && !p.lastSignIn || attention === "setup" && p.gaps?.length > 0 || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(p.latestInvite?.outcome.status)) &&
-    (tab === "test" ? p.isTestDemo : tab === "archived" ? p.status === "archived" : tab === "revoked" ? (p.status === "revoked" || p.scopedRevokes.length > 0) : tab === "all" ? p.status === "active" && !p.isTestDemo : false)), [q.data, s, type, tab, attention]);
+    inScope(p) && matchesPerson({ name: p.name, email: p.email, funds: p.funds }, s, { matchAllFundsMarker: matchedFunds.length > 0 }) && (type === "all" || p.types.includes(type)) && (attention === "all" || attention === "never" && !p.lastSignIn || attention === "setup" && p.gaps?.length > 0 || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(p.latestInvite?.outcome.status)) &&
+    (tab === "archived" ? p.status === "archived" : tab === "revoked" ? (p.status === "revoked" || p.scopedRevokes.length > 0) : tab === "all" ? p.status === "active" : false)), [q.data, s, type, tab, attention, testScope]);
   const invites = useMemo(() => (q.data?.invites ?? []).filter((i: any) =>
-    matchesInvite({ name: i.name, email: i.email, fundName: i.fundName }, s) && (type === "all" || i.type === type) && (attention === "all" || attention === "expired" && i.expiresAt && Date.parse(i.expiresAt) < Date.now() || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)) && (tab === "invited" ? !i.isTestDemo : tab === "test" ? i.isTestDemo : false)), [q.data, s, type, tab, attention]);
-  const testClients = tab === "test" ? (q.data?.clients ?? []).filter((c: any) => c.is_test_demo) : [];
+    inScope(i) && matchesInvite({ name: i.name, email: i.email, fundName: i.fundName }, s) && (type === "all" || i.type === type) && (attention === "all" || attention === "expired" && i.expiresAt && Date.parse(i.expiresAt) < Date.now() || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)) && tab === "invited"), [q.data, s, type, tab, attention, testScope]);
+  const testClients = testScope && tab === "all" ? (q.data?.clients ?? []).filter((c: any) => c.is_test_demo) : [];
+  const scopedInvites = (q.data?.invites ?? []).filter(inScope), scopedPeople = (q.data?.people ?? []).filter(inScope);
 
 
   const act = async (fn: () => Promise<any>, msg: string) => { setBusy(true); try { await fn(); toast.success(msg); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } finally { await qc.invalidateQueries(); setBusy(false); } };
