@@ -51143,7 +51143,7 @@ export type Database = {
         | "suspended"
         | "revoked"
         | "expired"
-      fund_team_role: "fund_viewer" | "fund_assistant"
+      fund_team_role: "fund_viewer" | "fund_assistant" | "fund_reviewer"
       funding_method: "wire" | "ach"
       identity_check_kind:
         | "identity"
@@ -51653,7 +51653,7 @@ export const Constants = {
         "revoked",
         "expired",
       ],
-      fund_team_role: ["fund_viewer", "fund_assistant"],
+      fund_team_role: ["fund_viewer", "fund_assistant", "fund_reviewer"],
       funding_method: ["wire", "ach"],
       identity_check_kind: [
         "identity",

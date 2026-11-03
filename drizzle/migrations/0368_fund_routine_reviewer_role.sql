@@ -1,0 +1,2 @@
+ALTER TYPE public.fund_team_role ADD VALUE IF NOT EXISTS 'fund_reviewer';
+COMMENT ON TYPE public.fund_team_role IS 'Viewer and assistant rights unchanged. fund_reviewer is explicitly designated exact-fund routine review only; never manager, signatory, money, identity, access or filing authority.';
