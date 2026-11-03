@@ -138,7 +138,7 @@ function IssueRow({ i }: { i: any }) {
             Reported by {i.reporterName}{i.page ? ` · ${i.page}` : ""}{i.occurred_at ? ` · ${new Date(i.occurred_at).toLocaleString()}` : ""}
             {i.record_ref && <> · <Link to={i.record_ref as never} className="text-primary underline">Open record</Link></>}
           </p>
-          {i.stage === "deployed" && <p className="rounded-md bg-muted px-3 py-2 text-xs">Retest in the <Link to={"/qa-sandbox" as never} className="text-primary underline">fictional QA sandbox</Link>, not on real records.</p>}
+          {i.stage === "deployed" && <p className="rounded-md bg-muted px-3 py-2 text-xs">Retest in the <Link to="/qa-sandbox" className="text-primary underline">fictional QA sandbox</Link>, not on real records.</p>}
           {i.steps_allowed.length > 0 && (
             <div className="space-y-2">
               <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={i.steps_allowed.includes("retest_failed") ? "What you checked, or what still fails" : "Note (optional)"} aria-label="Note" />
