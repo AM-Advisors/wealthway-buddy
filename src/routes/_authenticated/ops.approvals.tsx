@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { useApprovalsInbox } from "@/components/approvals-inbox-banner";
+import { LoadError } from "@/components/load-error";
+import { PartialResultsNotice } from "@/components/partial-results-notice";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -53,9 +55,10 @@ function ApprovalsInbox() {
           Waiting 3+ days ({q.data?.stalled ?? 0})
         </button>
       </div>
+      <PartialResultsNotice partial={q.data?.partial} failedAreas={q.data?.failedAreas} />
       {q.isLoading ? <p className="text-muted-foreground">Loading…</p> :
-       q.error ? <p className="text-destructive">{(q.error as Error).message}</p> :
-       shown.length === 0 ? <Card><CardContent className="py-8 text-center text-base text-muted-foreground">{items.length ? "Nothing matches that search." : "Nothing is waiting for approval."}</CardContent></Card> :
+       q.error ? <LoadError error={q.error} what="Approvals" onRetry={() => q.refetch()} /> :
+       shown.length === 0 ? <Card><CardContent className="py-8 text-center text-base text-muted-foreground">{items.length ? "Nothing matches that search." : q.data?.partial ? "No approvals found in what loaded." : "Nothing is waiting for approval."}</CardContent></Card> :
        groups.map(([name, rows]) => (
         <section key={name} className="space-y-2">
           <h2 className="text-base font-semibold">{name} <span className="font-normal text-muted-foreground">({rows.length})</span></h2>
