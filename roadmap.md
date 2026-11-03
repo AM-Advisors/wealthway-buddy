@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Erebor $100,000 minimum (2026-11-03)
-- [ ] Save $100,000 through the requesting user's authorized fund save.
-- [ ] Correct the current unsigned subscription template as a new document version; keep the already-correct PPM and signed history unchanged.
+- [ ] Save $100,000 through the requesting user's authorized fund save: blocked by required Super Admin written self-approval reason; authenticated attempt correctly refused without it.
+- [ ] Correct the current unsigned subscription template as a new document version: exact current DOCX prepared with one $500,000.00 → $100,000.00 replacement; publication awaits authorized save/approval. PPM already states $100,000; signed history unchanged.
 - [ ] Verify saved minimum and document content; report any approval or sign-in blockers.
 
 ## Old Erebor PPM access removal (2026-11-03)
