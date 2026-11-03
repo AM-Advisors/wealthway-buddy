@@ -465,10 +465,12 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
   add("bad_actor", ba?.state ?? "not_applicable", ba?.reason);
 
   const amount = Number(subscription.requestedAmountCents ?? 0);
+  // Below the fund minimum never blocks the investor; the fund manager owes a side letter before close.
+  const amountProblem = amountError(amount, { ...offering, minInvestmentCents: null });
   add(
     "investment_amount",
-    amount > 0 && !amountError(amount, offering) ? "valid" : "missing",
-    amountError(amount, offering) ?? undefined,
+    amount > 0 && !amountProblem ? "valid" : "missing",
+    amountProblem ?? undefined,
   );
 
   add(
