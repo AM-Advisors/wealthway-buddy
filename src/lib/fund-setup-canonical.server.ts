@@ -25,7 +25,7 @@ const db = () => supabaseAdmin as any;
 
 async function assertRead(userId: string, offeringId: string) {
   const actor = await setupActor(userId);
-  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, offeringId);
   return actor;
 }
 async function assertStaffFor(userId: string, offeringId: string) {
@@ -116,7 +116,8 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
   });
 
   return {
-    canEdit: actor.isStaff,
+    canEdit: true,
+    routineOnly: !actor.isStaff,
     isStaff: actor.isStaff,
     offering: {
       id: o.id,
@@ -153,8 +154,8 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       : null,
     termApplies: termApplies(o.fund_type),
     economics: {
-      canApprove: actor.isStaff || actor.offeringIds.includes(offeringId),
-      canEdit: actor.isStaff || actor.offeringIds.includes(offeringId),
+      canApprove: true,
+      canEdit: true,
       versionId: current?.id ?? null,
       status: current?.status ?? null,
       version: current?.version ?? null,
@@ -220,7 +221,8 @@ export async function saveFundSetupFields(
   userId: string,
   input: { offeringId: string; fields: Record<string, unknown>; setupFields?: { fiscalYearEnd?: string | null | undefined; fundTermMonths?: number | null | undefined; investmentPeriodMonths?: number | null | undefined } | undefined },
 ) {
-  await assertStaffFor(userId, input.offeringId);
+  const actor = await assertRead(userId, input.offeringId);
+  if (!actor.isStaff) (await import("./fund-routine-access.server")).assertRoutineFields(input.fields);
   const update: any = {};
   for (const [k, v] of Object.entries(input.fields)) {
     const col = OFFERING_FIELDS[k];

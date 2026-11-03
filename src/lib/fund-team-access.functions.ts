@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { grantRefusal, isGrantLive, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
+import { grantRefusal, isGrantLive, isFundTeamRole, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
 
 /**
  * Fund Team Access server functions. Every call re-checks, on the server, that
@@ -218,7 +218,11 @@ export const changeFundTeamAccess = createServerFn({ method: "POST" })
       await logEvent(db, { grant_id: g.id, offering_id: g.offering_id, event: "revoked", actor_user_id: context.userId, before_role: g.role, reason: data.reason });
     } else {
       if (!manager && !staff) throw new Error("Only a Fund Manager of this Fund can change roles.");
-      if (data.role !== "fund_viewer" && data.role !== "fund_assistant") throw new Error("Only Viewer or Assistant access can be granted.");
+      if (!isFundTeamRole(data.role)) throw new Error("Choose Viewer, Assistant or Routine reviewer.");
+      if (data.role === "fund_reviewer" && g.scope !== "fund") throw new Error("Designate routine reviewers for one fund at a time.");
+      if (g.grantee_user_id === context.userId || String(g.grantee_email).toLowerCase() === String((context.claims as any)?.email ?? "").toLowerCase()) throw new Error("You cannot grant yourself access.");
+      const { data: investor } = g.grantee_user_id ? await db.from("investor_onboardings").select("id").eq("investor_user_id", g.grantee_user_id).eq("offering_id", g.offering_id).is("removed_at", null).limit(1) : { data: [] };
+      if (investor?.length) throw new Error("Investors in this fund cannot receive team authority.");
       // A role change re-grants under the current manager.
       await db.from("fund_team_grants").update({ role: data.role, granted_by: context.userId, status: "active", updated_at: new Date().toISOString() }).eq("id", g.id);
       await logEvent(db, { grant_id: g.id, offering_id: g.offering_id, event: "role_changed", actor_user_id: context.userId, before_role: g.role, after_role: data.role, reason: data.reason });

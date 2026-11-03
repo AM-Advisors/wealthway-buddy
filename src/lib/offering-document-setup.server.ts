@@ -32,7 +32,7 @@ const now = () => new Date().toISOString();
 
 async function assertRead(userId: string, offeringId: string) {
   const a = await setupActor(userId);
-  if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  if (!a.isStaff && !a.offeringIds.includes(offeringId)) await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, offeringId);
   return a;
 }
 async function assertStaff(userId: string, offeringId: string) {
@@ -60,7 +60,9 @@ export async function approvedTemplateVersions(offeringId: string): Promise<Set<
 }
 async function assertTemplateEditor(userId: string, d: any, version?: number) {
   void version; // self-serve: any version of the manager's own fund
-  return assertRead(userId, d.offering_id);
+  const actor = await setupActor(userId);
+  if (!actor.isStaff && !actor.offeringIds.includes(d.offering_id)) forbid("the fund manager must configure signing or release investor versions.");
+  return actor;
 }
 async function event(offeringId: string, documentId: string | null, version: number | null, ev: string, actor: string, detail: Record<string, unknown> = {}) {
   await db().from("offering_document_events").insert({ offering_id: offeringId, offering_document_id: documentId, version, event: ev, actor_user_id: actor, detail });

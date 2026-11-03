@@ -41,6 +41,7 @@ async function actorKind(db: any, userId: string, fundId: string): Promise<Actor
   ]);
   if (((roles ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role))) return "staff";
   if (mgr) return "manager";
+  if (await (await import("./fund-routine-access.server")).routineReviewer(db, userId, fundId)) return "reviewer";
   if (grant && (!grant.expires_at || new Date(grant.expires_at) > new Date())) {
     const { data: granter } = await db
       .from("fund_managers")

@@ -22,8 +22,8 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
   .validator(z.object({ offeringId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
-    const access = await t.assertFund(context.userId, data.offeringId);
     const db = await t.db();
+    const access = await (await import("./fund-routine-access.server")).assertRoutineFund(db, context.userId, data.offeringId);
     const { questionAuthorAccess, questionDocumentOptions } = await import("./fund-question-ai.server");
     const author = await questionAuthorAccess(context.supabase, context.userId, data.offeringId).catch(() => null);
     const documents = author ? await questionDocumentOptions(db, data.offeringId) : [];
@@ -34,7 +34,7 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
     const baseQs = ((base ?? []) as any[])[0]?.questions ?? (await import("@/lib/standard-investor-questionnaire.json")).default;
     const { newSectionQuestions } = await import("@/lib/fund-questionnaire-section");
     return {
-      staff: !!(access as any).staff,
+      staff: true,
       canDraft: !!author,
       documents,
       aiBlocked: aiState && !aiState.reset_at ? aiState.blocked_message as string : null,
@@ -82,10 +82,10 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
   .validator(z.object({ sectionId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
-    if (!(await t.isStaff(context.userId))) throw new Error("Only Harmonious staff can approve fund questions.");
     const db = await t.db();
     const { data: row } = await db.from("fund_questionnaire_sections").select("*").eq("id", data.sectionId).maybeSingle();
     if (!row || row.status !== "draft") throw new Error("That draft wasn't found.");
+    await (await import("./fund-routine-access.server")).assertRoutineFund(db, context.userId, row.offering_id);
     const { validateSectionQuestions } = await import("./fund-questionnaire-section");
     const invalid = validateSectionQuestions(row.questions);
     if (invalid) throw new Error(invalid);
