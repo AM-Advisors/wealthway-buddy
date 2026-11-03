@@ -50,12 +50,12 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <header>
-        <h1 className="text-3xl">{tab === "test" ? "Test & Demo users" : "All users"}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Everyone with an account or an open invitation. Revoke, archive or restore access; mark test and demo records so they're left out of totals.</p>
+        <h1 className="text-3xl">{testScope ? "Test & Demo users" : "All users"}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{testScope ? "Only test and demo records appear here. Real accounts are never shown in this section." : "Everyone with an account or an open invitation. Revoke, archive or restore access; mark test and demo records so they're left out of totals."}</p>
       </header>
-      {q.data && <div className="flex flex-wrap gap-3 border-y py-3 text-sm"><span>Pending invites: {q.data.invites.filter((i: any) => !i.isTestDemo).length}</span><span>Expired: {q.data.invites.filter((i: any) => !i.isTestDemo && i.expiresAt && Date.parse(i.expiresAt) < Date.now()).length}</span><span>Never signed in: {q.data.people.filter((p: any) => !p.isTestDemo && !p.lastSignIn).length}</span><span>Incomplete setup: {q.data.people.filter((p: any) => !p.isTestDemo && p.gaps.length).length}</span><span>Email failures: {q.data.invites.filter((i: any) => !i.isTestDemo && ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)).length}</span></div>}
+      {q.data && <div className="flex flex-wrap gap-3 border-y py-3 text-sm"><span>Pending invites: {scopedInvites.length}</span><span>Expired: {scopedInvites.filter((i: any) => i.expiresAt && Date.parse(i.expiresAt) < Date.now()).length}</span><span>Never signed in: {scopedPeople.filter((p: any) => !p.lastSignIn).length}</span><span>Incomplete setup: {scopedPeople.filter((p: any) => p.gaps.length).length}</span><span>Email failures: {scopedInvites.filter((i: any) => ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)).length}</span></div>}
       <div className="flex flex-wrap gap-1">
-        {TABS.map((t) => <Button key={t.id} size="sm" variant={tab === t.id ? "default" : "outline"} onClick={() => setTab(t.id)}>{t.label}</Button>)}
+        {visibleTabs.map((t) => <Button key={t.id} size="sm" variant={tab === t.id ? "default" : "outline"} onClick={() => setTab(t.id)}>{t.label}</Button>)}
       </div>
       <div className="flex flex-wrap gap-2">
         <Input placeholder="Search name, email or fund" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
