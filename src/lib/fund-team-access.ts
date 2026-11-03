@@ -4,7 +4,7 @@
  * Sensitive data (bank/wire, tax IDs, KYC evidence) and authority actions
  * (sign, approve, launch, fund, move money, grant access) are never included.
  */
-export const FUND_TEAM_ROLES = ["fund_viewer", "fund_assistant"] as const;
+export const FUND_TEAM_ROLES = ["fund_viewer", "fund_assistant", "fund_reviewer"] as const;
 export type FundTeamRole = (typeof FUND_TEAM_ROLES)[number];
 
 /** Grant breadth. Scope grants resolve against current funds at read time, so new funds are auto-included. */
@@ -20,6 +20,7 @@ export function fundTeamScopeLabel(s: FundTeamScope): string {
 }
 
 export const FUND_TEAM_PERMISSIONS = {
+  fund_reviewer: ["fund.overview.view", "fund.roster.view", "fund.documents.view_approved", "fund.routine.prepare", "fund.routine.approve"],
   fund_viewer: ["fund.overview.view", "fund.roster.view", "fund.documents.view_approved"],
   fund_assistant: [
     "fund.overview.view",
@@ -46,7 +47,7 @@ export function isFundTeamRole(v: unknown): v is FundTeamRole {
 }
 
 export function fundTeamRoleLabel(r: FundTeamRole): string {
-  return r === "fund_assistant" ? "Assistant" : "Viewer";
+  return r === "fund_reviewer" ? "Routine reviewer" : r === "fund_assistant" ? "Assistant" : "Viewer";
 }
 
 export function permissionsFor(role: FundTeamRole): readonly string[] {
@@ -84,7 +85,8 @@ export function grantRefusal(i: GrantCheckInput): string | null {
   if (!i.granterIsFundManager && !i.granterIsStaff) return "Only a Fund Manager of this Fund can grant access.";
   const sr = scopeRefusal(i.scope, i.granterIsFundManager, !!i.granterIsStaff);
   if (sr) return sr;
-  if (!isFundTeamRole(i.role)) return "Only Viewer or Assistant access can be granted.";
+  if (!isFundTeamRole(i.role)) return "Only Viewer or Assistant or Routine reviewer access can be granted.";
+  if (i.role === "fund_reviewer" && (i.scope ?? "fund") !== "fund") return "Routine reviewer access must be designated for this fund only.";
   const email = i.granteeEmail.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return "Enter a valid email address.";
   if (
