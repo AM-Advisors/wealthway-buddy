@@ -230,7 +230,7 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
     ]);
     const nameBy = new Map(((offerings ?? []) as any[]).map((o) => [o.id, o.name]));
     const canonApps = await canonicalizeApplications(db, (apps ?? []) as any[], data.investorUserId);
-    const items: any[] = canonApps.map((a: any) => {
+    const items = canonApps.map((a: any) => {
       const k = ((kyc ?? []) as any[]).find((r) => r.application_id === a.id);
       const r = (k?.result ?? {}) as Record<string, any>;
       const files = ((docs ?? []) as any[]).filter((d) => d.application_id === a.id);
@@ -249,8 +249,7 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
         files: files.map((f) => ({ id: f.id, side: f.side, status: f.status, fileName: f.file_name, uploadedAt: f.confirmed_at, supersededAt: f.superseded_at })),
       };
     });
-    if (loginItem) items.unshift(loginItem);
-    return { items };
+    return { items: loginItem ? [loginItem, ...items] : items };
   });
 
 export const getGovernmentIdReviewUrl = createServerFn({ method: "POST" })
