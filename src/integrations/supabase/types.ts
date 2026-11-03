@@ -46374,16 +46374,24 @@ export type Database = {
           client_id: string | null
           client_visibility: boolean
           completed_at: string | null
+          completion_note: string | null
+          completion_ref: string | null
           created_at: string
           created_by: string | null
           description: string | null
           due_date: string | null
           escalated_at: string | null
           follow_up_date: string | null
+          handoff_accepted_at: string | null
+          handoff_from_user_id: string | null
+          handoff_issue: string | null
+          handoff_requested_at: string | null
+          handoff_to_user_id: string | null
           id: string
           information_request_type: string | null
           information_required: boolean
           last_reminder_at: string | null
+          next_action: string | null
           offering_id: string | null
           prepared_by: string | null
           priority: string
@@ -46429,16 +46437,24 @@ export type Database = {
           client_id?: string | null
           client_visibility?: boolean
           completed_at?: string | null
+          completion_note?: string | null
+          completion_ref?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           escalated_at?: string | null
           follow_up_date?: string | null
+          handoff_accepted_at?: string | null
+          handoff_from_user_id?: string | null
+          handoff_issue?: string | null
+          handoff_requested_at?: string | null
+          handoff_to_user_id?: string | null
           id?: string
           information_request_type?: string | null
           information_required?: boolean
           last_reminder_at?: string | null
+          next_action?: string | null
           offering_id?: string | null
           prepared_by?: string | null
           priority?: string
@@ -46484,16 +46500,24 @@ export type Database = {
           client_id?: string | null
           client_visibility?: boolean
           completed_at?: string | null
+          completion_note?: string | null
+          completion_ref?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           escalated_at?: string | null
           follow_up_date?: string | null
+          handoff_accepted_at?: string | null
+          handoff_from_user_id?: string | null
+          handoff_issue?: string | null
+          handoff_requested_at?: string | null
+          handoff_to_user_id?: string | null
           id?: string
           information_request_type?: string | null
           information_required?: boolean
           last_reminder_at?: string | null
+          next_action?: string | null
           offering_id?: string | null
           prepared_by?: string | null
           priority?: string
@@ -50779,6 +50803,15 @@ export type Database = {
         Returns: Json
       }
       sod_override_active: { Args: { _ids: string[] }; Returns: boolean }
+      staff_task_transition: {
+        Args: {
+          _action: string
+          _actor: string
+          _payload?: Json
+          _task: string
+        }
+        Returns: Json
+      }
       store_offering_rp_identifier: {
         Args: {
           _actor: string
