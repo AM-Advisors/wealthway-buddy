@@ -2,9 +2,10 @@
 
 ## Erebor $100,000 minimum (2026-11-03)
 - [x] Save $100,000 through Alyssa's authorized fund save with her supplied reason, Fund Manager request; offering read-back confirms 10,000,000 cents.
-- [ ] Correct the current unsigned subscription template as a new document version: exact current DOCX prepared with one $500,000.00 → $100,000.00 replacement; publication awaits authorized save/approval. PPM already states $100,000; signed history unchanged.
-- [ ] Verify saved minimum and document content; report any approval or sign-in blockers.
-- [ ] Check Chris's exact investment continuation and current unsigned documents without changing signed history.
+- [x] Correct unsigned subscription as approved, signing-confirmed version 4, activated new_only through Alyssa's account; resign=0. Stored DOCX download verifies $100,000.00 and no $500,000.00. PPM already agrees; signed OA and investor history unchanged.
+- [x] Verify saved minimum and document content. Onboarding/public minimum readers now prefer offerings over legacy setup; 67 focused tests pass, preview build OK.
+- [x] Chris's exact investment authorized read-back: $250,000 amount valid, identity/screening/eligibility valid, Verification complete, nextStep=sign. Remaining tax answers, subscription answers and signatures belong in Sign, not a verification block.
+- [ ] Chris's own signed-in Continue → Sign click remains unverified: real-investor impersonation is not QA; no independently isolated synthetic end-to-end session supplied. New code not published in this turn; live fund/document data updates are saved.
 
 ## Old Erebor PPM access removal (2026-11-03)
 - [x] Removed four confirmed Justin-naming PPM review draft files from ordinary Files and the review collection, retaining private copies.
