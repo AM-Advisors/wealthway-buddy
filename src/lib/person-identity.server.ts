@@ -27,6 +27,16 @@ export async function resolvePersonIdentity(userId: string | null, personId: str
  */
 export async function fanOutPersonIdentity(personId: string | null, sessionId: string | null, actorUserId: string | null) {
   if (!personId || !sessionId) return { applied: 0 };
+  // Carry a clean screening result from the passed login check to the person record.
+  try {
+    const { data: chk } = await db().from("account_identity_checks").select("status, decision_summary").eq("session_id", sessionId).maybeSingle();
+    const aml = (chk as any)?.decision_summary?.aml;
+    const clean = (chk as any)?.status === "approved" && Number(aml?.hits ?? 0) === 0 && /approved|clear|passed/i.test(String(aml?.status ?? ""));
+    if (clean) {
+      await db().from("persons").update({ aml_status: "approved", aml_screened_at: new Date().toISOString() })
+        .eq("id", personId).in("aml_status", ["not_started", "pending"]);
+    }
+  } catch (e) { console.error("[person-identity] screening carry-over", (e as Error).message); }
   const { data: obs } = await db().from("investor_onboardings")
     .select("id, application_id, questionnaire_didit_session_id, stage")
     .eq("person_id", personId).in("stage", ["profile_selected", "verification"]);
