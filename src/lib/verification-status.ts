@@ -112,7 +112,36 @@ export async function loadPersonStatuses(supabase: any, userIds: string[]) {
     .from("persons")
     .select("user_id, kyc_status, aml_status, merged_into_person_id")
     .in("user_id", userIds);
-  return personStatusByUser(data ?? []);
+  const map = personStatusByUser(data ?? []);
+  return applyLoginChecks(map, await loadLoginChecks(userIds));
+}
+
+/** Latest login identity check status per account. Server-only read of status alone, for accounts the caller already reached. */
+async function loadLoginChecks(userIds: string[]): Promise<{ user_id: string; status: string | null }[]> {
+  if (typeof window !== "undefined" || !userIds.length) return [];
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await (supabaseAdmin as any).from("account_identity_checks")
+      .select("user_id, status, created_at").in("user_id", userIds).order("created_at", { ascending: false });
+    return (data ?? []) as any[];
+  } catch { return []; }
+}
+
+/** The person's login check is their one identity check: its real result wins for ID. Screening stays on the person record. */
+export function applyLoginChecks(
+  map: Map<string, { kyc: string | null; aml: string | null }>,
+  checks: { user_id: string; status: string | null }[],
+) {
+  const seen = new Set<string>();
+  for (const c of checks) {
+    if (!c.user_id || seen.has(c.user_id)) continue; // newest first
+    seen.add(c.user_id);
+    const s = String(c.status ?? "").toLowerCase();
+    if (canonicalVerificationStatus(s) === "pending" && !verificationDetail(s)) continue;
+    const prev = map.get(c.user_id);
+    map.set(c.user_id, { kyc: s, aml: prev?.aml ?? null });
+  }
+  return map;
 }
 
 /**
