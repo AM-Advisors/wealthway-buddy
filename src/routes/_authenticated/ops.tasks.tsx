@@ -147,7 +147,7 @@ function NewTask({ staff }: { staff: { id: string; name: string }[] }) {
   );
 }
 
-function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: string; name: string }[]; canWrite: boolean; open: boolean; onToggle: () => void }) {
+function TaskRow({ t, staff, viewer, seeAll, canWrite, open, onToggle }: { t: any; staff: { id: string; name: string }[]; viewer: string; seeAll: boolean; canWrite: boolean; open: boolean; onToggle: () => void }) {
   const update = useServerFn(updateTask);
   const hist = useServerFn(getTaskHistory);
   const qc = useQueryClient();
@@ -170,7 +170,7 @@ function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: 
           <div className="flex flex-wrap items-center gap-2"><span className="truncate font-medium text-foreground">{t.title}</span><ResponsibilityBadge status={t.responsibility_status} /></div>
           {waiting && <div className="text-xs text-foreground">{RESPONSIBILITY_LABEL[asResponsibility(t.responsibility_status)]}: {waiting}</div>}
           <div className="text-xs text-muted-foreground">
-            {t.assigneeName ?? "Unassigned"}{t.team ? ` · ${TEAMS[t.team] ?? t.team}` : ""}{t.fundName ? ` · ${t.fundName}` : t.clientName ? ` · ${t.clientName}` : ""}{t.source === "hubspot" ? " · from HubSpot" : ""}
+            {t.assigneeName ?? "Unassigned"}{t.handoff_to_user_id ? ` → awaiting ${t.handoffToName}` : ""}{t.next_action ? ` · next: ${t.next_action}` : ""}{t.team ? ` · ${TEAMS[t.team] ?? t.team}` : ""}{t.fundName ? ` · ${t.fundName}` : t.clientName ? ` · ${t.clientName}` : ""}{t.source === "hubspot" ? " · from HubSpot" : ""}
             {t.due_date ? ` · due ${new Date(t.due_date + "T00:00:00").toLocaleDateString()}` : ""}
           </div>
         </button>
