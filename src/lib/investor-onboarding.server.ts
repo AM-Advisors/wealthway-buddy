@@ -153,7 +153,7 @@ async function recordEvent(input: {
   subjectTable?: string | null;
   subjectId?: string | null;
   detail?: Record<string, unknown>;
-  actorUserId: string;
+  actorUserId: string | null;
   actorRole?: string;
 }) {
   const SLACK_EVENTS: Record<string, string> = { questionnaire_submitted: "Investor submitted the questionnaire", signature_completed: "Investor signed subscription documents", investor_reports_funds_sent: "Investor reported a wire sent", amount_requested: "Investor submitted an investment amount", verification_completed: "Investor identity check finished" };
@@ -2568,7 +2568,7 @@ export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { 
     if (error) throw new Error("Verified investment could not advance to signing.");
     if (advanced) {
       row.stage = "signature";
-      await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_auto_advanced", actorUserId: ctx.actorUserId, actorRole: "system", detail: { from: "verification", to: "signature", trigger: ctx.trigger } });
+      await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_auto_advanced", fromStatus: "verification", toStatus: "signature", actorUserId: ctx.actorUserId, actorRole: "system", detail: { trigger: ctx.trigger } });
     }
   }
   await saveReadinessSummary(row, result);

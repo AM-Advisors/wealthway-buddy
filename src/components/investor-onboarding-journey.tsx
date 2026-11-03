@@ -89,6 +89,7 @@ export function InvestorOnboardingJourney({
   const detail = useQuery({
     queryKey: ["onboarding", onboardingId],
     queryFn: () => detailFn({ data: { onboardingId } }),
+    refetchInterval: (query) => query.state.data?.stage === "verification" ? 15000 : false,
   });
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["onboarding", onboardingId] });
@@ -103,6 +104,9 @@ export function InvestorOnboardingJourney({
     const fresh = !requestedStep && d.stage !== undefined && !d.investmentProfileId;
     setActive(fresh ? "review" : openableStep(steps, requestedStep));
   }, [d, active, steps, requestedStep]);
+  useEffect(() => {
+    if (active === "verify" && d?.stage === "signature" && steps.find(s => s.key === "verify")?.state === "complete" && steps.find(s => s.key === "sign")?.state !== "locked") setActive("sign");
+  }, [active, d?.stage, steps]);
 
   if (detail.isLoading) return <p className="text-sm text-muted-foreground">Loading your investment…</p>;
   if (!d) return <p className="text-sm text-muted-foreground">This investment is not available.</p>;
