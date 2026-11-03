@@ -625,7 +625,13 @@ export async function investorRecord(context: any, data: { id: string }) {
       .eq("user_id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!person) throw new Error(NOT_FOUND);
+    let person2: any = person;
+    if (!person2) {
+      // Manager-entered or newly claimed investors may only have a canonical person row.
+      const { data: p } = await s.from("persons").select("user_id, legal_first_name, legal_last_name, email, country, created_at").eq("user_id", data.id).maybeSingle();
+      if (!p) throw new Error(NOT_FOUND);
+      person2 = { user_id: p.user_id, legal_name: [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") || null, email: p.email, investor_type: null, country: p.country, created_at: p.created_at };
+    }
 
     const [profiles, positions, onboardings] = await Promise.all([
       s.from("investment_profiles").select("id").eq("owner_user_id", data.id),
@@ -636,12 +642,12 @@ export async function investorRecord(context: any, data: { id: string }) {
     return {
       capabilities,
       record: {
-        id: person.user_id,
-        title: person.legal_name || person.email || "Unnamed person",
-        subtitle: person.email,
-        investorType: person.investor_type,
-        country: person.country,
-        since: person.created_at,
+        id: person2.user_id,
+        title: person2.legal_name || person2.email || "Unnamed person",
+        subtitle: person2.email,
+        investorType: person2.investor_type,
+        country: person2.country,
+        since: person2.created_at,
         profileCount: rows(profiles).length,
         investmentCount: rows(positions).length,
         acceptedCents: sum(onboardingRows, "accepted_amount_cents"),
@@ -655,7 +661,10 @@ export async function investorTab(context: any, data: { id: string; tab: string 
     await gateTab(context, "investor", data.tab);
     const s = context.supabase;
     const { data: person } = await s.from("profiles").select("user_id").eq("user_id", data.id).maybeSingle();
-    if (!person) throw new Error(NOT_FOUND);
+    if (!person) {
+      const { data: p } = await s.from("persons").select("user_id").eq("user_id", data.id).maybeSingle();
+      if (!p) throw new Error(NOT_FOUND);
+    }
 
     const profileRows = rows(
       await s
