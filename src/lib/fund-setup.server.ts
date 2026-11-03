@@ -476,9 +476,7 @@ export async function saveSetupDocument(
     notes?: string | null | undefined;
   },
 ) {
-  const routineSetup = await setupRow(input.setupId);
-  const access = await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, routineSetup.offering_id);
-  const actor = { isStaff: access.staff };
+  const { actor } = await assertSetupAccess(userId, input.setupId);
   const { data: versions } = await db()
     .from("fund_setup_documents")
     .select("*")
@@ -655,7 +653,9 @@ export async function saveEconomics(
     versionId?: string | undefined;
   },
 ) {
-  const { actor } = await assertSetupAccess(userId, input.setupId);
+  const routineSetup = await setupRow(input.setupId);
+  const access = await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, routineSetup.offering_id);
+  const actor = { isStaff: access.staff };
   const { data: rows } = await db()
     .from("fund_economics_versions")
     .select("*")

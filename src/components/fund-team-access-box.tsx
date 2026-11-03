@@ -76,7 +76,7 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
       <div>
         <h2 className="font-heading text-lg text-foreground">Team access</h2>
         <p className="text-sm text-muted-foreground">
-          Give someone view-only or assistant access to this Fund. Neither role can see bank, tax ID or identity details, sign, approve, or move money. Assistants prepare drafts for you to send.
+          Viewers read. Assistants prepare messages. Designated routine reviewers manage fund details and routine approvals for this fund only. Banking, identity, access and signatures stay protected.
         </p>
       </div>
 
@@ -87,11 +87,12 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
             <select
               className="h-9 rounded-md border border-input bg-background px-2 text-sm"
               value={role}
-              onChange={(e) => setRole(e.target.value as FundTeamRole)}
+              onChange={(e) => { setRole(e.target.value as FundTeamRole); setTarget({ kind: "this" }); }}
               aria-label="Role"
             >
               <option value="fund_viewer">Viewer</option>
               <option value="fund_assistant">Assistant</option>
+              <option value="fund_reviewer">Routine reviewer</option>
             </select>
             <Input type="date" value={expires} onChange={(e) => setExpires(e.target.value)} aria-label="Ends on (optional)" />
             <Button onClick={add} disabled={busy || !email || (target.kind === "pick" && target.ids.length === 0)}>Add person</Button>
@@ -101,12 +102,12 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
             <label className="flex items-center gap-1">
               <input type="radio" checked={target.kind === "this"} onChange={() => setTarget({ kind: "this" })} /> This fund
             </label>
-            {otherFunds.length > 0 && (
+            {role !== "fund_reviewer" && otherFunds.length > 0 && (
               <label className="flex items-center gap-1">
                 <input type="radio" checked={target.kind === "pick"} onChange={() => setTarget({ kind: "pick", ids: [] })} /> Choose funds
               </label>
             )}
-            {(isStaff || otherFunds.length > 0) && (
+            {role !== "fund_reviewer" && (isStaff || otherFunds.length > 0) && (
               <label className="flex items-center gap-1">
                 <input type="radio" checked={target.kind === "all"} onChange={() => setTarget({ kind: "all" })} /> {isStaff ? "All funds" : "All my funds"}
               </label>
@@ -161,6 +162,7 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
                     Make {g.role === "fund_viewer" ? "Assistant" : "Viewer"}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => act(g.id, "revoke")}>Remove</Button>
+                  {g.role !== "fund_reviewer" && g.scope === "fund" && <Button size="sm" variant="outline" onClick={() => act(g.id, "change_role", "fund_reviewer")}>Designate reviewer</Button>}
                 </div>
               )}
             </li>
