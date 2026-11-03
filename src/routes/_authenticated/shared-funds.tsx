@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { FundRoutineWorkspace } from "@/components/fund-routine-workspace";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -8,10 +10,11 @@ import { fundTeamRoleLabel } from "@/lib/fund-team-access";
 import { AssistantDrafts } from "@/components/fund-team-drafts";
 
 export const Route = createFileRoute("/_authenticated/shared-funds")({
+  validateSearch: (search: Record<string, unknown>) => ({ fund: typeof search.fund === "string" ? search.fund : undefined, review: typeof search.review === "string" && ["terms", "questions", "document", "side_letter"].includes(search.review) ? search.review : undefined, item: typeof search.item === "string" ? search.item : undefined }),
   head: () => ({
     meta: [
       { title: "Shared funds | Harmonious" },
-      { name: "description", content: "Funds a Fund Manager has shared with you as a Viewer or Assistant." },
+      { name: "description", content: "Harmonious funds shared with viewers, assistants and designated routine reviewers." },
       { property: "og:title", content: "Shared funds | Harmonious" },
       { property: "og:description", content: "Funds shared with you by their Fund Manager." },
       { property: "og:type", content: "website" },
@@ -22,14 +25,15 @@ export const Route = createFileRoute("/_authenticated/shared-funds")({
 });
 
 function Page() {
+  const search = Route.useSearch();
   const listFn = useServerFn(listMySharedFunds);
   const getFn = useServerFn(getSharedFund);
   const list = useQuery({ queryKey: ["my-shared-funds"], queryFn: () => listFn() });
   const [sel, setSel] = useState<string | null>(null);
-  const fundId = sel ?? list.data?.funds[0]?.fundId ?? null;
+  const fundId = sel ?? (list.data?.funds.some(f => f.fundId === search.fund) ? search.fund : null) ?? list.data?.funds[0]?.fundId ?? null;
   const fund = useQuery({
     queryKey: ["shared-fund", fundId],
-    queryFn: () => getFn({ data: { fundId: fundId! } }),
+    queryFn: () => { if (!fundId) throw new Error("Choose a fund."); return getFn({ data: { fundId } }); },
     enabled: !!fundId,
   });
 
@@ -43,14 +47,14 @@ function Page() {
       ) : (
         <>
           <div className="flex flex-wrap gap-2">
-            {list.data!.funds.map((f) => (
-              <button
+            {list.data?.funds.map((f) => (
+              <Button
                 key={f.fundId}
                 onClick={() => setSel(f.fundId)}
                 className={`rounded-md border px-3 py-1.5 text-sm ${f.fundId === fundId ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground"}`}
               >
                 {f.name} · {fundTeamRoleLabel(f.role)}
-              </button>
+              </Button>
             ))}
           </div>
           {fund.data && (
@@ -82,6 +86,8 @@ function Page() {
             </section>
           )}
           {fund.data?.role === "fund_assistant" && fundId && <AssistantDrafts fundId={fundId} />}
+          {fund.data?.role === "fund_reviewer" && fundId && <FundRoutineWorkspace key={`${fundId}:${search.review}`} fundId={fundId} initialView={search.review} />}
+          {search.fund && !list.data?.funds.some(f => f.fundId === search.fund) && <Button asChild><Link to="/manager/fund/$fundId" params={{ fundId: search.fund }}>Open fund</Link></Button>}
           {fund.isError && <p className="text-sm text-destructive">You no longer have access to this fund.</p>}
         </>
       )}
