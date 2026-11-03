@@ -43978,6 +43978,68 @@ export type Database = {
         }
         Relationships: []
       }
+      sealed_record_openings: {
+        Row: {
+          id: string
+          opened_at: string
+          opened_by: string
+          reason: string
+          sealed_record_id: string
+        }
+        Insert: {
+          id?: string
+          opened_at?: string
+          opened_by: string
+          reason: string
+          sealed_record_id: string
+        }
+        Update: {
+          id?: string
+          opened_at?: string
+          opened_by?: string
+          reason?: string
+          sealed_record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sealed_record_openings_sealed_record_id_fkey"
+            columns: ["sealed_record_id"]
+            isOneToOne: false
+            referencedRelation: "sealed_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sealed_records: {
+        Row: {
+          id: string
+          label: string
+          reason: string
+          record_id: string
+          record_table: string
+          sealed_at: string
+          sealed_by: string | null
+        }
+        Insert: {
+          id?: string
+          label: string
+          reason: string
+          record_id: string
+          record_table: string
+          sealed_at?: string
+          sealed_by?: string | null
+        }
+        Update: {
+          id?: string
+          label?: string
+          reason?: string
+          record_id?: string
+          record_table?: string
+          sealed_at?: string
+          sealed_by?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           accuracy_m: number | null
@@ -50400,6 +50462,10 @@ export type Database = {
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
+      is_sealed_record: {
+        Args: { _id: string; _table: string }
+        Returns: boolean
+      }
       list_admin_review: {
         Args: never
         Returns: {

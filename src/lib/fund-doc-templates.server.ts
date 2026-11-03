@@ -36,22 +36,26 @@ export async function listTemplates(userId: string) {
     if (!actor.offeringIds.length) forbid("you do not manage a fund.");
     const [{ data: t }, { data: v }] = await Promise.all([
       db().from("document_templates").select("id, title, category, description, fund_types").is("archived_at", null).order("created_at", { ascending: false }),
-      db().from("document_template_versions").select("template_id, version, status").eq("status", "approved").order("version", { ascending: false }),
+      db().from("document_template_versions").select("id, template_id, version, status").eq("status", "approved").order("version", { ascending: false }),
     ]);
+    const sealedT = await (await import("./sealed-records.server")).sealedIds(db(), "document_template_versions");
+    const vOpen = ((v ?? []) as any[]).filter((x) => !sealedT.has(x.id));
     return {
       funds: [],
       templates: ((t ?? []) as any[]).map((tp) => ({
         id: tp.id as string, title: tp.title as string, category: (DOCUMENT_CATEGORY_LABELS as any)[tp.category] ?? tp.category, categoryKey: tp.category as string,
-        description: tp.description as string | null, fundTypes: (tp.fund_types ?? []) as string[], currentApproved: (((v ?? []) as any[]).find((x) => x.template_id === tp.id)?.version ?? null) as number | null, versions: [], uses: [],
+        description: tp.description as string | null, fundTypes: (tp.fund_types ?? []) as string[], currentApproved: ((vOpen).find((x) => x.template_id === tp.id)?.version ?? null) as number | null, versions: [], uses: [],
       })).filter((x) => x.currentApproved != null),
     };
   }
-  const [{ data: t }, { data: v }, { data: u }, { data: funds }] = await Promise.all([
+  const [{ data: t }, { data: vAll }, { data: u }, { data: funds }] = await Promise.all([
     db().from("document_templates").select("*").is("archived_at", null).order("created_at", { ascending: false }),
     db().from("document_template_versions").select("id, template_id, version, file_name, status, change_note, created_by, created_at, decided_by, decided_at, decision_note, source_offering_id, source_version").order("version", { ascending: false }),
     db().from("document_template_uses").select("template_id, template_version, offering_id, fund_version, used_at").order("used_at", { ascending: false }),
     db().from("offerings").select("id, name").order("name"),
   ]);
+  const sealedV = await (await import("./sealed-records.server")).sealedIds(db(), "document_template_versions");
+  const v = ((vAll ?? []) as any[]).filter((x) => !sealedV.has(x.id));
   const people = [...new Set([...(v ?? []).map((x: any) => x.created_by), ...(v ?? []).map((x: any) => x.decided_by)].filter(Boolean))];
   const { data: profiles } = people.length ? await db().from("profiles").select("id, full_name").in("id", people) : { data: [] };
   const who = new Map(((profiles ?? []) as any[]).map((p) => [p.id, p.full_name as string]));

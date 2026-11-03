@@ -293,6 +293,7 @@ import { Route as AuthenticatedOpsReportCardsRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticated/ops.roles'
 import { Route as AuthenticatedOpsSaasOrdersRouteImport } from './routes/_authenticated/ops.saas-orders'
+import { Route as AuthenticatedOpsSealedArchiveRouteImport } from './routes/_authenticated/ops.sealed-archive'
 import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
 import { Route as AuthenticatedOpsServiceEngagementsRouteImport } from './routes/_authenticated/ops.service-engagements'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
@@ -2090,6 +2091,12 @@ const AuthenticatedOpsSaasOrdersRoute =
     path: '/ops/saas-orders',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsSealedArchiveRoute =
+  AuthenticatedOpsSealedArchiveRouteImport.update({
+    id: '/ops/sealed-archive',
+    path: '/ops/sealed-archive',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSecurityComplianceRoute =
   AuthenticatedOpsSecurityComplianceRouteImport.update({
     id: '/ops/security-compliance',
@@ -3515,6 +3522,7 @@ export interface FileRoutesByFullPath {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/saas-orders': typeof AuthenticatedOpsSaasOrdersRoute
+  '/ops/sealed-archive': typeof AuthenticatedOpsSealedArchiveRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -3990,6 +3998,7 @@ export interface FileRoutesByTo {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/saas-orders': typeof AuthenticatedOpsSaasOrdersRoute
+  '/ops/sealed-archive': typeof AuthenticatedOpsSealedArchiveRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -4473,6 +4482,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/_authenticated/ops/saas-orders': typeof AuthenticatedOpsSaasOrdersRoute
+  '/_authenticated/ops/sealed-archive': typeof AuthenticatedOpsSealedArchiveRoute
   '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/_authenticated/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -4957,6 +4967,7 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/saas-orders'
+    | '/ops/sealed-archive'
     | '/ops/security-compliance'
     | '/ops/service-engagements'
     | '/ops/ss4'
@@ -5432,6 +5443,7 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/saas-orders'
+    | '/ops/sealed-archive'
     | '/ops/security-compliance'
     | '/ops/service-engagements'
     | '/ops/ss4'
@@ -5914,6 +5926,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/roles'
     | '/_authenticated/ops/saas-orders'
+    | '/_authenticated/ops/sealed-archive'
     | '/_authenticated/ops/security-compliance'
     | '/_authenticated/ops/service-engagements'
     | '/_authenticated/ops/ss4'
@@ -8198,6 +8211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsSaasOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/sealed-archive': {
+      id: '/_authenticated/ops/sealed-archive'
+      path: '/ops/sealed-archive'
+      fullPath: '/ops/sealed-archive'
+      preLoaderRoute: typeof AuthenticatedOpsSealedArchiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/security-compliance': {
       id: '/_authenticated/ops/security-compliance'
       path: '/ops/security-compliance'
@@ -10081,6 +10101,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsRolesRoute: typeof AuthenticatedOpsRolesRoute
   AuthenticatedOpsSaasOrdersRoute: typeof AuthenticatedOpsSaasOrdersRoute
+  AuthenticatedOpsSealedArchiveRoute: typeof AuthenticatedOpsSealedArchiveRoute
   AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
   AuthenticatedOpsServiceEngagementsRoute: typeof AuthenticatedOpsServiceEngagementsRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
@@ -10430,6 +10451,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsRolesRoute: AuthenticatedOpsRolesRoute,
   AuthenticatedOpsSaasOrdersRoute: AuthenticatedOpsSaasOrdersRoute,
+  AuthenticatedOpsSealedArchiveRoute: AuthenticatedOpsSealedArchiveRoute,
   AuthenticatedOpsSecurityComplianceRoute:
     AuthenticatedOpsSecurityComplianceRoute,
   AuthenticatedOpsServiceEngagementsRoute:

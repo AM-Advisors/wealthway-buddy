@@ -72,7 +72,8 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
     db().from("offering_documents").select("id, title, doc_type, document_category, usage, applicability, active_version, current_version, requires_signature").eq("offering_id", offeringId).is("removed_at", null).order("sort_order"),
     db().from("offering_document_versions").select("*").eq("offering_id", offeringId).order("version", { ascending: false }),
   ]);
-  const vs = (versions ?? []) as any[];
+  const sealed = await (await import("./sealed-records.server")).sealedIds(db(), "offering_document_versions");
+  const vs = ((versions ?? []) as any[]).filter((v) => !sealed.has(v.id));
   const templates = await approvedTemplateVersions(offeringId);
   const list = ((docs ?? []) as any[]).map((d) => {
     const own = vs.filter((v) => v.offering_document_id === d.id);

@@ -40,19 +40,15 @@
 - Investor classes use offerings.has_multiple_classes — why: no inferred classes.
 - approveToFund allows admin staff/exact-fund managers, never self — why: staff approve, signatories sign; money/identity unchanged.
 - Inbox channels and the automatic fund onboarding email depend on the fund's active service level via src/lib/inbox-policy.ts — why: one rule for Self Serve vs paid.
-- Migrated client billing (past fees/invoices/payments, generated or uploaded SOWs, commission hand-off) lives in migrated-billing.server.ts; commissions reuse the signed-quote engine via a recorded quote, and the recorder can't also push to commissions — why: one commission engine, maker-checker kept.
 - Contact/person selection uses SearchableSelect over entitled options; FundPersonPicker keeps identity badges, multi-recipient selections stay independent. Why: consistent suggestions, no global directory or broader access.
 - Missing Sales quote/document recipients use the existing CRM prospect engine with record-scoped authorization and conditional, audited assignment before sending; no client membership is granted — why: add contacts inline without replacing sent recipients or duplicating identity/access workflows.
 - CRM uses durable owner/fund-scoped crm_companies links; crm.server.ts history reads only entitled contacts/deals; title/phone edits retain contact saves/audits. Why: connected records, no second directory, inferred merges or broader access.
-- Signed-SOW commission handoff uses commission-notify.server.ts and the canonical queueInvoicePayouts engine; event-bound assigned-rep notices use managed delivery, while only paid invoices receive quarter-end queue rows — why: one commission engine, retry-safe notices and no automatic money movement.
 
 - Forecast rules (projections only, ForecastInput forms, operating and fund cash-flow models): src/lib/AGENTS.md.
 
 - Billing, ROAS payment tracking, payment planning and quote package rules: src/lib/AGENTS.md. Why: canonical receipts, no automatic posting.
 
 - Commission basis is gross profit from append-only cost entries/settings; expected signed-SOW rows are computed projections, never payable; existing queue/payout amounts remain historical.
-- Bookkeeping uses the shared quote engine with recorded proposed configurations and frozen line snapshots; database gates keep these draft-only until a separately approved release — why: staged pricing must never reach live signing, billing or enrollment.
-- Linked quote/SOW draft terms use the canonical quote editor and service-role-only save_linked_quote_draft transaction; shared commercial fields update together, reviewed/signed records require new versions, and legacy SOW price controls cannot bypass it — why: bidirectional consistency without partial saves or approval drift.
 - Public proposal SOW tabs reuse the acceptance token and exact linked client/version, projecting only client agreement sections and recorded generated lines — why: portal-free reading without directory, notes or signing authority exposure.
 - Countersign timing lives in src/lib/countersign-timing.ts and feeds canInvestorFund; canCloseInvestment always forces pause so admission still needs approval — why: one funding gate, unchanged admission authority.
 - Client dashboard insights use client-insights.functions.ts + pure client-dashboard-model.ts; earnings = posted 'Management fee' ledger entries + approved carry rows only, kept separate from raised capital and Harmonious costs — why: no estimated earnings or mixed figures.
@@ -62,7 +58,6 @@
 
 - Public security uses published content only, never certification status; see src/lib/AGENTS.md.
 - Fictional QA sandbox at /qa-sandbox (src/lib/qa-sandbox/) intercepts every server-function call client-side with in-memory fictional data and blocks anything not modeled; never point it at the real backend — why: isolated click-through testing without touching records, emails or money.
-- Invoice fee entry previews use invoice-fee-preview.ts with exact-client book ownership, explicit expense mappings, open periods and source-entry checks; previews never persist or post journals — why: accounting preparation remains inert until the isolated financial release is approved.
 - Commercial views use scoped readers and fictional QA only. Sales handoffs use quote-keyed staff_tasks and the service-only save_sales_operations_handoff transaction for owner, due date and receiving-owner transitions with task events. Why: one queue, no access or money grants.
 - Listed contacts/team entries auto-link to a confirmed same-email login via connect_listed_entries (triggers + sign-in RPC, logged); view-only client access, never manager rights — why: no separate invite needed.
 - Amount-range classes: FundClass min/max (exclusive) + class-tiers.ts; agreement prep picks the series from the signed amount, records it, and refuses when several fit until staff/manager records the choice — why: investors never self-select overlapping series.
@@ -71,3 +66,6 @@
 - Personal onboarding mounts private content behind shared AccountKycGate. Why: unverified accounts get recovery instead of repeated denied reads; server checks remain authoritative.
 
 - Party conversion/name corrections sync investment_profiles legal_name/display_label, log changes, reconcile readiness and invalidate readers; personal identity stays separate. Why: consistent trust names, unchanged verification.
+- Sealed archive: sealed_records hides retained document/template versions from every reader (filter via sealed-records.server.ts in any new version listing); only Super Admin opens with a logged reason at /ops/sealed-archive — why: legal retention without visibility, nothing deleted.
+
+- Commercial billing/commission/bookkeeping/invoice-preview rules: src/lib/AGENTS.md.

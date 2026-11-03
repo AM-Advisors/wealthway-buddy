@@ -41,11 +41,13 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
     const obIds = obs.map((o) => o.id);
     const none = Promise.resolve({ data: [] as any[] });
     const [versR, ackR, sigR, prior2]: any[] = await Promise.all([
-      docIds.length ? db.from("offering_document_versions").select("offering_document_id, version, file_name, created_at, superseded_at").in("offering_document_id", docIds) : none,
+      docIds.length ? db.from("offering_document_versions").select("id, offering_document_id, version, file_name, created_at, superseded_at").in("offering_document_id", docIds) : none,
       docIds.length ? db.from("investment_document_acknowledgments").select("offering_document_id, version, onboarding_id, acknowledged_at").in("offering_document_id", docIds) : none,
       docIds.length ? db.from("document_signatures").select("offering_document_id, application_id, signature_template_version, signed_at").in("offering_document_id", docIds).is("cancelled_at", null).not("signed_at", "is", null) : none,
       obIds.length ? db.from("prior_signed_documents").select("onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : none,
     ]);
+    const sealed = await (await import("@/lib/sealed-records.server")).sealedIds(db, "offering_document_versions");
+    if (versR.data) versR.data = (versR.data as any[]).filter((x) => !sealed.has(x.id));
     const removerIds = [...new Set(docs.map((d) => d.removed_by).filter(Boolean))];
     const { data: profs } = removerIds.length ? await db.from("profiles").select("id, email").in("id", removerIds) : { data: [] };
     const who = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.email || null]));
