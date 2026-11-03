@@ -223,6 +223,7 @@ export async function saveFundSetupFields(
 ) {
   const actor = await assertRead(userId, input.offeringId);
   if (!actor.isStaff) (await import("./fund-routine-access.server")).assertRoutineFields(input.fields);
+  if (input.setupFields && Object.keys(input.setupFields).length && !actor.isStaff && !actor.offeringIds.includes(input.offeringId)) throw new Error("Fund tax and term setup requires the manager's existing workflow.");
   const update: any = {};
   for (const [k, v] of Object.entries(input.fields)) {
     const col = OFFERING_FIELDS[k];
@@ -246,7 +247,8 @@ export async function saveFundSetupFields(
     if ("fiscalYearEnd" in input.setupFields) patch.fiscal_year_end = input.setupFields.fiscalYearEnd || null;
     if ("fundTermMonths" in input.setupFields) patch.fund_term_months = input.setupFields.fundTermMonths ?? null;
     if ("investmentPeriodMonths" in input.setupFields) patch.investment_period_months = input.setupFields.investmentPeriodMonths ?? null;
-    await db().from("fund_setups").update(patch).eq("id", setup.id);
+    const { error } = await db().from("fund_setups").update(patch).eq("id", setup.id);
+    if (error) throw new Error("Fund setup details could not be saved.");
   }
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteTasks(input.offeringId);
   return { ok: true };

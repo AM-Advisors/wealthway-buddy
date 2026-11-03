@@ -9,9 +9,11 @@ export const saveFundReviewOwnerFn = createServerFn({ method: "POST" }).middlewa
     if (!manager && !(roles ?? []).some(r => ["admin", "super_admin"].includes(r.role))) throw new Error("Only this fund's manager may choose the review email owner.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    if (data.userId) await (await import("./fund-routine-access.server")).assertRoutineFund(db, data.userId, data.fundId);
-    const { error } = await db.from("offerings").update({ routine_review_user_id: data.userId }).eq("id", data.fundId);
+    if (data.userId) {
+      const { data: recipientManager } = await db.from("fund_managers").select("id").eq("user_id", data.userId).eq("offering_id", data.fundId).maybeSingle();
+      if (!recipientManager && !(await (await import("./fund-routine-access.server")).routineReviewer(db, data.userId, data.fundId))) throw new Error("Choose this fund's manager or a designated reviewer.");
+    }
+    const { error } = await db.from("offerings").update({ routine_review_user_id: data.userId, routine_review_changed_by: context.userId }).eq("id", data.fundId);
     if (error) throw new Error("Review email owner could not be saved.");
-    await db.from("fund_team_grant_events").insert({ offering_id: data.fundId, event: "review_owner_changed", actor_user_id: context.userId, reason: data.userId ? "Routine review owner designated" : "Manager fallback restored" });
     return { ok: true };
   });

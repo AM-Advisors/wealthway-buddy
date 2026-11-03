@@ -103,7 +103,7 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { assertRoutineFields } = await import("./fund-routine-access.server");
-    let routine = true;
+    let routine = !data.setupFields || Object.keys(data.setupFields).length === 0;
     try { assertRoutineFields(data.fields); } catch { routine = false; }
     const save = async () => (await engine()).saveFundSetupFields(context.userId, data);
     const result = routine ? await save() : await (await import("@/lib/record-locks.server")).lockedSave("fund_fields", context as any, data, save);
