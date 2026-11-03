@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { LoadError } from "@/components/load-error";
+import { PartialResultsNotice } from "@/components/partial-results-notice";
 import { getStalledWork } from "@/lib/ops-work-queue.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/stalled")({
@@ -26,7 +28,7 @@ function StalledPage() {
   const q = useQuery({ queryKey: ["ops-stalled"], queryFn: () => load() });
   const [owner, setOwner] = useState<"all" | "Investor" | "Fund manager">("all");
   const [fund, setFund] = useState("all");
-  const items = q.data ?? [];
+  const items = q.data?.items ?? [];
   const funds = useMemo(() => [...new Map(items.map((i) => [i.fundId, i.fundName ?? "Fund"])).entries()].sort((a, b) => a[1].localeCompare(b[1])), [items]);
   const shown = items.filter((i) => (owner === "all" || i.owner === owner) && (fund === "all" || i.fundId === fund));
   return (
@@ -43,9 +45,10 @@ function StalledPage() {
           <option value="all">All funds</option>{funds.map(([id, n]) => <option key={id} value={id}>{n}</option>)}
         </select>
       </div>
-      {q.isError ? <p role="alert" className="text-destructive">Stalled items couldn't be loaded. You may not have Operations access, or try refreshing.</p>
+      <PartialResultsNotice partial={q.data?.partial} failedAreas={q.data?.failedAreas} />
+      {q.isError ? <LoadError error={q.error} what="Stalled items" onRetry={() => q.refetch()} />
         : q.isLoading ? <p className="text-muted-foreground">Loading stalled items…</p>
-        : !shown.length ? <p className="text-muted-foreground">Nothing is stalled right now.</p>
+        : !shown.length ? <p className="text-muted-foreground">{q.data?.partial ? "No stalled items found in what loaded." : "Nothing is stalled right now."}</p>
         : <div className="space-y-2">
             <p className="text-sm text-muted-foreground">{shown.length} stalled item{shown.length === 1 ? "" : "s"}, longest waiting first</p>
             {shown.map((i) => (
