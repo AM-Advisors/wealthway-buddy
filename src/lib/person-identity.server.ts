@@ -47,6 +47,7 @@ export async function fanOutPersonIdentity(personId: string | null, sessionId: s
       if (!ob.questionnaire_didit_session_id) await db().from("investor_onboardings").update({ questionnaire_didit_session_id: sessionId }).eq("id", ob.id);
       await autoApplyDiditForOnboarding(ob.id, actorUserId);
       if (ob.application_id) await supersedeUnstartedInvestmentCheck(ob.application_id, sessionId);
+      await (await import("./investor-onboarding.server")).reconcileAfter([ob.id], { actorUserId, trigger: "person_identity_applied" });
       applied++;
     } catch (e) { console.error("[person-identity] fan-out", (e as Error).message); }
   }

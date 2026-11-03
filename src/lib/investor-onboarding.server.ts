@@ -153,7 +153,7 @@ async function recordEvent(input: {
   subjectTable?: string | null;
   subjectId?: string | null;
   detail?: Record<string, unknown>;
-  actorUserId: string;
+  actorUserId: string | null;
   actorRole?: string;
 }) {
   const SLACK_EVENTS: Record<string, string> = { questionnaire_submitted: "Investor submitted the questionnaire", signature_completed: "Investor signed subscription documents", investor_reports_funds_sent: "Investor reported a wire sent", amount_requested: "Investor submitted an investment amount", verification_completed: "Investor identity check finished" };
@@ -2555,12 +2555,22 @@ export async function readinessForMany(rows: any[]) {
  * reconcileInvestmentReadiness - the one canonical, idempotent reconciliation.
  * Called after a canonical record changes (mutation completion, provider webhook,
  * or an explicitly authorized staff reconciliation) - never by rendering a page.
- * Writes only readiness history (real transitions) and work items.
+ * Writes readiness history/work items and advances completed Verification to signing.
  */
 export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { actorUserId: string | null; trigger: string }) {
   const { readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
   const row = await onboardingRow(onboardingId);
   const { result, facts } = await computeReadinessFor(row);
+  const { shouldAdvanceVerifiedInvestor } = await import("./verification-auto-advance");
+  if (shouldAdvanceVerifiedInvestor(row.stage, facts.requirements, Boolean(row.removed_at))) {
+    const { data: advanced, error } = await db().from("investor_onboardings")
+      .update({ stage: "signature", updated_at: nowIso() }).eq("id", row.id).eq("stage", "verification").is("removed_at", null).select("id").maybeSingle();
+    if (error) throw new Error("Verified investment could not advance to signing.");
+    if (advanced) {
+      row.stage = "signature";
+      await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_auto_advanced", fromStatus: "verification", toStatus: "signature", actorUserId: ctx.actorUserId, actorRole: "system", detail: { trigger: ctx.trigger } });
+    }
+  }
   await saveReadinessSummary(row, result);
   const [{ data: evs }, { data: tasks }] = await Promise.all([
     db().from("investment_readiness_events").select("requirement_key,new_status,created_at").eq("onboarding_id", row.id).order("created_at", { ascending: true }),
