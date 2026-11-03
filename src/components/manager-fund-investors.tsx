@@ -132,13 +132,12 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   );
   const legacyMenu = (applicationId: string, name: string) => {
     const a = actions.data?.rows[applicationId];
-    const userId = a?.userId;
     return (
       <InvestorActionsMenu
         name={name}
         open={<Link to={applicationTo} params={{ applicationId }}>Open investor</Link>}
         invitation={a?.invitationId ? <ResendInviteMenuItem target={{ kind: "fund", id: a.invitationId }} label="Resend invitation" /> : undefined}
-        removal={userId ? <DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Revoke ${name}'s access to this fund? Their account and past records are kept.`)) run(() => revoke({ data: { userId, offeringId: fundId, role: "investor" } }), "Fund access revoked"); }}>Revoke fund access</DropdownMenuItem> : undefined}
+        removal={<DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Remove ${name} from this Fund? Their account and past records are kept.`)) run(() => removeLegacy({ data: { applicationId, offeringId: fundId } }), "Removed from Fund"); }}>Remove from Fund</DropdownMenuItem>}
       />
     );
   };
