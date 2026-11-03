@@ -4,7 +4,7 @@
 - [x] Reviewed tasks, handoffs, follow-ups, software issue retests and work-area navigation for missing actions and lost work.
 - [x] Added exact-item alert links, Follow up due, shared task visibility, open-before-history reads, live badge refresh, visible partial-result/retry states and discoverable staff issue links; collapsed new-task, filter and advanced forms. No live assignments or publishing.
 - [x] 110 focused regressions passed; actual task page fictional alert → handoff → acceptance and next-step save → cleanup removal passed. Failed-retest note gating checked. Preview compiles.
-- [ ] Durable staff handoff/next-step/issue retest and RPC read-back, blocked by independently isolated backend and synthetic-session evidence. Page-load split-export errors found during fictional browser checks are being repaired, not claimed fully verified.
+- [ ] Durable staff handoff/next-step/issue retest and RPC read-back, blocked by independently isolated backend and synthetic-session evidence. Two page-load split-export defects were repaired and preview build passes; a fresh full-page browser run remains unverified after the final test harness stalled.
 - [ ] Wider request/task atomic creation, follow-up clearing and recorded passed-retest evidence need transactional QA/release in independently isolated records; existing request/task sync tests pass but do not verify these failure paths.
 
 ## Trust profile correction (2026-10-30)
