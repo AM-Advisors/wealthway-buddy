@@ -372,6 +372,7 @@ export async function fundTemplateDocumentUrl(userId: string, input: { offeringI
   await staffOrManager(userId, input.offeringId);
   const { data: v } = await db().from("offering_document_versions").select("file_path, offering_id").eq("id", input.versionId).maybeSingle();
   if (!v || v.offering_id !== input.offeringId) throw new Error("That document was not found.");
+  await (await import("./sealed-records.server")).assertUnsealedVersion(db(), "offering_document_versions", input.versionId);
   const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(v.file_path, 300);
   if (error) throw new Error(error.message);
   return { url: data.signedUrl };
@@ -379,8 +380,9 @@ export async function fundTemplateDocumentUrl(userId: string, input: { offeringI
 
 export async function templateDownloadUrl(userId: string, input: { templateId: string; version: number }) {
   await staff(userId);
-  const { data: v } = await db().from("document_template_versions").select("file_path").eq("template_id", input.templateId).eq("version", input.version).maybeSingle();
+  const { data: v } = await db().from("document_template_versions").select("id, file_path").eq("template_id", input.templateId).eq("version", input.version).maybeSingle();
   if (!v) throw new Error("Version not found.");
+  await (await import("./sealed-records.server")).assertUnsealedVersion(db(), "document_template_versions", v.id);
   const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(v.file_path, 300);
   if (error) throw new Error(error.message);
   return { url: data.signedUrl };

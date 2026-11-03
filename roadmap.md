@@ -1,5 +1,11 @@
 # Roadmap
 
+## Old Erebor PPM access removal (2026-11-03)
+- [x] Removed four confirmed Justin-naming PPM review draft files from ordinary Files and the review collection, retaining private copies.
+- [x] Added sealed-version checks to both direct template download endpoints and restrictive storage/template read policies; reason-logged Super Admin archive access remains separate.
+- [x] Eleven focused tests passed, preview build OK, live read policies confirmed, current approved Erebor_PPM_v8.pdf unchanged.
+- [ ] Exact screenshot attachment/link remains unidentified: original sealed PPM and older Files drafts were found, but the 73-page preview origin requires its source link; authenticated end-to-end checks require isolated synthetic QA.
+
 ## Team daily-work audit (2026-11-03)
 - [x] Reviewed tasks, handoffs, follow-ups, software issue retests and work-area navigation for missing actions and lost work.
 - [x] Added exact-item alert links, Follow up due, shared task visibility, open-before-history reads, live badge refresh, visible partial-result/retry states and discoverable staff issue links; collapsed new-task, filter and advanced forms. No live assignments or publishing.

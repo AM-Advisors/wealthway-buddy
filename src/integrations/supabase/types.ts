@@ -50589,6 +50589,10 @@ export type Database = {
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
+      is_sealed_document_file: {
+        Args: { _bucket: string; _path: string }
+        Returns: boolean
+      }
       is_sealed_record: {
         Args: { _id: string; _table: string }
         Returns: boolean

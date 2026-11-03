@@ -67,6 +67,7 @@
 
 - Party conversion/name corrections sync investment_profiles legal_name/display_label, log changes, reconcile readiness and invalidate readers; personal identity stays separate. Why: consistent trust names, unchanged verification.
 - Sealed archive: sealed_records hides retained document/template versions from every reader (filter via sealed-records.server.ts in any new version listing); only Super Admin opens with a logged reason at /ops/sealed-archive — why: legal retention without visibility, nothing deleted.
+- Direct template download endpoints must call assertUnsealedVersion; storage SELECT also rejects paths referenced by sealed records, leaving only the logged archive opener — why: list filtering alone cannot protect known download links.
 
 - Commercial billing/commission/bookkeeping/invoice-preview rules: src/lib/AGENTS.md.
 - Staff task handoffs/blocked/complete go through staff_task_transition (owner-only, receiver accepts); task readers/history/writes share team-work-model visibility, and action alerts carry exact-record search targets. Software issues use software_issue_report/move with retester-gated resolution; open reads exclude resolved history before limits. Why: one owner, findable work, unchanged authority and no duplicate queue.
