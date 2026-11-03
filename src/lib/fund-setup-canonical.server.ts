@@ -222,7 +222,8 @@ export async function saveFundSetupFields(
   input: { offeringId: string; fields: Record<string, unknown>; setupFields?: { fiscalYearEnd?: string | null | undefined; fundTermMonths?: number | null | undefined; investmentPeriodMonths?: number | null | undefined } | undefined },
 ) {
   const actor = await assertRead(userId, input.offeringId);
-  if (!actor.isStaff) (await import("./fund-routine-access.server")).assertRoutineFields(input.fields);
+  if (!actor.isStaff && !actor.offeringIds.includes(input.offeringId)) (await import("./fund-routine-access.server")).assertRoutineFields(input.fields);
+  else if (!actor.isStaff) { try { (await import("./fund-routine-access.server")).assertRoutineFields(input.fields); } catch { await assertStaffFor(userId, input.offeringId); } }
   if (input.setupFields && Object.keys(input.setupFields).length && !actor.isStaff && !actor.offeringIds.includes(input.offeringId)) throw new Error("Fund tax and term setup requires the manager's existing workflow.");
   const update: any = {};
   for (const [k, v] of Object.entries(input.fields)) {

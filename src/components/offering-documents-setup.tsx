@@ -239,7 +239,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         </div>
       )}
 
-      {data.canEdit && doc.resignOpen.length > 0 && (
+      {data.canRelease && doc.resignOpen.length > 0 && (
         <div className="mt-3 space-y-1 rounded-md border border-destructive/40 p-2 text-xs">
           <p className="font-medium">Re-sign needed ({doc.resignOpen.length})</p>
           <p className="text-muted-foreground">Send each investor the new version with the usual send button, then mark it here. Nothing is sent automatically.</p>

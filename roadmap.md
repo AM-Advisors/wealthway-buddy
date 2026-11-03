@@ -1,11 +1,12 @@
 # Roadmap
 
 ## Manager-led routine fund work and review emails
-- [ ] Add explicit exact-fund designated reviewer access without upgrading existing assistants/viewers.
-- [ ] Connect routine detail edits, terms, questions, document and side-letter reviews to existing canonical actions and authorized fund-team controls.
-- [ ] Send one event-specific email to the responsible authorized reviewer after pending work is saved; preserve existing investor/signing notices.
-- [ ] Keep protected money, identity, access, filings and signatures unchanged; retain Harmonious stalled-item visibility.
-- [ ] Test permissions, revocation, same-fund routing, pending-only notifications and fictional review click-through; publish only if requested.
+- [x] Add explicit exact-fund designated reviewer access without upgrading existing assistants/viewers.
+- [x] Connect routine minimum edits, terms, questions, document and side-letter reviews to existing canonical actions and authorized fund-team controls. Manager can designate the review email owner.
+- [x] Send one event-specific email to the responsible authorized reviewer after pending work is saved; preserve existing investor/signing notices. No old-item sweep or live sends.
+- [x] Keep protected money, identity, access, filings and signatures unchanged; retain Harmonious stalled-item visibility. Side-letter decisions now commit version, state and audit atomically.
+- [x] 94 permission/notification/regression tests passed; fictional routine minimum save and return/read-back verified without runtime errors; preview build OK.
+- [ ] Durable designated-reviewer grant, approval and email delivery verification needs independently isolated backend and synthetic sessions. Not published; no live reviewer assignments or emails sent.
 
 ## Erebor $100,000 minimum (2026-11-03)
 - [x] Save $100,000 through Alyssa's authorized fund save with her supplied reason, Fund Manager request; offering read-back confirms 10,000,000 cents.
