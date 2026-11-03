@@ -354,6 +354,7 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
     onSuccess: (r: any) => {
       if (r?.url) window.location.assign(r.url);
       else if (r?.completed) { toast.success("Your earlier identity check was reused."); void qc.invalidateQueries(); }
+      else if (r?.inReview) { toast.info("Your identity check is being finished. Nothing more to do, we'll email you when it's done."); void qc.invalidateQueries(); }
     },
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
