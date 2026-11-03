@@ -63,6 +63,9 @@ export type WorkItem = {
   dueDate?: string | null;
   blocked?: boolean;
   blockReason?: string | null;
+  /** Recorded next step and follow-up, only where the workflow stores them. */
+  nextAction?: string | null;
+  followUpDate?: string | null;
   /** When the underlying record last moved; used for neutral ordering. */
   at?: string | null;
   priority: WorkPriority;
@@ -222,6 +225,10 @@ export type WorkFilters = {
   area?: OpsArea | undefined;
   workflowState?: string | undefined;
   assignedTo?: string | undefined;
+  /** Related workflow areas on a process page. Applied before pagination. */
+  areas?: OpsArea[] | undefined;
+  /** Only assignable records with no recorded owner; never widens access. */
+  unassigned?: boolean | undefined;
   /** "mine" limits to the signed-in person's authoritative assignments. */
   scope?: "mine" | "all" | undefined;
   dueBefore?: string | undefined;
@@ -244,6 +251,8 @@ export function applyFilters(
     if (filters.clientId && item.clientId !== filters.clientId) return false;
     if (filters.fundId && item.fundId !== filters.fundId) return false;
     if (filters.area && item.area !== filters.area) return false;
+    if (filters.areas && !filters.areas.includes(item.area)) return false;
+    if (filters.unassigned && (!isAssignable(item) || item.assignedTo || item.assignedToName)) return false;
     if (filters.workflowState && item.workflowState !== filters.workflowState) return false;
     if (filters.assignedTo && item.assignedTo !== filters.assignedTo) return false;
     if (filters.scope === "mine" && item.assignedTo !== viewerUserId) return false;
@@ -302,6 +311,11 @@ export const ASSIGNMENT_SOURCES: Record<string, string> = {
   "onboarding.exception": "investor_onboarding_exceptions.owner",
   "reconciliation.exception": "accounting_exceptions.opened_by",
 };
+
+/** Whether the item's workflow records an owner at all. */
+export function isAssignable(item: Pick<WorkItem, "source">): boolean {
+  return Object.prototype.hasOwnProperty.call(ASSIGNMENT_SOURCES, item.source);
+}
 
 /** Workflows with no owner field anywhere. Reported, not filled in. */
 export const ASSIGNMENT_GAPS = [

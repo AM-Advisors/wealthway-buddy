@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { invalidateFundWork } from "@/components/fund-approvals";
+import { TaskHandoffPanel } from "@/components/task-handoff-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/tasks")({
   head: () => ({ meta: [
@@ -62,7 +63,7 @@ function TasksPage() {
     return d.rows.filter((t: any) => {
       const closed = t.status === "done" || t.status === "cancelled";
       if (tab === "done" ? !closed : closed) return false;
-      if (tab === "mine" && t.assignee_user_id !== d.viewer) return false;
+      if (tab === "mine" && t.assignee_user_id !== d.viewer && t.handoff_to_user_id !== d.viewer) return false;
       if (tab === "created" && t.created_by !== d.viewer) return false;
       if (tab === "unassigned" && t.assignee_user_id) return false;
       if (resp !== "ALL" && asResponsibility(t.responsibility_status) !== resp) return false;
@@ -103,7 +104,7 @@ function TasksPage() {
         </div>
         <div className="rounded-lg border bg-card">
           {rows.length ? rows.map((t: any) => (
-            <TaskRow key={t.id} t={t} staff={d.staff} canWrite={d.canWrite} open={openId === t.id} onToggle={() => setOpenId(openId === t.id ? null : t.id)} />
+            <TaskRow key={t.id} t={t} staff={d.staff} viewer={d.viewer} seeAll={d.seeAll} canWrite={d.canWrite} open={openId === t.id} onToggle={() => setOpenId(openId === t.id ? null : t.id)} />
           )) : <p className="p-4 text-sm text-muted-foreground">No tasks here.</p>}
         </div>
       </>)}
@@ -146,7 +147,7 @@ function NewTask({ staff }: { staff: { id: string; name: string }[] }) {
   );
 }
 
-function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: string; name: string }[]; canWrite: boolean; open: boolean; onToggle: () => void }) {
+function TaskRow({ t, staff, viewer, seeAll, canWrite, open, onToggle }: { t: any; staff: { id: string; name: string }[]; viewer: string; seeAll: boolean; canWrite: boolean; open: boolean; onToggle: () => void }) {
   const update = useServerFn(updateTask);
   const hist = useServerFn(getTaskHistory);
   const qc = useQueryClient();
@@ -169,20 +170,20 @@ function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: 
           <div className="flex flex-wrap items-center gap-2"><span className="truncate font-medium text-foreground">{t.title}</span><ResponsibilityBadge status={t.responsibility_status} /></div>
           {waiting && <div className="text-xs text-foreground">{RESPONSIBILITY_LABEL[asResponsibility(t.responsibility_status)]}: {waiting}</div>}
           <div className="text-xs text-muted-foreground">
-            {t.assigneeName ?? "Unassigned"}{t.team ? ` · ${TEAMS[t.team] ?? t.team}` : ""}{t.fundName ? ` · ${t.fundName}` : t.clientName ? ` · ${t.clientName}` : ""}{t.source === "hubspot" ? " · from HubSpot" : ""}
+            {t.assigneeName ?? "Unassigned"}{t.handoff_to_user_id ? ` → awaiting ${t.handoffToName}` : ""}{t.next_action ? ` · next: ${t.next_action}` : ""}{t.team ? ` · ${TEAMS[t.team] ?? t.team}` : ""}{t.fundName ? ` · ${t.fundName}` : t.clientName ? ` · ${t.clientName}` : ""}{t.source === "hubspot" ? " · from HubSpot" : ""}
             {t.due_date ? ` · due ${new Date(t.due_date + "T00:00:00").toLocaleDateString()}` : ""}
           </div>
         </button>
         {overdueDays > 0 && <Badge variant="destructive">Overdue {overdueDays}d</Badge>}
         {(t.priority === "high" || t.priority === "urgent") && <Badge variant="destructive">{PRIORITY[t.priority]}</Badge>}
         {canWrite ? (<>
-          <SearchablePeoplePicker value={t.assignee_user_id ?? UNASSIGNED} onValueChange={(v) => save({ assignee: v === UNASSIGNED ? null : v })}>
+          <SearchablePeoplePicker value={t.assignee_user_id ?? UNASSIGNED} onValueChange={(v) => save({ assignee: v === UNASSIGNED ? null : v })} disabled={!!t.assignee_user_id && !seeAll}>
             <SelectTrigger className="h-8 w-44" aria-label="Assignee"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value={UNASSIGNED}>Unassigned</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
           </SearchablePeoplePicker>
           <Select value={t.status} onValueChange={(v) => save({ status: v })}>
             <SelectTrigger className="h-8 w-36" aria-label="Status"><SelectValue /></SelectTrigger>
-            <SelectContent>{Object.entries(STATUS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+            <SelectContent>{Object.entries(STATUS).filter(([k]) => (k !== "done" && k !== "blocked") || k === t.status).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
           </Select>
         </>) : <Badge variant="secondary">{STATUS[t.status]}</Badge>}
       </div>
@@ -199,6 +200,7 @@ function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: 
           {t.responsibility_note_internal && <p className="text-xs text-foreground"><span className="font-medium">Internal note:</span> {t.responsibility_note_internal}</p>}
           {t.responsibility_note_client && <p className="text-xs text-foreground"><span className="font-medium">Client note:</span> {t.responsibility_note_client}</p>}
           {t.description && <p className="whitespace-pre-wrap text-foreground">{t.description}</p>}
+          {canWrite && <TaskHandoffPanel t={t} viewer={viewer} staff={staff} />}
           {canWrite && !["done", "cancelled"].includes(t.status) && <ResponsibilityEditor t={t} staff={staff} />}
           {canWrite && (
             <div className="flex flex-wrap gap-2">

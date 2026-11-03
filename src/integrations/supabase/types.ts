@@ -45625,6 +45625,109 @@ export type Database = {
           },
         ]
       }
+      software_issue_events: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          from_stage: string | null
+          id: string
+          issue_id: string
+          note: string | null
+          to_stage: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          from_stage?: string | null
+          id?: string
+          issue_id: string
+          note?: string | null
+          to_stage: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          from_stage?: string | null
+          id?: string
+          issue_id?: string
+          note?: string | null
+          to_stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "software_issue_events_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "software_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      software_issues: {
+        Row: {
+          actual: string
+          created_at: string
+          expected: string
+          id: string
+          impact: string
+          occurred_at: string | null
+          page: string | null
+          record_ref: string | null
+          reporter_user_id: string
+          retester_user_id: string
+          stage: string
+          steps: string
+          task_id: string | null
+          technical_owner_user_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual: string
+          created_at?: string
+          expected: string
+          id?: string
+          impact: string
+          occurred_at?: string | null
+          page?: string | null
+          record_ref?: string | null
+          reporter_user_id: string
+          retester_user_id: string
+          stage?: string
+          steps: string
+          task_id?: string | null
+          technical_owner_user_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual?: string
+          created_at?: string
+          expected?: string
+          id?: string
+          impact?: string
+          occurred_at?: string | null
+          page?: string | null
+          record_ref?: string | null
+          reporter_user_id?: string
+          retester_user_id?: string
+          stage?: string
+          steps?: string
+          task_id?: string | null
+          technical_owner_user_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "software_issues_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "staff_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       source_reconciliation_decisions: {
         Row: {
           actor_user_id: string
@@ -46374,16 +46477,24 @@ export type Database = {
           client_id: string | null
           client_visibility: boolean
           completed_at: string | null
+          completion_note: string | null
+          completion_ref: string | null
           created_at: string
           created_by: string | null
           description: string | null
           due_date: string | null
           escalated_at: string | null
           follow_up_date: string | null
+          handoff_accepted_at: string | null
+          handoff_from_user_id: string | null
+          handoff_issue: string | null
+          handoff_requested_at: string | null
+          handoff_to_user_id: string | null
           id: string
           information_request_type: string | null
           information_required: boolean
           last_reminder_at: string | null
+          next_action: string | null
           offering_id: string | null
           prepared_by: string | null
           priority: string
@@ -46429,16 +46540,24 @@ export type Database = {
           client_id?: string | null
           client_visibility?: boolean
           completed_at?: string | null
+          completion_note?: string | null
+          completion_ref?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           escalated_at?: string | null
           follow_up_date?: string | null
+          handoff_accepted_at?: string | null
+          handoff_from_user_id?: string | null
+          handoff_issue?: string | null
+          handoff_requested_at?: string | null
+          handoff_to_user_id?: string | null
           id?: string
           information_request_type?: string | null
           information_required?: boolean
           last_reminder_at?: string | null
+          next_action?: string | null
           offering_id?: string | null
           prepared_by?: string | null
           priority?: string
@@ -46484,16 +46603,24 @@ export type Database = {
           client_id?: string | null
           client_visibility?: boolean
           completed_at?: string | null
+          completion_note?: string | null
+          completion_ref?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           escalated_at?: string | null
           follow_up_date?: string | null
+          handoff_accepted_at?: string | null
+          handoff_from_user_id?: string | null
+          handoff_issue?: string | null
+          handoff_requested_at?: string | null
+          handoff_to_user_id?: string | null
           id?: string
           information_request_type?: string | null
           information_required?: boolean
           last_reminder_at?: string | null
+          next_action?: string | null
           offering_id?: string | null
           prepared_by?: string | null
           priority?: string
@@ -50779,6 +50906,23 @@ export type Database = {
         Returns: Json
       }
       sod_override_active: { Args: { _ids: string[] }; Returns: boolean }
+      software_issue_move: {
+        Args: { _actor: string; _issue: string; _note?: string; _to: string }
+        Returns: Json
+      }
+      software_issue_report: {
+        Args: { _actor: string; _p: Json }
+        Returns: string
+      }
+      staff_task_transition: {
+        Args: {
+          _action: string
+          _actor: string
+          _payload?: Json
+          _task: string
+        }
+        Returns: Json
+      }
       store_offering_rp_identifier: {
         Args: {
           _actor: string

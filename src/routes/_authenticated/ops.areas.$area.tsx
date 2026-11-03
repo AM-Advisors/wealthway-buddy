@@ -5,6 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { useClientWorkspace } from "@/components/client-workspace";
+import { LoadError } from "@/components/load-error";
+import { PartialResultsNotice } from "@/components/partial-results-notice";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAccessControlAccess } from "@/lib/access-control.functions";
@@ -75,13 +78,20 @@ function WorkAreaPage() {
   const screens = visibleScreens(allowedScreens(area, caps), { accessControl: acl?.allowed === true });
 
   const queueFn = useServerFn(getOpsWorkQueue);
+  const [view, setView] = useState<"all" | "mine" | "unassigned">("all");
+  const [page, setPage] = useState(1);
+  const queues = (area.queues ?? [area.id]) as any[];
+  useEffect(() => { setView("all"); setPage(1); }, [areaId]);
   const queue = useQuery({
-    queryKey: ["ops-work-queue", "area-page"],
-    queryFn: () => queueFn({ data: { page: 1, pageSize: 100 } }),
+    queryKey: ["ops-work-queue", "area-page", areaId, view, page],
+    queryFn: () => queueFn({ data: { page, pageSize: 8, filters: {
+      areas: queues,
+      ...(view === "mine" ? { scope: "mine" as const } : {}),
+      ...(view === "unassigned" ? { unassigned: true } : {}),
+    } } }),
     enabled: allowed,
   });
-  const queues = new Set(area.queues ?? [area.id]);
-  const waiting = (queue.data?.items ?? []).filter((i) => queues.has(i.area));
+  const waiting = queue.data?.items ?? [];
 
   const [recent, setRecent] = useState<RecentScreen[]>([]);
   useEffect(() => setRecent(readRecent()), []);
@@ -108,26 +118,40 @@ function WorkAreaPage() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 Waiting now
-                {queue.data && <Badge variant="secondary">{waiting.length}</Badge>}
+                {queue.data && !queue.isError && <Badge variant="secondary">{queue.data.total}</Badge>}
               </CardTitle>
+              <div className="flex flex-wrap gap-2 pt-2" role="group" aria-label="Whose work">
+                {([["all", "All work"], ["mine", "My work"], ["unassigned", "Needs owner"]] as const).map(([v, label]) => (
+                  <Button key={v} size="sm" variant={view === v ? "default" : "outline"} onClick={() => { setView(v); setPage(1); }}>{label}</Button>
+                ))}
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-2">
+              <PartialResultsNotice partial={queue.data?.partial} failedAreas={queue.data?.failedAreas} />
               {queue.isLoading ? (
                 <p className="text-sm text-muted-foreground">Loading…</p>
+              ) : queue.isError ? (
+                <LoadError error={queue.error} what="Work" onRetry={() => queue.refetch()} />
               ) : waiting.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nothing is waiting here right now.</p>
+                <p className="text-sm text-muted-foreground">
+                  {queue.data?.partial ? "Nothing found in what loaded." : view === "mine" ? "Nothing assigned to you here." : view === "unassigned" ? "Everything here has an owner." : "Nothing is waiting here right now."}
+                </p>
               ) : (
                 <ul className="divide-y">
-                  {waiting.slice(0, 8).map((i) => {
+                  {waiting.map((i) => {
                     const w = waitingLabel(i.at);
                     const aging = w && /\d/.test(w) && Number(w.match(/\d+/)![0]) >= 3;
+                    const owner = i.assignedToName ?? (i.assignedTo ? "Assigned" : (i as any).assignable ? "Needs owner" : "No owner field");
                     return (
                       <li key={i.id}>
                         <Link to={i.destination as never} className="flex items-center justify-between gap-3 py-2 hover:text-primary">
                           <span className="min-w-0">
                             <span className="block truncate text-sm font-medium">{i.title}</span>
                             <span className="block truncate text-xs text-muted-foreground">
-                              {[i.fundName ?? i.clientName, i.reason].filter(Boolean).join(" · ")}
+                              {[i.fundName ?? i.clientName, (i as any).nextAction ?? i.reason].filter(Boolean).join(" · ")}
+                            </span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {[`Owner: ${owner}`, `Action: ${i.requiredAction}`, i.dueDate ? `Due ${i.dueDate}` : null, i.blocked ? `Blocked${i.blockReason ? `: ${i.blockReason}` : ""}` : null, (i as any).followUpDate ? `Follow up ${(i as any).followUpDate}` : null].filter(Boolean).join(" · ")}
                             </span>
                           </span>
                           <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
@@ -141,8 +165,12 @@ function WorkAreaPage() {
                   })}
                 </ul>
               )}
-              {waiting.length > 8 && (
-                <Link to="/ops" className="mt-2 inline-block text-sm text-primary">See all {waiting.length} on Home</Link>
+              {queue.data && queue.data.pages > 1 && (
+                <div className="flex items-center justify-between gap-2 pt-2 text-sm">
+                  <Button size="sm" variant="outline" disabled={queue.data.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
+                  <span className="text-muted-foreground">Page {queue.data.page} of {queue.data.pages}</span>
+                  <Button size="sm" variant="outline" disabled={queue.data.page >= queue.data.pages} onClick={() => setPage((p) => p + 1)}>Next</Button>
+                </div>
               )}
             </CardContent>
           </Card>

@@ -49,3 +49,16 @@ export const getClientFundTasks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-tasks.server")).listClientFundTasks(context.userId, data.fundId));
+
+export const transitionTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({
+    id: z.string().uuid(),
+    action: z.enum(["request_handoff", "accept_handoff", "handoff_issue", "cancel_handoff", "block", "set_next", "complete"]),
+    payload: z.object({
+      to: z.string().uuid().optional(), nextAction: z.string().max(1000).optional(), text: z.string().max(2000).optional(),
+      targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), followUp: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      unblock: z.boolean().optional(), note: z.string().max(4000).optional(), ref: z.string().max(500).optional(),
+    }).optional(),
+  }).parse(d))
+  .handler(async ({ context, data }) => (await import("@/lib/staff-tasks.server")).transitionTask(context.userId, data as any));
