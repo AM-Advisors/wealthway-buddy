@@ -82,7 +82,7 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
 
   return (
     <>
-    <CountersignTimingCard offeringId={offeringId} />
+    {q.data.canRelease && <CountersignTimingCard offeringId={offeringId} />}
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Offering Documents</CardTitle>

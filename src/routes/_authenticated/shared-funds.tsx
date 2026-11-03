@@ -41,6 +41,7 @@ function Page() {
   return (
     <main className="mx-auto max-w-5xl p-6 space-y-6">
       <h1 className="font-heading text-2xl text-foreground">Shared funds</h1>
+      {search.fund && !list.isLoading && !list.data?.funds.some(f => f.fundId === search.fund) && <Button asChild><Link to="/manager/fund/$fundId" params={{ fundId: search.fund }}>Open fund review</Link></Button>}
       {list.isLoading ? (
         <p className="text-muted-foreground">Loading…</p>
       ) : (list.data?.funds.length ?? 0) === 0 ? (

@@ -68,6 +68,7 @@ export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
       const { data: saved, error } = await db.from("fund_questionnaire_sections").update({ title: data.title, questions: data.questions, prepared_by: context.userId, prepared_at: new Date().toISOString(), ...provenance }).eq("id", data.sectionId).eq("offering_id", data.offeringId).eq("status", "draft").select("id").maybeSingle();
       if (error) throw new Error(error.message);
       if (!saved) throw new Error("That draft changed. Refresh before saving.");
+      await (await import("./fund-review-notify.server")).notifyFundReview("questions", saved.id);
       return { ok: true };
     }
     const { data: last } = await db.from("fund_questionnaire_sections").select("version").eq("offering_id", data.offeringId).order("version", { ascending: false }).limit(1);
