@@ -567,7 +567,15 @@ async function signingSeries(admin: any, offeringId: string, applicationId: stri
   const pick = resolveSigningClass(classes, cents, ob?.offering_class_key ?? null);
   if (pick.status === "no_ranges") return classes.find((c) => c.key === ob?.offering_class_key)?.name ?? null;
   if (pick.status === "no_amount") refuse("Enter the investment amount before this agreement is prepared.");
-  if (pick.status === "below_minimum") refuse(`The amount is below this fund's $${(pick.minimumCents / 100).toLocaleString("en-US")} minimum.`);
+  if (pick.status === "below_minimum") {
+    // A side letter waiving the minimum lets the investment sign in the entry-level series.
+    const { data: sl } = ob ? await admin.from("side_letters").select("id").eq("onboarding_id", ob.id).in("status", ["proposed", "active"]).limit(1) : { data: [] };
+    if (!(sl ?? []).length) refuse(`The amount is below this fund's $${(pick.minimumCents / 100).toLocaleString("en-US")} minimum.`);
+    const entry = [...classes].filter((c) => c.minInvestmentCents != null).sort((a, b) => a.minInvestmentCents - b.minInvestmentCents)[0];
+    if (!entry) return null;
+    if (ob.offering_class_key !== entry.key) await admin.from("investor_onboardings").update({ offering_class_key: entry.key }).eq("id", ob.id);
+    return entry.name ?? entry.key;
+  }
   if (pick.status === "choose") {
     const names = pick.keys.map((k) => classes.find((c) => c.key === k)?.name ?? k).join(" or ");
     refuse(`This amount qualifies for ${names}. A fund manager or Harmonious must choose the series before signing.`);
