@@ -22,7 +22,7 @@ import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { ManagerAddInvestor } from "@/components/manager-add-investor";
 import { PrepareInvestor } from "@/components/prepare-investor";
 import { copyText, FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
-import { getFundInvestorActions, removeFundAccess } from "@/lib/invitations.functions";
+import { getFundInvestorActions, removeFundAccess, removeLegacyApplicationFromFund } from "@/lib/invitations.functions";
 import { fundReadinessFn, managerOnboardingBoardFn } from "@/lib/investor-onboarding.functions";
 import { ResendInviteButton, ResendInviteMenuItem } from "@/components/invite-resend";
 import { fundInvestorRecordsFn, removeFromFundFn } from "@/lib/investor-record.functions";
@@ -67,6 +67,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   const loadLink = useServerFn(getFundLinkFn);
   const remove = useServerFn(removeFromFundFn);
   const revoke = useServerFn(removeFundAccess);
+  const removeLegacy = useServerFn(removeLegacyApplicationFromFund);
 
   const records = useQuery({ queryKey: ["fund-investor-records", fundId], queryFn: () => loadRecords({ data: { offeringId: fundId } }) });
   const readiness = useQuery({ queryKey: ["fund-readiness", fundId], queryFn: () => loadReadiness({ data: { offeringId: fundId } }), retry: false });
