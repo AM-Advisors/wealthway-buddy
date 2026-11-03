@@ -171,6 +171,10 @@ export async function transitionTask(viewer: string, d: { id: string; action: (t
   if (!canWrite) throw new Error("Your role can view tasks but not change them.");
   const payload = d.payload ?? {};
   if (d.action === "request_handoff" && !staff.has(String(payload["to"] ?? ""))) throw new Error("Tasks can only be handed to Harmonious staff.");
+  if (d.action === "complete") {
+    const { data: t } = await db.from("staff_tasks").select("related_workflow_type").eq("id", d.id).maybeSingle();
+    if (t?.related_workflow_type === "software_issue") throw new Error("This task closes when its software issue passes retest and is resolved.");
+  }
   const { error } = await db.rpc("staff_task_transition", { _task: d.id, _actor: viewer, _action: d.action, _payload: payload });
   if (error) throw new Error(error.message);
   return { ok: true };
