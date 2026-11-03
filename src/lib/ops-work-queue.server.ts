@@ -14,6 +14,8 @@ import { canonicalizeApplications } from "@/lib/verification-status";
  * by the exact step (prepare / review / approve) the item asks for.
  */
 
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import { requireOperations } from "@/lib/ops-access.functions";
 import { verificationNeedsConfirmation } from "@/lib/verification-alert-model";
 import { can, type OpsArea, type OpsCapability } from "@/lib/ops-capabilities";
@@ -30,6 +32,7 @@ import {
   sectionOf,
   sortItems,
   summaryIsSafe,
+  isAssignable,
   type WorkFilters,
   type WorkItem,
   type WorkSection,
@@ -37,18 +40,52 @@ import {
 
 const SOURCE_LIMIT = 200;
 
+/** Per-request record of sources that failed or hit their read limit. */
+type Completeness = { failed: Set<string>; truncated: number };
+const completeness = new AsyncLocalStorage<Completeness>();
+const newCompleteness = (): Completeness => ({ failed: new Set(), truncated: 0 });
+
 const rows = <T = any>(res: { data: any; error: any }): T[] => {
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []) as T[];
+  const data = (res.data ?? []) as T[];
+  if (data.length >= SOURCE_LIMIT) {
+    const c = completeness.getStore();
+    if (c) c.truncated++;
+  }
+  return data;
 };
 
-/** A source that fails (missing table, tightened policy) must not blank the page. */
+/** A source that fails must not blank the page, but the failure is recorded so results are never shown as complete. */
 async function safely<T>(load: () => Promise<T[]>): Promise<T[]> {
   try {
     return await load();
   } catch {
+    completeness.getStore()?.failed.add("source");
     return [];
   }
+}
+
+/** Runs every permitted collector, recording which areas failed or were cut short. */
+async function collectAll(capabilities: Set<OpsCapability> | any, run: (load: (typeof COLLECTORS)[number]["load"]) => Promise<WorkItem[]>) {
+  const c = newCompleteness();
+  const collected = await completeness.run(c, () => Promise.all(
+    COLLECTORS.map(async ({ area, load }) => {
+      if (!can(capabilities, area, "see")) return [] as WorkItem[];
+      try {
+        return await run(load);
+      } catch {
+        c.failed.add(area);
+        return [] as WorkItem[];
+      }
+    }),
+  ));
+  return { items: collected.flat(), completeness: summarizeCompleteness(c) };
+}
+
+function summarizeCompleteness(c: Completeness) {
+  const failedAreas = [...c.failed].filter((x) => x !== "source");
+  const partial = c.failed.size > 0 || c.truncated > 0;
+  return { partial, failedAreas, failedSources: c.failed.size, truncatedSources: c.truncated };
 }
 
 type Ctx = { userId: string; supabase: any };
@@ -1239,14 +1276,10 @@ export async function workQueue(context: Ctx, input: WorkQueueInput = {}) {
   const filters = input.filters ?? {};
   const lookup = await lookups(s);
 
-  const collected = await Promise.all(
-    COLLECTORS.map(async ({ area, load }) =>
-      // never read an area this person may not see
-      can(capabilities, area, "see") ? load(s, lookup, now, filters.fundId) : [],
-    ),
-  );
+  // never read an area this person may not see
+  const { items: collectedItems, completeness: done } = await collectAll(capabilities, (load) => load(s, lookup, now, filters.fundId));
 
-  const authorized = filterByCapability(collected.flat(), capabilities).filter(summaryIsSafe);
+  const authorized = filterByCapability(collectedItems, capabilities).filter(summaryIsSafe);
   const filtered = sortItems(applyFilters(authorized, filters, context.userId, now));
   const page = paginate(filtered, input.page ?? 1, input.pageSize ?? 25);
 
@@ -1258,7 +1291,8 @@ export async function workQueue(context: Ctx, input: WorkQueueInput = {}) {
   return {
     roles,
     capabilities,
-    items: page.rows.map((item) => ({ ...item, destination: destinationFor(item), section: sectionOf(item, now) })),
+    items: page.rows.map((item) => ({ ...item, destination: destinationFor(item), section: sectionOf(item, now), assignable: isAssignable(item) })),
+    ...done,
     total: page.total,
     page: page.page,
     pages: page.pages,
@@ -1283,12 +1317,16 @@ export async function approvalsInbox(context: Ctx) {
   const s = context.supabase;
   const now = new Date();
   const lookup = await lookups(s);
-  const collected = await Promise.all(
-    COLLECTORS.map(async ({ area, load }) => (can(capabilities, area, "see") ? load(s, lookup, now).catch(() => [] as WorkItem[]) : [])),
-  );
-  const items = sortOldestFirst(filterByCapability(collected.flat(), capabilities).filter(summaryIsSafe).filter(isApprovalItem)).slice(0, 300);
+  const { items: collectedItems, completeness: done } = await collectAll(capabilities, (load) => load(s, lookup, now));
+  const all = sortOldestFirst(filterByCapability(collectedItems, capabilities).filter(summaryIsSafe).filter(isApprovalItem));
+  const items = all.slice(0, 300);
+  const capped = all.length > items.length;
+  const _unused = sortOldestFirst(filterByCapability([] as WorkItem[], capabilities).filter(summaryIsSafe).filter(isApprovalItem)).slice(0, 300);
   return {
-    total: items.length,
+    ...done,
+    partial: done.partial || capped,
+    total: all.length,
+    shown: items.length,
     stalled: items.filter((i) => isStalledApproval(i.at, now)).length,
     items: items.map((i) => ({
       id: i.id, title: i.title, reason: i.reason, requiredAction: i.requiredAction,

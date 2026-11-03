@@ -310,7 +310,6 @@ export const ASSIGNMENT_SOURCES: Record<string, string> = {
   "onboarding.review": "investor_onboardings.assigned_to",
   "onboarding.exception": "investor_onboarding_exceptions.owner",
   "reconciliation.exception": "accounting_exceptions.opened_by",
-  "task.staff": "staff_tasks.assignee_user_id",
 };
 
 /** Whether the item's workflow records an owner at all. */
