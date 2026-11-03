@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SelfApprovalPrompt } from "@/components/self-approval-prompt";
 import { ActivityTracker } from "@/components/activity-tracker";
 import { SessionEvidenceTracker } from "@/components/session-evidence-tracker";
+import { SessionRecorder } from "@/components/session-recorder";
 import { SessionTimeoutNotice } from "@/components/session-timeout-notice";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-mode";
 import { canonicalRedirect } from "@/lib/host-routing";
@@ -149,6 +150,7 @@ function RootComponent() {
       <SelfApprovalPrompt />
       <ActivityTracker />
       <SessionEvidenceTracker />
+      <SessionRecorder />
       <SessionTimeoutNotice />
     </QueryClientProvider>
   );

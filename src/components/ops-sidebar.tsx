@@ -233,6 +233,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const teamItems: NavItem[] = staffRoles.length ? [
     { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document", badge: taskAlerts },
     { id: "software-issues", title: "Software issues", url: "/ops/software-issues", icon: "tasks", badge: issueAlerts },
+    ...(has("super_admin", "executive", "admin") ? [{ id: "session-recordings", title: "Screen recordings", url: "/ops/session-recordings", icon: "document" as const }] : []),
     ...(!salesOnly ? [
     { id: "client-approvals", title: "Client approvals & requests", url: "/ops/client-approvals", icon: "document" },
     ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people", sub: peopleSub }] : []),

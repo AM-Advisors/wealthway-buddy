@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Circle, Square, Video, X } from "lucide-react";
@@ -107,6 +107,8 @@ export function SessionRecorder() {
     finally { setSaving(false); }
   };
 
+  const previewUrl = useMemo(() => (pending ? URL.createObjectURL(pending) : null), [pending]);
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   if (!signedIn) return null;
   return (
     <div data-no-record className="fixed bottom-4 left-4 z-50 flex flex-col items-start gap-2">
@@ -116,7 +118,7 @@ export function SessionRecorder() {
             <p className="text-sm font-medium">Send this recording to Harmonious?</p>
             <button aria-label="Discard recording" onClick={() => { setPending(null); setNote(""); }}><X className="h-4 w-4" /></button>
           </div>
-          <video src={URL.createObjectURL(pending)} controls className="mb-2 w-full rounded" />
+          <video src={previewUrl ?? undefined} controls className="mb-2 w-full rounded" />
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="What were you trying to do? (optional)" className="mb-2" />
           <div className="flex gap-2">
             <Button size="sm" onClick={send} disabled={saving}>{saving ? "Sending…" : "Send"}</Button>
