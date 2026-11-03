@@ -51,7 +51,7 @@ export async function supersedeUnstartedInvestmentCheck(applicationId: string, p
   const unstarted = ["pending", "not_started"].includes(String(kv.status)) && /not started/i.test(String(kv.provider_decision ?? "not started"));
   if (!unstarted) return false;
   await db().from("kyc_verifications").update({
-    status: "expired", session_url: null,
+    status: "not_started", session_url: null,
     harmonious_decision_reason: `Replaced by the person's identity check (${personSessionId})`,
     updated_at: new Date().toISOString(),
   }).eq("id", kv.id);
