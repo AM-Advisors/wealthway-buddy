@@ -28,8 +28,8 @@ export async function listTasks(viewer: string) {
   if (error) throw new Error(error.message);
   const all = (data ?? []) as any[];
   const seeAll = leader || roles.includes("leadership");
-  const rows = all.filter((t) => seeAll || t.created_by === viewer || (t.assignee_user_id && visible.has(t.assignee_user_id)) || (!t.assignee_user_id && t.team && ((TEAMS as any)[t.team]?.roles ?? []).some((r: string) => roles.includes(r))));
-  const nm = await names(db, [...staff.keys(), ...rows.map((r) => r.created_by)]);
+  const rows = all.filter((t) => seeAll || t.created_by === viewer || t.handoff_to_user_id === viewer || (t.assignee_user_id && visible.has(t.assignee_user_id)) || (!t.assignee_user_id && t.team && ((TEAMS as any)[t.team]?.roles ?? []).some((r: string) => roles.includes(r))));
+  const nm = await names(db, [...staff.keys(), ...rows.map((r) => r.created_by), ...rows.map((r) => r.handoff_to_user_id), ...rows.map((r) => r.handoff_from_user_id)]);
   const clientIds = [...new Set(rows.map((r) => r.client_id).filter(Boolean))];
   const { data: cl } = clientIds.length ? await db.from("clients").select("id, name").in("id", clientIds) : { data: [] };
   const cm = new Map(((cl ?? []) as any[]).map((c) => [c.id, c.name]));
@@ -46,7 +46,7 @@ export async function listTasks(viewer: string) {
   return {
     viewer, canWrite, seeAll,
     staff: [...staff.keys()].map((id) => ({ id, name: nm.get(id) ?? "Staff member" })).sort((a, b) => a.name.localeCompare(b.name)),
-    rows: rows.map((t) => ({ ...t, assigneeName: t.assignee_user_id ? nm.get(t.assignee_user_id) ?? "Staff member" : null, creatorName: t.created_by ? nm.get(t.created_by) ?? "" : "", clientName: t.client_id ? cm.get(t.client_id) ?? null : null,
+    rows: rows.map((t) => ({ ...t, assigneeName: t.assignee_user_id ? nm.get(t.assignee_user_id) ?? "Staff member" : null, handoffToName: t.handoff_to_user_id ? nm.get(t.handoff_to_user_id) ?? "Staff member" : null, handoffFromName: t.handoff_from_user_id ? nm.get(t.handoff_from_user_id) ?? "Staff member" : null, creatorName: t.created_by ? nm.get(t.created_by) ?? "" : "", clientName: t.client_id ? cm.get(t.client_id) ?? null : null,
       fundName: t.offering_id ? fm.get(t.offering_id) ?? null : null,
       serviceLevel: t.offering_id ? em.get(t.offering_id)?.service_level ?? null : null,
       primaryAdministratorId: t.offering_id ? em.get(t.offering_id)?.primary_administrator_user_id ?? null : null,
@@ -72,10 +72,12 @@ export async function createTask(viewer: string, d: { title: string; description
 }
 
 export async function updateTask(viewer: string, d: { id: string; status?: string | undefined; priority?: string | undefined; assignee?: string | null | undefined; team?: string | null | undefined; dueDate?: string | null | undefined; note?: string | null | undefined }) {
-  const { db, staff, canWrite } = await ctx(viewer);
+  const { db, staff, canWrite, leader } = await ctx(viewer);
   if (!canWrite) throw new Error("Your role can view tasks but not change them.");
   const { data: t } = await db.from("staff_tasks").select("*").eq("id", d.id).maybeSingle();
   if (!t) throw new Error("Task not found.");
+  if (d.status && d.status !== t.status && (d.status === "done" || d.status === "blocked")) throw new Error(d.status === "done" ? "Use Complete and add a short note about what was done." : "Use Blocked and add the next action, target date and follow-up.");
+  if (d.assignee !== undefined && t.assignee_user_id && d.assignee !== t.assignee_user_id && !leader) throw new Error("Use Hand off so the receiver can accept the task.");
   const patch: any = { updated_at: new Date().toISOString() };
   const changes: any = {};
   if (d.status && d.status !== t.status) { patch.status = d.status; patch.completed_at = d.status === "done" ? new Date().toISOString() : null; changes.status = [t.status, d.status]; }
