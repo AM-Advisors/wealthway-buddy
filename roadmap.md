@@ -1,5 +1,11 @@
 # Roadmap
 
+## Automatic Verification to Sign
+- [ ] Advance completed Verification during canonical reconciliation, not page reads or investor Continue clicks.
+- [ ] Preserve failed, expired and incomplete verification, signatures, funding and admission controls.
+- [ ] Reconcile the four currently parked investors through authorized actions and confirm stored stages.
+- [ ] Test repeat/concurrent advancement and verification blockers; publishing remains separate.
+
 ## Manager-led routine fund work and review emails
 - [x] Add explicit exact-fund designated reviewer access without upgrading existing assistants/viewers.
 - [x] Connect routine minimum edits, terms, questions, document and side-letter reviews to existing canonical actions and authorized fund-team controls. Manager can designate the review email owner.
