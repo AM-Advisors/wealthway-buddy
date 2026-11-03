@@ -6,7 +6,7 @@ export const MANAGER_REVIEW_KINDS = ["entity_formation", "operating_agreement", 
 
 export async function assertUploadReviewer(userId: string, offeringId: string) {
   const actor = await setupActor(userId);
-  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) await (await import("./fund-routine-access.server")).assertRoutineFund(await admin(), userId, offeringId);
   return actor;
 }
 
@@ -15,6 +15,7 @@ export async function uploadReviewContext(userId: string, documentId: string) {
   const { data: row, error } = await d.from("investor_documents").select("id, offering_id, onboarding_id, application_id, investment_profile_id, user_id, prepared_for_person_id, storage_path, file_name, doc_kind, review_status").eq("id", documentId).maybeSingle();
   if (error || !row?.offering_id) throw new Error("That file is not available.");
   const actor = await assertUploadReviewer(userId, row.offering_id);
+  if (!actor.isStaff && !actor.offeringIds.includes(row.offering_id) && !(MANAGER_REVIEW_KINDS as readonly string[]).includes(row.doc_kind)) throw new Error("This document requires its protected review workflow.");
   if (row.onboarding_id) {
     const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investment_profile_id, investor_user_id, person_id, removed_at").eq("id", row.onboarding_id).maybeSingle();
     if (!ob || ob.removed_at || ob.offering_id !== row.offering_id || (row.investment_profile_id && ob.investment_profile_id !== row.investment_profile_id) || (ob.investor_user_id ? row.user_id !== ob.investor_user_id : row.prepared_for_person_id !== ob.person_id)) throw new Error("This file does not match the recorded investor.");

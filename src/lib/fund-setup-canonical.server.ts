@@ -147,7 +147,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       hasMultipleClasses: !!o.has_multiple_classes,
       plannedClassCount: (o.planned_class_count ?? null) as number | null,
       driveFolderUrl: o.drive_folder_url,
-      driveLinks: (Array.isArray(o.drive_links) ? o.drive_links : []) as { label: string; url: string }[],
+      driveLinks: (actor.isStaff && Array.isArray(o.drive_links) ? o.drive_links : []) as { label: string; url: string }[],
     },
     setup: setup
       ? { id: setup.id, fiscalYearEnd: setup.fiscal_year_end, fundTermMonths: setup.fund_term_months, investmentPeriodMonths: setup.investment_period_months }
