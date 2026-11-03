@@ -160,3 +160,16 @@ export async function listClientFundTasks(viewer: string, fundId: string) {
 }
 
 export { isLeader };
+
+export const TASK_ACTIONS = ["request_handoff", "accept_handoff", "handoff_issue", "cancel_handoff", "block", "set_next", "complete"] as const;
+
+/** Handoffs, blockers, next steps and completion. Rules and history are enforced in one database transaction. */
+export async function transitionTask(viewer: string, d: { id: string; action: (typeof TASK_ACTIONS)[number]; payload?: Record<string, unknown> | undefined }) {
+  const { db, staff, canWrite } = await ctx(viewer);
+  if (!canWrite) throw new Error("Your role can view tasks but not change them.");
+  const payload = d.payload ?? {};
+  if (d.action === "request_handoff" && !staff.has(String(payload["to"] ?? ""))) throw new Error("Tasks can only be handed to Harmonious staff.");
+  const { error } = await db.rpc("staff_task_transition", { _task: d.id, _actor: viewer, _action: d.action, _payload: payload });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
