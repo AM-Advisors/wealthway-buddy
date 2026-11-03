@@ -2570,6 +2570,13 @@
       "when": 1793672264434,
       "tag": "0366_software_issues",
       "breakpoints": true
+    },
+    {
+      "idx": 367,
+      "version": "7",
+      "when": 1793735274892,
+      "tag": "0367_sealed_document_file_access",
+      "breakpoints": true
     }
   ]
 }

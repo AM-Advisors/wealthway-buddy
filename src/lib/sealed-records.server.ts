@@ -11,3 +11,9 @@ export async function sealedIds(db: any, table: SealedTable): Promise<Set<string
 export function withoutSealed<T extends { id?: string }>(rows: T[], sealed: Set<string>): T[] {
   return rows.filter((r) => !r.id || !sealed.has(r.id));
 }
+
+/** Direct URL endpoints must check too: privileged file reads bypass row policies. */
+export async function assertUnsealedVersion(db: any, table: SealedTable, id: string): Promise<void> {
+  const sealed = await sealedIds(db, table);
+  if (sealed.has(id)) throw new Error("That document is no longer available.");
+}
