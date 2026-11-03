@@ -62,3 +62,7 @@ export const transitionTask = createServerFn({ method: "POST" })
     }).optional(),
   }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-tasks.server")).transitionTask(context.userId, data as any));
+
+export const getMyActionAlerts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await import("@/lib/staff-tasks.server")).myActionAlerts(context.userId));

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { MyActionAlerts } from "@/components/my-action-alerts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -45,6 +46,7 @@ function SoftwareIssuesPage() {
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.isError && <LoadError error={q.error} what="Software issues" onRetry={() => q.refetch()} />}
       {d && (<>
+        <MyActionAlerts kinds={["retest", "fix"]} />
         <PartialResultsNotice partial={d.truncated} />
         <div className="flex flex-wrap gap-2">
           {d.canWrite && <Button onClick={() => setShowForm((v) => !v)}>{showForm ? "Close form" : "Report a software issue"}</Button>}
