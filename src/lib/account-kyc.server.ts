@@ -102,6 +102,10 @@ export async function applyAccountDecision(c: any, decision: Record<string, any>
   await db().from("account_identity_checks").update({ status: to, decision_summary: summary, warnings: n.warnings.slice(0, 20), updated_at: now() }).eq("id", c.id);
   await logEvent(c, "provider_decision", c.status, to, null);
   if (c.status === "review") await emailReviewOutcome(c, to, null);
+  if (to === "approved") {
+    try { const { fanOutPersonIdentity } = await import("@/lib/person-identity.server"); await fanOutPersonIdentity(c.person_id ?? null, c.session_id ? String(c.session_id) : null, null); }
+    catch (e) { console.error("[account-kyc] fan-out", e instanceof Error ? e.message : String(e)); }
+  }
   const { notifyVerificationConfirmation } = await import("@/lib/ops-slack-notify.server");
   await notifyVerificationConfirmation({ check: "KYC", status: to, ref: c.id, path: "/ops/security-compliance?section=overview" });
   await notifyVerificationConfirmation({ check: "AML", status: n.aml.hitCount > 0 ? "review" : n.aml.status, ref: c.id, path: "/ops/security-compliance?section=overview" });
@@ -163,6 +167,8 @@ export async function decideAccountCheck(uid: string, checkId: string, action: "
       const { autoApplyDiditSession, applyApprovedAccountCheck } = await import("@/lib/didit-auto-apply.server");
       if (c.session_id) await autoApplyDiditSession(String(c.session_id));
       await applyApprovedAccountCheck(c.person_id ?? null, c.session_id ? String(c.session_id) : null, uid);
+      const { fanOutPersonIdentity } = await import("@/lib/person-identity.server");
+      await fanOutPersonIdentity(c.person_id ?? null, c.session_id ? String(c.session_id) : null, uid);
     } catch (e) { console.error("[account-kyc] auto-apply after approval", e instanceof Error ? e.message : String(e)); }
   }
   return { ok: true };

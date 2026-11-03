@@ -2360,6 +2360,27 @@ export async function startInvestmentVerification(userId: string, onboardingId: 
     await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_reused", actorUserId: userId, actorRole: "investor" } as any);
     return { url: null as string | null, completed: true };
   }
+  // One identity check per person: follow the login check instead of opening a second session.
+  {
+    const { resolvePersonIdentity, supersedeUnstartedInvestmentCheck } = await import("@/lib/person-identity.server");
+    const { check, action } = await resolvePersonIdentity(row.investor_user_id ?? null, row.person_id ?? null);
+    if (check) {
+      if (check.session_id && row.application_id) await supersedeUnstartedInvestmentCheck(row.application_id, check.session_id);
+      if (check.session_id && !row.questionnaire_didit_session_id) await touch(row.id, { questionnaire_didit_session_id: check.session_id });
+      if (String(row.stage) === "profile_selected") await touch(row.id, { stage: "verification" });
+      if (action.kind === "resume") return { url: action.url };
+      if (action.kind === "wait" || action.kind === "reuse") return { url: null as string | null, completed: false, inReview: true };
+      if (action.kind === "blocked") fail("Harmonious is following up on your identity check. We'll email you with next steps.");
+      if (action.kind === "start" && row.investor_user_id === userId) {
+        const { startAccountCheck } = await import("@/lib/account-kyc.server");
+        const r = await startAccountCheck(userId, origin);
+        if (r.url) {
+          await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_started", actorUserId: userId, actorRole: "investor" } as any);
+          return { url: r.url };
+        }
+      }
+    }
+  }
   let applicationId = row.application_id as string | null;
   if (!applicationId) {
     if (!authenticatedDb) fail("We couldn't safely link this investment's verification. Please contact Harmonious.");

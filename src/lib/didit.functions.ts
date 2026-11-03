@@ -37,6 +37,12 @@ export const startIdentityCheck = createServerFn({ method: "POST" })
       /* fall back to the production origin */
     }
 
+    // One identity check per person: reopen the login check rather than a second session.
+    const { resolvePersonIdentity } = await import("@/lib/person-identity.server");
+    const { action } = await resolvePersonIdentity(userId, null);
+    if (action.kind === "resume") return { url: action.url, resumed: true };
+    if (action.kind === "wait" || action.kind === "reuse") return { url: null as string | null, resumed: true };
+    if (action.kind === "blocked") throw new Error("Harmonious is following up on your identity check.");
     const { startVerificationSession } = await import("@/lib/kyc-verification.server");
     const result = await startVerificationSession({
       applicationId: application.id,
