@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getTasks, createTask, updateTask, getTaskHistory, setTaskResponsibility } from "@/lib/staff-tasks.functions";
+import { getTasks, createTask, updateTask, getTaskHistory, setTaskResponsibility, transitionTask } from "@/lib/staff-tasks.functions";
 import { ResponsibilityBadge, ResponsibilityFilter } from "@/components/responsibility-badge";
 import { RESPONSIBILITY_LABEL, RESPONSIBILITY_STATUSES, THIRD_PARTY_TYPES, asResponsibility, daysOverdue, responsibilityCounts, waitingOnDetail, type ResponsibilityStatus } from "@/lib/responsibility";
 import { titleCase } from "@/lib/service-engagement-labels";
@@ -45,7 +45,9 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
     </Select>
   );
 }
-type Tab = "mine" | "created" | "unassigned" | "all" | "done";
+type Tab = "mine" | "created" | "unassigned" | "all" | "done" | "needs_next";
+/** Open tasks with no recorded next step, usually made before handoffs existed. Owner is the assignee, or the creator when unassigned. */
+const needsNext = (t: any, viewer: string, seeAll: boolean) => !t.next_action && !t.handoff_to_user_id && (seeAll || (t.assignee_user_id ?? t.created_by) === viewer);
 
 function TasksPage() {
   const load = useServerFn(getTasks);
@@ -64,6 +66,7 @@ function TasksPage() {
     return d.rows.filter((t: any) => {
       const closed = t.status === "done" || t.status === "cancelled";
       if (tab === "done" ? !closed : closed) return false;
+      if (tab === "needs_next" && !needsNext(t, d.viewer, false)) return false;
       if (tab === "mine" && t.assignee_user_id !== d.viewer && t.handoff_to_user_id !== d.viewer) return false;
       if (tab === "created" && t.created_by !== d.viewer) return false;
       if (tab === "unassigned" && t.assignee_user_id) return false;
@@ -90,7 +93,7 @@ function TasksPage() {
         <MyActionAlerts kinds={["handoff", "handoff_issue"]} />
         {d.canWrite && <NewTask staff={d.staff} />}
         <div className="flex flex-wrap items-center gap-2">
-          {([["mine", `Assigned to me (${count((t) => t.assignee_user_id === d.viewer)})`], ["created", `I created (${count((t) => t.created_by === d.viewer)})`], ["unassigned", `Unassigned (${count((t) => !t.assignee_user_id)})`], ["all", `All open (${count(() => true)})`], ["done", "Done"]] as const).map(([k, l]) => (
+          {([["mine", `Assigned to me (${count((t) => t.assignee_user_id === d.viewer)})`], ["created", `I created (${count((t) => t.created_by === d.viewer)})`], ["unassigned", `Unassigned (${count((t) => !t.assignee_user_id)})`], ["all", `All open (${count(() => true)})`], ["needs_next", `Needs next step (${count((t) => needsNext(t, d.viewer, false))})`], ["done", "Done"]] as const).map(([k, l]) => (
             <Button key={k} size="sm" variant={tab === k ? "default" : "outline"} onClick={() => setTab(k)}>{l}</Button>
           ))}
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks" aria-label="Search tasks" className="ml-auto max-w-xs" />
@@ -105,7 +108,9 @@ function TasksPage() {
           <FilterSelect label="Due date" value={f.due} onChange={(v) => setF({ ...f, due: v })} options={[["overdue", "Overdue"], ["week", "Due within 7 days"], ["none", "No due date"]]} />
         </div>
         <div className="rounded-lg border bg-card">
-          {rows.length ? rows.map((t: any) => (
+          {tab === "needs_next" && <p className="border-b p-3 text-sm text-muted-foreground">These open tasks you own have no next action yet. Add one and a follow-up date so anyone can see what happens next.</p>}
+          {tab === "needs_next" ? (rows.length ? rows.map((t: any) => <NextStepQuickForm key={t.id} t={t} />) : <p className="p-4 text-sm text-muted-foreground">Every task you own has a next step.</p>) :
+          rows.length ? rows.map((t: any) => (
             <TaskRow key={t.id} t={t} staff={d.staff} viewer={d.viewer} seeAll={d.seeAll} canWrite={d.canWrite} open={openId === t.id} onToggle={() => setOpenId(openId === t.id ? null : t.id)} />
           )) : <p className="p-4 text-sm text-muted-foreground">No tasks here.</p>}
         </div>
@@ -278,6 +283,37 @@ function ResponsibilityEditor({ t, staff }: { t: any; staff: { id: string; name:
       <div className="flex gap-2">
         <Input value={v.reason} onChange={(e) => setV({ ...v, reason: e.target.value })} placeholder="Reason for change (required, kept in history)" aria-label="Reason for change" className="h-8" />
         <Button size="sm" onClick={save} disabled={busy || v.reason.trim().length < 5}>Save</Button>
+      </div>
+    </div>
+  );
+}
+
+function NextStepQuickForm({ t }: { t: any }) {
+  const run = useServerFn(transitionTask);
+  const qc = useQueryClient();
+  const [next, setNext] = useState("");
+  const [follow, setFollow] = useState(t.follow_up_date ?? "");
+  const [due, setDue] = useState(t.due_date ?? "");
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try {
+      await run({ data: { id: t.id, action: "set_next", payload: { nextAction: next, ...(follow ? { followUp: follow } : {}) } } });
+      if (due && due !== (t.due_date ?? "")) await update({ data: { id: t.id, dueDate: due } as any });
+      toast.success("Next step saved.");
+      qc.invalidateQueries({ queryKey: ["staff-tasks"] }); qc.invalidateQueries({ queryKey: ["staff-task-history", t.id] });
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  const update = useServerFn(updateTask);
+  return (
+    <div className="space-y-2 border-b p-3 last:border-0">
+      <div className="text-sm font-medium text-foreground">{t.title}</div>
+      <div className="text-xs text-muted-foreground">{STATUS[t.status]}{t.fundName ? ` · ${t.fundName}` : t.clientName ? ` · ${t.clientName}` : ""} · created {new Date(t.created_at).toLocaleDateString()}</div>
+      <div className="flex flex-wrap items-end gap-2">
+        <Input value={next} onChange={(e) => setNext(e.target.value)} placeholder="Next action" aria-label={`Next action for ${t.title}`} className="h-9 min-w-[240px] flex-1" />
+        <label className="text-xs">Follow up<Input type="date" value={follow} onChange={(e) => setFollow(e.target.value)} className="h-9 w-40" /></label>
+        <label className="text-xs">Target date<Input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="h-9 w-40" /></label>
+        <Button size="sm" disabled={busy || !next.trim() || !follow} onClick={save}>Save</Button>
       </div>
     </div>
   );
