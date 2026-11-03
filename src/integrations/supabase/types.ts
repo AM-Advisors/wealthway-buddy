@@ -45150,6 +45150,54 @@ export type Database = {
         }
         Relationships: []
       }
+      session_recordings: {
+        Row: {
+          bytes: number
+          chunk_count: number
+          created_at: string
+          first_path: string | null
+          id: string
+          kind: string
+          last_activity_at: string
+          last_path: string | null
+          note: string | null
+          started_at: string
+          storage_prefix: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          bytes?: number
+          chunk_count?: number
+          created_at?: string
+          first_path?: string | null
+          id?: string
+          kind: string
+          last_activity_at?: string
+          last_path?: string | null
+          note?: string | null
+          started_at?: string
+          storage_prefix: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          bytes?: number
+          chunk_count?: number
+          created_at?: string
+          first_path?: string | null
+          id?: string
+          kind?: string
+          last_activity_at?: string
+          last_path?: string | null
+          note?: string | null
+          started_at?: string
+          storage_prefix?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       short_links: {
         Row: {
           code: string

@@ -2612,6 +2612,13 @@
       "when": 1793737953701,
       "tag": "0372_atomic_routine_side_letter_review",
       "breakpoints": true
+    },
+    {
+      "idx": 373,
+      "version": "7",
+      "when": 1793740038279,
+      "tag": "0373_session_recordings",
+      "breakpoints": true
     }
   ]
 }
