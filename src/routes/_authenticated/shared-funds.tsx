@@ -4,13 +4,14 @@ import { FundRoutineWorkspace } from "@/components/fund-routine-workspace";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { z } from "zod";
 
 import { getSharedFund, listMySharedFunds } from "@/lib/fund-team-access.functions";
 import { fundTeamRoleLabel } from "@/lib/fund-team-access";
 import { AssistantDrafts } from "@/components/fund-team-drafts";
 
 export const Route = createFileRoute("/_authenticated/shared-funds")({
-  validateSearch: (search: Record<string, unknown>) => ({ fund: typeof search.fund === "string" ? search.fund : undefined, review: typeof search.review === "string" && ["terms", "questions", "document", "side_letter"].includes(search.review) ? search.review : undefined, item: typeof search.item === "string" ? search.item : undefined }),
+  validateSearch: z.object({ fund: z.string().optional(), review: z.enum(["terms", "questions", "document", "side_letter"]).optional(), item: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "Shared funds | Harmonious" },
