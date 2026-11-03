@@ -36133,6 +36133,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent: string | null
           rolling_closes: boolean | null
+          routine_review_user_id: string | null
           service_level: string
           service_tier: string
           share_price_cents: number
@@ -36220,6 +36221,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          routine_review_user_id?: string | null
           service_level?: string
           service_tier?: string
           share_price_cents?: number
@@ -36307,6 +36309,7 @@ export type Database = {
           reg_type?: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          routine_review_user_id?: string | null
           service_level?: string
           service_tier?: string
           share_price_cents?: number
