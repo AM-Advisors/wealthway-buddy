@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getInvitationInsight } from "@/lib/user-access.functions";
 import { UserInsights } from "@/components/user-insights";
-export const Route = createFileRoute("/_authenticated/ops/people/invitations/$invitationId")({
+export const Route = createFileRoute("/_authenticated/ops/people_/invitations/$invitationId")({
   validateSearch: (s: Record<string, unknown>) => ({ source: typeof s["source"] === "string" ? s["source"] : "fund_invitations" }),
   head: () => ({ meta: [{ title: "Invitation history | Harmonious" }, { name: "description", content: "Review invitation sends, email outcomes and account progress." }, { property: "og:title", content: "Invitation history | Harmonious" }, { property: "og:description", content: "Invitation and login history for an invited Harmonious user." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: InvitationPage,

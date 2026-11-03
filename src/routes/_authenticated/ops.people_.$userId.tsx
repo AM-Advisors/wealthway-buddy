@@ -13,7 +13,7 @@ import { SidebarAccessCard } from "@/components/sidebar-access-card";
 import { RefreshCw } from "lucide-react";
 import { MfaResetPanel } from "@/components/mfa-reset-panel";
 
-export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
+export const Route = createFileRoute("/_authenticated/ops/people_/$userId")({
   head: () => ({
     meta: [
       { title: "View account | Harmonious" },
