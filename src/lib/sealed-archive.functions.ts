@@ -35,7 +35,7 @@ export const openSealedRecordFn = createServerFn({ method: "POST" })
     if (!row?.file_path) throw new Error("The sealed file is unavailable.");
     const { error: logErr } = await db.from("sealed_record_openings").insert({ sealed_record_id: rec.id, opened_by: context.userId, reason: data.reason });
     if (logErr) throw new Error("The opening could not be recorded, so the file was not opened.");
-    const bucket = rec.record_table === "document_template_versions" ? "document-templates" : "offering-documents";
+    const bucket = "offering-files";
     const { data: signed, error } = await db.storage.from(bucket).createSignedUrl(row.file_path, 120);
     if (error || !signed?.signedUrl) throw new Error("The sealed file could not be opened.");
     return { url: signed.signedUrl as string };
