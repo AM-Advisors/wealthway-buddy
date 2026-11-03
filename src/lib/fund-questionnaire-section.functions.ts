@@ -71,8 +71,9 @@ export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
     }
     const { data: last } = await db.from("fund_questionnaire_sections").select("version").eq("offering_id", data.offeringId).order("version", { ascending: false }).limit(1);
     const version = (((last ?? []) as any[])[0]?.version ?? 0) + 1;
-    const { error } = await db.from("fund_questionnaire_sections").insert({ offering_id: data.offeringId, version, title: data.title, questions: data.questions, prepared_by: context.userId, ...provenance });
+    const { data: savedSection, error } = await db.from("fund_questionnaire_sections").insert({ offering_id: data.offeringId, version, title: data.title, questions: data.questions, prepared_by: context.userId, ...provenance }).select("id").single();
     if (error) throw new Error(error.message);
+    if (savedSection) await (await import("./fund-review-notify.server")).notifyFundReview("questions", savedSection.id);
     return { ok: true };
   });
 

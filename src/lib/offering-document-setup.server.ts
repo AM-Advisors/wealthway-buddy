@@ -191,6 +191,8 @@ export async function uploadDocumentVersion(userId: string, input: { documentId:
   // The active version (and the file investors see) only changes on explicit activation.
   await db().from("offering_documents").update({ current_version: version, file_updated_at: now() }).eq("id", d.id);
   await event(d.offering_id, d.id, version, "version_uploaded", userId, { fileName: input.fileName });
+  const { data: savedVersion } = await db().from("offering_document_versions").select("id").eq("offering_document_id", d.id).eq("version", version).maybeSingle();
+  if (savedVersion) await (await import("./fund-review-notify.server")).notifyFundReview("document", savedVersion.id);
   return { version };
 }
 

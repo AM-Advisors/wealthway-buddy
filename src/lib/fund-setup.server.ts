@@ -710,6 +710,7 @@ export async function saveEconomics(
     actorUserId: userId,
     actorRole: actor.isStaff ? "harmonious" : "client",
   });
+  await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id);
   return data;
 }
 
