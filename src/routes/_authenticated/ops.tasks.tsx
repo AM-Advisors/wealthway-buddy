@@ -1,7 +1,10 @@
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { MyActionAlerts } from "@/components/my-action-alerts";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { LoadError } from "@/components/load-error";
+import { PartialResultsNotice } from "@/components/partial-results-notice";
+import { assignedToViewer, taskNeedsNext, taskFollowUpDue } from "@/lib/team-work-model";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -19,6 +22,7 @@ import { invalidateFundWork } from "@/components/fund-approvals";
 import { TaskHandoffPanel } from "@/components/task-handoff-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/tasks")({
+  validateSearch: (s: Record<string, unknown>) => ({ task: typeof s.task === "string" ? s.task : undefined }),
   head: () => ({ meta: [
     { title: "Tasks | Harmonious" },
     { name: "description", content: "Assign and track tasks for each Harmonious team member." },
@@ -45,19 +49,30 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
     </Select>
   );
 }
-type Tab = "mine" | "created" | "unassigned" | "all" | "done" | "needs_next";
+type Tab = "mine" | "created" | "unassigned" | "all" | "done" | "needs_next" | "follow_up";
 /** Open tasks with no recorded next step, usually made before handoffs existed. Owner is the assignee, or the creator when unassigned. */
-const needsNext = (t: any, viewer: string, seeAll: boolean) => !t.next_action && !t.handoff_to_user_id && (seeAll || (t.assignee_user_id ?? t.created_by) === viewer);
+const needsNext = taskNeedsNext;
 
-function TasksPage() {
+export function TasksPage() {
+  const { task: selectedTask } = Route.useSearch();
   const load = useServerFn(getTasks);
-  const q = useQuery({ queryKey: ["staff-tasks"], queryFn: () => load(), retry: false });
+  const q = useQuery({ queryKey: ["staff-tasks"], queryFn: () => load(), retry: false, refetchInterval: 60_000 });
   const [tab, setTab] = useState<Tab>("mine");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [resp, setResp] = useState<ResponsibilityStatus | "ALL">("ALL");
   const [f, setF] = useState({ fund: ALL, level: ALL, admin: ALL, lead: ALL, team: ALL, due: ALL });
   const d = q.data;
+  const today = new Date().toLocaleDateString("en-CA");
+  useEffect(() => {
+    if (!selectedTask || !d) return;
+    const selected = d.rows.find((t: any) => t.id === selectedTask);
+    setTab(selected && ["done", "cancelled"].includes(selected.status) ? "done" : "all");
+    setSearch(""); setResp("ALL");
+    setF({ fund: ALL, level: ALL, admin: ALL, lead: ALL, team: ALL, due: ALL });
+    setOpenId(selectedTask);
+  }, [selectedTask, Boolean(d)]);
+  useEffect(() => { if (selectedTask && openId === selectedTask) document.getElementById(`task-${selectedTask}`)?.scrollIntoView({ block: "center" }); }, [selectedTask, openId, tab]);
   const nameOf = (id: string | null) => d?.staff.find((x: any) => x.id === id)?.name ?? "Staff member";
   const opt = (key: string) => [...new Set((d?.rows ?? []).map((t: any) => t[key]).filter(Boolean))] as string[];
   const rows = useMemo(() => {
@@ -66,8 +81,9 @@ function TasksPage() {
     return d.rows.filter((t: any) => {
       const closed = t.status === "done" || t.status === "cancelled";
       if (tab === "done" ? !closed : closed) return false;
-      if (tab === "needs_next" && !needsNext(t, d.viewer, false)) return false;
-      if (tab === "mine" && t.assignee_user_id !== d.viewer && t.handoff_to_user_id !== d.viewer) return false;
+      if (tab === "needs_next" && !needsNext(t, d.viewer)) return false;
+      if (tab === "follow_up" && !taskFollowUpDue(t, d.viewer, today)) return false;
+      if (tab === "mine" && !assignedToViewer(t, d.viewer)) return false;
       if (tab === "created" && t.created_by !== d.viewer) return false;
       if (tab === "unassigned" && t.assignee_user_id) return false;
       if (resp !== "ALL" && asResponsibility(t.responsibility_status) !== resp) return false;
@@ -81,19 +97,21 @@ function TasksPage() {
       if (f.due === "none" && t.due_date) return false;
       return !s || `${t.title} ${t.fundName ?? ""} ${t.waiting_on_name ?? ""} ${t.investorName ?? ""} ${t.description ?? ""} ${t.assigneeName ?? ""} ${t.clientName ?? ""}`.toLowerCase().includes(s);
     });
-  }, [d, tab, search, resp, f]);
+  }, [d, tab, search, resp, f, today]);
   const counts = useMemo(() => responsibilityCounts((d?.rows ?? []).filter((t: any) => tab === "done" || !["done", "cancelled"].includes(t.status))), [d, tab]);
   const count = (f: (t: any) => boolean) => d?.rows.filter((t: any) => !["done", "cancelled"].includes(t.status) && f(t)).length ?? 0;
 
   return (
-    <AmPage title="Tasks" intro="Create a task, assign it to anyone on the team, and track it to done. Every change is kept in the task's history.">
+    <AmPage title="Tasks">
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-      {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
+      {q.error && <LoadError error={q.error} what="Tasks" onRetry={() => q.refetch()} />}
       {d && (<>
         <MyActionAlerts kinds={["handoff", "handoff_issue"]} />
+        <PartialResultsNotice partial={d.partial} />
+        {selectedTask && !d.rows.some((t: any) => t.id === selectedTask) && <p role="status" className="text-sm text-destructive">This task isn't in your available work. It may be outside your access or this list's read limit.</p>}
         {d.canWrite && <NewTask staff={d.staff} />}
         <div className="flex flex-wrap items-center gap-2">
-          {([["mine", `Assigned to me (${count((t) => t.assignee_user_id === d.viewer)})`], ["created", `I created (${count((t) => t.created_by === d.viewer)})`], ["unassigned", `Unassigned (${count((t) => !t.assignee_user_id)})`], ["all", `All open (${count(() => true)})`], ["needs_next", `Needs next step (${count((t) => needsNext(t, d.viewer, false))})`], ["done", "Done"]] as const).map(([k, l]) => (
+          {([["mine", `My work (${count((t) => assignedToViewer(t, d.viewer))})`], ["follow_up", `Follow up due (${count((t) => taskFollowUpDue(t, d.viewer, today))})`], ["needs_next", `Needs next step (${count((t) => needsNext(t, d.viewer))})`], ["created", `I created (${count((t) => t.created_by === d.viewer)})`], ["unassigned", `Unassigned (${count((t) => !t.assignee_user_id)})`], ["all", `All open (${count(() => true)})`], ["done", "Done"]] as const).map(([k, l]) => (
             <Button key={k} size="sm" variant={tab === k ? "default" : "outline"} onClick={() => setTab(k)}>{l}</Button>
           ))}
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks" aria-label="Search tasks" className="ml-auto max-w-xs" />
@@ -109,7 +127,7 @@ function TasksPage() {
         </div>
         <div className="rounded-lg border bg-card">
           {tab === "needs_next" && <p className="border-b p-3 text-sm text-muted-foreground">These open tasks you own have no next action yet. Add one and a follow-up date so anyone can see what happens next.</p>}
-          {tab === "needs_next" ? (rows.length ? rows.map((t: any) => <NextStepQuickForm key={t.id} t={t} />) : <p className="p-4 text-sm text-muted-foreground">Every task you own has a next step.</p>) :
+          {tab === "needs_next" ? (rows.length ? rows.map((t: any) => <NextStepQuickForm key={t.id} t={t} />) : <p className="p-4 text-sm text-muted-foreground">{search || resp !== "ALL" || Object.values(f).some((v) => v !== ALL) ? "No tasks match these filters." : "No tasks needing a next step in this view."}</p>) :
           rows.length ? rows.map((t: any) => (
             <TaskRow key={t.id} t={t} staff={d.staff} viewer={d.viewer} seeAll={d.seeAll} canWrite={d.canWrite} open={openId === t.id} onToggle={() => setOpenId(openId === t.id ? null : t.id)} />
           )) : <p className="p-4 text-sm text-muted-foreground">No tasks here.</p>}
@@ -171,16 +189,16 @@ function TaskRow({ t, staff, viewer, seeAll, canWrite, open, onToggle }: { t: an
     } catch (e) { toast.error((e as Error).message); }
   };
   return (
-    <div className="border-b p-3 last:border-0">
+    <div id={`task-${t.id}`} className="border-b p-3 last:border-0">
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={onToggle} className="min-w-0 flex-1 text-left">
+        <Button variant="ghost" onClick={onToggle} aria-expanded={open} className="h-auto min-w-0 flex-1 justify-start whitespace-normal p-0 text-left"><span className="block w-full">
           <div className="flex flex-wrap items-center gap-2"><span className="truncate font-medium text-foreground">{t.title}</span><ResponsibilityBadge status={t.responsibility_status} /></div>
           {waiting && <div className="text-xs text-foreground">{RESPONSIBILITY_LABEL[asResponsibility(t.responsibility_status)]}: {waiting}</div>}
           <div className="text-xs text-muted-foreground">
-            {t.assigneeName ?? "Unassigned"}{t.handoff_to_user_id ? ` → awaiting ${t.handoffToName}` : ""}{t.next_action ? ` · next: ${t.next_action}` : ""}{t.team ? ` · ${TEAMS[t.team] ?? t.team}` : ""}{t.fundName ? ` · ${t.fundName}` : t.clientName ? ` · ${t.clientName}` : ""}{t.source === "hubspot" ? " · from HubSpot" : ""}
+            {t.assigneeName ?? "Unassigned"}{t.handoff_to_user_id ? ` → awaiting ${t.handoffToName}` : ""}{t.next_action ? ` · next: ${t.next_action}` : ""}{t.follow_up_date ? ` · follow up ${t.follow_up_date}` : ""}{t.team ? ` · ${TEAMS[t.team] ?? t.team}` : ""}{t.fundName ? ` · ${t.fundName}` : t.clientName ? ` · ${t.clientName}` : ""}
             {t.due_date ? ` · due ${new Date(t.due_date + "T00:00:00").toLocaleDateString()}` : ""}
           </div>
-        </button>
+        </span></Button>
         {overdueDays > 0 && <Badge variant="destructive">Overdue {overdueDays}d</Badge>}
         {(t.priority === "high" || t.priority === "urgent") && <Badge variant="destructive">{PRIORITY[t.priority]}</Badge>}
         {canWrite ? (<>
@@ -220,6 +238,7 @@ function TaskRow({ t, staff, viewer, seeAll, canWrite, open, onToggle }: { t: an
           )}
           <div>
             <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">History</div>
+            {h.isError && <LoadError error={h.error} what="Task history" onRetry={() => h.refetch()} />}
             <ul className="space-y-1">
               {(h.data ?? []).map((e: any) => (
                 <li key={e.id} className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{e.who}</span> {e.kind === "comment" ? `: ${e.detail.text}` : e.kind === "created" ? "created this task" : e.kind === "responsibility" ? `changed responsibility from ${RESPONSIBILITY_LABEL[asResponsibility(e.detail.from)]} to ${RESPONSIBILITY_LABEL[asResponsibility(e.detail.to)]}${e.detail.reason ? ` — ${e.detail.reason}` : ""}` : `changed ${Object.keys(e.detail).join(", ")}`} · {new Date(e.at).toLocaleString()}</li>
@@ -299,9 +318,10 @@ function NextStepQuickForm({ t }: { t: any }) {
     setBusy(true);
     try {
       await run({ data: { id: t.id, action: "set_next", payload: { nextAction: next, ...(follow ? { followUp: follow } : {}) } } });
-      if (due && due !== (t.due_date ?? "")) await update({ data: { id: t.id, dueDate: due } as any });
+      if (due !== (t.due_date ?? "")) await update({ data: { id: t.id, dueDate: due || null } as any });
       toast.success("Next step saved.");
       qc.invalidateQueries({ queryKey: ["staff-tasks"] }); qc.invalidateQueries({ queryKey: ["staff-task-history", t.id] });
+      qc.invalidateQueries({ queryKey: ["my-action-alerts"] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   const update = useServerFn(updateTask);

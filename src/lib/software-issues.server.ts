@@ -10,22 +10,31 @@ async function ctx(viewer: string) {
   return { ...s, canWrite };
 }
 
-export async function listIssues(viewer: string) {
+export async function listIssues(viewer: string, filters: { openOnly?: boolean; issue?: string } = {}) {
   const { db, staff, canWrite } = await ctx(viewer);
-  const { data, error } = await db.from("software_issues").select("*").order("created_at", { ascending: false }).limit(500);
+  let query = db.from("software_issues").select("*");
+  if (filters.openOnly !== false) query = query.neq("stage", "resolved");
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(500);
   if (error) throw new Error("Software issues couldn't load.");
+  if (filters.issue && !(data ?? []).some((i: any) => i.id === filters.issue)) {
+    const exact = await db.from("software_issues").select("*").eq("id", filters.issue).maybeSingle();
+    if (exact.error) throw new Error("The selected software issue couldn't load.");
+    if (exact.data) (data ?? []).unshift(exact.data);
+  }
   const ids = ((data ?? []) as any[]).map((i) => i.id);
-  const { data: ev } = ids.length ? await db.from("software_issue_events").select("issue_id, actor_user_id, from_stage, to_stage, note, created_at").in("issue_id", ids).order("created_at") : { data: [] };
+  const eventsResult = ids.length ? await db.from("software_issue_events").select("issue_id, actor_user_id, from_stage, to_stage, note, created_at").in("issue_id", ids).order("created_at") : { data: [], error: null };
+  if (eventsResult.error) throw new Error("Software issue history couldn't load.");
+  const ev = eventsResult.data;
   const people = [...staff.keys()];
   const { data: profs } = people.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", people) : { data: [] };
   const nm = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Staff member"]));
   const name = (id: string | null) => (id ? nm.get(id) ?? "Staff member" : null);
   return {
     viewer, canWrite, truncated: (data ?? []).length >= 500,
-    staff: people.map((id) => ({ id, name: name(id)! })).sort((a, b) => a.name.localeCompare(b.name)),
+    staff: people.map((id) => ({ id, name: name(id) ?? "Staff member" })).sort((a, b) => a.name.localeCompare(b.name)),
     issues: ((data ?? []) as any[]).map((i) => ({
       ...i, ownerName: name(i.technical_owner_user_id), retesterName: name(i.retester_user_id), reporterName: name(i.reporter_user_id),
-      steps_allowed: nextSteps(i.stage, { owner: i.technical_owner_user_id === viewer, retester: i.retester_user_id === viewer }),
+      steps_allowed: canWrite ? nextSteps(i.stage, { owner: i.technical_owner_user_id === viewer, retester: i.retester_user_id === viewer }) : [],
       events: ((ev ?? []) as any[]).filter((e) => e.issue_id === i.id).map((e) => ({ ...e, who: name(e.actor_user_id) })),
     })),
   };
