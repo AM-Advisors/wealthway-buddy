@@ -21,7 +21,12 @@ describe("Operations fund metrics", () => {
   });
   it("totals and attention lines", () => {
     const rows = [{ isOpen: true, metrics: fundMetrics(A, facts, []) }, { isOpen: false, metrics: fundMetrics(B, facts, []) }];
-    expect(totals(rows)).toEqual({ activeFunds: 1, onboarding: 4, ready: 1, needsHarmonious: 2, blocked: 1 });
+    // Fund cards count funds (matching the filtered rows); investor counts are separate.
+    expect(totals(rows)).toEqual({ activeFunds: 1, onboarding: 2, ready: 1, needsHarmonious: 2, blocked: 1, investors: { total: 6, onboarding: 4, ready: 1, needsHarmonious: 2, blocked: 1 } });
+    for (const k of ["onboarding", "ready", "needs_harmonious", "blocked"] as const) {
+      const key = k === "needs_harmonious" ? "needsHarmonious" : k;
+      expect(rows.filter((r) => matchesFilter({ ...r, targetClose: null }, k)).length).toBe(totals(rows)[key]);
+    }
     expect(attentionLines(rows[0]!.metrics)).toEqual(["1 investor blocked", "1 investor needs Harmonious review", "1 investor ready for close"]);
   });
   it("closing soon is an explicit date window only", () => {

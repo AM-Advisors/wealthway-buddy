@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { OpsRecordList } from "@/components/ops-record";
 import { InvestorStallReport } from "@/components/investor-stall-report";
+import { InvestorMetricsSummary } from "@/components/investor-metrics-summary";
 
 export const Route = createFileRoute("/_authenticated/ops/investors/")({
   head: () => ({
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/ops/investors/")({
   }),
   component: () => (
     <div className="space-y-4">
+      <InvestorMetricsSummary />
       <InvestorStallReport />
       <OpsRecordList type="investor" />
     </div>
