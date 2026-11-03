@@ -835,7 +835,17 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
   // One identity result per person: approved investment check, else the approved login check.
   const { approvedPersonVerification } = await import("@/lib/person-identity.server");
   const pv = await approvedPersonVerification(person?.id ?? null);
-  const k = pv ? { verified_full_name: pv.fullName, document_issuing_country: pv.documentCountry } : null;
+  let k: { verified_full_name: string | null; document_issuing_country: string | null } | null = pv ? { verified_full_name: pv.fullName, document_issuing_country: pv.documentCountry } : null;
+  // Login checks not yet linked to the person: fall back to the account's approved check.
+  if (!k && row.investor_user_id) {
+    const { data: acc } = await db().from("account_identity_checks").select("review_details, decision_summary")
+      .eq("user_id", row.investor_user_id).eq("status", "approved").order("created_at", { ascending: false }).limit(1);
+    const a = ((acc ?? []) as any[])[0];
+    if (a) {
+      const idDoc = a.review_details?.idDocument ?? {};
+      k = { verified_full_name: idDoc.fullName ?? null, document_issuing_country: a.decision_summary?.document?.country ?? idDoc.country ?? null };
+    }
+  }
   const profileType = (profile?.profile_type ?? null) as string | null;
   const isIndividual = profileType === "individual" || profileType === "joint";
   const verifiedName = isIndividual ? (k?.verified_full_name ?? null) : k ? (profile?.legal_name ?? null) : null;
