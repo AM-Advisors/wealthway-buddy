@@ -6,6 +6,7 @@
  * Harmonious compliance decision, every underlying check keeps its own result,
  * and nothing a browser sends can move a check forward.
  */
+import { unresolvedAmlHits } from "@/lib/aml-match-model";
 
 export type CheckStatus = "not_started" | "pending" | "review" | "approved" | "declined";
 
