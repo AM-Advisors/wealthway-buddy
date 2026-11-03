@@ -1321,7 +1321,6 @@ export async function approvalsInbox(context: Ctx) {
   const all = sortOldestFirst(filterByCapability(collectedItems, capabilities).filter(summaryIsSafe).filter(isApprovalItem));
   const items = all.slice(0, 300);
   const capped = all.length > items.length;
-  const _unused = sortOldestFirst(filterByCapability([] as WorkItem[], capabilities).filter(summaryIsSafe).filter(isApprovalItem)).slice(0, 300);
   return {
     ...done,
     partial: done.partial || capped,
@@ -1381,6 +1380,12 @@ export async function pendingApprovalItemsForAlerts(s: any): Promise<WorkItem[]>
 
 /** Harmonious-only stalled list: fund setup work plus investors idle 7+ days. Read only. */
 export async function stalledWork(context: Ctx) {
+  const c = newCompleteness();
+  const items = await completeness.run(c, () => stalledWorkItems(context));
+  return { items, ...summarizeCompleteness(c) };
+}
+
+async function stalledWorkItems(context: Ctx) {
   const { capabilities } = await requireOperations(context);
   const { INVESTOR_STALL_DAYS, investorStageAction, daysWaiting } = await import("@/lib/stalled-items");
   const s = context.supabase;
