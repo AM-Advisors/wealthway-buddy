@@ -1,5 +1,12 @@
 # Roadmap
 
+## Manager-led routine fund work and review emails
+- [ ] Add explicit exact-fund designated reviewer access without upgrading existing assistants/viewers.
+- [ ] Connect routine detail edits, terms, questions, document and side-letter reviews to existing canonical actions and authorized fund-team controls.
+- [ ] Send one event-specific email to the responsible authorized reviewer after pending work is saved; preserve existing investor/signing notices.
+- [ ] Keep protected money, identity, access, filings and signatures unchanged; retain Harmonious stalled-item visibility.
+- [ ] Test permissions, revocation, same-fund routing, pending-only notifications and fictional review click-through; publish only if requested.
+
 ## Erebor $100,000 minimum (2026-11-03)
 - [x] Save $100,000 through Alyssa's authorized fund save with her supplied reason, Fund Manager request; offering read-back confirms 10,000,000 cents.
 - [x] Correct unsigned subscription as approved, signing-confirmed version 4, activated new_only through Alyssa's account; resign=0. Stored DOCX download verifies $100,000.00 and no $500,000.00. PPM already agrees; signed OA and investor history unchanged.
