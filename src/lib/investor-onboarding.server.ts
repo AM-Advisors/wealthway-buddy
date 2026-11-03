@@ -950,9 +950,10 @@ export async function teamPrepareContext(userId: string, onboardingId: string) {
   const { isAccreditationQuestion } = await import("@/lib/accreditation-step");
   const questions = locks.questions.filter((q: any) => !isAccreditationQuestion(q.key) && q.type !== "document");
   const keys = questions.map((q) => q.key);
+  const raw: Record<string, unknown> = { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks.supplied, keys), ...Object.fromEntries(Object.entries(locks.locked).filter(([, v]) => v != null)) };
   return {
-    questions,
-    answers: { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks.supplied, keys), ...Object.fromEntries(Object.entries(locks.locked).filter(([, v]) => v != null)) },
+    questions: JSON.parse(JSON.stringify(questions)) as Array<Record<string, any>>,
+    answers: Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, v == null ? "" : String(v)])) as Record<string, string>,
     locked: locks.locked,
     confirmedByInvestor: Boolean(row.questionnaire_submitted_at),
     hasAccount: Boolean(row.investor_user_id),
