@@ -1,5 +1,10 @@
 # Roadmap
 
+## Team daily-work audit (2026-11-03)
+- [ ] Review tasks, handoffs, follow-ups, software issue retests and work-area navigation for missing actions and lost work.
+- [ ] Repair confirmed gaps using existing records and authority, without publishing or changing live assignments.
+- [ ] Run focused regressions and fictional click-through checks; distinguish verified outcomes from isolated-QA blockers.
+
 ## Trust profile correction (2026-10-30)
 - [x] Found trust type saved but display label retained the individual name.
 - [x] Synchronize legal/display names through conversion and existing profile correction saves, refresh readers, retain personal verification/history.
