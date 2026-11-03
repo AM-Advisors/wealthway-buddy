@@ -94,9 +94,9 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
         </div>
       )}
 
-      {(tab === "invited" || tab === "test") && q.data && (
+      {tab === "invited" && q.data && (
         <section className="space-y-2">
-          {tab === "test" && <h2 className="text-lg font-semibold">Test & Demo invitations</h2>}
+          {testScope && <h2 className="text-lg font-semibold">Test & Demo invitations</h2>}
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Invited</th><th className="p-3">Type</th><th className="p-3">Invited by</th><th className="p-3">Sent</th><th className="p-3">Last reminder</th><th className="p-3" /></tr></thead>
@@ -123,7 +123,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
         </section>
       )}
 
-      {tab === "test" && (
+      {testScope && tab === "all" && (
         <section className="space-y-2">
           <h2 className="text-lg font-semibold">Test & Demo clients</h2>
           {!testClients.length ? <p className="text-sm text-muted-foreground">None marked. Use "Mark test" on the Clients list.</p> : (
