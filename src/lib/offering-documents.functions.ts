@@ -26,6 +26,8 @@ export const readOfferingDocument = createServerFn({ method: "POST" })
     ]);
     if (versionResult.error || onboardingResult.error) throw new Error("The document version could not be loaded. Please try again.");
     if (data.onboarding_id && !onboardingResult.data) throw new Error("This document is not available for that investment.");
+    const sealed = await (await import("@/lib/sealed-records.server")).sealedIds(db, "offering_document_versions");
+    versionResult.data = (versionResult.data ?? []).filter((x: any) => !sealed.has(x.id));
     const { documentReadSource } = await import("@/lib/offering-document-reader");
     const source = documentReadSource(document, versionResult.data ?? [], onboardingResult.data?.id ?? null, null);
     const { logLegalDocumentView } = await import("./legal-doc-views.server");
