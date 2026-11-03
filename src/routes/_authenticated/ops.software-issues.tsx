@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { MyActionAlerts } from "@/components/my-action-alerts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -45,6 +46,7 @@ function SoftwareIssuesPage() {
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.isError && <LoadError error={q.error} what="Software issues" onRetry={() => q.refetch()} />}
       {d && (<>
+        <MyActionAlerts kinds={["retest", "fix"]} />
         <PartialResultsNotice partial={d.truncated} />
         <div className="flex flex-wrap gap-2">
           {d.canWrite && <Button onClick={() => setShowForm((v) => !v)}>{showForm ? "Close form" : "Report a software issue"}</Button>}
@@ -71,7 +73,7 @@ function ReportForm({ staff, onDone }: { staff: { id: string; name: string }[]; 
       const data: any = Object.fromEntries(Object.entries(v).filter(([, x]) => x !== ""));
       if (data.occurredAt) data.occurredAt = new Date(data.occurredAt).toISOString();
       await report({ data });
-      toast.success("Issue reported. It's in the technical owner's task list.");
+      toast.success("Issue reported. It's in the technical owner's task list."); qc.invalidateQueries({ queryKey: ["my-action-alerts"] });
       qc.invalidateQueries({ queryKey: ["software-issues"] }); qc.invalidateQueries({ queryKey: ["staff-tasks"] });
       onDone();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -117,7 +119,7 @@ function IssueRow({ i }: { i: any }) {
     setBusy(true);
     try {
       await move({ data: { id: i.id, to, ...(note.trim() ? { note } : {}) } });
-      toast.success(STAGE_LABEL[to]); setNote("");
+      toast.success(STAGE_LABEL[to]); setNote(""); qc.invalidateQueries({ queryKey: ["my-action-alerts"] });
       qc.invalidateQueries({ queryKey: ["software-issues"] }); qc.invalidateQueries({ queryKey: ["staff-tasks"] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };

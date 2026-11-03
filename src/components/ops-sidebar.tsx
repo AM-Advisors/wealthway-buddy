@@ -1,4 +1,5 @@
 import { useApprovalsInbox } from "@/components/approvals-inbox-banner";
+import { useMyActionAlerts } from "@/components/my-action-alerts";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -188,6 +189,9 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const peopleHits = canSeePeople ? records.data?.people ?? [] : [];
   const allowedUrls = useMemo(() => new Set(opsWorkAreas(capabilities).flatMap((a) => a.screens.map((s) => s.url))), [capabilities]);
 
+  const myAlerts = useMyActionAlerts().data?.alerts ?? [];
+  const taskAlerts = myAlerts.filter((a: any) => a.kind === "handoff" || a.kind === "handoff_issue").length;
+  const issueAlerts = myAlerts.filter((a: any) => a.kind === "retest" || a.kind === "fix").length;
   const approvalsCount = useApprovalsInbox(allowedUrls.has("/ops/queue")).data?.total ?? 0;
   const home = sections.find((s) => s.id === "home");
   const adminSection = sections.find((s) => s.id === "administration");
@@ -201,7 +205,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(allowedUrls.has("/ops/queue") ? [{ id: "approvals", title: "Approvals inbox", url: "/ops/approvals", icon: "check", badge: approvalsCount }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "stalled", title: "Stalled items", url: "/ops/stalled", icon: "tasks" }] : []),
-    ...(allowedUrls.has("/ops/queue") ? [{ id: "software-issues", title: "Software issues", url: "/ops/software-issues", icon: "tasks" }] : []),
+    ...(allowedUrls.has("/ops/queue") ? [{ id: "software-issues", title: "Software issues", url: "/ops/software-issues", icon: "tasks", badge: issueAlerts }] : []),
     ...(has("super_admin") ? [{ id: "sealed", title: "Sealed archive", url: "/ops/sealed-archive", icon: "document" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
   ];
@@ -228,7 +232,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Roles", url: "/ops/people-access?tab=roles" }, { title: "Invites & access", url: "/ops/people-access?tab=access" }] : []),
   ];
   const teamItems: NavItem[] = salesOnly ? [] : [
-    { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document" },
+    { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document", badge: taskAlerts },
     { id: "client-approvals", title: "Client approvals & requests", url: "/ops/client-approvals", icon: "document" },
     ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people", sub: peopleSub }] : []),
     ...(canSee("mailboxes", staffRoles) ? [{ id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" }] : []),

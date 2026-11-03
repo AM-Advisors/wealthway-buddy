@@ -1,4 +1,5 @@
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
+import { MyActionAlerts } from "@/components/my-action-alerts";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -86,6 +87,7 @@ function TasksPage() {
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {d && (<>
+        <MyActionAlerts kinds={["handoff", "handoff_issue"]} />
         {d.canWrite && <NewTask staff={d.staff} />}
         <div className="flex flex-wrap items-center gap-2">
           {([["mine", `Assigned to me (${count((t) => t.assignee_user_id === d.viewer)})`], ["created", `I created (${count((t) => t.created_by === d.viewer)})`], ["unassigned", `Unassigned (${count((t) => !t.assignee_user_id)})`], ["all", `All open (${count(() => true)})`], ["done", "Done"]] as const).map(([k, l]) => (

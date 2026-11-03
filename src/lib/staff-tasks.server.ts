@@ -179,3 +179,24 @@ export async function transitionTask(viewer: string, d: { id: string; action: (t
   if (error) throw new Error(error.message);
   return { ok: true };
 }
+
+/** In-app alerts derived from current records: handoffs to accept, handoffs sent back, retests and fixes waiting on the viewer. */
+export async function myActionAlerts(viewer: string) {
+  const { db, roles } = await viewerScope(viewer);
+  if (!roles.some((r) => STAFF_ROLE_SET.includes(r))) return { alerts: [] as any[] };
+  const [toMe, backToMe, retest, fix] = await Promise.all([
+    db.from("staff_tasks").select("id, title, handoff_from_user_id, handoff_requested_at").eq("handoff_to_user_id", viewer).not("status", "in", "(done,cancelled)").limit(100),
+    db.from("staff_tasks").select("id, title, handoff_to_user_id, handoff_issue, updated_at").eq("handoff_from_user_id", viewer).not("handoff_to_user_id", "is", null).not("handoff_issue", "is", null).not("status", "in", "(done,cancelled)").limit(100),
+    db.from("software_issues").select("id, title, updated_at").eq("retester_user_id", viewer).eq("stage", "deployed").limit(100),
+    db.from("software_issues").select("id, title, stage, updated_at").eq("technical_owner_user_id", viewer).in("stage", ["reported", "retest_failed", "retest_passed"]).limit(100),
+  ]);
+  if (toMe.error || backToMe.error || retest.error || fix.error) throw new Error("Your alerts couldn't load.");
+  const nm = await names(db, [...(toMe.data ?? []).map((t: any) => t.handoff_from_user_id), ...(backToMe.data ?? []).map((t: any) => t.handoff_to_user_id)]);
+  const alerts = [
+    ...((toMe.data ?? []) as any[]).map((t) => ({ id: `h:${t.id}`, kind: "handoff", title: t.title, detail: `${nm.get(t.handoff_from_user_id) ?? "A colleague"} handed this to you. Accept it or say what's missing.`, href: "/ops/tasks", at: t.handoff_requested_at })),
+    ...((backToMe.data ?? []) as any[]).map((t) => ({ id: `m:${t.id}`, kind: "handoff_issue", title: t.title, detail: `${nm.get(t.handoff_to_user_id) ?? "The receiver"} needs more: ${t.handoff_issue}`, href: "/ops/tasks", at: t.updated_at })),
+    ...((retest.data ?? []) as any[]).map((i) => ({ id: `r:${i.id}`, kind: "retest", title: i.title, detail: "The fix is live. Retest it and record the result.", href: "/ops/software-issues", at: i.updated_at })),
+    ...((fix.data ?? []) as any[]).map((i) => ({ id: `f:${i.id}`, kind: "fix", title: i.title, detail: i.stage === "retest_failed" ? "Retest failed. It's back with you." : i.stage === "retest_passed" ? "Retest passed. You can resolve it." : "New issue assigned to you.", href: "/ops/software-issues", at: i.updated_at })),
+  ].sort((a, b) => String(b.at ?? "").localeCompare(String(a.at ?? "")));
+  return { alerts };
+}
