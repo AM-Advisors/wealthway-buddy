@@ -22,8 +22,8 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
   .validator(z.object({ offeringId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
-    const access = await t.assertFund(context.userId, data.offeringId);
     const db = await t.db();
+    const access = await (await import("./fund-routine-access.server")).assertRoutineFund(db, context.userId, data.offeringId);
     const { questionAuthorAccess, questionDocumentOptions } = await import("./fund-question-ai.server");
     const author = await questionAuthorAccess(context.supabase, context.userId, data.offeringId).catch(() => null);
     const documents = author ? await questionDocumentOptions(db, data.offeringId) : [];
@@ -34,7 +34,8 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
     const baseQs = ((base ?? []) as any[])[0]?.questions ?? (await import("@/lib/standard-investor-questionnaire.json")).default;
     const { newSectionQuestions } = await import("@/lib/fund-questionnaire-section");
     return {
-      staff: !!(access as any).staff,
+      staff: !!access.staff,
+      canApprove: true,
       canDraft: !!author,
       documents,
       aiBlocked: aiState && !aiState.reset_at ? aiState.blocked_message as string : null,
@@ -67,12 +68,14 @@ export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
       const { data: saved, error } = await db.from("fund_questionnaire_sections").update({ title: data.title, questions: data.questions, prepared_by: context.userId, prepared_at: new Date().toISOString(), ...provenance }).eq("id", data.sectionId).eq("offering_id", data.offeringId).eq("status", "draft").select("id").maybeSingle();
       if (error) throw new Error(error.message);
       if (!saved) throw new Error("That draft changed. Refresh before saving.");
+      await (await import("./fund-review-notify.server")).notifyFundReview("questions", saved.id);
       return { ok: true };
     }
     const { data: last } = await db.from("fund_questionnaire_sections").select("version").eq("offering_id", data.offeringId).order("version", { ascending: false }).limit(1);
     const version = (((last ?? []) as any[])[0]?.version ?? 0) + 1;
-    const { error } = await db.from("fund_questionnaire_sections").insert({ offering_id: data.offeringId, version, title: data.title, questions: data.questions, prepared_by: context.userId, ...provenance });
+    const { data: savedSection, error } = await db.from("fund_questionnaire_sections").insert({ offering_id: data.offeringId, version, title: data.title, questions: data.questions, prepared_by: context.userId, ...provenance }).select("id").single();
     if (error) throw new Error(error.message);
+    if (savedSection) await (await import("./fund-review-notify.server")).notifyFundReview("questions", savedSection.id);
     return { ok: true };
   });
 
@@ -82,10 +85,10 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
   .validator(z.object({ sectionId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
-    if (!(await t.isStaff(context.userId))) throw new Error("Only Harmonious staff can approve fund questions.");
     const db = await t.db();
     const { data: row } = await db.from("fund_questionnaire_sections").select("*").eq("id", data.sectionId).maybeSingle();
     if (!row || row.status !== "draft") throw new Error("That draft wasn't found.");
+    await (await import("./fund-routine-access.server")).assertRoutineFund(db, context.userId, row.offering_id);
     const { validateSectionQuestions } = await import("./fund-questionnaire-section");
     const invalid = validateSectionQuestions(row.questions);
     if (invalid) throw new Error(invalid);

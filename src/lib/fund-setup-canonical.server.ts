@@ -25,7 +25,7 @@ const db = () => supabaseAdmin as any;
 
 async function assertRead(userId: string, offeringId: string) {
   const actor = await setupActor(userId);
-  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, offeringId);
   return actor;
 }
 async function assertStaffFor(userId: string, offeringId: string) {
@@ -117,6 +117,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
 
   return {
     canEdit: actor.isStaff,
+    routineOnly: !actor.isStaff,
     isStaff: actor.isStaff,
     offering: {
       id: o.id,
@@ -146,15 +147,15 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       hasMultipleClasses: !!o.has_multiple_classes,
       plannedClassCount: (o.planned_class_count ?? null) as number | null,
       driveFolderUrl: o.drive_folder_url,
-      driveLinks: (Array.isArray(o.drive_links) ? o.drive_links : []) as { label: string; url: string }[],
+      driveLinks: (actor.isStaff && Array.isArray(o.drive_links) ? o.drive_links : []) as { label: string; url: string }[],
     },
     setup: setup
       ? { id: setup.id, fiscalYearEnd: setup.fiscal_year_end, fundTermMonths: setup.fund_term_months, investmentPeriodMonths: setup.investment_period_months }
       : null,
     termApplies: termApplies(o.fund_type),
     economics: {
-      canApprove: actor.isStaff || actor.offeringIds.includes(offeringId),
-      canEdit: actor.isStaff || actor.offeringIds.includes(offeringId),
+      canApprove: true,
+      canEdit: true,
       versionId: current?.id ?? null,
       status: current?.status ?? null,
       version: current?.version ?? null,
@@ -220,7 +221,10 @@ export async function saveFundSetupFields(
   userId: string,
   input: { offeringId: string; fields: Record<string, unknown>; setupFields?: { fiscalYearEnd?: string | null | undefined; fundTermMonths?: number | null | undefined; investmentPeriodMonths?: number | null | undefined } | undefined },
 ) {
-  await assertStaffFor(userId, input.offeringId);
+  const actor = await assertRead(userId, input.offeringId);
+  if (!actor.isStaff && !actor.offeringIds.includes(input.offeringId)) (await import("./fund-routine-access.server")).assertRoutineFields(input.fields);
+  else if (!actor.isStaff) { try { (await import("./fund-routine-access.server")).assertRoutineFields(input.fields); } catch { await assertStaffFor(userId, input.offeringId); } }
+  if (input.setupFields && Object.keys(input.setupFields).length && !actor.isStaff && !actor.offeringIds.includes(input.offeringId)) throw new Error("Fund tax and term setup requires the manager's existing workflow.");
   const update: any = {};
   for (const [k, v] of Object.entries(input.fields)) {
     const col = OFFERING_FIELDS[k];
@@ -244,7 +248,8 @@ export async function saveFundSetupFields(
     if ("fiscalYearEnd" in input.setupFields) patch.fiscal_year_end = input.setupFields.fiscalYearEnd || null;
     if ("fundTermMonths" in input.setupFields) patch.fund_term_months = input.setupFields.fundTermMonths ?? null;
     if ("investmentPeriodMonths" in input.setupFields) patch.investment_period_months = input.setupFields.investmentPeriodMonths ?? null;
-    await db().from("fund_setups").update(patch).eq("id", setup.id);
+    const { error } = await db().from("fund_setups").update(patch).eq("id", setup.id);
+    if (error) throw new Error("Fund setup details could not be saved.");
   }
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteTasks(input.offeringId);
   return { ok: true };

@@ -19,4 +19,9 @@ describe("Fund change alerts", () => {
     mocks.managers.mockRejectedValue(new Error("unavailable"));
     await expect(notifyFundChange({ fundId: "fund-a", ref: "letter-a", title: "Side letter change", status: "requested", actorId: "staff-a" })).resolves.toBeUndefined();
   });
+  it("does not duplicate routine side-letter review emails", async () => {
+    await notifyFundChange({ fundId: "fund-a", ref: "letter-a", title: "Side letter change", status: "requested", actorId: "staff-a" });
+    expect(mocks.managers).not.toHaveBeenCalled();
+    expect(mocks.ops).toHaveBeenCalledTimes(1);
+  });
 });

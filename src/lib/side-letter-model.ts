@@ -89,7 +89,7 @@ export function mfnCandidates(
     .map((h) => h.sideLetterId);
 }
 
-export type ActorKind = "staff" | "manager" | "assistant" | "viewer" | "none";
+export type ActorKind = "staff" | "manager" | "reviewer" | "assistant" | "viewer" | "none";
 
 /**
  * Staff or exact-fund managers may approve routine proposals, including their
@@ -100,11 +100,11 @@ export function canApprove(input: {
   actorKind: ActorKind;
   proposedBy: string;
 }): boolean {
-  return routineApprovalAllowed("side_letter", input.actorKind === "staff" || input.actorKind === "manager");
+  return routineApprovalAllowed("side_letter", input.actorKind === "staff" || input.actorKind === "manager" || input.actorKind === "reviewer");
 }
 
 export function canPropose(kind: ActorKind): boolean {
-  return kind === "staff" || kind === "manager" || kind === "assistant";
+  return kind === "staff" || kind === "manager" || kind === "reviewer" || kind === "assistant";
 }
 
 export function emptySnapshot(investorLabel = ""): SideLetterSnapshot {

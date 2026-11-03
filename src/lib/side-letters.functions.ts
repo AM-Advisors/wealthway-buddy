@@ -41,6 +41,7 @@ async function actorKind(db: any, userId: string, fundId: string): Promise<Actor
   ]);
   if (((roles ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role))) return "staff";
   if (mgr) return "manager";
+  if (await (await import("./fund-routine-access.server")).routineReviewer(db, userId, fundId)) return "reviewer";
   if (grant && (!grant.expires_at || new Date(grant.expires_at) > new Date())) {
     const { data: granter } = await db
       .from("fund_managers")
@@ -296,6 +297,7 @@ export const proposeSideLetterChange = createServerFn({ method: "POST" })
       detail: { change_request_id: req.id, reason: data.reason },
     });
     await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: data.fundId, ref: req.id, title: "Side letter change", status: "requested", actorId: context.userId });
+    await (await import("./fund-review-notify.server")).notifyFundReview("side_letter", req.id);
     return { ok: true, requestId: req.id as string };
   });
 
@@ -324,56 +326,8 @@ export const decideSideLetterChange = createServerFn({ method: "POST" })
       if (data.decision === "declined" && !data.reason?.trim()) throw new Error("A decline reason is required.");
     }
 
-    const { data: decided, error } = await db
-      .from("side_letter_change_requests")
-      .update({
-        status: data.decision,
-        decided_by: context.userId,
-        decided_at: new Date().toISOString(),
-        decision_reason: data.reason?.trim() || null,
-      })
-      .eq("id", req.id)
-      .eq("status", "pending")
-      .select("id")
-      .maybeSingle();
-    if (error || !decided) throw new Error("Could not record the decision. Refresh the proposal before trying again.");
-
-    const { data: letter } = await db.from("side_letters").select("*").eq("id", req.side_letter_id).single();
-    if (data.decision === "approved") {
-      const s = req.after_snapshot as SideLetterSnapshot;
-      const version = (letter.current_version ?? 0) + 1;
-      await db.from("side_letter_versions").insert({
-        side_letter_id: letter.id,
-        version,
-        snapshot: s,
-        change_request_id: req.id,
-      });
-      await db
-        .from("side_letters")
-        .update({
-          status: req.kind === "terminate" ? "terminated" : "active",
-          investor_label: s.investorLabel,
-          mfn_enabled: s.mfnEnabled,
-          mfn_scope: s.mfnEnabled ? s.mfnScope : null,
-          effective_date: s.effectiveDate,
-          expiry_date: s.expiryDate,
-          renewal_note: s.renewalNote,
-          document_reference: s.documentReference,
-          terms: s.terms,
-          current_version: version,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", letter.id);
-    } else if (req.kind === "create") {
-      await db.from("side_letters").update({ status: "declined", updated_at: new Date().toISOString() }).eq("id", letter.id);
-    }
-    await db.from("side_letter_events").insert({
-      offering_id: req.offering_id,
-      side_letter_id: letter.id,
-      event: `${data.decision}_${req.kind}`,
-      actor_id: context.userId,
-      detail: { change_request_id: req.id, reason: data.reason ?? null },
-    });
+    const { error } = await db.rpc("decide_routine_side_letter", { _request: req.id, _actor: context.userId, _decision: data.decision, _reason: data.reason?.trim() || null });
+    if (error) throw new Error("Could not record the complete decision. Refresh the proposal before trying again.");
     await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: req.offering_id, ref: req.id, title: "Side letter change", status: data.decision === "approved" ? "approved" : "rejected", actorId: context.userId });
     return { ok: true };
   });

@@ -1,0 +1,2 @@
+ALTER TABLE public.offerings ADD COLUMN routine_review_user_id uuid;
+COMMENT ON COLUMN public.offerings.routine_review_user_id IS 'Explicit routine review email owner. Every use rechecks exact-fund manager or live routine reviewer grant; never grants authority.';

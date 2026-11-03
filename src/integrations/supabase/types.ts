@@ -36133,6 +36133,8 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent: string | null
           rolling_closes: boolean | null
+          routine_review_changed_by: string | null
+          routine_review_user_id: string | null
           service_level: string
           service_tier: string
           share_price_cents: number
@@ -36220,6 +36222,8 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          routine_review_changed_by?: string | null
+          routine_review_user_id?: string | null
           service_level?: string
           service_tier?: string
           share_price_cents?: number
@@ -36307,6 +36311,8 @@ export type Database = {
           reg_type?: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          routine_review_changed_by?: string | null
+          routine_review_user_id?: string | null
           service_level?: string
           service_tier?: string
           share_price_cents?: number
@@ -50477,6 +50483,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      decide_routine_side_letter: {
+        Args: {
+          _actor: string
+          _decision: string
+          _reason: string
+          _request: string
+        }
+        Returns: undefined
+      }
       diligence_access_open: {
         Args: { _offering_id: string }
         Returns: boolean
@@ -50588,6 +50603,10 @@ export type Database = {
       is_any_staff: { Args: never; Returns: boolean }
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
+      is_live_fund_reviewer: {
+        Args: { _fund: string; _user: string }
+        Returns: boolean
+      }
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
       is_sealed_document_file: {
         Args: { _bucket: string; _path: string }
@@ -51143,7 +51162,7 @@ export type Database = {
         | "suspended"
         | "revoked"
         | "expired"
-      fund_team_role: "fund_viewer" | "fund_assistant"
+      fund_team_role: "fund_viewer" | "fund_assistant" | "fund_reviewer"
       funding_method: "wire" | "ach"
       identity_check_kind:
         | "identity"
@@ -51653,7 +51672,7 @@ export const Constants = {
         "revoked",
         "expired",
       ],
-      fund_team_role: ["fund_viewer", "fund_assistant"],
+      fund_team_role: ["fund_viewer", "fund_assistant", "fund_reviewer"],
       funding_method: ["wire", "ach"],
       identity_check_kind: [
         "identity",

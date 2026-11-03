@@ -1,0 +1,2 @@
+ALTER TABLE public.side_letter_change_requests DROP CONSTRAINT side_letter_change_requests_proposer_kind_check;
+ALTER TABLE public.side_letter_change_requests ADD CONSTRAINT side_letter_change_requests_proposer_kind_check CHECK (proposer_kind IN ('staff','manager','assistant','reviewer'));

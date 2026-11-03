@@ -653,7 +653,9 @@ export async function saveEconomics(
     versionId?: string | undefined;
   },
 ) {
-  const { actor } = await assertSetupAccess(userId, input.setupId);
+  const routineSetup = await setupRow(input.setupId);
+  const access = await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, routineSetup.offering_id);
+  const actor = { isStaff: access.staff };
   const { data: rows } = await db()
     .from("fund_economics_versions")
     .select("*")
@@ -708,6 +710,7 @@ export async function saveEconomics(
     actorUserId: userId,
     actorRole: actor.isStaff ? "harmonious" : "client",
   });
+  await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id);
   return data;
 }
 
@@ -718,7 +721,9 @@ export async function approveEconomics(userId: string, versionId: string) {
     .eq("id", versionId)
     .maybeSingle();
   if (!version) fail("That economics version was not found.");
-  const { actor } = await assertSetupAccess(userId, version.setup_id);
+  const routineSetup = await setupRow(version.setup_id);
+  const access = await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, routineSetup.offering_id);
+  const actor = { isStaff: access.staff };
   if (version.status !== "draft") fail("Only a draft economics version can be approved.");
   // Exact-fund authority comes from the saved version; routine approval is explicit.
 

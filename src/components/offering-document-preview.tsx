@@ -3,19 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, Eye } from "lucide-react";
-import { listDocumentVersions, getDocumentVersionUrl } from "@/lib/document-versions.functions";
+import { fundReviewPreviewFn } from "@/lib/fund-review-preview.functions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /** Explicit version selection: preview never substitutes the latest template. */
 export function OfferingDocumentPreview({ offeringId, documentId, version, title, onClose }: { offeringId: string; documentId: string; version: number; title: string; onClose: () => void }) {
-  const list = useServerFn(listDocumentVersions);
-  const link = useServerFn(getDocumentVersionUrl);
+  const link = useServerFn(fundReviewPreviewFn);
   const q = useQuery({ queryKey: ["offering-version-preview", offeringId, documentId, version], retry: false, staleTime: 0, queryFn: async () => {
-    const history = await list({ data: { offering_id: offeringId } });
-    const selected = history.versions.find(v => v.document_id === documentId && v.version === version);
-    if (!selected) throw new Error("This document version is not available.");
-    return link({ data: { version_id: selected.id } });
+    return link({ data: { offeringId, documentId, version } });
   } });
   const content = useRef<HTMLDivElement>(null);
   const [wordState, setWordState] = useState<"loading" | "ready" | "failed">("loading");

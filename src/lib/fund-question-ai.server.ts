@@ -13,7 +13,10 @@ export async function questionAuthorAccess(client: any, userId: string, offering
   ]);
   if (roles.error || manager.error) throw new Error("Could not verify fund access.");
   const staff = (roles.data ?? []).some((r: { role: string }) => ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"].includes(r.role));
-  if (!staff && !manager.data?.length) throw new Error("Only staff or this fund's managers can draft questions.");
+  if (!staff && !manager.data?.length) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await (await import("./fund-routine-access.server")).assertRoutineFund(supabaseAdmin, userId, offeringId);
+  }
   return { staff };
 }
 

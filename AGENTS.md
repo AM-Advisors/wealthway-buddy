@@ -72,3 +72,4 @@
 - Commercial billing/commission/bookkeeping/invoice-preview rules: src/lib/AGENTS.md.
 - Staff task handoffs/blocked/complete go through staff_task_transition (owner-only, receiver accepts); task readers/history/writes share team-work-model visibility, and action alerts carry exact-record search targets. Software issues use software_issue_report/move with retester-gated resolution; open reads exclude resolved history before limits. Why: one owner, findable work, unchanged authority and no duplicate queue.
 - Fund minimums use currentFundMinimum, offerings first, setup fallback. Below-minimum entry calls ensureMinimumSideLetter; investor steps and entry-series signing stay open, canCloseInvestment needs an active waiver. Why: current terms and manager-owned pre-close duty.
+- Routine reviewers need live exact-fund grants; pending-event emails choose one eligible owner. Protected actions stay unchanged. Why: manager-led work, no implicit powers.

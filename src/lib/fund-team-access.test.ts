@@ -19,6 +19,17 @@ const base = {
 };
 
 describe("fund team access", () => {
+  it("designated reviewer has routine rights but assistants and viewers do not", () => {
+    expect(hasFundTeamPermission("fund_reviewer", "fund.routine.approve")).toBe(true);
+    expect(hasFundTeamPermission("fund_reviewer", "fund.routine.prepare")).toBe(true);
+    expect(hasFundTeamPermission("fund_assistant", "fund.routine.approve")).toBe(false);
+    expect(hasFundTeamPermission("fund_viewer", "fund.routine.prepare")).toBe(false);
+  });
+  it("reviewer grants must be exact-fund", () => {
+    expect(grantRefusal({ ...base, role: "fund_reviewer", scope: "fund" })).toBeNull();
+    expect(grantRefusal({ ...base, role: "fund_reviewer", scope: "all_managed" })).toMatch(/this fund only/);
+    expect(grantRefusal({ ...base, role: "fund_reviewer", scope: "all_funds", granterIsStaff: true })).toMatch(/this fund only/);
+  });
   it("never includes sensitive or authority permissions", () => {
     for (const perms of Object.values(FUND_TEAM_PERMISSIONS))
       for (const p of NEVER_GRANTABLE) expect(perms as readonly string[]).not.toContain(p);

@@ -32,7 +32,7 @@ const now = () => new Date().toISOString();
 
 async function assertRead(userId: string, offeringId: string) {
   const a = await setupActor(userId);
-  if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  if (!a.isStaff && !a.offeringIds.includes(offeringId)) await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, offeringId);
   return a;
 }
 async function assertStaff(userId: string, offeringId: string) {
@@ -60,7 +60,9 @@ export async function approvedTemplateVersions(offeringId: string): Promise<Set<
 }
 async function assertTemplateEditor(userId: string, d: any, version?: number) {
   void version; // self-serve: any version of the manager's own fund
-  return assertRead(userId, d.offering_id);
+  const actor = await setupActor(userId);
+  if (!actor.isStaff && !actor.offeringIds.includes(d.offering_id)) forbid("the fund manager must configure signing or release investor versions.");
+  return actor;
 }
 async function event(offeringId: string, documentId: string | null, version: number | null, ev: string, actor: string, detail: Record<string, unknown> = {}) {
   await db().from("offering_document_events").insert({ offering_id: offeringId, offering_document_id: documentId, version, event: ev, actor_user_id: actor, detail });
@@ -98,7 +100,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
     }));
     return {
       id: d.id,
-      canConfigureTemplate: !actor.isStaff && templates.has(`${d.id}:${d.current_version}`),
+      canConfigureTemplate: actor.isStaff || actor.offeringIds.includes(offeringId),
       title: d.title,
       category: d.document_category as DocumentCategory | null,
       usage: d.usage as DocumentUsage | null,
@@ -141,7 +143,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       };
     }),
   );
-  return { canEdit: true /* self-serve: actor already scoped to this fund */, documents: withUsage, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
+  return { canEdit: true, canRelease: actor.isStaff || actor.offeringIds.includes(offeringId), documents: withUsage, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
 }
 
 export async function createSetupDocument(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
@@ -189,6 +191,8 @@ export async function uploadDocumentVersion(userId: string, input: { documentId:
   // The active version (and the file investors see) only changes on explicit activation.
   await db().from("offering_documents").update({ current_version: version, file_updated_at: now() }).eq("id", d.id);
   await event(d.offering_id, d.id, version, "version_uploaded", userId, { fileName: input.fileName });
+  const { data: savedVersion } = await db().from("offering_document_versions").select("id").eq("offering_document_id", d.id).eq("version", version).maybeSingle();
+  if (savedVersion) await (await import("./fund-review-notify.server")).notifyFundReview("document", savedVersion.id);
   return { version };
 }
 

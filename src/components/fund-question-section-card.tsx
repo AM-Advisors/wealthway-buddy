@@ -48,7 +48,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
   });
   if (q.isPending) return null;
   if (q.isError || !q.data) return <p role="alert" className="text-sm text-destructive">{q.error?.message ?? "Could not load fund questions."}</p>;
-  const staff = q.data.staff;
+  const staff = q.data.canApprove;
   const editable = q.data.canDraft && (!!draft || !live || newVersion);
   const asked = new Set<string>(shown?.alreadyAskedKeys ?? []);
   const upd = (i: number, p: Partial<Q>) => { setDirty(true); setQs((cur) => cur.map((x, j) => (j === i ? { ...x, ...p, ...(p.label !== undefined || p.type !== undefined ? { prefillKey: null } : {}) } : x))); };
