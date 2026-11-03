@@ -79,5 +79,5 @@ export async function openRecording(userId: string, id: string) {
     if (f.error || !f.data) continue;
     try { events.push(...(JSON.parse(await f.data.text()) as unknown[])); } catch { /* skip corrupt chunk */ }
   }
-  return { kind: "replay" as const, events };
+  return { kind: "replay" as const, events: events as any };
 }

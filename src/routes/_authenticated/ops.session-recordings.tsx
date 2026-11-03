@@ -65,10 +65,10 @@ function RecordingsPage() {
 
 function Player({ id, onClose }: { id: string; onClose: () => void }) {
   const open = useServerFn(openRecordingFn);
-  const q = useQuery({ queryKey: ["session-recording", id], queryFn: () => open({ data: { id } }), retry: false, staleTime: Infinity });
+  const q = useQuery({ queryKey: ["session-recording", id], queryFn: async () => (await open({ data: { id } })) as { kind: "replay"; events: unknown[] } | { kind: "screen"; url: string }, retry: false, staleTime: Infinity });
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const d = q.data;
+    const d = q.data as any;
     if (!d || d.kind !== "replay" || !box.current) return;
     const el = box.current;
     el.innerHTML = "";
