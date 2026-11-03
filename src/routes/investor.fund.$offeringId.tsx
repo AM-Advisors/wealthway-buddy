@@ -46,7 +46,7 @@ export const Route = createFileRoute("/investor/fund/$offeringId")({
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { tab?: Tab } =>
-    TABS.some((t) => t.value === s["tab"]) ? { tab: s["tab"] as Tab } : {},
+    ["overview", "my-share", "documents", "deal-room", "payments", "taxes", "messages", "updates"].includes(String(s["tab"])) ? { tab: s["tab"] as Tab } : {},
   component: InvestorFund,
 });
 

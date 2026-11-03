@@ -59,6 +59,8 @@ export function TasksPage() {
   const q = useQuery({ queryKey: ["staff-tasks"], queryFn: () => load(), retry: false, refetchInterval: 60_000 });
   const [tab, setTab] = useState<Tab>("mine");
   const [search, setSearch] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [resp, setResp] = useState<ResponsibilityStatus | "ALL">("ALL");
   const [f, setF] = useState({ fund: ALL, level: ALL, admin: ALL, lead: ALL, team: ALL, due: ALL });
@@ -109,14 +111,19 @@ export function TasksPage() {
         <MyActionAlerts kinds={["handoff", "handoff_issue"]} />
         <PartialResultsNotice partial={d.partial} />
         {selectedTask && !d.rows.some((t: any) => t.id === selectedTask) && <p role="status" className="text-sm text-destructive">This task isn't in your available work. It may be outside your access or this list's read limit.</p>}
-        {d.canWrite && <NewTask staff={d.staff} />}
+        <div className="flex flex-wrap gap-2">
+          {d.canWrite && <Button size="sm" onClick={() => setShowNew((v) => !v)}>{showNew ? "Close new task" : "New task"}</Button>}
+          <Button size="sm" variant="outline" aria-expanded={showFilters} onClick={() => setShowFilters((v) => !v)}>Filters</Button>
+          {(resp !== "ALL" || Object.values(f).some((v) => v !== ALL)) && <Button size="sm" variant="ghost" onClick={() => { setResp("ALL"); setF({ fund: ALL, level: ALL, admin: ALL, lead: ALL, team: ALL, due: ALL }); }}>Clear filters</Button>}
+        </div>
+        {d.canWrite && showNew && <NewTask staff={d.staff} />}
         <div className="flex flex-wrap items-center gap-2">
           {([["mine", `My work (${count((t) => assignedToViewer(t, d.viewer))})`], ["follow_up", `Follow up due (${count((t) => taskFollowUpDue(t, d.viewer, today))})`], ["needs_next", `Needs next step (${count((t) => needsNext(t, d.viewer))})`], ["created", `I created (${count((t) => t.created_by === d.viewer)})`], ["unassigned", `Unassigned (${count((t) => !t.assignee_user_id)})`], ["all", `All open (${count(() => true)})`], ["done", "Done"]] as const).map(([k, l]) => (
             <Button key={k} size="sm" variant={tab === k ? "default" : "outline"} onClick={() => setTab(k)}>{l}</Button>
           ))}
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks" aria-label="Search tasks" className="ml-auto max-w-xs" />
         </div>
-        <ResponsibilityFilter value={resp} onChange={setResp} counts={counts} />
+        {showFilters && <><ResponsibilityFilter value={resp} onChange={setResp} counts={counts} />
         <div className="flex flex-wrap gap-2">
           <FilterSelect label="Fund" value={f.fund} onChange={(v) => setF({ ...f, fund: v })} options={opt("offering_id").map((id) => [id, d.rows.find((t: any) => t.offering_id === id)?.fundName ?? "Fund"])} />
           <FilterSelect label="Service level" value={f.level} onChange={(v) => setF({ ...f, level: v })} options={opt("serviceLevel").map((l) => [l, titleCase(l)])} />
@@ -124,7 +131,7 @@ export function TasksPage() {
           <FilterSelect label="Relationship lead" value={f.lead} onChange={(v) => setF({ ...f, lead: v })} options={opt("relationshipLeadId").map((id) => [id, nameOf(id)])} />
           <FilterSelect label="Team" value={f.team} onChange={(v) => setF({ ...f, team: v })} options={Object.entries(TEAMS)} />
           <FilterSelect label="Due date" value={f.due} onChange={(v) => setF({ ...f, due: v })} options={[["overdue", "Overdue"], ["week", "Due within 7 days"], ["none", "No due date"]]} />
-        </div>
+        </div></>}
         <div className="rounded-lg border bg-card">
           {tab === "needs_next" && <p className="border-b p-3 text-sm text-muted-foreground">These open tasks you own have no next action yet. Add one and a follow-up date so anyone can see what happens next.</p>}
           {tab === "needs_next" ? (rows.length ? rows.map((t: any) => <NextStepQuickForm key={t.id} t={t} />) : <p className="p-4 text-sm text-muted-foreground">{search || resp !== "ALL" || Object.values(f).some((v) => v !== ALL) ? "No tasks match these filters." : "No tasks needing a next step in this view."}</p>) :
@@ -226,8 +233,9 @@ function TaskRow({ t, staff, viewer, seeAll, canWrite, open, onToggle }: { t: an
           {t.responsibility_note_client && <p className="text-xs text-foreground"><span className="font-medium">Client note:</span> {t.responsibility_note_client}</p>}
           {t.description && <p className="whitespace-pre-wrap text-foreground">{t.description}</p>}
           {canWrite && <TaskHandoffPanel t={t} viewer={viewer} staff={staff} />}
-          {canWrite && !["done", "cancelled"].includes(t.status) && <ResponsibilityEditor t={t} staff={staff} />}
-          {canWrite && (
+          {canWrite && <details><summary className="cursor-pointer text-sm font-medium">More task details</summary><div className="mt-3 space-y-3">
+          {!["done", "cancelled"].includes(t.status) && <ResponsibilityEditor t={t} staff={staff} />}
+          {(
             <div className="flex flex-wrap gap-2">
               <Select value={t.priority} onValueChange={(v) => save({ priority: v })}><SelectTrigger className="h-8 w-32" aria-label="Priority"><SelectValue /></SelectTrigger>
                 <SelectContent>{Object.entries(PRIORITY).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
@@ -236,6 +244,7 @@ function TaskRow({ t, staff, viewer, seeAll, canWrite, open, onToggle }: { t: an
               <Input type="date" defaultValue={t.due_date ?? ""} onBlur={(e) => e.target.value !== (t.due_date ?? "") && save({ dueDate: e.target.value || null })} aria-label="Due date" className="h-8 w-44" />
             </div>
           )}
+          </div></details>}
           <div>
             <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">History</div>
             {h.isError && <LoadError error={h.error} what="Task history" onRetry={() => h.refetch()} />}
