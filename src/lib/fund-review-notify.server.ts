@@ -28,13 +28,14 @@ export async function sendFundReview(db: any, kind: ReviewKind, id: string) {
     offeringId = setup?.offering_id;
   }
   if (!offeringId) return { sent: false };
-  const { data: fund, error: fundError } = await db.from("offerings").select("name").eq("id", offeringId).maybeSingle();
+  const { data: fund, error: fundError } = await db.from("offerings").select("name,routine_review_user_id").eq("id", offeringId).maybeSingle();
   if (fundError || !fund) return { sent: false };
   const { data: managers, error: managerError } = await db.from("fund_managers").select("user_id").eq("offering_id", offeringId).order("user_id");
   if (managerError) throw new Error("Review owner unavailable");
   // Explicit saved assignment wins only if still eligible; otherwise a manager owns it.
   let recipientId: string | null = null;
-  if (row.assigned_to && ((managers ?? []).some((m: any) => m.user_id === row.assigned_to) || await routineReviewer(db, row.assigned_to, offeringId))) recipientId = row.assigned_to;
+  const assigned = row.assigned_to ?? fund.routine_review_user_id;
+  if (assigned && ((managers ?? []).some((m: any) => m.user_id === assigned) || await routineReviewer(db, assigned, offeringId))) recipientId = assigned;
   recipientId ??= managers?.[0]?.user_id ?? null;
   if (!recipientId) return { sent: false };
   const { data: auth, error: authError } = await db.auth.admin.getUserById(recipientId);

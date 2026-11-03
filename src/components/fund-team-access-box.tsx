@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { changeFundTeamAccess, grantFundTeamAccess, listFundTeamGrants, listGrantableFunds } from "@/lib/fund-team-access.functions";
 import { fundTeamRoleLabel, fundTeamScopeLabel, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
+import { saveFundReviewOwnerFn } from "@/lib/fund-review-owner.functions";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 const STATUS: Record<string, string> = {
   active: "Active",
@@ -22,6 +24,7 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
   const list = useServerFn(listFundTeamGrants);
   const grant = useServerFn(grantFundTeamAccess);
   const change = useServerFn(changeFundTeamAccess);
+  const owner = useServerFn(saveFundReviewOwnerFn);
   const grantable = useServerFn(listGrantableFunds);
   const key = ["fund-team-grants", fundId];
   const q = useQuery({ queryKey: key, queryFn: () => list({ data: { fundId } }) });
@@ -82,6 +85,8 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
 
       {q.data?.canManage && (
         <div className="space-y-2">
+          <label className="block text-sm">Review email owner</label>
+          <SearchableSelect aria-label="Review email owner" value={q.data.reviewOwnerId ?? ""} options={[{ value: "", label: "Fund manager" }, ...grants.filter(g => g.role === "fund_reviewer" && g.status === "active" && g.userId).map(g => ({ value: g.userId ?? "", label: g.email }))]} onValueChange={value => { void owner({ data: { fundId, userId: value || null } }).then(() => { toast.success("Review email owner saved"); void qc.invalidateQueries({ queryKey: key }); }).catch(e => toast.error(e.message)); }} />
           <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] items-end">
             <Input type="email" placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
             <select

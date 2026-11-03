@@ -74,6 +74,7 @@ export const listFundTeamGrants = createServerFn({ method: "GET" })
       }
       out.push({
         id: g.id as string,
+        userId: g.grantee_user_id as string | null,
         email: g.grantee_email as string,
         claimed: !!g.grantee_user_id,
         role: g.role as FundTeamRole,
@@ -90,7 +91,8 @@ export const listFundTeamGrants = createServerFn({ method: "GET" })
         revokeReason: g.revoke_reason as string | null,
       });
     }
-    return { canManage: manager || staff, grants: out };
+    const { data: fund } = await db.from("offerings").select("routine_review_user_id").eq("id", data.fundId).maybeSingle();
+    return { canManage: manager || staff, grants: out, reviewOwnerId: fund?.routine_review_user_id ?? null };
   });
 
 /** Funds the caller may grant team access on: funds they manage, or every fund for staff. */
