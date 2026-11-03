@@ -296,6 +296,7 @@ import { Route as AuthenticatedOpsSaasOrdersRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsSealedArchiveRouteImport } from './routes/_authenticated/ops.sealed-archive'
 import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
 import { Route as AuthenticatedOpsServiceEngagementsRouteImport } from './routes/_authenticated/ops.service-engagements'
+import { Route as AuthenticatedOpsSessionRecordingsRouteImport } from './routes/_authenticated/ops.session-recordings'
 import { Route as AuthenticatedOpsSoftwareIssuesRouteImport } from './routes/_authenticated/ops.software-issues'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStalledRouteImport } from './routes/_authenticated/ops.stalled'
@@ -2110,6 +2111,12 @@ const AuthenticatedOpsServiceEngagementsRoute =
     path: '/ops/service-engagements',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsSessionRecordingsRoute =
+  AuthenticatedOpsSessionRecordingsRouteImport.update({
+    id: '/ops/session-recordings',
+    path: '/ops/session-recordings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSoftwareIssuesRoute =
   AuthenticatedOpsSoftwareIssuesRouteImport.update({
     id: '/ops/software-issues',
@@ -3532,6 +3539,7 @@ export interface FileRoutesByFullPath {
   '/ops/sealed-archive': typeof AuthenticatedOpsSealedArchiveRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
+  '/ops/session-recordings': typeof AuthenticatedOpsSessionRecordingsRoute
   '/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/stalled': typeof AuthenticatedOpsStalledRoute
@@ -4009,6 +4017,7 @@ export interface FileRoutesByTo {
   '/ops/sealed-archive': typeof AuthenticatedOpsSealedArchiveRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
+  '/ops/session-recordings': typeof AuthenticatedOpsSessionRecordingsRoute
   '/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/stalled': typeof AuthenticatedOpsStalledRoute
@@ -4494,6 +4503,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/sealed-archive': typeof AuthenticatedOpsSealedArchiveRoute
   '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/_authenticated/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
+  '/_authenticated/ops/session-recordings': typeof AuthenticatedOpsSessionRecordingsRoute
   '/_authenticated/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/stalled': typeof AuthenticatedOpsStalledRoute
@@ -4980,6 +4990,7 @@ export interface FileRouteTypes {
     | '/ops/sealed-archive'
     | '/ops/security-compliance'
     | '/ops/service-engagements'
+    | '/ops/session-recordings'
     | '/ops/software-issues'
     | '/ops/ss4'
     | '/ops/stalled'
@@ -5457,6 +5468,7 @@ export interface FileRouteTypes {
     | '/ops/sealed-archive'
     | '/ops/security-compliance'
     | '/ops/service-engagements'
+    | '/ops/session-recordings'
     | '/ops/software-issues'
     | '/ops/ss4'
     | '/ops/stalled'
@@ -5941,6 +5953,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/sealed-archive'
     | '/_authenticated/ops/security-compliance'
     | '/_authenticated/ops/service-engagements'
+    | '/_authenticated/ops/session-recordings'
     | '/_authenticated/ops/software-issues'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/stalled'
@@ -8245,6 +8258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsServiceEngagementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/session-recordings': {
+      id: '/_authenticated/ops/session-recordings'
+      path: '/ops/session-recordings'
+      fullPath: '/ops/session-recordings'
+      preLoaderRoute: typeof AuthenticatedOpsSessionRecordingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/software-issues': {
       id: '/_authenticated/ops/software-issues'
       path: '/ops/software-issues'
@@ -10107,6 +10127,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsSealedArchiveRoute: typeof AuthenticatedOpsSealedArchiveRoute
   AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
   AuthenticatedOpsServiceEngagementsRoute: typeof AuthenticatedOpsServiceEngagementsRoute
+  AuthenticatedOpsSessionRecordingsRoute: typeof AuthenticatedOpsSessionRecordingsRoute
   AuthenticatedOpsSoftwareIssuesRoute: typeof AuthenticatedOpsSoftwareIssuesRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStalledRoute: typeof AuthenticatedOpsStalledRoute
@@ -10462,6 +10483,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsSecurityComplianceRoute,
   AuthenticatedOpsServiceEngagementsRoute:
     AuthenticatedOpsServiceEngagementsRoute,
+  AuthenticatedOpsSessionRecordingsRoute:
+    AuthenticatedOpsSessionRecordingsRoute,
   AuthenticatedOpsSoftwareIssuesRoute: AuthenticatedOpsSoftwareIssuesRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStalledRoute: AuthenticatedOpsStalledRoute,
