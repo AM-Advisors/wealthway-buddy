@@ -832,10 +832,10 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
     row.investment_profile_id ? db().from("investment_profiles").select("profile_type, legal_name, country, address_line1, address_line2, city, region, postal_code, phone, details").eq("id", row.investment_profile_id).maybeSingle() : Promise.resolve({ data: null }),
     row.investment_profile_id ? db().from("investor_tax_profiles").select("*").eq("investment_profile_id", row.investment_profile_id).order("created_at", { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
   ]) as any[];
-  const { data: kyc } = person?.id
-    ? await db().from("kyc_verifications").select("verified_full_name, status, completed_at, document_issuing_country").eq("person_id", person.id).eq("status", "approved").not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(1)
-    : { data: [] as any[] };
-  const k = ((kyc ?? []) as any[])[0] ?? null;
+  // One identity result per person: approved investment check, else the approved login check.
+  const { approvedPersonVerification } = await import("@/lib/person-identity.server");
+  const pv = await approvedPersonVerification(person?.id ?? null);
+  const k = pv ? { verified_full_name: pv.fullName, document_issuing_country: pv.documentCountry } : null;
   const profileType = (profile?.profile_type ?? null) as string | null;
   const isIndividual = profileType === "individual" || profileType === "joint";
   const verifiedName = isIndividual ? (k?.verified_full_name ?? null) : k ? (profile?.legal_name ?? null) : null;

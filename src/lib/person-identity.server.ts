@@ -15,6 +15,25 @@ export async function personIdentityCheck(userId: string | null, personId: strin
   return (data ?? null) as null | { id: string; user_id: string; person_id: string | null; status: PersonCheckState; session_id: string | null; session_url: string | null };
 }
 
+/**
+ * Verified facts (name, ID country) from the person's approved identity result: an approved
+ * investment check first, otherwise the approved login check. Used for W-9/W-8 routing and prefill.
+ */
+export async function approvedPersonVerification(personId: string | null): Promise<null | { fullName: string | null; documentCountry: string | null }> {
+  if (!personId) return null;
+  const { data: k } = await db().from("kyc_verifications").select("verified_full_name, document_issuing_country")
+    .eq("person_id", personId).eq("status", "approved").not("completed_at", "is", null)
+    .order("completed_at", { ascending: false }).limit(1);
+  const kv = (k ?? [])[0];
+  if (kv) return { fullName: kv.verified_full_name ?? null, documentCountry: kv.document_issuing_country ?? null };
+  const { data: a } = await db().from("account_identity_checks").select("decision_summary, review_details")
+    .eq("person_id", personId).eq("status", "approved").order("decided_at", { ascending: false }).limit(1);
+  const ac = (a ?? [])[0];
+  if (!ac) return null;
+  const doc = ac.review_details?.idDocument ?? {};
+  return { fullName: doc.fullName ?? null, documentCountry: ac.decision_summary?.document?.country ?? doc.country ?? null };
+}
+
 /** What an investment's Verification step should do given the person's single check. */
 export async function resolvePersonIdentity(userId: string | null, personId: string | null) {
   const c = await personIdentityCheck(userId, personId);
