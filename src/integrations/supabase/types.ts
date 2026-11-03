@@ -36133,6 +36133,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent: string | null
           rolling_closes: boolean | null
+          routine_review_changed_by: string | null
           routine_review_user_id: string | null
           service_level: string
           service_tier: string
@@ -36221,6 +36222,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          routine_review_changed_by?: string | null
           routine_review_user_id?: string | null
           service_level?: string
           service_tier?: string
@@ -36309,6 +36311,7 @@ export type Database = {
           reg_type?: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          routine_review_changed_by?: string | null
           routine_review_user_id?: string | null
           service_level?: string
           service_tier?: string
@@ -50591,6 +50594,10 @@ export type Database = {
       is_any_staff: { Args: never; Returns: boolean }
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
+      is_live_fund_reviewer: {
+        Args: { _fund: string; _user: string }
+        Returns: boolean
+      }
       is_platform_admin: { Args: { _uid: string }; Returns: boolean }
       is_sealed_document_file: {
         Args: { _bucket: string; _path: string }
