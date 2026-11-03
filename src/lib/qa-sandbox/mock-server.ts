@@ -55,6 +55,7 @@ export type QaState = {
   lastMatches: ReturnType<typeof rankMatches> | null;
   documentDraft: { created_by: string; version: number; self_serve_review_state: string; generation_issues: string[]; active: boolean } | null;
   investorCopies?: { id: string; fileName: string; kind: string; status: string; note: string | null; canReview: boolean }[];
+  routineMinimum?: number;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -74,6 +75,7 @@ const KNOWN_FNS = [
   "fundDocumentGenerationAccessFn", "fundTypeTemplatesFn", "generateFundTypeDocumentsFn", "listFundTemplateDocumentsFn", "templateDocSendStatusFn", "reviewGeneratedDocumentFn", "activateDocumentVersionFn",
   "getFundLinkFn",
   "uploadOnboardingDocForFn", "managerUploadReviewsFn", "managerReviewUploadFn", "managerUploadUrlFn",
+  "getFundSetupOverview", "saveFundSetupFieldsFn",
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -97,6 +99,12 @@ export class QaBlockedError extends Error {}
 /** Pure handler for one mocked server-function call. Throws Error with a user-facing message on failure. */
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
   switch (fnName) {
+    case "getFundSetupOverview": return { canEdit: false, routineOnly: true, isStaff: false, offering: { displayName: QA_FUND_NAME, minInvestmentCents: state.routineMinimum ?? 10000000 }, economics: { canEdit: true, canApprove: true, status: "draft", terms: {}, classes: [] } };
+    case "saveFundSetupFieldsFn": {
+      if (data.offeringId !== QA_FUND_ID || Object.keys(data.fields ?? {}).some(k => k !== "minInvestmentCents")) throw new QaBlockedError("Protected or outside-fund edit blocked.");
+      state.routineMinimum = data.fields.minInvestmentCents;
+      return { ok: true };
+    }
     case "managerUploadReviewsFn": return state.investorCopies ?? [];
     case "uploadOnboardingDocForFn": {
       const copies = state.investorCopies ??= [];

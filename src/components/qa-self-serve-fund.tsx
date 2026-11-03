@@ -6,6 +6,7 @@ import { FundOnboardingLinkCard } from "./fund-onboarding-link";
 import { QA_FUND_ID } from "@/lib/qa-sandbox/fictional-data";
 import { FundManagerNextAction } from "@/components/fund-manager-next-action";
 import { UploadForInvestor } from "@/components/upload-for-investor";
+import { FundRoutineWorkspace } from "./fund-routine-workspace";
 
 export function QaSelfServeFund() {
   const [area, setArea] = useState<SelfServeArea>("setup");
@@ -15,7 +16,7 @@ export function QaSelfServeFund() {
     investors: () => <><CreateInvestor fundId={QA_FUND_ID} isStaff={false} onDone={() => setAdded(true)} />{added && <p className="mt-3 text-sm">Fictional investor added and invitation recorded.</p>}</>,
     documents: () => <><UploadForInvestor onboardingId="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" /><QaFundDocuments /></>,
     link: () => <FundOnboardingLinkCard fundId={QA_FUND_ID} />,
-    team: () => <section><h2 className="text-xl">Fund team</h2><p className="mt-3 text-sm">Jordan Vale · Fund manager</p></section>,
+    team: () => <section><h2 className="text-xl">Fund team</h2><p className="mt-3 text-sm">Jordan Vale · Fund manager</p><FundRoutineWorkspace fundId={QA_FUND_ID} /></section>,
     overview: () => <section><h2 className="text-xl">Activity & reporting</h2><p className="mt-3 text-sm text-muted-foreground">No financial reports released.</p></section>,
   }} />;
 }

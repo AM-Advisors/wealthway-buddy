@@ -13,6 +13,12 @@ const newInvestor = {
 };
 
 describe("QA sandbox mock server", () => {
+  it("saves and reloads fictional routine minimum without protected edits", () => {
+    const state = createQaState("manager");
+    handleQaServerCall("saveFundSetupFieldsFn", { offeringId: QA_FUND_ID, fields: { minInvestmentCents: 2500000 } }, state);
+    expect((handleQaServerCall("getFundSetupOverview", {}, state) as any).offering.minInvestmentCents).toBe(2500000);
+    expect(() => handleQaServerCall("saveFundSetupFieldsFn", { offeringId: QA_FUND_ID, fields: { taxClassification: "changed" } }, state)).toThrow("Protected");
+  });
   it("fictional generation requires independent review before availability", () => {
     const state = createQaState("manager");
     handleQaServerCall("generateFundTypeDocumentsFn", {}, state);
