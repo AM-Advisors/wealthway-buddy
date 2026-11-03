@@ -318,7 +318,7 @@ export async function loadReadinessInputs(rows: any[]) {
     readIn(profIds, (c) => d.from("profile_accreditations").select("profile_id, status, verification_method, verified_at, expires_at, offering_id").in("profile_id", c)),
     readIn(profIds, (c) => d.from("investor_documents").select(DOC_COLS).in("investment_profile_id", c)),
     readIn(rows.filter((r) => r.investment_profile_id && r.investor_user_id).map((r) => r.id), (c) => d.from("investor_documents").select(DOC_COLS).is("investment_profile_id", null).in("onboarding_id", c)),
-    readIn(personIds, (c) => d.from("kyc_verifications").select("person_id, provider_decision, liveness_status, face_match_status, verified_full_name, completed_at").in("person_id", c)),
+    readIn(personIds, (c) => d.from("kyc_verifications").select("person_id, provider_decision, liveness_status, face_match_status, verified_full_name, completed_at, harmonious_decision_reason").in("person_id", c)),
   ]);
   const configs = await readIn(setups.map((s) => s.id), (c) => d.from("fund_eligibility_configs").select("*").in("setup_id", c).eq("status", "approved").order("version", { ascending: false }));
   const sigs = new Map<string, any>();
@@ -361,7 +361,9 @@ export type ReadinessInputs = Awaited<ReturnType<typeof loadReadinessInputs>>;
  * able to start again instead of waiting forever.
  */
 export function kycNeverSubmitted(list: any[] | undefined): boolean {
-  if (!list || list.length === 0) return false;
+  // Investment copies replaced by the person's login identity check are not unfinished work.
+  list = (list ?? []).filter((k) => !/^Replaced by the person's identity check/i.test(String(k?.harmonious_decision_reason ?? "")));
+  if (list.length === 0) return false;
   const touched = (v: unknown) => v != null && !["", "not_started", "none"].includes(String(v).toLowerCase());
   return list.every((k) => !touched(k.provider_decision) && !touched(k.liveness_status) && !touched(k.face_match_status) && !k.verified_full_name && !k.completed_at);
 }
