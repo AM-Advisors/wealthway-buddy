@@ -94,6 +94,17 @@ export const saveQuestionnaireFn = createServerFn({ method: "POST" })
     })),
   );
 
+export const teamPrepareContextFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(onboardingInput.parse)
+  .handler(async ({ data, context }) => (await engine()).teamPrepareContext(context.userId, data.onboardingId));
+
+/** Manager, fund team or Harmonious fills in answers; the investor confirms them before signing. */
+export const teamSaveInvestorAnswersFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: z.string().min(1), answers: z.record(z.string(), z.string().max(2000)) }).parse)
+  .handler(async ({ data, context }) => reconciled(data.onboardingId, context.userId, "teamSaveInvestorAnswers", (await engine()).teamSaveInvestorAnswers(context.userId, data)));
+
 export const prepareSubscriptionDocumentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(onboardingInput.parse)

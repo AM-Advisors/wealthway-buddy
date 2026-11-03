@@ -1,4 +1,5 @@
 import { InviteInvestorMenuItem } from "@/components/personal-investment-link";
+import { FillForInvestorButton } from "@/components/fill-for-investor";
 import { useApplicationRoute, useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useMemo, useState, type ReactNode } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
@@ -227,7 +228,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
                       <p className="truncate text-xs text-muted-foreground">{r.profileLabel ?? r.profileType ?? "Profile needed"}{r.claimState === "prepared" ? " · Not signed in yet" : ""}</p></div>
                     <p className="text-sm">{money(r.amountCents)}</p>
                     <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p></div>
-                  </Link>{rowMenu(r)}
+                  </Link><FillForInvestorButton onboardingId={r.onboardingId} name={r.name} />{rowMenu(r)}
                 </li>); })}
               {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); const linked = linkedRecords.get(row.applicationId); return (
                 <li key={row.applicationId} className="flex items-center gap-3 p-3 hover:bg-muted/30">

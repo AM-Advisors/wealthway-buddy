@@ -923,6 +923,74 @@ export async function saveQuestionnaire(
   return { saved: true, underReview: flagged.length > 0 };
 }
 
+/** Manager, fund team or Harmonious may fill in the investor's answers before signing. */
+async function assertTeamPreparer(userId: string, onboardingId: string) {
+  const actor = await onboardingActor(userId);
+  const row = await onboardingRow(onboardingId);
+  let role: "harmonious" | "manager" | "fund_team";
+  if (actor.isStaff) role = "harmonious";
+  else if (actor.managedOfferingIds.includes(row.offering_id)) role = "manager";
+  else {
+    const { routineReviewer } = await import("@/lib/fund-routine-access.server");
+    if (!(await routineReviewer(db(), actor.userId, row.offering_id))) forbid("you are not on this fund's team.");
+    role = "fund_team";
+  }
+  if (row.removed_at || ["closed", "declined", "cancelled"].includes(String(row.stage))) fail("This investment can no longer be changed.");
+  const { investorEditWindow } = await import("@/lib/manager-edit-window.server");
+  if (!(await investorEditWindow(row))) fail("This investor has already signed or sent money, so answers can't be filled in for them.");
+  return { actor, row, role };
+}
+
+/** What the team sees when filling in for the investor. */
+export async function teamPrepareContext(userId: string, onboardingId: string) {
+  const { row } = await assertTeamPreparer(userId, onboardingId);
+  const questionnaire = await publishedQuestionnaire(row.offering_id);
+  const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
+  const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
+  const { isAccreditationQuestion } = await import("@/lib/accreditation-step");
+  const questions = locks.questions.filter((q: any) => !isAccreditationQuestion(q.key) && q.type !== "document");
+  const keys = questions.map((q) => q.key);
+  const raw: Record<string, unknown> = { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks.supplied, keys), ...Object.fromEntries(Object.entries(locks.locked).filter(([, v]) => v != null)) };
+  return {
+    questions: JSON.parse(JSON.stringify(questions)) as Array<Record<string, any>>,
+    answers: Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, v == null ? "" : String(v)])) as Record<string, string>,
+    locked: locks.locked,
+    confirmedByInvestor: Boolean(row.questionnaire_submitted_at),
+    hasAccount: Boolean(row.investor_user_id),
+  };
+}
+
+/**
+ * Saves answers as a draft for the investor. Never submits: the investor
+ * reviews and confirms every statement themselves before signing.
+ */
+export async function teamSaveInvestorAnswers(userId: string, input: { onboardingId: string; answers: Record<string, unknown> }) {
+  const { actor, row, role } = await assertTeamPreparer(userId, input.onboardingId);
+  if (row.questionnaire_submitted_at) fail("The investor already confirmed their answers. Ask them to update the answers themselves.");
+  const questionnaire = await publishedQuestionnaire(row.offering_id);
+  const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
+  const { applyLocked } = await import("@/lib/subscription-prefill");
+  const { isAccreditationQuestion } = await import("@/lib/accreditation-step");
+  const { stripHiddenAnswers } = await import("@/lib/investor-onboarding-model");
+  const questions = locks.questions;
+  const keys = questions.map((q) => q.key);
+  const editable = new Set(questions.filter((q: any) => !q.locked && q.type !== "document" && !isAccreditationQuestion(q.key)).map((q) => q.key));
+  const existing = (row.questionnaire_responses ?? {}) as Record<string, unknown>;
+  const merged: Record<string, unknown> = { ...existing };
+  for (const [k, v] of Object.entries(input.answers)) if (editable.has(k)) merged[k] = typeof v === "string" ? v.slice(0, 2000) : v;
+  const answers = stripHiddenAnswers(questions, applyLocked(merged, locks.locked, keys));
+  await touch(row.id, { questionnaire_responses: answers, questionnaire_source: "fund_team" });
+  await recordEvent({
+    onboardingId: row.id,
+    offeringId: row.offering_id,
+    event: "questionnaire_prepared_by_team",
+    detail: { answered: Object.keys(input.answers).filter((k) => editable.has(k)).length },
+    actorUserId: actor.userId,
+    actorRole: role,
+  });
+  return { saved: true };
+}
+
 export const HIGH_RISK_DETAIL_PREFIX = "Investor answered Yes to high-risk question";
 
 /** A bad-actor "Yes" opens one blocking compliance issue and tells Harmonious and the fund team. */
@@ -1320,6 +1388,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     questionnaire: questionnaire ? { version: questionnaire.version, questions: locks?.questions ?? questionnaire.questions, sectionTitle: (questionnaire as any).sectionTitle ?? null, sectionStartKey: (questionnaire as any).sectionStartKey ?? null } : null,
     questionnaireResponses: { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks?.supplied ?? {}, (questionnaire?.questions ?? []).map((q: Question) => q.key)), ...Object.fromEntries(Object.entries(locks?.locked ?? {}).filter(([, v]) => v != null)) },
     questionnaireLocked: locks?.locked ?? {},
+    questionnairePreparedByTeam: row.questionnaire_source === "fund_team" && !row.questionnaire_submitted_at,
     documentTemplateVersion: row.document_template_version as number | null,
     executedSnapshot: row.executed_snapshot,
     availableProfiles: (profiles ?? []) as any[],
