@@ -470,7 +470,8 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
   const pg = Math.min(page, pages - 1);
   const pageQs = toAsk.slice(pg * PAGE, pg * PAGE + PAGE);
   const pageMissing = pageQs.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
-  const [showKnown, setShowKnown] = useState(false);
+  const teamPrepared = Boolean(d.questionnairePreparedByTeam);
+  const [showKnown, setShowKnown] = useState(teamPrepared);
   const renderQ = (q: any) => (
     <div key={q.key} className="space-y-1.5">
       <Label htmlFor={q.key} className="leading-snug">{q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
@@ -512,6 +513,9 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
       </div>
       {open ? (
         <fieldset disabled={locked} className="space-y-4">
+          {teamPrepared && !done ? (
+            <div role="status" className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">Your fund team filled in these answers for you. Check each one carefully. When you submit, you confirm they are true and correct.</div>
+          ) : null}
           {known.length > 0 && (
             <div className="rounded-md border bg-muted/40 p-3">
               <button type="button" className="flex w-full items-center justify-between text-left text-sm font-medium" onClick={() => setShowKnown((v) => !v)}>
