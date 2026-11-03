@@ -71,3 +71,4 @@
 - Personal onboarding mounts private content behind shared AccountKycGate. Why: unverified accounts get recovery instead of repeated denied reads; server checks remain authoritative.
 
 - Party conversion/name corrections sync investment_profiles legal_name/display_label, log changes, reconcile readiness and invalidate readers; personal identity stays separate. Why: consistent trust names, unchanged verification.
+- Sealed archive: sealed_records hides retained document/template versions from every reader (filter via sealed-records.server.ts in any new version listing); only Super Admin opens with a logged reason at /ops/sealed-archive — why: legal retention without visibility, nothing deleted.
