@@ -100,7 +100,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
     }));
     return {
       id: d.id,
-      canConfigureTemplate: !actor.isStaff && templates.has(`${d.id}:${d.current_version}`),
+      canConfigureTemplate: actor.isStaff || actor.offeringIds.includes(offeringId),
       title: d.title,
       category: d.document_category as DocumentCategory | null,
       usage: d.usage as DocumentUsage | null,

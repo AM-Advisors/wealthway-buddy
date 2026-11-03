@@ -34,7 +34,8 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
     const baseQs = ((base ?? []) as any[])[0]?.questions ?? (await import("@/lib/standard-investor-questionnaire.json")).default;
     const { newSectionQuestions } = await import("@/lib/fund-questionnaire-section");
     return {
-      staff: true,
+      staff: !!access.staff,
+      canApprove: true,
       canDraft: !!author,
       documents,
       aiBlocked: aiState && !aiState.reset_at ? aiState.blocked_message as string : null,

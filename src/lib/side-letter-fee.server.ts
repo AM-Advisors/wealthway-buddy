@@ -137,6 +137,7 @@ export async function ensureMinimumSideLetter(onboardingId: string, actorUserId:
     reason: "Fund manager entered a commitment below the fund minimum.", proposed_by: actorUserId, proposer_kind: "manager",
   }).select("id").single();
   await d.from("side_letter_events").insert({ offering_id: ob.offering_id, side_letter_id: letter.id, event: "proposed_create", actor_id: actorUserId, detail: { change_request_id: req?.id ?? null, automatic: "below_minimum" } });
+  if (req?.id) await (await import("./fund-review-notify.server")).notifyFundReview("side_letter", req.id);
   return letter.id as string;
 }
 
