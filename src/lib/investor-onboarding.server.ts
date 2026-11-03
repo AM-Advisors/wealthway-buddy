@@ -778,6 +778,8 @@ export async function setInvestmentAmount(
     const usd = (c: number) => `$${(c / 100).toLocaleString("en-US")}`;
     const { notifySideLetterRequired } = await import("@/lib/investor-blocked-notify.server");
     await notifySideLetterRequired({ onboardingId: row.id, offeringId: row.offering_id, investorUserId: row.investor_user_id ?? null, commitment: usd(input.amountCents), minimum: usd(Number(offering.minInvestmentCents)) });
+    const { ensureMinimumSideLetter } = await import("@/lib/side-letter-fee.server");
+    await ensureMinimumSideLetter(row.id, null).catch((e) => console.error("[amount] side letter", (e as Error).message));
   }
   await recordEvent({
     onboardingId: row.id,
@@ -1559,6 +1561,7 @@ export async function reviewDetail(userId: string, onboardingId: string) {
     fundingReconciled: isReconciledFunding(row.funding_status),
     acceptedAt: row.accepted_at,
     acceptedAmountCents: row.accepted_amount_cents,
+    minimumSideLetterMissing: await minimumSideLetterMissing(row, facts.offering),
   });
 
   return {
@@ -1877,6 +1880,15 @@ export async function acceptSubscription(
  * Closing links the existing accounting records. It never creates an
  * independent onboarding capital balance.
  */
+/** Below-minimum investments close only once an approved (active) side letter is on file for them. */
+async function minimumSideLetterMissing(row: any, offering: any): Promise<boolean> {
+  const { sideLetterRequired } = await import("@/lib/investor-onboarding-model");
+  const amount = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+  if (!sideLetterRequired(amount, offering?.minInvestmentCents ?? null)) return false;
+  const { data } = await db().from("side_letters").select("id").eq("onboarding_id", row.id).eq("status", "active").limit(1);
+  return !(data ?? []).length;
+}
+
 export async function closeInvestment(userId: string, input: { onboardingId: string; closingDate?: string }) {
   const actor = await assertStaff(userId);
   const row = await onboardingRow(input.onboardingId);
@@ -1892,6 +1904,7 @@ export async function closeInvestment(userId: string, input: { onboardingId: str
     fundingReconciled: isReconciledFunding(row.funding_status),
     acceptedAt: row.accepted_at,
     acceptedAmountCents: row.accepted_amount_cents,
+    minimumSideLetterMissing: await minimumSideLetterMissing(row, facts.offering),
   });
   if (!gate.allowed) fail(gate.reasons[0]!);
 
