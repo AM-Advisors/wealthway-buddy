@@ -778,6 +778,8 @@ export async function setInvestmentAmount(
     const usd = (c: number) => `$${(c / 100).toLocaleString("en-US")}`;
     const { notifySideLetterRequired } = await import("@/lib/investor-blocked-notify.server");
     await notifySideLetterRequired({ onboardingId: row.id, offeringId: row.offering_id, investorUserId: row.investor_user_id ?? null, commitment: usd(input.amountCents), minimum: usd(Number(offering.minInvestmentCents)) });
+    const { ensureMinimumSideLetter } = await import("@/lib/side-letter-fee.server");
+    await ensureMinimumSideLetter(row.id, null).catch((e) => console.error("[amount] side letter", (e as Error).message));
   }
   await recordEvent({
     onboardingId: row.id,
