@@ -1,5 +1,10 @@
 # Roadmap
 
+## Erebor $100,000 minimum (2026-11-03)
+- [ ] Save $100,000 through the requesting user's authorized fund save.
+- [ ] Correct the current unsigned subscription template as a new document version; keep the already-correct PPM and signed history unchanged.
+- [ ] Verify saved minimum and document content; report any approval or sign-in blockers.
+
 ## Old Erebor PPM access removal (2026-11-03)
 - [x] Removed four confirmed Justin-naming PPM review draft files from ordinary Files and the review collection, retaining private copies.
 - [x] Added sealed-version checks to both direct template download endpoints and restrictive storage/template read policies; reason-logged Super Admin archive access remains separate.
