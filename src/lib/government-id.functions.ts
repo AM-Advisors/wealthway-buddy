@@ -220,7 +220,7 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
       provider: login.provider ?? "verification",
       providerStatus: login.status,
       reviewStatus: login.status,
-      files: [] as any[],
+      files: [] as { id: string; side: string; status: string; fileName: string; uploadedAt: string | null; supersededAt: string | null }[],
     } : null;
     if (!appIds.length) return { items: loginItem ? [loginItem] : [] };
     const [{ data: kyc }, { data: docs }, { data: offerings }] = await Promise.all([
