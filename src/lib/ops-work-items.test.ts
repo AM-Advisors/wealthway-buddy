@@ -196,3 +196,21 @@ describe("paging happens before anything reaches the browser", () => {
     expect(page.pages).toBe(3);
   });
 });
+
+describe("work-area views", () => {
+  const NOW2 = new Date("2026-11-03T00:00:00Z");
+  const base = { source: "onboarding.review", area: "onboarding", recordType: "fund", recordId: "r", recordTab: "t", title: "x", reason: "y", workflowState: "s", requiredAction: "prepare", priority: "normal" } as any;
+  it("finds area work beyond the first hundred global items", () => {
+    const many = Array.from({ length: 105 }, (_, i) => ({ ...base, id: `o${i}`, area: "capital" }));
+    const match = Array.from({ length: 12 }, (_, i) => ({ ...base, id: `t${i}`, area: i % 2 ? "reports" : "accounting" }));
+    const f = applyFilters([...many, ...match], { areas: ["accounting", "reports"] as any }, "me", NOW2);
+    expect(paginate(f, 1, 8).total).toBe(12);
+    expect(paginate(f, 2, 8).rows).toHaveLength(4);
+  });
+  it("needs-owner keeps name-only owners and skips workflows without owners", () => {
+    const recs = [{ ...base, id: "mine", assignedTo: "me" }, { ...base, id: "named", assignedToName: "Pat" }, { ...base, id: "none" }, { ...base, id: "noField", source: "capital.call" }];
+    expect(applyFilters(recs, { unassigned: true }, "me", NOW2).map((i) => i.id)).toEqual(["none"]);
+    expect(applyFilters(recs, { scope: "mine", areas: ["onboarding"] as any }, "me", NOW2).map((i) => i.id)).toEqual(["mine"]);
+    expect(applyFilters(recs, { scope: "mine", unassigned: true }, "me", NOW2)).toEqual([]);
+  });
+});
