@@ -70,3 +70,4 @@
 
 - Commercial billing/commission/bookkeeping/invoice-preview rules: src/lib/AGENTS.md.
 - Staff task handoffs/blocked/complete go through staff_task_transition (owner-only, receiver accepts); task readers/history/writes share team-work-model visibility, and action alerts carry exact-record search targets. Software issues use software_issue_report/move with retester-gated resolution; open reads exclude resolved history before limits. Why: one owner, findable work, unchanged authority and no duplicate queue.
+- Manager-entered amounts below the fund minimum call ensureMinimumSideLetter (side-letter-fee.server.ts), filing one proposed minimum-waiver letter per investment; agreement prep then signs in the entry-level series instead of refusing — why: managers accept smaller commitments without blocking investors.
