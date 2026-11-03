@@ -207,12 +207,12 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           {data.canEdit && latest?.approval === "uploaded_review_required" && !latest.approvedTemplate && (!latest.reviewState || latest.canReview || isSuper) && latest.reviewState !== "returned" && (
             <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: latest.version } }), "Document approved")}>Mark approved</Button>
           )}
-          {(data.canEdit || doc.canConfigureTemplate) && latest && latest.approval !== "superseded" && !latest.isActive && latest.rolloutScope !== "single" && (
+          {data.canRelease && latest && latest.approval !== "superseded" && !latest.isActive && latest.rolloutScope !== "single" && (
             <Button size="sm" disabled={busy || !doc.usage || (latest.reviewState && latest.reviewState !== "approved") || (needsSigning && latest.signingStatus !== "confirmed")} onClick={() => { setOpen(true); void startActivate(latest.version); }}>{latest.reviewState ? "Make available" : "Approve and make available"}</Button>
           )}
           {!data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setShowRequest(!showRequest)}>Request a change</Button>}
           {data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Replace</Button>}
-          {active && <Button size="sm" onClick={() => setSendOpen(true)}>Send</Button>}
+          {active && data.canRelease && <Button size="sm" onClick={() => setSendOpen(true)}>Send</Button>}
           <Button size="sm" variant={latest ? "ghost" : "default"} onClick={() => setOpen(!open)}>{open ? "Hide" : latest ? "Manage" : "Set up"}</Button>
         </div>
       </div>
@@ -275,13 +275,13 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           </Step>
 
           <Step n={2} title="How it is used and who it applies to" done={!!doc.usage}>
-            <UsageEditor doc={doc} data={{ ...data, canEdit: data.canEdit || doc.canConfigureTemplate }} busy={busy} onSave={(usage, applicability) => run(() => setUsage({ data: { documentId: doc.id, usage, applicability } }), "Usage saved")} />
+            <UsageEditor doc={doc} data={{ ...data, canEdit: data.canRelease }} busy={busy} onSave={(usage, applicability) => run(() => setUsage({ data: { documentId: doc.id, usage, applicability } }), "Usage saved")} />
           </Step>
 
           {needsSigning && (
             <Step n={3} title="Signature blocks" done={latest?.signingStatus === "confirmed"}>
               {!latest ? <p className="text-sm text-muted-foreground">Upload the document first, then add its signature blocks here.</p>
-                : <SigningEditor key={`${latest.version}-${latest.signingStatus}`} doc={doc} version={latest} data={{ ...data, canEdit: data.canEdit || doc.canConfigureTemplate }} onChanged={onChanged} />}
+                : <SigningEditor key={`${latest.version}-${latest.signingStatus}`} doc={doc} version={latest} data={{ ...data, canEdit: data.canRelease }} onChanged={onChanged} />}
             </Step>
           )}
 
@@ -302,7 +302,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
                     {data.canEdit && v.approval === "uploaded_review_required" && !v.approvedTemplate && (
                       <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: v.version } }), "Approved for use")}>Mark approved</Button>
                     )}
-                    {(v.approval === "approved" || v.approvedTemplate) && !v.isActive && v.rolloutScope !== "single" && (
+                    {data.canRelease && (v.approval === "approved" || v.approvedTemplate) && !v.isActive && v.rolloutScope !== "single" && (
                       <Button size="sm" disabled={busy || (needsSigning && v.signingStatus !== "confirmed")} onClick={() => startActivate(v.version)}>Use this version</Button>
                     )}
                     {needsSigning && v.signingStatus !== "confirmed" && !v.isActive && (
