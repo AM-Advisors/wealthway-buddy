@@ -553,6 +553,29 @@ export const removeFundAccess = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Remove an earlier (legacy) application from one fund: marks it withdrawn
+ *  (never deleted, history kept), revokes fund access and logs the change. */
+export const removeLegacyApplicationFromFund = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => z.object({ applicationId: z.string().uuid(), offeringId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const authz = await import("@/lib/reviewer-authz.server");
+    await authz.authorizeOffering(context.userId, data.offeringId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: app } = await db.from("investor_applications").select("id, user_id, offering_id, status").eq("id", data.applicationId).maybeSingle();
+    if (!app || app.offering_id !== data.offeringId) throw new Error("Application not found for this fund.");
+    if (["funded", "closed"].includes(String(app.status))) throw new Error("Funded or closed investments can't be removed.");
+    const { error } = await db.from("investor_applications").update({ status: "withdrawn", updated_at: new Date().toISOString() }).eq("id", app.id);
+    if (error) throw new Error(error.message);
+    if (app.user_id) {
+      const { count } = await db.from("investor_applications").select("id", { count: "exact", head: true })
+        .eq("user_id", app.user_id).eq("offering_id", data.offeringId).neq("status", "withdrawn");
+      if ((count ?? 0) === 0) await removeAccessFor(context.userId, app.user_id, data.offeringId, "investor");
+    }
+    return { ok: true };
+  });
+
 // ------------------------------------------------ Fund workspace (activation)
 
 function maskEmail(email: string | null): string {

@@ -122,6 +122,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
           "id, user_id, persona_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, manager_review_status, commitment_cents, submitted_at, created_at, updated_at",
         )
         .eq("offering_id", offeringId)
+        .neq("status", "withdrawn")
         .order("updated_at", { ascending: false })
         .limit(500),
       supabase
