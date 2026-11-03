@@ -29,7 +29,7 @@ export function TaskHandoffPanel({ t, viewer, staff }: { t: any; viewer: string;
     try {
       const clean = Object.fromEntries(Object.entries(payload).filter(([, x]) => x !== "" && x !== undefined));
       await run({ data: { id: t.id, action: action as any, payload: clean as any } });
-      toast.success(ok); setMode(null);
+      toast.success(ok); setMode(null); qc.invalidateQueries({ queryKey: ["my-action-alerts"] });
       qc.invalidateQueries({ queryKey: ["staff-tasks"] }); qc.invalidateQueries({ queryKey: ["staff-task-history", t.id] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };

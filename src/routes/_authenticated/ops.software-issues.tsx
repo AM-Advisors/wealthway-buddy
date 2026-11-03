@@ -73,7 +73,7 @@ function ReportForm({ staff, onDone }: { staff: { id: string; name: string }[]; 
       const data: any = Object.fromEntries(Object.entries(v).filter(([, x]) => x !== ""));
       if (data.occurredAt) data.occurredAt = new Date(data.occurredAt).toISOString();
       await report({ data });
-      toast.success("Issue reported. It's in the technical owner's task list.");
+      toast.success("Issue reported. It's in the technical owner's task list."); qc.invalidateQueries({ queryKey: ["my-action-alerts"] });
       qc.invalidateQueries({ queryKey: ["software-issues"] }); qc.invalidateQueries({ queryKey: ["staff-tasks"] });
       onDone();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -119,7 +119,7 @@ function IssueRow({ i }: { i: any }) {
     setBusy(true);
     try {
       await move({ data: { id: i.id, to, ...(note.trim() ? { note } : {}) } });
-      toast.success(STAGE_LABEL[to]); setNote("");
+      toast.success(STAGE_LABEL[to]); setNote(""); qc.invalidateQueries({ queryKey: ["my-action-alerts"] });
       qc.invalidateQueries({ queryKey: ["software-issues"] }); qc.invalidateQueries({ queryKey: ["staff-tasks"] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
