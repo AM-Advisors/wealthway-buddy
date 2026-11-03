@@ -437,7 +437,7 @@ import { Route as AuthenticatedOpsHelpIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsHelpSlugRouteImport } from './routes/_authenticated/ops.help.$slug'
 import { Route as AuthenticatedOpsInvestorsIndexRouteImport } from './routes/_authenticated/ops.investors.index'
 import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './routes/_authenticated/ops.investors.$investorId'
-import { Route as AuthenticatedOpsPeopleUserIdRouteImport } from './routes/_authenticated/ops.people.$userId'
+import { Route as AuthenticatedOpsPeopleUserIdRouteImport } from './routes/_authenticated/ops.people_.$userId'
 import { Route as AuthenticatedOpsPeopleTestDemoRouteImport } from './routes/_authenticated/ops.people_.test-demo'
 import { Route as AuthenticatedOpsPeriodLinksBatchIdRouteImport } from './routes/_authenticated/ops.period-links.$batchId'
 import { Route as AuthenticatedOpsSyntheticStatementsFundIdRouteImport } from './routes/_authenticated/ops.synthetic-statements.$fundId'
@@ -487,7 +487,7 @@ import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes
 import { Route as AuthenticatedManagerFundFundIdTransactionsRouteImport } from './routes/_authenticated/manager.fund.$fundId.transactions'
 import { Route as AuthenticatedMarketingStudioContentItemIdRouteImport } from './routes/_authenticated/marketing_.studio_.content.$itemId'
 import { Route as AuthenticatedMarketingStudioResearchMonitoringRouteImport } from './routes/_authenticated/marketing_.studio_.research_.monitoring'
-import { Route as AuthenticatedOpsPeopleInvitationsInvitationIdRouteImport } from './routes/_authenticated/ops.people.invitations.$invitationId'
+import { Route as AuthenticatedOpsPeopleInvitationsInvitationIdRouteImport } from './routes/_authenticated/ops.people_.invitations.$invitationId'
 import { Route as AuthenticatedOpsTaxKindIdRouteImport } from './routes/_authenticated/ops.tax_.$kind.$id'
 import { Route as AuthenticatedProfessionalTaxKindIdRouteImport } from './routes/_authenticated/professional.tax_.$kind.$id'
 import { Route as AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport } from './routes/_authenticated/manager.fund.$fundId.investor.$onboardingId'
@@ -2936,9 +2936,9 @@ const AuthenticatedOpsInvestorsInvestorIdRoute =
   } as any)
 const AuthenticatedOpsPeopleUserIdRoute =
   AuthenticatedOpsPeopleUserIdRouteImport.update({
-    id: '/$userId',
-    path: '/$userId',
-    getParentRoute: () => AuthenticatedOpsPeopleRoute,
+    id: '/ops/people_/$userId',
+    path: '/ops/people/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsPeopleTestDemoRoute =
   AuthenticatedOpsPeopleTestDemoRouteImport.update({
@@ -3223,9 +3223,9 @@ const AuthenticatedMarketingStudioResearchMonitoringRoute =
   } as any)
 const AuthenticatedOpsPeopleInvitationsInvitationIdRoute =
   AuthenticatedOpsPeopleInvitationsInvitationIdRouteImport.update({
-    id: '/invitations/$invitationId',
-    path: '/invitations/$invitationId',
-    getParentRoute: () => AuthenticatedOpsPeopleRoute,
+    id: '/ops/people_/invitations/$invitationId',
+    path: '/ops/people/invitations/$invitationId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsTaxKindIdRoute =
   AuthenticatedOpsTaxKindIdRouteImport.update({
@@ -3518,7 +3518,7 @@ export interface FileRoutesByFullPath {
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/payment-reminders': typeof AuthenticatedOpsPaymentRemindersRoute
-  '/ops/people': typeof AuthenticatedOpsPeopleRouteWithChildren
+  '/ops/people': typeof AuthenticatedOpsPeopleRoute
   '/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/portfolio': typeof AuthenticatedOpsPortfolioRoute
@@ -3995,7 +3995,7 @@ export interface FileRoutesByTo {
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/payment-reminders': typeof AuthenticatedOpsPaymentRemindersRoute
-  '/ops/people': typeof AuthenticatedOpsPeopleRouteWithChildren
+  '/ops/people': typeof AuthenticatedOpsPeopleRoute
   '/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/portfolio': typeof AuthenticatedOpsPortfolioRoute
@@ -4480,7 +4480,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/payment-reminders': typeof AuthenticatedOpsPaymentRemindersRoute
-  '/_authenticated/ops/people': typeof AuthenticatedOpsPeopleRouteWithChildren
+  '/_authenticated/ops/people': typeof AuthenticatedOpsPeopleRoute
   '/_authenticated/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/portfolio': typeof AuthenticatedOpsPortfolioRoute
@@ -4630,7 +4630,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/_authenticated/ops/help/$slug': typeof AuthenticatedOpsHelpSlugRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
-  '/_authenticated/ops/people/$userId': typeof AuthenticatedOpsPeopleUserIdRoute
+  '/_authenticated/ops/people_/$userId': typeof AuthenticatedOpsPeopleUserIdRoute
   '/_authenticated/ops/people_/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
   '/_authenticated/ops/period-links/$batchId': typeof AuthenticatedOpsPeriodLinksBatchIdRoute
   '/_authenticated/ops/synthetic-statements/$fundId': typeof AuthenticatedOpsSyntheticStatementsFundIdRoute
@@ -4691,7 +4691,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/_authenticated/marketing_/studio_/content/$itemId': typeof AuthenticatedMarketingStudioContentItemIdRoute
   '/_authenticated/marketing_/studio_/research_/monitoring': typeof AuthenticatedMarketingStudioResearchMonitoringRoute
-  '/_authenticated/ops/people/invitations/$invitationId': typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
+  '/_authenticated/ops/people_/invitations/$invitationId': typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
   '/_authenticated/ops/tax_/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/_authenticated/professional/tax_/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/_authenticated/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -6077,7 +6077,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/funds/$fundId'
     | '/_authenticated/ops/help/$slug'
     | '/_authenticated/ops/investors/$investorId'
-    | '/_authenticated/ops/people/$userId'
+    | '/_authenticated/ops/people_/$userId'
     | '/_authenticated/ops/people_/test-demo'
     | '/_authenticated/ops/period-links/$batchId'
     | '/_authenticated/ops/synthetic-statements/$fundId'
@@ -6138,7 +6138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/transactions'
     | '/_authenticated/marketing_/studio_/content/$itemId'
     | '/_authenticated/marketing_/studio_/research_/monitoring'
-    | '/_authenticated/ops/people/invitations/$invitationId'
+    | '/_authenticated/ops/people_/invitations/$invitationId'
     | '/_authenticated/ops/tax_/$kind/$id'
     | '/_authenticated/professional/tax_/$kind/$id'
     | '/_authenticated/manager/fund/$fundId/'
@@ -9232,12 +9232,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsInvestorsInvestorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ops/people/$userId': {
-      id: '/_authenticated/ops/people/$userId'
-      path: '/$userId'
+    '/_authenticated/ops/people_/$userId': {
+      id: '/_authenticated/ops/people_/$userId'
+      path: '/ops/people/$userId'
       fullPath: '/ops/people/$userId'
       preLoaderRoute: typeof AuthenticatedOpsPeopleUserIdRouteImport
-      parentRoute: typeof AuthenticatedOpsPeopleRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/people_/test-demo': {
       id: '/_authenticated/ops/people_/test-demo'
@@ -9582,12 +9582,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingStudioResearchMonitoringRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ops/people/invitations/$invitationId': {
-      id: '/_authenticated/ops/people/invitations/$invitationId'
-      path: '/invitations/$invitationId'
+    '/_authenticated/ops/people_/invitations/$invitationId': {
+      id: '/_authenticated/ops/people_/invitations/$invitationId'
+      path: '/ops/people/invitations/$invitationId'
       fullPath: '/ops/people/invitations/$invitationId'
       preLoaderRoute: typeof AuthenticatedOpsPeopleInvitationsInvitationIdRouteImport
-      parentRoute: typeof AuthenticatedOpsPeopleRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/tax_/$kind/$id': {
       id: '/_authenticated/ops/tax_/$kind/$id'
@@ -9833,23 +9833,6 @@ const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChil
 const AuthenticatedProfessionalRouteWithChildren =
   AuthenticatedProfessionalRoute._addFileChildren(
     AuthenticatedProfessionalRouteChildren,
-  )
-
-interface AuthenticatedOpsPeopleRouteChildren {
-  AuthenticatedOpsPeopleUserIdRoute: typeof AuthenticatedOpsPeopleUserIdRoute
-  AuthenticatedOpsPeopleInvitationsInvitationIdRoute: typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
-}
-
-const AuthenticatedOpsPeopleRouteChildren: AuthenticatedOpsPeopleRouteChildren =
-  {
-    AuthenticatedOpsPeopleUserIdRoute: AuthenticatedOpsPeopleUserIdRoute,
-    AuthenticatedOpsPeopleInvitationsInvitationIdRoute:
-      AuthenticatedOpsPeopleInvitationsInvitationIdRoute,
-  }
-
-const AuthenticatedOpsPeopleRouteWithChildren =
-  AuthenticatedOpsPeopleRoute._addFileChildren(
-    AuthenticatedOpsPeopleRouteChildren,
   )
 
 interface AuthenticatedManagerFundFundIdRouteChildren {
@@ -10110,7 +10093,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPaymentRemindersRoute: typeof AuthenticatedOpsPaymentRemindersRoute
-  AuthenticatedOpsPeopleRoute: typeof AuthenticatedOpsPeopleRouteWithChildren
+  AuthenticatedOpsPeopleRoute: typeof AuthenticatedOpsPeopleRoute
   AuthenticatedOpsPeopleAccessRoute: typeof AuthenticatedOpsPeopleAccessRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsPortfolioRoute: typeof AuthenticatedOpsPortfolioRoute
@@ -10209,6 +10192,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedOpsHelpSlugRoute: typeof AuthenticatedOpsHelpSlugRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
+  AuthenticatedOpsPeopleUserIdRoute: typeof AuthenticatedOpsPeopleUserIdRoute
   AuthenticatedOpsPeopleTestDemoRoute: typeof AuthenticatedOpsPeopleTestDemoRoute
   AuthenticatedOpsPeriodLinksBatchIdRoute: typeof AuthenticatedOpsPeriodLinksBatchIdRoute
   AuthenticatedOpsSyntheticStatementsFundIdRoute: typeof AuthenticatedOpsSyntheticStatementsFundIdRoute
@@ -10226,6 +10210,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminClientsClientIdEntitiesRoute: typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   AuthenticatedMarketingStudioContentItemIdRoute: typeof AuthenticatedMarketingStudioContentItemIdRoute
   AuthenticatedMarketingStudioResearchMonitoringRoute: typeof AuthenticatedMarketingStudioResearchMonitoringRoute
+  AuthenticatedOpsPeopleInvitationsInvitationIdRoute: typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
   AuthenticatedOpsTaxKindIdRoute: typeof AuthenticatedOpsTaxKindIdRoute
   AuthenticatedOpsFundFundIdInvestorOnboardingIdRoute: typeof AuthenticatedOpsFundFundIdInvestorOnboardingIdRoute
 }
@@ -10461,7 +10446,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPaymentRemindersRoute: AuthenticatedOpsPaymentRemindersRoute,
-  AuthenticatedOpsPeopleRoute: AuthenticatedOpsPeopleRouteWithChildren,
+  AuthenticatedOpsPeopleRoute: AuthenticatedOpsPeopleRoute,
   AuthenticatedOpsPeopleAccessRoute: AuthenticatedOpsPeopleAccessRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsPortfolioRoute: AuthenticatedOpsPortfolioRoute,
@@ -10594,6 +10579,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsHelpSlugRoute: AuthenticatedOpsHelpSlugRoute,
   AuthenticatedOpsInvestorsInvestorIdRoute:
     AuthenticatedOpsInvestorsInvestorIdRoute,
+  AuthenticatedOpsPeopleUserIdRoute: AuthenticatedOpsPeopleUserIdRoute,
   AuthenticatedOpsPeopleTestDemoRoute: AuthenticatedOpsPeopleTestDemoRoute,
   AuthenticatedOpsPeriodLinksBatchIdRoute:
     AuthenticatedOpsPeriodLinksBatchIdRoute,
@@ -10616,6 +10602,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedMarketingStudioContentItemIdRoute,
   AuthenticatedMarketingStudioResearchMonitoringRoute:
     AuthenticatedMarketingStudioResearchMonitoringRoute,
+  AuthenticatedOpsPeopleInvitationsInvitationIdRoute:
+    AuthenticatedOpsPeopleInvitationsInvitationIdRoute,
   AuthenticatedOpsTaxKindIdRoute: AuthenticatedOpsTaxKindIdRoute,
   AuthenticatedOpsFundFundIdInvestorOnboardingIdRoute:
     AuthenticatedOpsFundFundIdInvestorOnboardingIdRoute,
