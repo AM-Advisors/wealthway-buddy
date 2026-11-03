@@ -20,3 +20,9 @@ describe("unfinished identity checks", () => {
     expect(kycNeverSubmitted([])).toBe(false);
   });
 });
+
+describe("replaced investment copies", () => {
+  it("an unstarted copy replaced by the login check does not block", () => {
+    expect(kycNeverSubmitted([{ liveness_status: "not_started", harmonious_decision_reason: "Replaced by the person's identity check (abc)" }])).toBe(false);
+  });
+});
