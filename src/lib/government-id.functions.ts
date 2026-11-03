@@ -203,7 +203,26 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: apps } = await db.from("investor_applications").select("id, offering_id, kyc_status").eq("user_id", data.investorUserId).limit(50);
     const appIds = ((apps ?? []) as any[]).map((a) => a.id);
-    if (!appIds.length) return { items: [] };
+    // Login identity check: one per person, reused across investments.
+    const { data: acct } = await db.from("account_identity_checks")
+      .select("id, provider, status, review_details, decided_at, updated_at")
+      .eq("user_id", data.investorUserId).order("created_at", { ascending: false }).limit(5);
+    const login = ((acct ?? []) as any[]).find((c) => c.status === "approved") ?? ((acct ?? []) as any[])[0] ?? null;
+    const loginId = (login?.review_details?.idDocument ?? null) as Record<string, any> | null;
+    const loginItem = login ? {
+      applicationId: `login:${login.id}`,
+      fund: "Login identity check (all investments)",
+      documentType: loginId?.["subtype"] ?? loginId?.["type"] ?? null,
+      issuingCountry: loginId?.["country"] ?? null,
+      expiration: loginId?.["expires"] ?? null,
+      last4: loginId?.["numberLast4"] ?? null,
+      providedByVerification: login.status === "approved",
+      provider: login.provider ?? "verification",
+      providerStatus: login.status,
+      reviewStatus: login.status,
+      files: [] as any[],
+    } : null;
+    if (!appIds.length) return { items: loginItem ? [loginItem] : [] };
     const [{ data: kyc }, { data: docs }, { data: offerings }] = await Promise.all([
       db.from("kyc_verifications").select("application_id, provider, status, result, document_type, document_issuing_country, document_expiration_date, document_number_last4, document_expired, harmonious_decision").in("application_id", appIds),
       db.from("government_id_documents").select("id, application_id, side, document_type, status, file_name, confirmed_at, superseded_at").in("application_id", appIds).neq("status", "pending").order("created_at", { ascending: false }),
@@ -211,7 +230,7 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
     ]);
     const nameBy = new Map(((offerings ?? []) as any[]).map((o) => [o.id, o.name]));
     const canonApps = await canonicalizeApplications(db, (apps ?? []) as any[], data.investorUserId);
-    const items = canonApps.map((a: any) => {
+    const items: any[] = canonApps.map((a: any) => {
       const k = ((kyc ?? []) as any[]).find((r) => r.application_id === a.id);
       const r = (k?.result ?? {}) as Record<string, any>;
       const files = ((docs ?? []) as any[]).filter((d) => d.application_id === a.id);
@@ -230,6 +249,7 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
         files: files.map((f) => ({ id: f.id, side: f.side, status: f.status, fileName: f.file_name, uploadedAt: f.confirmed_at, supersededAt: f.superseded_at })),
       };
     });
+    if (loginItem) items.unshift(loginItem);
     return { items };
   });
 
