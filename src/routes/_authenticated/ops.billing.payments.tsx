@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { RoasPaymentsView } from "@/components/roas-payments-view";
 import { getRoasPayments } from "@/lib/ops-billing.functions";
 
-const paymentsQuery = queryOptions({ queryKey: ["roas-payments"], queryFn: () => getRoasPayments() });
+export const paymentsQuery = queryOptions({ queryKey: ["roas-payments"], queryFn: () => getRoasPayments() });
 export const Route = createFileRoute("/_authenticated/ops/billing/payments")({
   validateSearch: (search: Record<string, unknown>) => ({ year: Number.isInteger(Number(search['year'])) && Number(search['year']) >= 2026 && Number(search['year']) <= 9999 ? Number(search['year']) : 2026 }),
   loader: ({ context }) => context.queryClient.ensureQueryData(paymentsQuery),

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { MyActionAlerts } from "@/components/my-action-alerts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AmPage } from "@/components/account-management-ui";
@@ -18,6 +18,7 @@ import { STAGE_LABEL, type IssueStage } from "@/lib/software-issue-model";
 import { getSoftwareIssues, moveSoftwareIssue, reportSoftwareIssue } from "@/lib/software-issues.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/software-issues")({
+  validateSearch: (s: Record<string, unknown>) => ({ issue: typeof s["issue"] === "string" ? s["issue"] : undefined }),
   head: () => ({ meta: [
     { title: "Software issues | Harmonious Operations" },
     { name: "description", content: "Report a platform problem, track the fix and confirm it with a retest." },
@@ -34,15 +35,19 @@ const STEP_BUTTON: Partial<Record<IssueStage, string>> = {
   in_progress: "Start fixing", fixed: "Mark fixed", deployed: "Mark live", retest_passed: "Retest passed", retest_failed: "Retest failed", resolved: "Resolve",
 };
 
-function SoftwareIssuesPage() {
+export function SoftwareIssuesPage() {
+  const { issue: selectedIssue } = Route.useSearch();
   const load = useServerFn(getSoftwareIssues);
-  const q = useQuery({ queryKey: ["software-issues"], queryFn: () => load(), retry: false });
   const [showForm, setShowForm] = useState(false);
   const [openOnly, setOpenOnly] = useState(true);
+  const [mine, setMine] = useState(false);
+  const [search, setSearch] = useState("");
+  const q = useQuery({ queryKey: ["software-issues", openOnly, selectedIssue], queryFn: () => load({ data: { openOnly, issue: selectedIssue } }), retry: false, refetchInterval: 60_000 });
   const d = q.data;
-  const issues = (d?.issues ?? []).filter((i: any) => !openOnly || i.stage !== "resolved");
+  useEffect(() => { if (selectedIssue) { setMine(false); setSearch(""); } }, [selectedIssue]);
+  const issues = (d?.issues ?? []).filter((i: any) => i.id === selectedIssue || ((!mine || i.technical_owner_user_id === d?.viewer || i.retester_user_id === d?.viewer || i.reporter_user_id === d?.viewer) && (!search || `${i.title} ${i.page ?? ""} ${i.ownerName ?? ""}`.toLowerCase().includes(search.toLowerCase()))));
   return (
-    <AmPage title="Software issues" intro="Report something that isn't working, see who is fixing it, and confirm the fix with a retest before it's closed.">
+    <AmPage title="Software issues" intro="">
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.isError && <LoadError error={q.error} what="Software issues" onRetry={() => q.refetch()} />}
       {d && (<>
@@ -51,10 +56,13 @@ function SoftwareIssuesPage() {
         <div className="flex flex-wrap gap-2">
           {d.canWrite && <Button onClick={() => setShowForm((v) => !v)}>{showForm ? "Close form" : "Report a software issue"}</Button>}
           <Button variant="outline" onClick={() => setOpenOnly((v) => !v)}>{openOnly ? "Show resolved too" : "Hide resolved"}</Button>
+          <Button variant={mine ? "default" : "outline"} onClick={() => setMine((v) => !v)}>My issues</Button>
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search software issues" aria-label="Search software issues" className="max-w-xs" />
         </div>
         {showForm && <ReportForm staff={d.staff} onDone={() => setShowForm(false)} />}
         <div className="space-y-2">
-          {issues.length ? issues.map((i: any) => <IssueRow key={i.id} i={i} />) : <p className="text-sm text-muted-foreground">No open software issues.</p>}
+          {selectedIssue && !d.issues.some((i: any) => i.id === selectedIssue) && <p role="status" className="text-sm text-destructive">The selected issue isn't available.</p>}
+          {issues.length ? issues.map((i: any) => <IssueRow key={i.id} i={i} selected={i.id === selectedIssue} />) : <p className="text-sm text-muted-foreground">No software issues match this view.</p>}
         </div>
       </>)}
     </AmPage>
@@ -109,10 +117,11 @@ function ReportForm({ staff, onDone }: { staff: { id: string; name: string }[]; 
   );
 }
 
-function IssueRow({ i }: { i: any }) {
+function IssueRow({ i, selected }: { i: any; selected: boolean }) {
   const move = useServerFn(moveSoftwareIssue);
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(selected);
+  useEffect(() => { if (selected) { setOpen(true); document.getElementById(`issue-${i.id}`)?.scrollIntoView({ block: "center" }); } }, [selected, i.id]);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const go = async (to: IssueStage) => {
@@ -124,12 +133,12 @@ function IssueRow({ i }: { i: any }) {
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
-    <div className="rounded-lg border bg-card p-3">
-      <button className="flex w-full flex-wrap items-center gap-2 text-left" onClick={() => setOpen((v) => !v)}>
+    <div id={`issue-${i.id}`} className="rounded-lg border bg-card p-3">
+      <Button variant="ghost" aria-expanded={open} className="h-auto w-full flex-wrap justify-start gap-2 whitespace-normal p-0 text-left" onClick={() => setOpen((v) => !v)}>
         <span className="flex-1 font-medium">{i.title}</span>
         <Badge variant={i.stage === "retest_failed" ? "destructive" : i.stage === "resolved" ? "secondary" : "outline"}>{STAGE_LABEL[i.stage as IssueStage]}</Badge>
         <span className="text-xs text-muted-foreground">Owner {i.ownerName} · Retest {i.retesterName}</span>
-      </button>
+      </Button>
       {open && (
         <div className="mt-3 space-y-2 text-sm">
           <p><span className="font-medium">Expected:</span> {i.expected}</p>
@@ -141,11 +150,12 @@ function IssueRow({ i }: { i: any }) {
             {i.record_ref && <> · <Link to={i.record_ref as never} className="text-primary underline">Open record</Link></>}
           </p>
           {i.stage === "deployed" && <p className="rounded-md bg-muted px-3 py-2 text-xs">Retest in the <Link to="/qa-sandbox" className="text-primary underline">fictional QA sandbox</Link>, not on real records.</p>}
+          {i.stage === "retest_passed" && <p className="text-sm">Retest passed. The owner or retester still needs to resolve this issue to close its task.</p>}
           {i.steps_allowed.length > 0 && (
             <div className="space-y-2">
               <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={i.steps_allowed.includes("retest_failed") ? "What you checked, or what still fails" : "Note (optional)"} aria-label="Note" />
               <div className="flex flex-wrap gap-2">{i.steps_allowed.map((s: IssueStage) => (
-                <Button key={s} size="sm" variant={s === "retest_failed" ? "outline" : "default"} disabled={busy} onClick={() => go(s)}>{STEP_BUTTON[s]}</Button>
+                <Button key={s} size="sm" variant={s === "retest_failed" ? "outline" : "default"} disabled={busy || (s === "retest_failed" && !note.trim())} onClick={() => go(s)}>{STEP_BUTTON[s]}</Button>
               ))}</div>
             </div>
           )}

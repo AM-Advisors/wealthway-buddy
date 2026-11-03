@@ -6,7 +6,8 @@ const text = (max: number) => z.string().trim().min(3).max(max);
 
 export const getSoftwareIssues = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => (await import("@/lib/software-issues.server")).listIssues(context.userId));
+  .validator((d: unknown) => z.object({ openOnly: z.boolean().default(true), issue: z.string().optional() }).default({ openOnly: true }).parse(d))
+  .handler(async ({ context, data }) => (await import("@/lib/software-issues.server")).listIssues(context.userId, data));
 
 export const reportSoftwareIssue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

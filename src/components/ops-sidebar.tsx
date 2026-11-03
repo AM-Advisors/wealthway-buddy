@@ -205,7 +205,6 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(allowedUrls.has("/ops/queue") ? [{ id: "approvals", title: "Approvals inbox", url: "/ops/approvals", icon: "check", badge: approvalsCount }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "stalled", title: "Stalled items", url: "/ops/stalled", icon: "tasks" }] : []),
-    ...(allowedUrls.has("/ops/queue") ? [{ id: "software-issues", title: "Software issues", url: "/ops/software-issues", icon: "tasks", badge: issueAlerts }] : []),
     ...(has("super_admin") ? [{ id: "sealed", title: "Sealed archive", url: "/ops/sealed-archive", icon: "document" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
   ];
@@ -231,15 +230,18 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(canSee("peopleOthers", staffRoles) ? [{ title: "Everyone else", url: "/ops/people-access?tab=others" }] : []),
     ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Roles", url: "/ops/people-access?tab=roles" }, { title: "Invites & access", url: "/ops/people-access?tab=access" }] : []),
   ];
-  const teamItems: NavItem[] = salesOnly ? [] : [
+  const teamItems: NavItem[] = staffRoles.length ? [
     { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document", badge: taskAlerts },
+    { id: "software-issues", title: "Software issues", url: "/ops/software-issues", icon: "tasks", badge: issueAlerts },
+    ...(!salesOnly ? [
     { id: "client-approvals", title: "Client approvals & requests", url: "/ops/client-approvals", icon: "document" },
     ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people", sub: peopleSub }] : []),
     ...(canSee("mailboxes", staffRoles) ? [{ id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" }] : []),
     { id: "mail", title: "Mail", url: "/ops/mail", icon: "document" },
     { id: "help-center", title: "Help center", url: "/ops/help", icon: "document" },
     { id: "reminders", title: "Reminder tracking", url: "/ops/reminders", icon: "report" },
-  ];
+    ] : []),
+  ] : [];
   const leadershipItems: NavItem[] = salesOnly || !(viewLeader || adminSection) ? [] : [
     ...(viewLeader ? [{ id: "dash-leadership", title: "Leadership dashboard", url: "/ops/dashboards/leadership", icon: "report" }] : []),
     ...grp("lead-access", "Access", "shield", [{ title: "Legacy permission settings", url: "/admin/permissions" }]),
@@ -326,7 +328,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     const byId = Object.fromEntries(deduped.map((g) => [g.id, g.items as NavItem[]])) as Record<string, NavItem[]>;
     return { byId, extra: extraGrantItems(deduped, navGrants) as NavItem[] };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navKey]);
+  }, [navKey, taskAlerts, issueAlerts, approvalsCount]);
   const G = (id: string) => groups.byId[id] ?? [];
 
   const exact = (i: NavItem) => pathname === i.url;

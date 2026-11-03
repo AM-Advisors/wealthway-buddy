@@ -9,6 +9,9 @@
  */
 
 import { useState } from "react";
+import { MyActionAlerts } from "@/components/my-action-alerts";
+import { PartialResultsNotice } from "@/components/partial-results-notice";
+import { LoadError } from "@/components/load-error";
 
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -102,20 +105,16 @@ export function OperationsWorkHome() {
         <h1 className="text-2xl">Operations</h1>
         <OpsNewMenu capabilities={data?.capabilities} />
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Work waiting on the Harmonious team, read straight from each workflow. Open an item to act on it
-        in the record itself.
-      </p>
+      <div className="mt-4"><MyActionAlerts kinds={["handoff", "handoff_issue", "retest", "fix"]} /></div>
 
       {queue.isError && (
-        <p className="mt-6 text-sm text-muted-foreground">
-          {(queue.error as any)?.message ?? "This is unavailable right now."}
-        </p>
+        <LoadError error={queue.error} what="Team work" onRetry={() => queue.refetch()} />
       )}
       {queue.isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading…</p>}
 
       {data && (
         <>
+          <div className="mt-4"><PartialResultsNotice partial={data.partial} failedAreas={data.failedAreas} /></div>
           {/* Counts are only useful because each one opens the work behind it. */}
           <div className="mt-6 flex flex-wrap gap-2">
             <button
@@ -226,7 +225,7 @@ export function OperationsWorkHome() {
                 {data.total === 0
                   ? section
                     ? SECTION_EMPTY[section]
-                    : "Nothing is waiting on the team right now."
+                    : data.partial ? "No items loaded. Some work is unavailable." : "Nothing waiting in this view."
                   : `${data.total} item${data.total === 1 ? "" : "s"}, most pressing first.`}
               </CardDescription>
             </CardHeader>
@@ -266,7 +265,7 @@ export function OperationsWorkHome() {
               ))}
               {data.items.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  {section ? SECTION_EMPTY[section] : "You are all caught up."}
+                  {data.partial ? "Some work is unavailable. Retry before treating this view as clear." : section ? SECTION_EMPTY[section] : "No items in this view."}
                 </p>
               )}
               {data.pages > 1 && (
@@ -330,6 +329,7 @@ export function OperationsWorkHome() {
             <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
           )}
           {activity.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {activity.isError && <LoadError error={activity.error} what="Recent activity" onRetry={() => activity.refetch()} />}
         </CardContent>
       </Card>
 
