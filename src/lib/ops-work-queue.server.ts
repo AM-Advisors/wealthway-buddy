@@ -173,8 +173,16 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
     lookup,
     onboardings.flatMap((o: any) => [o.investor_user_id, o.assigned_to]),
   );
+  // Latest login identity check per investor: flag anyone past Verification whose check was declined.
+  const ids = [...new Set((onboardings as any[]).map((o) => o.investor_user_id).filter(Boolean))];
+  const checks = ids.length
+    ? await safely(async () => rows(await s.from("account_identity_checks").select("user_id, status, created_at").in("user_id", ids).order("created_at", { ascending: false })))
+    : [];
+  const latestCheck = new Map<string, string>();
+  for (const c of checks as any[]) if (!latestCheck.has(c.user_id)) latestCheck.set(c.user_id, String(c.status));
   for (const o of onboardings as any[]) {
     const identity = o.stage === "verification";
+    const declinedPast = !identity && latestCheck.get(o.investor_user_id) === "declined";
     out.push(
       build(lookup, now, {
         id: `onboarding:${o.id}`,
@@ -182,14 +190,15 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         area: "onboarding",
         recordType: "investor",
         recordId: o.investor_user_id,
-        recordTab: identity ? "identity" : "investments",
+        recordTab: identity || declinedPast ? "identity" : "investments",
         title: `${lookup.people.get(o.investor_user_id) ?? "Investor"} | onboarding`,
-        reason:
-          o.stage === "harmonious_review"
+        reason: declinedPast
+          ? `At the ${o.stage.replace(/_/g, " ")} step, but their identity check was declined. Review before they continue`
+          : o.stage === "harmonious_review"
             ? "Submitted for Harmonious review"
             : `Waiting at the ${o.stage.replace(/_/g, " ")} step`,
         workflowState: o.stage,
-        requiredAction: o.stage === "harmonious_review" ? "review" : "prepare",
+        requiredAction: o.stage === "harmonious_review" || declinedPast ? "review" : "prepare",
         fundId: o.offering_id,
         investorUserId: o.investor_user_id,
         investmentProfileId: o.investment_profile_id,
