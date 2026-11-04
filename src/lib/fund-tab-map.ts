@@ -1,5 +1,5 @@
 /**
- * Fund page tab layout: eight top tabs, each with at most one row of sub-views,
+ * Fund page tab layout: nine top tabs, each with at most one row of sub-views,
  * so every fund detail is at most two clicks away. Old tab addresses map to
  * their single new home so bookmarks and emailed links keep working.
  */
@@ -10,7 +10,8 @@ export const FUND_TOP_TABS: FundTopTab[] = [
   { value: "setup", label: "Setup", group: ["setup", "formation"] },
   { value: "investors", label: "Investors", group: ["investors"] },
   { value: "documents", label: "Documents", group: ["documents"] },
-  { value: "approvals", label: "Approvals", group: ["approvals", "requests"] },
+  { value: "approvals", label: "Approvals", group: ["approvals"] },
+  { value: "requests", label: "Requests", group: ["requests"] },
   { value: "banking", label: "Banking", group: ["banking"] },
   { value: "accounting", label: "Accounting", group: ["accounting", "closes", "distributions", "assets", "services", "forecasts"] },
   { value: "activity", label: "Activity", group: ["audit", "calendar", "regulatory", "record"] },

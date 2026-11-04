@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
 import { SendFundDocuments } from "@/components/send-fund-documents";
 import { InvestorDocumentReview } from "@/components/investor-document-review";
+import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FundWorkspaceSection } from "@/components/fund-workspace-section";
 
 /** One Documents layout shared by fund managers and Harmonious. Layout only; each section's server functions decide authority (generation stays staff-only). */
@@ -14,11 +15,13 @@ export function FundDocumentsHub({ fundId, staff }: { fundId: string; staff: boo
     <Tabs value={tab} onValueChange={setTab}>
       <TabsList className="h-auto flex-wrap">
         <TabsTrigger value="files">Fund files</TabsTrigger>
+        <TabsTrigger value="approve">Review &amp; approve</TabsTrigger>
         <TabsTrigger value="send">Send to investors</TabsTrigger>
         <TabsTrigger value="review">Investor uploads</TabsTrigger>
         {!staff && <TabsTrigger value="more">More</TabsTrigger>}
       </TabsList>
       <TabsContent value="files">{tab === "files" && <DocumentsTab fundId={fundId} />}</TabsContent>
+      <TabsContent value="approve">{tab === "approve" && <OfferingDocumentsSetup offeringId={fundId} />}</TabsContent>
       <TabsContent value="send">{tab === "send" && <SendFundDocuments offeringId={fundId} />}</TabsContent>
       <TabsContent value="review">{tab === "review" && <InvestorDocumentReview offeringId={fundId} />}</TabsContent>
       {!staff && <TabsContent value="more">{tab === "more" && <FundWorkspaceSection title="More document tools" description="Other document areas for your funds." items={[
