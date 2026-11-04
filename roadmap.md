@@ -1,5 +1,9 @@
 # Roadmap
 
+## Applicable financial background within investor questionnaire (2026-11-04)
+- [ ] Include applicable BSA questions within the existing investor questionnaire, reuse exact-party facts and saved answers, remove the separate repeated task.
+- [ ] Test applicability, answer preservation and unchanged risk review; verify fictional investor controls without live records or emails.
+
 ## Outside-signed subscription review (2026-11-04)
 - [x] Share outside-signing facts between investor steps, readiness and protected approval checks; conditionally advance completed subscriptions to manager review after saves.
 - [x] Make the checklist approval button open confirmation directly, derive its availability from canonical facts and refresh related screens after saves/approval.
