@@ -386,3 +386,34 @@ describe("manager redaction", () => {
     expect(view).toEqual({ id: "1", stage: "funded" });
   });
 });
+
+describe("party-type applicability", () => {
+  const qs: Question[] = [
+    { key: "name", label: "Name", type: "text", required: true },
+    { key: "formation_state", label: "State of formation", type: "text", required: true, appliesTo: ["llc", "corporation", "partnership", "trust", "family_office", "foundation", "other_entity"] },
+    { key: "date_of_birth", label: "Date of birth", type: "date", required: true, appliesTo: ["individual", "joint"] },
+  ];
+
+  it("hides entity-only questions from individuals and vice versa", () => {
+    expect(questionVisible(qs[1]!, {}, "individual")).toBe(false);
+    expect(questionVisible(qs[2]!, {}, "individual")).toBe(true);
+    expect(questionVisible(qs[1]!, {}, "llc")).toBe(true);
+    expect(questionVisible(qs[2]!, {}, "llc")).toBe(false);
+  });
+
+  it("shows everything when the party type is not chosen yet", () => {
+    expect(questionVisible(qs[1]!, {}, null)).toBe(true);
+    expect(questionVisible(qs[1]!, {})).toBe(true);
+  });
+
+  it("does not require answers to questions that do not apply to the party", () => {
+    expect(validateQuestionnaire(qs, { name: "Kim" }, "individual").valid).toBe(true);
+    expect(validateQuestionnaire(qs, { name: "Kim" }, "llc").valid).toBe(false);
+    expect(validateQuestionnaire(qs, { name: "Kim" }, null).valid).toBe(false);
+  });
+
+  it("strips saved answers to questions that no longer apply", () => {
+    const out = stripHiddenAnswers(qs, { name: "Kim", formation_state: "DE", date_of_birth: "1980-01-01" }, "individual");
+    expect(out).toEqual({ name: "Kim", date_of_birth: "1980-01-01" });
+  });
+});
