@@ -763,7 +763,24 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                   </li>
                 );
               })}
-              {docs.length === 0 ? <li className="text-sm text-muted-foreground">The fund's documents are being prepared. We'll let you know when they're ready.</li> : null}
+              {docs.length === 0 ? (
+                docBlockers.length ? (
+                  <li className="space-y-2 text-sm">
+                    <span>Your subscription documents are prepared once these are done:</span>
+                    <ul className="space-y-1">
+                      {docBlockers.map((t) => (
+                        <li key={t.key}>
+                          <Button variant="link" className="h-auto p-0" onClick={() => go(t.key)}>
+                            {t.key === "accreditation" ? "Choose your accreditation" : t.label}
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ) : (
+                  <li className="text-sm text-muted-foreground">The fund's documents are being prepared. We'll let you know when they're ready.</li>
+                )
+              ) : null}
             </ol>
             {!signed && docs.some((x) => x.requiresSignature && !x.signed) ? (
               <Button disabled={prepare.isPending} onClick={() => prepare.mutate()}>
