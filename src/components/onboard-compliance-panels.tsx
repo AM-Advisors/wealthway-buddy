@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadError } from "@/components/load-error";
+import { taxPreviewMatches } from "@/lib/investor-step-prefill";
 import {
   certifyFn,
   certifyTaxFormFn,
@@ -363,16 +364,25 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
   const [foreignTin, setForeignTin] = useState("");
   const [sig, setSig] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [reviewedKey, setReviewedKey] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   const form = q.data?.tax.form;
+  const currentKey = JSON.stringify([onboardingId, form?.formType, form?.revision, legalName, tin, foreignTin]);
+  const currentKeyRef = useRef(currentKey);
+  currentKeyRef.current = currentKey;
+  const previewCurrent = taxPreviewMatches(reviewedKey, currentKey);
   const preview = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (!form) throw new Error("Complete your tax information first.");
-      return previewFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null } });
+      const key = currentKey;
+      const result = await previewFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null } });
+      return { ...result, key };
     },
     onSuccess: (r) => {
+      if (r.key !== currentKeyRef.current) return;
       const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
+      setReviewedKey(r.key);
       setPreviewUrl(URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })));
     },
     onError: (e: Error) => toast.error(e.message),
@@ -380,6 +390,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
   const sign = useMutation({
     mutationFn: () => {
       if (!form) throw new Error("Complete your tax information first.");
+      if (!previewCurrent) throw new Error("Review the updated tax form before signing.");
       return taxFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null, certifiedName: sig, acknowledgedRevision: form.revision } });
     },
     onSuccess: () => { toast.success(`${form?.title ?? "Tax form"} signed`); setTin(""); setForeignTin(""); setPreviewUrl(null); setUpdating(false); qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
@@ -421,7 +432,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
         <Button variant="outline" disabled={preview.isPending || legalName.trim().length < 2 || (d.tax.needsTin && tin.replace(/\D/g, "").length !== 9)} onClick={() => preview.mutate()}>
           {preview.isPending ? "Preparing…" : `Review ${form.title}`}
         </Button>
-        {previewUrl ? (
+        {previewUrl && previewCurrent ? (
           <>
             <iframe title={`${form.title} preview`} src={previewUrl} className="h-[70vh] w-full rounded-md border" />
             <a className="text-sm underline" href={previewUrl} target="_blank" rel="noreferrer">Open the form in a new tab</a>

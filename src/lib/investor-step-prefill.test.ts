@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { prepareThenOpen, taxIntakeDefaults, taxReviewDetails } from "./investor-step-prefill";
+import { prepareThenOpen, taxIntakeDefaults, taxReviewDetails, taxPreviewMatches } from "./investor-step-prefill";
 
 describe("earlier steps supply later investor details", () => {
+  it("requires review again after any tax form detail changes", () => {
+    expect(taxPreviewMatches(null, "current")).toBe(false);
+    expect(taxPreviewMatches("reviewed-name", "changed-name")).toBe(false);
+    expect(taxPreviewMatches("current", "current")).toBe(true);
+  });
   it("reuses the investing individual's earlier address and birthday", () => {
     expect(taxReviewDetails({ address_line1: "10 Fictional St", city: "Denver", date_of_birth: "1990-01-02" }, { profile_type: "individual", legal_name: "Fictional Investor" })).toMatchObject({ legalName: "Fictional Investor", addressLine: "10 Fictional St", cityStateZip: "Denver", dateOfBirth: "1990-01-02" });
   });

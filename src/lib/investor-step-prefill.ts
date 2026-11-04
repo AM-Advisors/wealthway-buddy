@@ -26,3 +26,7 @@ export async function prepareThenOpen(prepared: boolean, prepare: () => Promise<
   if (!prepared) await prepare();
   open();
 }
+
+export function taxPreviewMatches(reviewed: string | null, current: string): boolean {
+  return reviewed !== null && reviewed === current;
+}
