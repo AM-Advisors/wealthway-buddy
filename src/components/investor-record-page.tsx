@@ -107,7 +107,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>{onOps ? <Link to="/ops/fund/$fundId" params={{ fundId }} className="text-sm text-muted-foreground hover:underline">← {data.fund?.name ?? "Fund"}</Link> : <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="text-sm text-muted-foreground hover:underline">← {data.fund?.name ?? "Fund"} investors</Link>}
           <h2 className="mt-1 text-xl">{data.overview.name}</h2>
-          <p className="text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "Investor"}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
+          <p className="text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {entrySourceLabel(data.overview.enteredBy)}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
           {!data.overview.removed ? <Button size="sm" variant="outline" onClick={correctDetails}><Pencil className="mr-2 h-4 w-4" />Correct investor details</Button> : null}
           {staff && data.overview.investorUserId ? <Button asChild size="sm" variant="outline"><Link to="/ops/investors/$investorId" params={{ investorId: data.overview.investorUserId }} search={{ tab: undefined }}>Open Investor 360</Link></Button> : null}
