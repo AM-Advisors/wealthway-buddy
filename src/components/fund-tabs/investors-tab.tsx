@@ -463,32 +463,43 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
           </section>
             </TabsContent>
             <TabsContent value="actions" className="space-y-6">
-          {id && !embedded && <section className="rounded-lg border p-3" aria-label="Invite investor">
-            <h4 className="mb-1 font-medium">Investor account</h4>
-            <p className="mb-2 text-muted-foreground">Email the investor their personal invite so they can set up their account and start onboarding.</p>
-            <InviteInvestorButton onboardingId={id} />
-          </section>}
-          <section className="rounded-lg border p-3" aria-label="Send documents">
-            <h4 className="mb-1 font-medium">Send a document to this investor</h4>
-            <p className="text-muted-foreground">Each button emails the investor a link to that one item. Sending never signs, approves or certifies anything.</p>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              {([
-                ["subscription", "Subscription Agreement", d.docs === "Signed" || d.docs === "Signed (outside platform)"],
-                ["tax_form", "W-9 / tax form", (d.reviewEvidence?.taxForms ?? []).length > 0],
-                ["accreditation", "Accreditation proof", !!d.reviewEvidence?.accreditation?.verifiedAt],
-                ["fund_documents", "Fund documents", false],
-              ] as const).map(([kind, label, done]) => <Button key={kind} size="lg" variant="outline" className="justify-start text-base" disabled={sendingSign !== false || done} onClick={async () => {
-                if (!id) return;
-                setSendingSign(kind);
-                try {
+          {(() => {
+            const items = ([
+              ["subscription", "Subscription Agreement", d.docs === "Signed" || d.docs === "Signed (outside platform)"],
+              ["tax_form", "W-9 / tax form", (d.reviewEvidence?.taxForms ?? []).length > 0],
+              ["accreditation", "Accreditation proof", !!d.reviewEvidence?.accreditation?.verifiedAt],
+              ["fund_documents", "Fund documents", false],
+            ] as const);
+            const open = items.filter(([, , done]) => !done);
+            const send = async (list: readonly (typeof items[number])[]) => {
+              if (!id || !list.length) return;
+              setSendingSign(list.length > 1 ? "all" : list[0]![0]);
+              let sent = 0, invited = false, suppressed = false;
+              try {
+                for (const [kind] of list) {
                   const r = await sendSign({ data: { fundId, onboardingId: id, kind } });
-                  if (r.sent) toast.success(r.invited ? `Invite and ${label} sent to the investor` : `${label} sent to the investor`);
-                  else toast.message(r.reason === "recipient_suppressed" ? "This investor has turned off emails, so it wasn't sent." : "Already sent today, or the email wasn't sent.");
-                } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
-                finally { setSendingSign(false); }
-              }}>{done ? `${label}: done` : sendingSign === kind ? "Sending…" : `Send ${label}`}</Button>)}
-            </div>
-          </section>
+                  if (r.sent) sent++; if (r.invited) invited = true; if (r.reason === "recipient_suppressed") suppressed = true;
+                }
+                if (sent) toast.success(`${invited ? "Invite and " : ""}${sent} item${sent === 1 ? "" : "s"} sent to the investor`);
+                else toast.message(suppressed ? "This investor has turned off emails, so nothing was sent." : "Already sent today.");
+              } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
+              finally { setSendingSign(false); }
+            };
+            return <section className="rounded-lg border p-3" aria-label="Send to investor">
+              <h4 className="mb-1 font-medium">Send to investor</h4>
+              <p className="text-muted-foreground">The Subscription Agreement is emailed automatically as soon as it is ready. Use this to send everything still outstanding in one go; an invite is included if they have not signed up. Sending never signs or approves anything.</p>
+              <Button size="lg" className="mt-2 w-full sm:w-auto" disabled={sendingSign !== false || !open.length} onClick={() => void send(open)}>
+                {sendingSign !== false ? "Sending…" : open.length ? `Send everything outstanding (${open.length})` : "Nothing outstanding"}
+              </Button>
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-muted-foreground">Send one item or just the invite</summary>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {items.map((it) => <Button key={it[0]} size="sm" variant="outline" className="justify-start" disabled={sendingSign !== false || it[2]} onClick={() => void send([it])}>{it[2] ? `${it[1]}: done` : `Send ${it[1]}`}</Button>)}
+                </div>
+                {id && !embedded && <div className="mt-2"><InviteInvestorButton onboardingId={id} /></div>}
+              </details>
+            </section>;
+          })()}
           {id && !embedded && <PersonalInvestmentLinkCard onboardingId={id} />}
           {id && <InvestorEmailHistory onboardingId={id} />}
           {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}

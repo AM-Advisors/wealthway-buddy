@@ -952,6 +952,11 @@ export async function autoPrepareSubscriptionDocuments(userId: string, onboardin
     const { assertFeesAccepted } = await import("@/lib/investor-extras.server");
     await assertFeesAccepted(userId, onboardingId);
     const r: any = await prepareSubscriptionDocuments(userId, onboardingId);
+    // Newly ready: email the investor the signing link automatically (once per investment).
+    if (r?.templateVersion && !r?.alreadyPrepared) {
+      const { autoSendSubscriptionReady } = await import("@/lib/subscription-sign-notice.server");
+      await autoSendSubscriptionReady(db(), onboardingId).catch(() => null);
+    }
     return Boolean(r?.alreadyPrepared || r?.templateVersion);
   } catch {
     return false;
