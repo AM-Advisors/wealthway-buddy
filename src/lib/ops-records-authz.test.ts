@@ -227,7 +227,8 @@ describe("one record never leaks another", () => {
   });
 
   it("uses the same exact-investment readiness on overview, profiles, investments and identity", async () => {
-    const payloads = await Promise.all(["overview", "profiles", "investments", "identity"].map((tab) => ops.investorTab(admin(), { id: INVESTOR_1, tab })));
+    const payloads = [];
+    for (const tab of ["overview", "profiles", "investments", "identity"]) payloads.push(await ops.investorTab(admin(), { id: INVESTOR_1, tab }));
     const canonical = (payloads[0] as any).investmentReadiness;
     expect(canonical.map((i: any) => i.onboardingId)).toEqual(["ob-1", "ob-2"]);
     for (const payload of payloads) expect((payload as any).investmentReadiness).toEqual(canonical);
