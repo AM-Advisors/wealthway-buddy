@@ -1,0 +1,2 @@
+ALTER TABLE public.investor_onboardings DROP CONSTRAINT investor_onboardings_questionnaire_source_check;
+ALTER TABLE public.investor_onboardings ADD CONSTRAINT investor_onboardings_questionnaire_source_check CHECK (questionnaire_source = ANY (ARRAY['harmonious'::text, 'didit'::text, 'fund_team'::text]));
