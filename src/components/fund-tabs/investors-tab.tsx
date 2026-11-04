@@ -473,7 +473,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
             const open = items.filter(([, , done]) => !done);
             const send = async (list: readonly (typeof items[number])[]) => {
               if (!id || !list.length) return;
-              setSendingSign(list.length > 1 ? "all" : list[0][0]);
+              setSendingSign(list.length > 1 ? "all" : list[0]![0]);
               let sent = 0, invited = false, suppressed = false;
               try {
                 for (const [kind] of list) {
