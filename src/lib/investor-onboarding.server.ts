@@ -958,7 +958,7 @@ export async function autoPrepareSubscriptionDocuments(userId: string, onboardin
     // Newly ready: email the investor the signing link automatically (once per investment).
     if (r?.templateVersion && !r?.alreadyPrepared) {
       const { autoSendSubscriptionReady } = await import("@/lib/subscription-sign-notice.server");
-      await autoSendSubscriptionReady(db(), onboardingId).catch(() => null);
+      await autoSendSubscriptionReady(db(), onboardingId, userId).catch(() => null);
     }
     return Boolean(r?.alreadyPrepared || r?.templateVersion);
   } catch {

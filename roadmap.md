@@ -1,5 +1,10 @@
 # Roadmap
 
+## Pre-account subscription emails (2026-11-04)
+- [x] Send prepared subscription requests to the recorded investor email with their authorized personal invitation when no account exists; manual sends retain both invite and document request.
+- [x] Thirteen fictional email/invitation regressions passed; preview build OK. No live recipients, links or emails used for testing.
+- [ ] Live delivery and account creation/signing read-back require isolated synthetic QA and publishing; not verified or published in this turn.
+
 ## Steven’s questionnaire completion correction
 - [x] Confirm exact ROAS record: only accreditation saved, imported submission markers, no executed subscription.
 - [x] Replace timestamp-only completion in shared readiness, fund roster, progress, directory gaps and reminder eligibility with validated applicable answers and submission evidence.

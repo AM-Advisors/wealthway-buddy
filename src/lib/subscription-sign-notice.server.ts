@@ -29,15 +29,18 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
   let invited = false
   let recipient: string | null = null
   let recipientName: string | undefined
+  let invitationUrl: string | undefined
   if (!ob.investor_user_id) {
     const { data: person } = await db.from('investor_onboardings').select('persons(email, legal_first_name)').eq('id', ob.id).maybeSingle()
     recipient = String((person as any)?.persons?.email ?? '').trim().toLowerCase() || null
     recipientName = (person as any)?.persons?.legal_first_name || undefined
     if (!recipient) throw new Error("Add the investor's email first.")
     const links = await import('@/lib/investor-onboarding.server')
-    const cur: any = await links.getPersonalLink(actorId, ob.id)
-    if (!cur.link) await links.createPersonalLink(actorId, ob.id)
-    if (cur.link?.state !== 'claimed') { await links.sendPersonalLink(actorId, ob.id); invited = true }
+    let cur: any = await links.getPersonalLink(actorId, ob.id)
+    if (!cur.link) { await links.createPersonalLink(actorId, ob.id); cur = await links.getPersonalLink(actorId, ob.id) }
+    if (!cur.link || ['disabled', 'expired'].includes(cur.link.state)) throw new Error('This invitation is unavailable. Ask Harmonious to replace it.')
+    invitationUrl = cur.link.url
+    if (cur.link.state !== 'claimed') { const sent = await links.sendPersonalLink(actorId, ob.id); invited = Boolean(sent.emailSent) }
   } else {
     const { data: auth, error: authError } = await db.auth.admin.getUserById(ob.investor_user_id)
     if (authError || !auth?.user?.email) throw new Error('Investor email unavailable.')
@@ -47,8 +50,9 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
   const { data: fund } = await db.from('offerings').select('name').eq('id', ob.offering_id).maybeSingle()
   const { data: sender } = await db.auth.admin.getUserById(actorId)
   const day = new Date().toISOString().slice(0, 10)
+  if (!recipient) throw new Error('Investor email unavailable.')
   const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
-  const result: any = await sendTemplateEmail('signing-reminder', recipient!, {
+  const result: any = await sendTemplateEmail('signing-reminder', recipient, {
     managed: true,
     inboxForAnyUser: true,
     // One notice per investment per day, so repeated clicks don't spam the investor.
@@ -59,7 +63,7 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
       fundName: fund?.name ?? 'your fund',
       steps: [...spec.steps],
       requestedBy: sender?.user?.user_metadata?.name || undefined,
-      ctaUrl: `https://app.harmonious.co/investment/${ob.id}?step=${spec.step}`,
+      ctaUrl: invitationUrl ?? `https://app.harmonious.co/investment/${ob.id}?step=${spec.step}`,
       ctaLabel: spec.label,
     },
   })
@@ -70,14 +74,31 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
 /**
  * Automatic notice once subscription documents are prepared: the investor is emailed
  * the signing link without anyone pressing Send. Sent once per investment (idempotent),
- * only to the investment's own signed-in investor. Never signs or approves anything.
+ * to the investment's recorded email, with an email-bound invitation when no account exists.
+ * Never signs, approves or grants access by sending.
  */
-export async function autoSendSubscriptionReady(db: any, onboardingId: string) {
+export async function autoSendSubscriptionReady(db: any, onboardingId: string, actorId?: string) {
   const { data: ob } = await db.from('investor_onboardings')
-    .select('id, offering_id, investor_user_id, stage, removed_at').eq('id', onboardingId).maybeSingle()
-  if (!ob || ob.removed_at || !ob.investor_user_id || CLOSED.includes(ob.stage)) return { sent: false }
-  const { data: auth } = await db.auth.admin.getUserById(ob.investor_user_id)
-  const recipient = auth?.user?.email
+    .select('id, offering_id, investor_user_id, stage, removed_at, persons(email, legal_first_name)').eq('id', onboardingId).maybeSingle()
+  if (!ob || ob.removed_at || CLOSED.includes(ob.stage)) return { sent: false }
+  let recipient: string | undefined
+  let recipientName: string | undefined
+  let invitationUrl: string | undefined
+  if (ob.investor_user_id) {
+    const { data: auth } = await db.auth.admin.getUserById(ob.investor_user_id)
+    recipient = auth?.user?.email
+    recipientName = auth?.user?.user_metadata?.name
+  } else {
+    recipient = String(ob.persons?.email ?? '').trim().toLowerCase() || undefined
+    recipientName = ob.persons?.legal_first_name
+    if (!recipient || !actorId) return { sent: false }
+    const links = await import('@/lib/investor-onboarding.server')
+    // The canonical engine rechecks exact-fund staff/manager authority before creating a link.
+    let cur: any = await links.getPersonalLink(actorId, ob.id)
+    if (!cur.link) { await links.createPersonalLink(actorId, ob.id); cur = await links.getPersonalLink(actorId, ob.id) }
+    if (!cur.link || ['disabled', 'expired'].includes(cur.link.state)) return { sent: false }
+    invitationUrl = cur.link.url
+  }
   if (!recipient) return { sent: false }
   const { data: fund } = await db.from('offerings').select('name').eq('id', ob.offering_id).maybeSingle()
   const spec = DOCUMENT_REQUESTS.subscription
@@ -87,12 +108,12 @@ export async function autoSendSubscriptionReady(db: any, onboardingId: string) {
     inboxForAnyUser: true,
     idempotencyKey: `subscription-ready:${ob.id}`,
     templateData: {
-      recipientName: auth.user.user_metadata?.name || 'there',
+      recipientName: recipientName || 'there',
       documentTitle: spec.title,
       fundName: fund?.name ?? 'your fund',
-      steps: ['Sign in to Harmonious', 'Review your Subscription Agreement', 'Sign'],
-      ctaUrl: `https://app.harmonious.co/investment/${ob.id}?step=${spec.step}`,
-      ctaLabel: spec.label,
+      steps: [invitationUrl ? 'Accept your personal invitation and create your account' : 'Sign in to Harmonious', 'Finish any earlier steps shown', 'Review your Subscription Agreement', 'Sign'],
+      ctaUrl: invitationUrl ?? `https://app.harmonious.co/investment/${ob.id}?step=${spec.step}`,
+      ctaLabel: invitationUrl ? 'Accept invite and open documents' : spec.label,
     },
   } as any)
   return { sent: !(result && result.sent === false) }
