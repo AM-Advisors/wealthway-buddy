@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "events": {
+    "project.document_opened": {
+      "event_schema_version": 1,
+      "description": "An existing investor document handler successfully renders a fund document, prepares a tax preview, or opens an issued signing session; not proof of reading, email opening or signing.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_kind",
+          "evidence"
+        ],
+        "properties": {
+          "document_kind": {
+            "type": "string",
+            "enum": [
+              "fund_document",
+              "tax_form",
+              "signing_document"
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "enum": [
+              "rendered",
+              "preview_ready",
+              "signing_session_ready"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -11,5 +11,5 @@ export function OfferingDocumentReader({ documentId, onboardingId, title, onReac
   if (query.isPending) return <p className="text-sm text-muted-foreground">Opening the document…</p>;
   if (query.error) return <div className="space-y-2"><p className="text-sm text-destructive">{query.error.message}</p><LoadError error={query.error} what={title} audience="account" onRetry={() => void query.refetch()} /></div>;
   if (!doc) return null;
-  return <OfferingDocumentContent key={`${documentId}:${onboardingId ?? ""}:${doc.url ?? doc.body}`} doc={doc} title={title} onReachedEnd={onReachedEnd} />;
+  return <OfferingDocumentContent key={`${documentId}:${onboardingId ?? ""}:${doc.url ?? doc.body}`} doc={doc} title={title} onReachedEnd={onReachedEnd} investorDocument={Boolean(onboardingId)} />;
 }

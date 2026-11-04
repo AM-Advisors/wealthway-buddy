@@ -382,6 +382,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
       const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
       setReviewedKey(r.key);
       setPreviewUrl(URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })));
+      window.__lovableEvents?.track?.("project.document_opened", { document_kind: "tax_form", evidence: "preview_ready" });
     },
     onError: (e: Error) => toast.error(e.message),
   });

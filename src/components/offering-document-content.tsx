@@ -5,8 +5,8 @@ import { documentReachedEnd } from "@/lib/document-review-model";
 type DocumentSource = { kind: "text" | "file"; body?: string | null; url?: string | null; filename?: string | null };
 
 /** Browser rendering is separate from the authorized source read; it never signs or saves review. */
-export function OfferingDocumentContent({ doc, title, onReachedEnd }: {
-  doc: DocumentSource; title: string; onReachedEnd: () => void;
+export function OfferingDocumentContent({ doc, title, onReachedEnd, investorDocument = false }: {
+  doc: DocumentSource; title: string; onReachedEnd: () => void; investorDocument?: boolean;
 }) {
   const content = useRef<HTMLDivElement>(null);
   const callback = useRef(onReachedEnd);
@@ -83,10 +83,11 @@ export function OfferingDocumentContent({ doc, title, onReachedEnd }: {
       if (cancelled) return;
       ready = true;
       setState("ready");
+      if (investorDocument) window.__lovableEvents?.track?.("project.document_opened", { document_kind: "fund_document", evidence: "rendered" });
       fit();
     })().catch(() => { if (!cancelled) setState("error"); });
     return () => { cancelled = true; observer.disconnect(); container.removeEventListener("scroll", check); destroyPdf?.(); };
-  }, [doc.kind, doc.body, doc.url, isWord, isPdf, canRender, title]);
+  }, [doc.kind, doc.body, doc.url, isWord, isPdf, canRender, title, investorDocument]);
 
   return <div className="min-w-0 space-y-3">
     {doc.url && <Button asChild size="sm" variant="outline"><a href={doc.url} target="_blank" rel="noreferrer">Open or download document</a></Button>}
