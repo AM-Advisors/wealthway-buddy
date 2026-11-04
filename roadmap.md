@@ -1046,3 +1046,7 @@
 - [ ] Authenticated on-screen check blocked by authenticator sign-in in testing.
 
 - [ ] Approval email reminders to the assigned approver after 3 days waiting (Slack alerts already post for new items) — awaiting go-ahead on wording/frequency
+
+## Unified investor sends (2026-11-04)
+- [x] Consolidate tax and unsigned-document send controls into the existing Send to investor card, visible above review tabs; keep protected fund countersignature actions separate.
+- [ ] Verify shared send card and document review navigation with fictional data; no live email QA.

@@ -11,7 +11,6 @@ import { useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { openTargetFor } from "@/lib/readiness-open-target";
-import { sendSubscriptionSignNoticeFn } from "@/lib/fund-tabs.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -56,7 +55,6 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const load = useServerFn(investorRecordDetailFn);
   const update = useServerFn(updateInvestorRecordFn);
   const resolve = useServerFn(resolveSuggestionFn);
-  const sendDoc = useServerFn(sendSubscriptionSignNoticeFn);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
@@ -83,12 +81,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       else toast.message("Harmonious handles this step. It's already on their list.");
       return;
     }
-    try {
-      if (t.action === "send_tax_form") {
-        const r = await sendDoc({ data: { fundId, onboardingId, kind: "tax_form" } });
-        toast.success(r.sent ? (r.invited ? "Invite and tax form sent to the investor to sign" : "Tax form sent to the investor to sign") : "Already sent today, or the email wasn't sent.");
-      }
-    } catch (e) { toast.error((e as Error).message); }
+    if (t.action === "send_tax_form") setTab("overview");
   };
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) : undefined);
 

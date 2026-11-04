@@ -73,3 +73,5 @@
 - Staff task handoffs/blocked/complete go through staff_task_transition (owner-only, receiver accepts); task readers/history/writes share team-work-model visibility, and action alerts carry exact-record search targets. Software issues use software_issue_report/move with retester-gated resolution; open reads exclude resolved history before limits. Why: one owner, findable work, unchanged authority and no duplicate queue.
 - Fund minimums use currentFundMinimum, offerings first, setup fallback. Below-minimum entry calls ensureMinimumSideLetter; investor steps and entry-series signing stay open, canCloseInvestment needs an active waiver. Why: current terms and manager-owned pre-close duty.
 - Routine reviewers need live exact-fund grants; pending-event emails choose one eligible owner. Protected actions stay unchanged. Why: manager-led work, no implicit powers.
+
+- Investor tax and unsigned-document requests use the existing Send to investor card above the review tabs; checklist tax actions focus that card and fund document reviews link to the exact investor record, never send separately. Why: one send location with unchanged server authorization.
