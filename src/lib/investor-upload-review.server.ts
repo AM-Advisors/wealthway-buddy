@@ -29,6 +29,12 @@ export async function reviewInvestorUpload(userId: string, input: { id: string; 
   const { d, row, actor } = await uploadReviewContext(userId, input.id);
   if (!actor.isStaff && !(MANAGER_REVIEW_KINDS as readonly string[]).includes(row.doc_kind)) throw new Error("Use the dedicated identity, accreditation or bank review for this document.");
   if (input.status === "new") throw new Error("Reviewed originals are retained. Upload a new copy for another review.");
+  // Accreditation proof on an investment goes through the accreditation decision so approval
+  // records the fund-scoped accreditation and advances readiness, instead of only marking the copy.
+  if (row.doc_kind === "accreditation_proof" && row.onboarding_id) {
+    const { decideOnboardingProof } = await import("./accreditation-review.server");
+    return decideOnboardingProof(userId, { documentId: row.id, decision: input.status === "accepted" ? "approved" : "more_needed", notes: input.note?.trim() ?? "" });
+  }
   if (row.review_status !== "new") throw new Error("This copy has already been reviewed. Refresh to see the decision.");
   const note = input.note?.trim() || null;
   if (input.status === "needs_followup" && !note) throw new Error("Explain what the investor needs to provide.");
