@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fee and carry review emails (2026-11-04)
+- [x] Existing Fees & Terms draft edits now notify, not only new drafts; pending post-signing fee requests use the managed sender and eligible non-requester staff approver. Manager links open Approvals directly; revision-specific keys deduplicate retries. Approval rules unchanged.
+- [x] 53 focused regressions passed, including pending draft save → notifier, managed single-recipient routing, revision deduplication and staff/non-requester boundaries. Sender domain verified; preview build OK. No live fee changes made for testing.
+- [ ] Live email delivery requires publishing and an actual authorized pending-change event; no live economics changed or email sent for QA.
+
 ## Automatic subscription preparation (2026-11-04)
 - [x] Prepare through canonical mutation/webhook reconciliation, including final fee acceptance; retain access, review, signature and funding checks and prepared versions.
 - [x] Remove routine preparation tasks and staff preparation button; signing retains a defensive checked opening path.
