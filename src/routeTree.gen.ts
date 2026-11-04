@@ -276,6 +276,7 @@ import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes
 import { Route as AuthenticatedOpsFundMigrationRouteImport } from './routes/_authenticated/ops.fund-migration'
 import { Route as AuthenticatedOpsHubspotDealsRouteImport } from './routes/_authenticated/ops.hubspot-deals'
 import { Route as AuthenticatedOpsHubspotTicketsRouteImport } from './routes/_authenticated/ops.hubspot-tickets'
+import { Route as AuthenticatedOpsInvestorProgressRouteImport } from './routes/_authenticated/ops.investor-progress'
 import { Route as AuthenticatedOpsLockedEditsRouteImport } from './routes/_authenticated/ops.locked-edits'
 import { Route as AuthenticatedOpsMailRouteImport } from './routes/_authenticated/ops.mail'
 import { Route as AuthenticatedOpsMailboxesRouteImport } from './routes/_authenticated/ops.mailboxes'
@@ -1996,6 +1997,12 @@ const AuthenticatedOpsHubspotTicketsRoute =
     path: '/ops/hubspot-tickets',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsInvestorProgressRoute =
+  AuthenticatedOpsInvestorProgressRouteImport.update({
+    id: '/ops/investor-progress',
+    path: '/ops/investor-progress',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsLockedEditsRoute =
   AuthenticatedOpsLockedEditsRouteImport.update({
     id: '/ops/locked-edits',
@@ -3519,6 +3526,7 @@ export interface FileRoutesByFullPath {
   '/ops/fund-migration': typeof AuthenticatedOpsFundMigrationRoute
   '/ops/hubspot-deals': typeof AuthenticatedOpsHubspotDealsRoute
   '/ops/hubspot-tickets': typeof AuthenticatedOpsHubspotTicketsRoute
+  '/ops/investor-progress': typeof AuthenticatedOpsInvestorProgressRoute
   '/ops/locked-edits': typeof AuthenticatedOpsLockedEditsRoute
   '/ops/mail': typeof AuthenticatedOpsMailRoute
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
@@ -3997,6 +4005,7 @@ export interface FileRoutesByTo {
   '/ops/fund-migration': typeof AuthenticatedOpsFundMigrationRoute
   '/ops/hubspot-deals': typeof AuthenticatedOpsHubspotDealsRoute
   '/ops/hubspot-tickets': typeof AuthenticatedOpsHubspotTicketsRoute
+  '/ops/investor-progress': typeof AuthenticatedOpsInvestorProgressRoute
   '/ops/locked-edits': typeof AuthenticatedOpsLockedEditsRoute
   '/ops/mail': typeof AuthenticatedOpsMailRoute
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
@@ -4483,6 +4492,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/fund-migration': typeof AuthenticatedOpsFundMigrationRoute
   '/_authenticated/ops/hubspot-deals': typeof AuthenticatedOpsHubspotDealsRoute
   '/_authenticated/ops/hubspot-tickets': typeof AuthenticatedOpsHubspotTicketsRoute
+  '/_authenticated/ops/investor-progress': typeof AuthenticatedOpsInvestorProgressRoute
   '/_authenticated/ops/locked-edits': typeof AuthenticatedOpsLockedEditsRoute
   '/_authenticated/ops/mail': typeof AuthenticatedOpsMailRoute
   '/_authenticated/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
@@ -4970,6 +4980,7 @@ export interface FileRouteTypes {
     | '/ops/fund-migration'
     | '/ops/hubspot-deals'
     | '/ops/hubspot-tickets'
+    | '/ops/investor-progress'
     | '/ops/locked-edits'
     | '/ops/mail'
     | '/ops/mailboxes'
@@ -5448,6 +5459,7 @@ export interface FileRouteTypes {
     | '/ops/fund-migration'
     | '/ops/hubspot-deals'
     | '/ops/hubspot-tickets'
+    | '/ops/investor-progress'
     | '/ops/locked-edits'
     | '/ops/mail'
     | '/ops/mailboxes'
@@ -5933,6 +5945,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/fund-migration'
     | '/_authenticated/ops/hubspot-deals'
     | '/_authenticated/ops/hubspot-tickets'
+    | '/_authenticated/ops/investor-progress'
     | '/_authenticated/ops/locked-edits'
     | '/_authenticated/ops/mail'
     | '/_authenticated/ops/mailboxes'
@@ -8118,6 +8131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsHubspotTicketsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/investor-progress': {
+      id: '/_authenticated/ops/investor-progress'
+      path: '/ops/investor-progress'
+      fullPath: '/ops/investor-progress'
+      preLoaderRoute: typeof AuthenticatedOpsInvestorProgressRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/locked-edits': {
       id: '/_authenticated/ops/locked-edits'
       path: '/ops/locked-edits'
@@ -10107,6 +10127,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundMigrationRoute: typeof AuthenticatedOpsFundMigrationRoute
   AuthenticatedOpsHubspotDealsRoute: typeof AuthenticatedOpsHubspotDealsRoute
   AuthenticatedOpsHubspotTicketsRoute: typeof AuthenticatedOpsHubspotTicketsRoute
+  AuthenticatedOpsInvestorProgressRoute: typeof AuthenticatedOpsInvestorProgressRoute
   AuthenticatedOpsLockedEditsRoute: typeof AuthenticatedOpsLockedEditsRoute
   AuthenticatedOpsMailRoute: typeof AuthenticatedOpsMailRoute
   AuthenticatedOpsMailboxesRoute: typeof AuthenticatedOpsMailboxesRoute
@@ -10461,6 +10482,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFundMigrationRoute: AuthenticatedOpsFundMigrationRoute,
   AuthenticatedOpsHubspotDealsRoute: AuthenticatedOpsHubspotDealsRoute,
   AuthenticatedOpsHubspotTicketsRoute: AuthenticatedOpsHubspotTicketsRoute,
+  AuthenticatedOpsInvestorProgressRoute: AuthenticatedOpsInvestorProgressRoute,
   AuthenticatedOpsLockedEditsRoute: AuthenticatedOpsLockedEditsRoute,
   AuthenticatedOpsMailRoute: AuthenticatedOpsMailRoute,
   AuthenticatedOpsMailboxesRoute: AuthenticatedOpsMailboxesRoute,
