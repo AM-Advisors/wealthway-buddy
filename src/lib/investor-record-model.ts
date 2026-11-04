@@ -5,11 +5,16 @@ import { resolvePerson } from "@/lib/person-resolution";
  * approves compliance, or moves money; the server applies these decisions.
  */
 
-export type EntrySource = "investor" | "fund_manager" | "harmonious" | "document" | "provider" | "bulk" | "preparer";
+export type EntrySource = "investor" | "fund_manager" | "harmonious" | "document" | "provider" | "bulk" | "preparer" | "staff" | "fund_signatory";
 export const SOURCE_LABELS: Record<EntrySource, string> = {
-  investor: "Investor", fund_manager: "Fund Manager", harmonious: "Harmonious",
+  investor: "Investor", fund_manager: "Fund Manager", harmonious: "Harmonious", staff: "Harmonious",
   document: "Imported document", provider: "Provider", bulk: "Bulk import", preparer: "Assigned preparer",
+  fund_signatory: "Fund signatory",
 };
+/** Label for any recorded entry source, including legacy values never in the dictionary. */
+export function entrySourceLabel(v: string | null | undefined): string {
+  return (v && (SOURCE_LABELS[v as EntrySource] ?? null)) ?? "Recorded entry";
+}
 
 export const PROFILE_TYPES = ["individual", "joint", "entity", "trust", "ira"] as const;
 export type ProfileType = (typeof PROFILE_TYPES)[number];
