@@ -6,7 +6,7 @@ export function questionnaireCompletion(input: {
   version?: number | null;
   questions: Question[] | null;
   answers?: Record<string, unknown> | null;
-  profileType?: string | null;
+  profileType?: string | null | undefined;
 }) {
   const errors = input.questions
     ? validateQuestionnaire(input.questions, input.answers ?? {}, input.profileType).errors

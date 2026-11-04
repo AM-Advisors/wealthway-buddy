@@ -115,7 +115,8 @@ describe("batch readiness equals single readiness", () => {
     state.requests = 0;
     await readinessForMany(many);
     expect(state.requests).toBe(four);
-    expect(four).toBeLessThanOrEqual(35);
+    // Two fund-level reads validate questionnaire answers, independent of investor count.
+    expect(four).toBeLessThanOrEqual(37);
   });
 
   it("completed W-9 removes both duplicate tax tasks in single and batch staff readiness", async () => {
@@ -129,6 +130,15 @@ describe("batch readiness equals single readiness", () => {
     for (const key of ["tax_classification", "tax_documentation"]) {
       expect(single.result.items.find((i) => i.key === key)?.status).toBe("complete");
     }
+  });
+
+  it("imported submission markers cannot complete an accreditation-only questionnaire", async () => {
+    const { computeReadinessFor, readinessForMany } = await import("@/lib/investor-onboarding.server");
+    const row = { ...ROWS[0], questionnaire_submitted_at: "2026-10-21T21:59:38Z", questionnaire_responses: { please_select_the_accreditation_that_applies_to_you: "Net worth over $1 million" } };
+    const single = await computeReadinessFor(row);
+    const [batch] = await readinessForMany([row]);
+    expect(batch).toEqual(single);
+    expect(single.result.items.find((i) => i.key === "subscription_questionnaire")?.status).not.toBe("complete");
   });
 
   it("a failed read is logged and treated as no rows, never thrown", async () => {
