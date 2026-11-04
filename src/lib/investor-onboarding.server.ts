@@ -880,7 +880,7 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
     const wire = await lastWireReportForProfile(row.investment_profile_id as string, row.id as string);
     wireFacts = wireBankFacts(wire, questions.map((q) => q.key));
   }
-  return { locked, supplied: { ...wireFacts, ...prior, ...mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)) }, questions: decorated };
+  return { locked, supplied: { ...wireFacts, ...prior, ...mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)) }, questions: decorated, profileType };
 }
 
 export async function saveQuestionnaire(
@@ -894,12 +894,12 @@ export async function saveQuestionnaire(
   const questions = locks.questions;
   const { stripHiddenAnswers, highRiskYes } = await import("@/lib/investor-onboarding-model");
   const keys = questions.map((q) => q.key);
-  const answers = stripHiddenAnswers(questions, applyLocked(fillMissingInvestorAnswers(input.answers, locks.supplied, keys), locks.locked, keys));
+  const answers = stripHiddenAnswers(questions, applyLocked(fillMissingInvestorAnswers(input.answers, locks.supplied, keys), locks.locked, keys), locks.profileType);
 
   if (input.submit) {
     const waiting = questions.find((q) => q.locked && q.required && locks.locked[q.key] == null);
     if (waiting) fail(`${waiting.label} fills in after Verification is complete.`);
-    const result = validateQuestionnaire(questions, answers);
+    const result = validateQuestionnaire(questions, answers, locks.profileType);
     if (!result.valid) fail(result.errors[0]!.message);
   }
   await touch(row.id, {
@@ -949,7 +949,8 @@ export async function teamPrepareContext(userId: string, onboardingId: string) {
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const { isAccreditationQuestion } = await import("@/lib/accreditation-step");
-  const questions = locks.questions.filter((q: any) => !isAccreditationQuestion(q.key) && q.type !== "document");
+  const { questionAppliesToProfile } = await import("@/lib/investor-onboarding-model");
+  const questions = locks.questions.filter((q: any) => !isAccreditationQuestion(q.key) && q.type !== "document" && questionAppliesToProfile(q, locks.profileType));
   const keys = questions.map((q) => q.key);
   const raw: Record<string, unknown> = { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks.supplied, keys), ...Object.fromEntries(Object.entries(locks.locked).filter(([, v]) => v != null)) };
   return {
@@ -979,7 +980,7 @@ export async function teamSaveInvestorAnswers(userId: string, input: { onboardin
   const existing = (row.questionnaire_responses ?? {}) as Record<string, unknown>;
   const merged: Record<string, unknown> = { ...existing };
   for (const [k, v] of Object.entries(input.answers)) if (editable.has(k)) merged[k] = typeof v === "string" ? v.slice(0, 2000) : v;
-  const answers = stripHiddenAnswers(questions, applyLocked(merged, locks.locked, keys));
+  const answers = stripHiddenAnswers(questions, applyLocked(merged, locks.locked, keys), locks.profileType);
   await touch(row.id, { questionnaire_responses: answers, questionnaire_source: "fund_team" });
   await recordEvent({
     onboardingId: row.id,
