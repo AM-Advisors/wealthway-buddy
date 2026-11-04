@@ -456,7 +456,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving, financialBackgroun
     setAnswers((current) => Object.fromEntries(Object.entries(fillMissingInvestorAnswers(current, incoming, Object.keys(incoming), [...dirty.current])).map(([key, value]) => [key, String(value ?? "")])));
   }, [savedKey]);
   const lockedVals = (d.questionnaireLocked ?? {}) as Record<string, string | null>;
-  const visible = questions.filter((q) => !isAccreditationQuestion(q.key) && questionVisible(q, answers));
+  const visible = questions.filter((q) => !isAccreditationQuestion(q.key) && questionVisible(q, answers, d.profileType ?? null));
   const missing = visible.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
   const set = (k: string, v: string) => { dirty.current.add(k); setAnswers((a) => ({ ...a, [k]: v })); };
   // Answers we already have (verified records, earlier funds, saved progress) sit in one
