@@ -285,7 +285,7 @@ const FIELD_ACTIVITY: Record<string, string> = {
 
 export function activityLabel(c: ChangeRow): string {
   if (FIELD_ACTIVITY[c.field]) return FIELD_ACTIVITY[c.field]!;
-  const who = SOURCE_LABELS[c.source as EntrySource] ?? "Harmonious";
+  const who = entrySourceLabel(c.source);
   return c.source === "investor" ? "Information confirmed by Investor" : `Information updated by ${who}`;
 }
 
@@ -294,7 +294,7 @@ export function activityFor(changes: ChangeRow[], viewer: "staff" | "manager") {
   return changes
     .filter((c) => viewer === "staff" || c.manager_visible)
     .map((c) => ({
-      at: c.created_at, label: activityLabel(c), source: SOURCE_LABELS[c.source as EntrySource] ?? c.source,
+      at: c.created_at, label: activityLabel(c), source: entrySourceLabel(c.source),
       ...(viewer === "staff" ? { field: c.field, from: c.old_value ?? null, to: c.new_value ?? null } : {}),
     }));
 }
