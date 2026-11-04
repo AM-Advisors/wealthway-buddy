@@ -147,6 +147,19 @@ function builder(table: string) {
 const contextFor = (userId: string) => ({ userId, supabase: { from: (t: string) => builder(t) } });
 
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));
+vi.mock("@/lib/investor-onboarding.server", () => ({
+  readinessForMany: async (rows: any[]) =>
+    rows.map(() => ({
+      result: {
+        stages: [
+          { stage: "identity", status: "complete" },
+          { stage: "eligibility", status: "not_applicable" },
+          { stage: "tax", status: "needs_investor" },
+        ],
+        nextAction: { label: "Complete tax form" },
+      },
+    })),
+}));
 
 const ops = await import("@/lib/ops-records.server");
 
@@ -204,6 +217,22 @@ describe("one record never leaks another", () => {
   it("keeps Investor Two's profiles out of Investor One", async () => {
     const tab = (await ops.investorTab(admin(), { id: INVESTOR_1, tab: "profiles" })) as any;
     expect(tab.profiles.map((p: any) => p.id).sort()).toEqual(["prof-individual", "prof-trust"]);
+  });
+
+  it("shows Investor 360 checks from canonical readiness, not stale application statuses", async () => {
+    const tab = (await ops.investorTab(admin(), { id: INVESTOR_1, tab: "overview" })) as any;
+    expect(tab.checks).toHaveLength(2);
+    expect(tab.checks[0]).toMatchObject({ identity: "complete", eligibility: "not_applicable", tax: "needs_investor", nextAction: "Complete tax form" });
+    expect(JSON.stringify(tab.checks)).not.toContain("accreditation");
+  });
+
+  it("uses the same exact-investment readiness on overview, profiles, investments and identity", async () => {
+    const payloads = [];
+    for (const tab of ["overview", "profiles", "investments", "identity"]) payloads.push(await ops.investorTab(admin(), { id: INVESTOR_1, tab }));
+    const canonical = (payloads[0] as any).investmentReadiness;
+    expect(canonical.map((i: any) => i.onboardingId)).toEqual(["ob-1", "ob-2"]);
+    for (const payload of payloads) expect((payload as any).investmentReadiness).toEqual(canonical);
+    expect((payloads[3] as any).applications).toBeUndefined();
   });
 });
 
@@ -272,7 +301,7 @@ describe("activity shows what happened, not what was stored", () => {
 
   it("keeps identity provider payloads out of the investor identity summary", async () => {
     const tab = (await ops.investorTab(admin(), { id: INVESTOR_1, tab: "identity" })) as any;
-    expect(tab.kyc[0].status).toBe("approved");
+    expect(tab.identityHistory[0].status).toBe("approved");
     expect(JSON.stringify(tab)).not.toContain("sensitive");
     expect(JSON.stringify(tab)).not.toContain("vendor_data");
   });

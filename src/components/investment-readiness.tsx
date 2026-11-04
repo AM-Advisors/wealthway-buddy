@@ -210,14 +210,16 @@ function Empty({ title, body, icon }: { title: string; body: string; icon?: Reac
 }
 
 /** Investor / manager / staff view of one Investment's canonical checklist. */
-export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined }) {
+export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, providedData }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined; providedData?: { readiness: any; viewer: "staff"; fundName: string; profileLabel: string | null } }) {
   const load = useServerFn(investmentReadinessFn);
   const loadAs = useServerFn(viewAsInvestmentFn);
   // In View As the server resolves the investment from the live perspective; no ID is sent.
-  const q = useQuery({ queryKey: viewAs ? ["view-as", "investment"] : ["investment-readiness", onboardingId], queryFn: () => (viewAs ? loadAs() : load({ data: { onboardingId } })), retry: false });
-  if (q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
-  if (q.isError || !q.data) return null;
-  const d = q.data as any;
+  const q = useQuery({ queryKey: viewAs ? ["view-as", "investment"] : ["investment-readiness", onboardingId], queryFn: () => (viewAs ? loadAs() : load({ data: { onboardingId } })), retry: false, enabled: !providedData || viewAs });
+  const supplied = !viewAs ? providedData : undefined;
+  if (!supplied && q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
+  if (!supplied && (q.isError || !q.data)) return null;
+  const d = (supplied ?? q.data) as any;
+  if (!d?.readiness) return <LoadError what="Investment readiness" error={new Error("Readiness could not be loaded.")} onRetry={() => void q.refetch()} />;
   const r = d.readiness;
   const subtitle = [d.fundName, d.amountCents ? `${money(d.amountCents)} investment` : null].filter(Boolean).join(" · ");
   return (
