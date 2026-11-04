@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { EconomicsCard } from "@/components/fund-setup-canonical";
-import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FundQuestionSectionCard } from "@/components/fund-question-section-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -14,11 +13,9 @@ export function FundSetupReviews({ fundId }: { fundId: string }) {
   return <Tabs value={tab} onValueChange={setTab} className="space-y-4">
     <TabsList aria-label="Fund setup approvals" className="h-auto w-full flex-wrap justify-start gap-1">
       <TabsTrigger value="fees">Fees &amp; terms</TabsTrigger>
-      <TabsTrigger value="documents">Documents</TabsTrigger>
       <TabsTrigger value="questions">Investor questions</TabsTrigger>
     </TabsList>
     <TabsContent value="fees">{tab === "fees" && <FeesReview fundId={fundId} />}</TabsContent>
-    <TabsContent value="documents">{tab === "documents" && <OfferingDocumentsSetup offeringId={fundId} />}</TabsContent>
     <TabsContent value="questions">{tab === "questions" && <FundQuestionSectionCard offeringId={fundId} />}</TabsContent>
   </Tabs>;
 }
