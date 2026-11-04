@@ -46,9 +46,11 @@ export async function resolvePersonIdentity(userId: string | null, personId: str
  */
 export async function fanOutPersonIdentity(personId: string | null, sessionId: string | null, actorUserId: string | null) {
   if (!personId || !sessionId) return { applied: 0 };
+  let checkApproved = false;
   // Carry a clean screening result from the passed login check to the person record.
   try {
     const { data: chk } = await db().from("account_identity_checks").select("status, decision_summary").eq("session_id", sessionId).maybeSingle();
+    checkApproved = (chk as any)?.status === "approved";
     const aml = (chk as any)?.decision_summary?.aml;
     const clean = (chk as any)?.status === "approved" && Number(aml?.hits ?? 0) === 0 && /approved|clear|passed/i.test(String(aml?.status ?? ""));
     if (clean) {
@@ -63,7 +65,19 @@ export async function fanOutPersonIdentity(personId: string | null, sessionId: s
   let applied = 0;
   for (const ob of (obs ?? []) as any[]) {
     try {
-      if (!ob.questionnaire_didit_session_id) await db().from("investor_onboardings").update({ questionnaire_didit_session_id: sessionId }).eq("id", ob.id);
+      const linked = ob.questionnaire_didit_session_id as string | null;
+      // An approved newer check replaces an older linked check (e.g. one stuck In Review);
+      // the older session and its provider evidence stay on file and the change is logged.
+      if (!linked || (checkApproved && linked !== sessionId)) {
+        await db().from("investor_onboardings").update({ questionnaire_didit_session_id: sessionId }).eq("id", ob.id);
+        if (linked) {
+          await db().from("person_onboarding_events").insert({
+            person_id: personId, from_state: null, to_state: null, actor_kind: actorUserId ? "staff" : "provider", actor_user_id: actorUserId,
+            reason: "Investment linked to the person's newer approved identity check",
+            detail: { onboarding_id: ob.id, previous_session: linked, session: sessionId },
+          });
+        }
+      }
       await autoApplyDiditForOnboarding(ob.id, actorUserId);
       if (ob.application_id) await supersedeUnstartedInvestmentCheck(ob.application_id, sessionId);
       await (await import("./investor-onboarding.server")).reconcileAfter([ob.id], { actorUserId, trigger: "person_identity_applied" });
