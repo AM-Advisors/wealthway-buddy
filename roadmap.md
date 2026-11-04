@@ -3,8 +3,8 @@
 ## Steven’s questionnaire completion correction
 - [x] Confirm exact ROAS record: only accreditation saved, imported submission markers, no executed subscription.
 - [x] Replace timestamp-only completion in shared readiness, fund roster, progress, directory gaps and reminder eligibility with validated applicable answers and submission evidence.
-- [ ] Run focused regressions and check preview errors.
-- [ ] Steven’s live import markers require an authorized live correction; this draft contains no copy of his record. Publishing remains separate.
+- [x] 100 focused regressions passed, including imported accreditation-only answers, applicable/conditional requirements, saved-answer read-back and fixed per-fund query count; preview build OK.
+- [ ] Steven’s live import markers remain unchanged because this draft has no copy of his record and cannot write to the app’s data. Corrected display requires accepting/publishing; authenticated live display is unverified.
 
 ## Fee and carry review emails (2026-11-04)
 - [x] Existing Fees & Terms draft edits now notify, not only new drafts; pending post-signing fee requests use the managed sender and eligible non-requester staff approver. Manager links open Approvals directly; revision-specific keys deduplicate retries. Approval rules unchanged.
