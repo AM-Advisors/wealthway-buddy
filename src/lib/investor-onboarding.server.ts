@@ -351,8 +351,25 @@ export async function loadReadinessInputs(rows: any[]) {
     profileAccreditations: groupBy(profAccs, "profile_id"),
     profileDocuments: [...docsByProfile, ...legacyDocs],
     kycByPerson: groupBy(kycRows, "person_id"),
+    // Login identity check is the person's one identity check: same source as the review screen.
+    loginChecks: groupBy(
+      await readIn([...new Set(rows.map((r) => r.investor_user_id).filter(Boolean))], (c) =>
+        d.from("account_identity_checks").select("user_id, status, created_at").in("user_id", c).order("created_at", { ascending: false })),
+      "user_id",
+    ),
     strip,
   };
+}
+
+/** Identity status every screen agrees on: the latest login check's real result, else the person record. */
+export function effectiveKycStatus(personKyc: string | null | undefined, loginChecks: { status: string | null }[] | undefined): string | null {
+  const latest = (loginChecks ?? [])[0];
+  const s = String(latest?.status ?? "").toLowerCase();
+  if (["approved", "review", "declined", "expired", "sent_back"].includes(s)) {
+    if (s === "approved") return "approved";
+    if (s === "review") return personKyc === "approved" ? "approved" : "review";
+  }
+  return personKyc ?? null;
 }
 export type ReadinessInputs = Awaited<ReturnType<typeof loadReadinessInputs>>;
 
@@ -487,7 +504,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
     offering,
     person: {
       personId: person?.id ?? null,
-      kycStatus: person?.kyc_status ?? null,
+      kycStatus: effectiveKycStatus(person?.kyc_status ?? null, row.investor_user_id ? (I as any).loginChecks?.get(String(row.investor_user_id)) : undefined),
       kycExpiresAt: person?.reverification_due_at ?? null,
       amlStatus: person?.aml_status ?? null,
       amlCompletedAt: person?.aml_screened_at ?? null,
