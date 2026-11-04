@@ -225,6 +225,14 @@ describe("one record never leaks another", () => {
     expect(tab.checks[0]).toMatchObject({ identity: "complete", eligibility: "not_applicable", tax: "needs_investor", nextAction: "Complete tax form" });
     expect(JSON.stringify(tab.checks)).not.toContain("accreditation");
   });
+
+  it("uses the same exact-investment readiness on overview, profiles, investments and identity", async () => {
+    const payloads = await Promise.all(["overview", "profiles", "investments", "identity"].map((tab) => ops.investorTab(admin(), { id: INVESTOR_1, tab })));
+    const canonical = (payloads[0] as any).investmentReadiness;
+    expect(canonical.map((i: any) => i.onboardingId)).toEqual(["ob-1", "ob-2"]);
+    for (const payload of payloads) expect((payload as any).investmentReadiness).toEqual(canonical);
+    expect((payloads[3] as any).applications).toBeUndefined();
+  });
 });
 
 describe("investing profiles are never merged", () => {

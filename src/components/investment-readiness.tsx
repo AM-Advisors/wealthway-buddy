@@ -219,7 +219,7 @@ export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, 
   if (!supplied && q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
   if (!supplied && (q.isError || !q.data)) return null;
   const d = (supplied ?? q.data) as any;
-  if (!d?.readiness) return <LoadError title="Investment readiness unavailable" onRetry={() => void q.refetch()} />;
+  if (!d?.readiness) return <LoadError what="Investment readiness" error={new Error("Readiness could not be loaded.")} onRetry={() => void q.refetch()} />;
   const r = d.readiness;
   const subtitle = [d.fundName, d.amountCents ? `${money(d.amountCents)} investment` : null].filter(Boolean).join(" · ");
   return (
