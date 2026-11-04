@@ -15,7 +15,8 @@ describe("sign step tasks", () => {
       { key: "subscription_questionnaire", state: "valid" }, { key: "accreditation", state: "valid" },
       { key: "bsa_aml", state: "missing" }, { key: "tax_documentation", state: "valid" }, { key: "certifications", state: "missing" },
     ] });
-    expect(t.map((x) => x.key)).toEqual(["subscription_questionnaire", "accreditation", "bsa_aml", "tax_documentation", "certifications", "fees", "subscription_documents", "submit"]);
+    expect(t.map((x) => x.key)).toEqual(["subscription_questionnaire", "accreditation", "tax_documentation", "certifications", "fees", "subscription_documents", "submit"]);
+    expect(t.find(x => x.key === "subscription_questionnaire")?.state).toBe("todo");
   });
 
   it("locks documents until questionnaire and tax form are done", () => {
@@ -41,5 +42,18 @@ describe("sign step tasks", () => {
   it("maps the server error to Review & certify", () => {
     const t = buildSignTasks({ ...base, requirements: [{ key: "certifications", state: "missing" }] });
     expect(taskForError("Review & certify must be completed first.", t)).toBe("certifications");
+  });
+  it("omits inapplicable BSA and routes applicable work to the questionnaire", () => {
+    const requirements = [{ key: "bsa_aml", state: "not_applicable" }];
+    expect(buildSignTasks({ ...base, hasQuestionnaire: false, requirements }).some(t => t.key === "subscription_questionnaire")).toBe(false);
+    const tasks = buildSignTasks({ ...base, hasQuestionnaire: false, requirements: [{ key: "bsa_aml", state: "missing" }] });
+    expect(tasks.find(t => t.key === "subscription_questionnaire")?.state).toBe("todo");
+    expect(taskForError("Financial background must be completed first.", tasks)).toBe("subscription_questionnaire");
+  });
+  it("keeps financial review without relocking completed tax intake", () => {
+    const tasks = buildSignTasks({ ...base, requirements: [{ key: "subscription_questionnaire", state: "valid" }, { key: "bsa_aml", state: "review_required" }, { key: "tax_documentation", state: "missing" }] });
+    expect(tasks.find(t => t.key === "subscription_questionnaire")?.state).toBe("review");
+    expect(tasks.find(t => t.key === "tax_documentation")?.state).toBe("todo");
+    expect(tasks.find(t => t.key === "submit")?.state).toBe("locked");
   });
 });

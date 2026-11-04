@@ -47,9 +47,10 @@ export function buildSignTasks(input: {
   const done = (s: SignTaskState | null) => s === null || s === "complete";
 
   const q = input.hasQuestionnaire ? (fromReq(req("subscription_questionnaire")) ?? "complete") : null;
-  add("subscription_questionnaire", q);
+  const financial = fromReq(req("bsa_aml"));
+  const questionnaire = q === "todo" || financial === "todo" ? "todo" : q === "review" || financial === "review" ? "review" : q ?? financial;
+  add("subscription_questionnaire", questionnaire);
   add("accreditation", fromReq(req("accreditation")));
-  add("bsa_aml", fromReq(req("bsa_aml")));
   const tax = signed ? (req("tax_documentation") ? "complete" : null) : fromReq(req("tax_documentation"));
   add("tax_documentation", tax === "todo" && !done(q) ? "locked" : tax, tax === "todo" && !done(q) ? "Finish the questionnaire first" : undefined);
   add("certifications", fromReq(req("certifications")));
@@ -72,9 +73,10 @@ export function buildSignTasks(input: {
 export function taskForError(message: string, tasks: SignTask[]): SignTaskKey | null {
   const m = /^(.+?) must be completed first/i.exec(message.trim());
   if (!m) return null;
-  const label = m[1]!.toLowerCase();
+  const label = m[1]?.toLowerCase();
+  if (!label) return null;
   const alias: Record<string, SignTaskKey> = {
-    "review & certify": "certifications", "financial background": "bsa_aml", "tax form": "tax_documentation",
+    "review & certify": "certifications", "financial background": "subscription_questionnaire", "tax form": "tax_documentation",
     "accreditation": "accreditation", "subscription information": "subscription_questionnaire",
   };
   const key = alias[label];
