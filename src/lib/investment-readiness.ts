@@ -272,6 +272,8 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     } else if (input.outsideSubscription && (stage === "subscription" || OUTSIDE_SIGNED_ANSWERS.has(r.key)) && r.state === "missing") {
       m = { status: "complete", owner: null, action: null };
       reason = `Signed outside the platform on ${input.outsideSubscription.signedOn}; copy loaded by Harmonious.`;
+    } else if (r.key === "signature" && r.state === "missing" && input.requirements.some(req => req.key === "subscription_documents" && req.state !== "valid" && req.state !== "not_applicable")) {
+      m = { status: "not_started", owner: null, action: null };
     }
     items.push({
       key: r.key,
@@ -384,7 +386,7 @@ function stageStatus(items: ReadinessItem[]): ReadinessStatus {
   for (const s of ["blocked", "needs_fund_manager", "needs_investor", "needs_harmonious", "under_review"] as const) {
     if (live.some((i) => i.status === s)) return s;
   }
-  return live.some((i) => i.status === "complete") ? "in_progress" : "not_started";
+  return live.some((i) => i.status === "complete" || i.status === "in_progress") ? "in_progress" : "not_started";
 }
 
 export type ReadinessViewer = "staff" | "investor" | "manager";

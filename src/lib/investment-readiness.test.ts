@@ -105,6 +105,7 @@ describe("audit and tasks", () => {
     const plan = readinessTaskPlan(new Set(["subscription_documents"]), result);
     expect(plan.create.map(t => t.key)).not.toContain("subscription_documents");
     expect(plan.resolve).toContain("subscription_documents");
+    expect(item(result, "signature")).toMatchObject({ status: "not_started", owner: null, action: null });
     expect(result.closeReady).toBe(false);
   });
   it("automated transitions produce audit entries only when status changes", () => {
