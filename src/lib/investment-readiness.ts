@@ -109,7 +109,7 @@ export const REQUIREMENT_SOURCE: Record<string, string> = {
 };
 
 /** Missing requirements Harmonious (not the investor) must act on. */
-const HARMONIOUS_WHEN_MISSING = new Set<string>(["aml", "subscription_documents"]);
+const HARMONIOUS_WHEN_MISSING = new Set<string>(["aml"]);
 
 /** Fund-manager-safe high-level labels. Never evidence, scores, providers, TINs or documents. */
 const SAFE_LABEL: Record<ReadinessStage, Partial<Record<ReadinessStatus, string>>> = {
@@ -196,8 +196,9 @@ function fromRequirement(r: RequirementResult): Pick<ReadinessItem, "status" | "
   if (s === "not_applicable") return { status: "not_applicable", owner: null, action: null };
   if (s === "review_required") return { status: "under_review", owner: "harmonious", action: r.key === "tax_documentation" ? "Review uploaded tax form certification" : `Review ${r.label.toLowerCase()}` };
   if (s === "refresh_required") return { status: "needs_investor", owner: "investor", action: `Update ${r.label.toLowerCase()}` };
+  if (r.key === "subscription_documents") return { status: "in_progress", owner: null, action: null };
   if (HARMONIOUS_WHEN_MISSING.has(r.key)) {
-    return { status: "needs_harmonious", owner: "harmonious", action: r.key === "aml" ? "Complete compliance screening" : "Prepare subscription documents" };
+    return { status: "needs_harmonious", owner: "harmonious", action: "Complete compliance screening" };
   }
   const verb: Record<string, string> = {
     identity_verification: "Complete identity verification",
@@ -271,6 +272,8 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     } else if (input.outsideSubscription && (stage === "subscription" || OUTSIDE_SIGNED_ANSWERS.has(r.key)) && r.state === "missing") {
       m = { status: "complete", owner: null, action: null };
       reason = `Signed outside the platform on ${input.outsideSubscription.signedOn}; copy loaded by Harmonious.`;
+    } else if (r.key === "signature" && r.state === "missing" && input.requirements.some(req => req.key === "subscription_documents" && req.state !== "valid" && req.state !== "not_applicable")) {
+      m = { status: "not_started", owner: null, action: null };
     }
     items.push({
       key: r.key,
@@ -383,7 +386,7 @@ function stageStatus(items: ReadinessItem[]): ReadinessStatus {
   for (const s of ["blocked", "needs_fund_manager", "needs_investor", "needs_harmonious", "under_review"] as const) {
     if (live.some((i) => i.status === s)) return s;
   }
-  return live.some((i) => i.status === "complete") ? "in_progress" : "not_started";
+  return live.some((i) => i.status === "complete" || i.status === "in_progress") ? "in_progress" : "not_started";
 }
 
 export type ReadinessViewer = "staff" | "investor" | "manager";

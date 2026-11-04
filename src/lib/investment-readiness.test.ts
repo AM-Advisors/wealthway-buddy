@@ -98,6 +98,16 @@ describe("investment readiness engine", () => {
 });
 
 describe("audit and tasks", () => {
+  it("automatic subscription preparation is not assigned to a person or queued as routine work", () => {
+    const requirements = reqs({ sig: false }).map(r => r.key === "subscription_documents" ? { ...r, state: "missing" as const } : r);
+    const result = computeReadiness(input({}, requirements));
+    expect(item(result, "subscription_documents")).toMatchObject({ status: "in_progress", owner: null, action: null, blocking: true });
+    const plan = readinessTaskPlan(new Set(["subscription_documents"]), result);
+    expect(plan.create.map(t => t.key)).not.toContain("subscription_documents");
+    expect(plan.resolve).toContain("subscription_documents");
+    expect(item(result, "signature")).toMatchObject({ status: "not_started", owner: null, action: null });
+    expect(result.closeReady).toBe(false);
+  });
   it("automated transitions produce audit entries only when status changes", () => {
     const r = computeReadiness(input());
     const first = readinessTransitions({}, r);
