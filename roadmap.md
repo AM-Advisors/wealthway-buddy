@@ -1,5 +1,10 @@
 # Roadmap
 
+## Connected investor steps (2026-11-04)
+- [ ] Reuse exact-party details and questionnaire tax choices in later tax review without duplicate entry or invented confirmations.
+- [ ] Sequence subscription preparation before opening signing, preserving readiness and signed versions.
+- [ ] Run focused data-reuse regressions and verify fictional UI where available; no real signatures or emails.
+
 ## Subscription preparation availability error (2026-11-04)
 - [x] Replace the preparer's investor-ownership fee lookup with existing exact-investment access and current-version acceptance checks; investor acceptance/signing remain unchanged.
 - [x] 118 focused preparation, readiness, signing and investor-record tests passed; preview build OK.
