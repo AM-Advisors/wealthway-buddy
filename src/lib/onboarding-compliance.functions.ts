@@ -31,7 +31,14 @@ export const certifyTaxFormFn = createServerFn({ method: "POST" })
       acknowledgedRevision: z.string().trim().max(60),
     }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).certifyTaxForm(context.userId, { ...data, origin: originOf() }));
+  .handler(async ({ data, context }) => {
+    const result = await (await engine()).certifyTaxForm(context.userId, { ...data, origin: originOf() });
+    // The tax form is the last step before the fund documents: prepare them automatically.
+    const { autoPrepareSubscriptionDocuments, reconcileAfter } = await import("@/lib/investor-onboarding.server");
+    const documentsPrepared = await autoPrepareSubscriptionDocuments(context.userId, data.onboardingId);
+    if (documentsPrepared) await reconcileAfter([data.onboardingId], { actorUserId: context.userId, trigger: "autoPrepareAfterTaxForm" });
+    return Object.assign(result ?? {}, { documentsPrepared });
+  });
 
 export const submitBadActorFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
