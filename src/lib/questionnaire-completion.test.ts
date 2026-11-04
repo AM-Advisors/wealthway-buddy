@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { questionnaireCompletion } from "./questionnaire-completion";
 import { ACCREDITATION_QUESTION_KEY } from "./accreditation-step";
 import type { Question } from "./investor-onboarding-model";
+import { loadCompletionQuestions, questionnaireCompletionForRows } from "./questionnaire-completion.server";
 
 const questions: Question[] = [
   { key: "name", label: "Name", type: "text", required: true },
@@ -32,5 +33,42 @@ describe("questionnaire completion evidence", () => {
   it("does not fabricate a missing certification or accept an unavailable definition", () => {
     expect(questionnaireCompletion({ ...submitted, answers: { name: "Example investor", confirm: false } }).complete).toBe(false);
     expect(questionnaireCompletion({ ...submitted, questions: null }).complete).toBe(false);
+  });
+});
+
+describe("persisted questionnaire read-back", () => {
+  function database() {
+    const tables: Record<string, any[]> = {
+      offering_questionnaires: [{ offering_id: "fund", status: "published", version: 1, questions }],
+      fund_questionnaire_sections: [{ offering_id: "fund", status: "approved", version: 1, title: "Extra", questions: [{ key: "fs_fact", label: "Extra fact", required: true, type: "text" }] }],
+      investment_profiles: [{ id: "profile", profile_type: "individual" }],
+    };
+    let fail = false;
+    const d = { from(table: string) {
+      let rows = tables[table] ?? [];
+      const q: any = {
+        select: () => q,
+        in: (key: string, values: unknown[]) => { rows = rows.filter((r) => values.includes(r[key])); return q; },
+        eq: (key: string, value: unknown) => { rows = rows.filter((r) => r[key] === value); return q; },
+        order: () => q,
+        then: (resolve: any) => resolve({ data: rows, error: fail ? { message: "unavailable" } : null }),
+      };
+      return q;
+    } };
+    return { d, fail: () => { fail = true; } };
+  }
+  it("reads partial import as incomplete then saved submitted answers as complete across shared readers", async () => {
+    const { d } = database();
+    const row = { id: "investment", offering_id: "fund", investment_profile_id: "profile", questionnaire_version: 1, questionnaire_submitted_at: "2026-11-04T21:53:00Z", questionnaire_responses: { [ACCREDITATION_QUESTION_KEY]: "Net worth over $1 million" } as Record<string, unknown> };
+    expect((await questionnaireCompletionForRows(d, [row])).get(row.id)?.complete).toBe(false);
+    row.questionnaire_responses = { name: "Example investor", confirm: true, fs_fact: "Saved fact" };
+    expect((await questionnaireCompletionForRows(d, [row])).get(row.id)?.complete).toBe(true);
+    delete row.questionnaire_responses["fs_fact"];
+    expect((await questionnaireCompletionForRows(d, [row])).get(row.id)?.complete).toBe(false);
+  });
+  it("never treats a failed questionnaire read as an empty completed definition", async () => {
+    const db = database();
+    db.fail();
+    await expect(loadCompletionQuestions(db.d, ["fund"])).rejects.toThrow("could not be loaded");
   });
 });
