@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadError } from "@/components/load-error";
+import { taxPreviewMatches } from "@/lib/investor-step-prefill";
 import {
   certifyFn,
   certifyTaxFormFn,
@@ -344,7 +345,7 @@ export function TaxSignPanel({ onboardingId, done, locked = false, subscriberNam
       {q.data.tax.state !== "valid" && !q.data.tax.uploadedCopy && !q.data.tax.form && q.data.taxIntake.state !== "valid" ? (
         <TaxIntakeCard key={JSON.stringify(q.data.taxIntake.answers)} onboardingId={onboardingId} d={q.data} refresh={refresh} />
       ) : null}
-      <TaxFormSignaturePanel onboardingId={onboardingId} done={done} defaultName={subscriberName ?? null} />
+      <TaxFormSignaturePanel onboardingId={onboardingId} done={done} defaultName={q.data.tax.reviewDetails?.legalName || q.data.profileName || subscriberName || null} />
     </section>
   );
 }
@@ -357,20 +358,31 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
   const taxFn = useServerFn(certifyTaxFormFn);
   const docFn = useServerFn(myTaxDocumentUrlFn);
   const [legalName, setLegalName] = useState(defaultName ?? "");
+  const [nameEdited, setNameEdited] = useState(false);
+  useEffect(() => { if (!nameEdited && defaultName) setLegalName(defaultName); }, [defaultName, nameEdited]);
   const [tin, setTin] = useState("");
   const [foreignTin, setForeignTin] = useState("");
   const [sig, setSig] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [reviewedKey, setReviewedKey] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   const form = q.data?.tax.form;
+  const currentKey = JSON.stringify([onboardingId, form?.formType, form?.revision, legalName, tin, foreignTin]);
+  const currentKeyRef = useRef(currentKey);
+  currentKeyRef.current = currentKey;
+  const previewCurrent = taxPreviewMatches(reviewedKey, currentKey);
   const preview = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (!form) throw new Error("Complete your tax information first.");
-      return previewFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null } });
+      const key = currentKey;
+      const result = await previewFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null } });
+      return { ...result, key };
     },
     onSuccess: (r) => {
+      if (r.key !== currentKeyRef.current) return;
       const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
+      setReviewedKey(r.key);
       setPreviewUrl(URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })));
     },
     onError: (e: Error) => toast.error(e.message),
@@ -378,6 +390,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
   const sign = useMutation({
     mutationFn: () => {
       if (!form) throw new Error("Complete your tax information first.");
+      if (!previewCurrent) throw new Error("Review the updated tax form before signing.");
       return taxFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null, certifiedName: sig, acknowledgedRevision: form.revision } });
     },
     onSuccess: () => { toast.success(`${form?.title ?? "Tax form"} signed`); setTin(""); setForeignTin(""); setPreviewUrl(null); setUpdating(false); qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
@@ -410,7 +423,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
         <CardDescription>The official IRS {form.title} ({form.revision}), filled in with your details. Review it, then certify and sign.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div><Label>Name as shown on your tax return</Label><Input value={legalName} onChange={(e) => setLegalName(e.target.value)} maxLength={200} /></div>
+        <div><Label>Name as shown on your tax return</Label><Input value={legalName} onChange={(e) => { setNameEdited(true); setLegalName(e.target.value); }} maxLength={200} /></div>
         {d.tax.needsTin ? (
           <div><Label>{d.tax.tinKind === "ssn" ? "Social Security number" : "Employer identification number (EIN)"}</Label><Input value={tin} onChange={(e) => setTin(e.target.value)} inputMode="numeric" autoComplete="off" maxLength={11} type="password" /></div>
         ) : form.formType === "w8ben" ? (
@@ -419,7 +432,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
         <Button variant="outline" disabled={preview.isPending || legalName.trim().length < 2 || (d.tax.needsTin && tin.replace(/\D/g, "").length !== 9)} onClick={() => preview.mutate()}>
           {preview.isPending ? "Preparing…" : `Review ${form.title}`}
         </Button>
-        {previewUrl ? (
+        {previewUrl && previewCurrent ? (
           <>
             <iframe title={`${form.title} preview`} src={previewUrl} className="h-[70vh] w-full rounded-md border" />
             <a className="text-sm underline" href={previewUrl} target="_blank" rel="noreferrer">Open the form in a new tab</a>

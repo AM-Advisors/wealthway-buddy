@@ -13,6 +13,15 @@ const newInvestor = {
 };
 
 describe("QA sandbox mock server", () => {
+  it("reuses fictional tax details and saves only the fictional confirmation", () => {
+    const state = createQaState();
+    const view = handleQaServerCall("investorComplianceFn", { onboardingId: "qa-tax-investment" }, state) as any;
+    expect(view.tax.reviewDetails.legalName).toBe("Casey Alden");
+    expect(view.tax.state).toBe("missing");
+    handleQaServerCall("certifyTaxFormFn", { onboardingId: "qa-tax-investment", certifiedName: "Casey Alden" }, state);
+    expect((handleQaServerCall("investorComplianceFn", { onboardingId: "qa-tax-investment" }, state) as any).tax.state).toBe("valid");
+    expect(() => handleQaServerCall("investorComplianceFn", { onboardingId: "real-investment" }, state)).toThrow(QaBlockedError);
+  });
   it("saves and reloads fictional routine minimum without protected edits", () => {
     const state = createQaState("manager");
     handleQaServerCall("saveFundSetupFieldsFn", { offeringId: QA_FUND_ID, fields: { minInvestmentCents: 2500000 } }, state);

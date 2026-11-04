@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
+import { prepareThenOpen } from "@/lib/investor-step-prefill";
 import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
 import { confirmAccreditationStepFn } from "@/lib/accreditation-step.functions";
 import { ACCREDITATION_QUESTION_KEY, basisFromAnswer, evidenceForBasis, isAccreditationQuestion, selfCertificationAllowed } from "@/lib/accreditation-step";
@@ -7,7 +8,7 @@ import { recordEvidence } from "@/lib/accreditation.functions";
 import { ProfessionalRequestPanel } from "@/components/accreditation-professional-request";
 import standardQuestions from "@/lib/standard-investor-questionnaire.json";
 import { InvestorBankVerify } from "@/components/investor-bank-verify";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check } from "lucide-react";
@@ -676,6 +677,7 @@ const TASK_BADGE: Record<SignTaskState, { label: string; variant: "default" | "o
 };
 
 function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
+  const navigate = useNavigate();
   const questionnaireFn = useServerFn(saveQuestionnaireFn);
   const prepareFn = useServerFn(prepareSubscriptionDocumentsFn);
   const confirmFn = useServerFn(recordSubscriptionSignatureFn);
@@ -683,7 +685,12 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const [open, setOpen] = useState<SignTaskKey | null>(null);
   const [userPicked, setUserPicked] = useState(false);
   const saveQ = useAction(questionnaireFn, "Answers saved.", done);
-  const prepare = useAction(prepareFn, null, done);
+  const prepare = useMutation({
+    mutationFn: () => prepareThenOpen(Boolean(d.documentTemplateVersion), () => prepareFn({ data: { onboardingId } }), () => {
+      void navigate({ to: "/fund/$offeringId/documents", params: { offeringId: d.offering.id } });
+    }),
+    onError: (e: Error) => toast.error(e.message),
+  });
   const confirm = useMutation({
     mutationFn: (v: any) => (confirmFn as any)(v),
     onSuccess: () => { toast.success("Thank you. Harmonious will now review your subscription."); done(); },
@@ -756,8 +763,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
               {docs.length === 0 ? <li className="text-sm text-muted-foreground">The fund's documents are being prepared. We'll let you know when they're ready.</li> : null}
             </ol>
             {!signed && docs.some((x) => x.requiresSignature && !x.signed) ? (
-              <Button asChild onClick={() => { if (!d.documentTemplateVersion) prepare.mutate({ data: { onboardingId } } as any); }}>
-                <Link to="/fund/$offeringId/documents" params={{ offeringId: d.offering.id }}>Review &amp; Sign Documents</Link>
+              <Button disabled={prepare.isPending} onClick={() => prepare.mutate()}>
+                {prepare.isPending ? "Preparing documents…" : "Review & Sign Documents"}
               </Button>
             ) : null}
             <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it, this can take a minute.</p>

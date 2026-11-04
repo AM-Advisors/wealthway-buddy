@@ -42,6 +42,8 @@ import { rankMatches, validateQuickAdd, createNewBlocker } from "@/lib/investor-
 import { previewInvoiceFee } from "@/lib/invoice-fee-preview";
 import { fictionalFeeFacts, QA_FEE_ID } from "./fee-fixture";
 import { generatedDocumentReviewError } from "@/lib/fund-document-generation-policy";
+import { IRS_FORM_REVISIONS } from "@/lib/onboarding-compliance-model";
+import { taxReviewDetails } from "@/lib/investor-step-prefill";
 
 export type QaRole = "staff" | "manager";
 
@@ -56,6 +58,7 @@ export type QaState = {
   documentDraft: { created_by: string; version: number; self_serve_review_state: string; generation_issues: string[]; active: boolean } | null;
   investorCopies?: { id: string; fileName: string; kind: string; status: string; note: string | null; canReview: boolean }[];
   routineMinimum?: number;
+  taxSigned?: boolean;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -76,6 +79,7 @@ const KNOWN_FNS = [
   "getFundLinkFn",
   "uploadOnboardingDocForFn", "managerUploadReviewsFn", "managerReviewUploadFn", "managerUploadUrlFn",
   "getFundSetupOverview", "saveFundSetupFieldsFn",
+  "investorComplianceFn", "previewTaxFormFn", "certifyTaxFormFn", "myTaxDocumentUrlFn",
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -99,6 +103,21 @@ export class QaBlockedError extends Error {}
 /** Pure handler for one mocked server-function call. Throws Error with a user-facing message on failure. */
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
   switch (fnName) {
+    case "investorComplianceFn": {
+      if (data?.onboardingId !== "qa-tax-investment") throw new QaBlockedError("Only the fictional tax investment is available.");
+      return { profileName: "Casey Alden", profileType: "individual", taxIntake: { answers: { usPerson: "yes" }, questions: [], state: "valid" }, tax: { state: state.taxSigned ? "valid" : "missing", form: IRS_FORM_REVISIONS.w9, needsTin: true, tinKind: "ssn", uploadedCopy: null, reviewDetails: taxReviewDetails({ address_line1: "10 Fictional St", city: "Denver" }, { profile_type: "individual", legal_name: "Casey Alden" }), current: state.taxSigned ? { formType: "w9", revision: IRS_FORM_REVISIONS.w9.revision, tinMasked: "•••-••-6789" } : null } };
+    }
+    case "previewTaxFormFn": {
+      if (data?.onboardingId !== "qa-tax-investment") throw new QaBlockedError("Only the fictional tax investment is available.");
+      const pdf = "%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF";
+      return { pdfBase64: btoa(pdf), revision: IRS_FORM_REVISIONS.w9.revision };
+    }
+    case "certifyTaxFormFn": {
+      if (data?.onboardingId !== "qa-tax-investment" || data?.certifiedName !== "Casey Alden") throw new QaBlockedError("Only the fictional signer is available.");
+      state.taxSigned = true;
+      return { ok: true };
+    }
+    case "myTaxDocumentUrlFn": return { url: "about:blank" };
     case "getFundSetupOverview": return { canEdit: false, routineOnly: true, isStaff: false, offering: { displayName: QA_FUND_NAME, minInvestmentCents: state.routineMinimum ?? 10000000 }, economics: { canEdit: true, canApprove: true, status: "draft", terms: {}, classes: [] } };
     case "saveFundSetupFieldsFn": {
       if (data.offeringId !== QA_FUND_ID || Object.keys(data.fields ?? {}).some(k => k !== "minInvestmentCents")) throw new QaBlockedError("Protected or outside-fund edit blocked.");
