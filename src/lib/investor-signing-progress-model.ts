@@ -7,6 +7,8 @@ export type SigningProgressFacts = {
   stage: string;
   questionnaireSubmitted: boolean;
   questionnaireAnswered: number;
+  /** Required, visible questions still blank (accreditation excluded). Submitted only counts when this is 0. */
+  questionnaireMissingRequired?: number;
   taxFormType: string | null;
   taxFormSigned: boolean;
   documentsPrepared: boolean;
@@ -29,7 +31,7 @@ const TAX_LABEL: Record<string, string> = { w9: "W-9", w8ben: "W-8BEN", w8bene: 
 export const taxFormLabel = (t: string | null) => (t ? TAX_LABEL[t] ?? t.toUpperCase() : "Tax form");
 
 export function signingProgressRow(f: SigningProgressFacts): SigningProgressRow {
-  const questionnaire: StepState = f.questionnaireSubmitted ? "done" : f.questionnaireAnswered > 0 ? "in_progress" : "not_started";
+  const questionnaire: StepState = f.questionnaireSubmitted && !(f.questionnaireMissingRequired ?? 0) ? "done" : f.questionnaireAnswered > 0 ? "in_progress" : "not_started";
   const taxForm: StepState = f.taxFormSigned ? "done" : f.taxFormType ? "in_progress" : "not_started";
   const signature: StepState = f.signaturesCompleted > 0 ? "done" : f.documentsPrepared ? "in_progress" : "not_started";
   let nextStep: string;
