@@ -82,6 +82,13 @@ function ReadinessHeader({ r, title, subtitle, action }: { r: any; title: string
   );
 }
 
+/** Small accreditation-only detail under waiting statuses; mirrors the same canonical states. */
+function accreditationDetail(i: { status: string; action?: string | null }) {
+  if (i.status === "under_review" || i.status === "needs_harmonious") return "Accreditation verification awaiting review";
+  if (i.status === "needs_investor") return i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed";
+  return "Accreditation needs attention";
+}
+
 export function AttentionNeeded({ r, viewer, onOpenItem, fundingApprovalAction }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   const list = blockersOf(r);
   if (!list.length || r.terminal) return null;
