@@ -45155,6 +45155,7 @@ export type Database = {
           bytes: number
           chunk_count: number
           created_at: string
+          device_id: string | null
           first_path: string | null
           id: string
           kind: string
@@ -45170,6 +45171,7 @@ export type Database = {
           bytes?: number
           chunk_count?: number
           created_at?: string
+          device_id?: string | null
           first_path?: string | null
           id?: string
           kind: string
@@ -45185,6 +45187,7 @@ export type Database = {
           bytes?: number
           chunk_count?: number
           created_at?: string
+          device_id?: string | null
           first_path?: string | null
           id?: string
           kind?: string

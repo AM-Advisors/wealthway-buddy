@@ -2626,6 +2626,13 @@
       "when": 1793754431890,
       "tag": "0374_allow_fund_team_questionnaire_source",
       "breakpoints": true
+    },
+    {
+      "idx": 375,
+      "version": "7",
+      "when": 1793771713860,
+      "tag": "0375_session_recordings_device_link",
+      "breakpoints": true
     }
   ]
 }

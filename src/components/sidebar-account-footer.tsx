@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, ShieldCheck, Sun, UserRound, ExternalLink } from "lucide-react";
+import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, ShieldCheck, Sun, UserRound, ExternalLink, Video } from "lucide-react";
 import { getNavigation } from "@/lib/navigation";
 import { useThemeMode, type ThemeMode } from "@/lib/theme-mode";
 
@@ -132,7 +132,10 @@ export function SidebarAccountFooter({
                 ))}
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => onSignOut()} className="flex items-center gap-2">
+              <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("hm:record-screen"))} className="flex items-center gap-2">
+                <Video className="size-4" /> Record my screen
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => { window.dispatchEvent(new Event("hm:flush-replay")); onSignOut(); }} className="flex items-center gap-2">
                 <LogOut className="size-4" /> Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>

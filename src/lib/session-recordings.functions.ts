@@ -8,7 +8,7 @@ const srv = () => import("@/lib/session-recordings.server");
 // Recording runs before identity verification too, so people stuck at sign-in can be helped.
 export const startRecordingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .validator((d) => z.object({ kind: z.enum(["replay", "screen"]), path, userAgent: z.string().max(300).optional() }).parse(d))
+  .validator((d) => z.object({ kind: z.enum(["replay", "screen"]), path, userAgent: z.string().max(300).optional(), deviceId: z.string().max(100).optional() }).parse(d))
   .handler(async ({ context, data }) => (await srv()).startRecording(context.userId, data));
 
 export const appendReplayChunkFn = createServerFn({ method: "POST" })
