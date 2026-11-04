@@ -97,7 +97,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem, fundingApprovalAction }
             </div>
             <div className="min-w-0 space-y-1 sm:text-left">
               <p className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</p>
-              {i.key === "accreditation" && viewer !== "investor" ? <p className="break-words text-xs text-muted-foreground">{i.status === "under_review" || i.status === "needs_harmonious" ? "Accreditation verification awaiting review" : i.status === "needs_investor" ? i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed" : "Accreditation needs attention"}</p> : null}
+              {i.key === "accreditation" && viewer !== "investor" ? <p className="break-words text-xs text-muted-foreground">{accreditationDetail(i)}</p> : null}
             </div>
             {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
