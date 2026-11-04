@@ -921,7 +921,24 @@ export async function saveQuestionnaire(
   });
   const flagged = input.submit ? highRiskYes(questions, answers) : [];
   if (flagged.length) await holdForHighRiskDisclosure(row, actor.userId, flagged);
-  return { saved: true, underReview: flagged.length > 0 };
+  const prepared = input.submit && !flagged.length ? await autoPrepareSubscriptionDocuments(actor.userId, row.id) : false;
+  return { saved: true, underReview: flagged.length > 0, documentsPrepared: prepared };
+}
+
+/**
+ * Once every earlier step is done, snapshot the fund documents for signing automatically,
+ * so nobody has to press Prepare documents. Uses the same checks as the manual action;
+ * never signs. Returns false (no error) when something is still outstanding.
+ */
+export async function autoPrepareSubscriptionDocuments(userId: string, onboardingId: string): Promise<boolean> {
+  try {
+    const { assertFeesAccepted } = await import("@/lib/investor-extras.server");
+    await assertFeesAccepted(userId, onboardingId);
+    const r: any = await prepareSubscriptionDocuments(userId, onboardingId);
+    return Boolean(r?.alreadyPrepared || r?.templateVersion);
+  } catch {
+    return false;
+  }
 }
 
 /** Manager, fund team or Harmonious may fill in the investor's answers before signing. */
