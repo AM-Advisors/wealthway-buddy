@@ -40,6 +40,9 @@ import { ClassAssignmentCard } from "@/components/fund-setup-phase3";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { InvestmentChecklist } from "@/components/investment-readiness";
 import { OnboardingProofReview } from "@/components/onboarding-proof-review";
+import { ACCREDITATION_QUESTION_KEY } from "@/lib/accreditation-step";
+import { setAccreditationStatusFn } from "@/lib/accreditation-step.functions";
+import standardQuestions from "@/lib/standard-investor-questionnaire.json";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
   const recordTo = useInvestorRecordRoute();
@@ -441,6 +444,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
                 {a.expiresAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Expires</dt><dd>{fmtDate(a.expiresAt)}</dd></div>}
                 {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string; reviewable?: boolean }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p>{"reviewable" in doc && <OnboardingProofReview documentId={doc.id} reviewable={!!doc.reviewable} onDone={() => q.refetch()} />}</div>)}
               </dl>; })() : <p className="text-muted-foreground">Accreditation has not been completed.</p>}
+              {d.canVerifyAccreditation && id ? <SetAccreditationStatus onboardingId={id} onChanged={() => void q.refetch()} /> : null}
             </section>
           </>}
           <section>
@@ -501,6 +505,46 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
           {termAssociation === "class" ? <ClassAssignmentCard offeringId={fundId} onboardingId={id} /> : <SideLetterRegistry fundId={fundId} onboardingId={id} />}
         </DialogContent>
       </Dialog>}
+    </div>
+  );
+}
+
+/** Staff or this fund's managers record the accredited-investor category and its status for the investor. */
+function SetAccreditationStatus({ onboardingId, onChanged }: { onboardingId: string; onChanged: () => void }) {
+  const setFn = useServerFn(setAccreditationStatusFn);
+  const options: string[] = ((standardQuestions as any).questions ?? []).find((q: any) => q.key === ACCREDITATION_QUESTION_KEY)?.options ?? [];
+  const [category, setCategory] = useState("");
+  const [decision, setDecision] = useState<"approved" | "review">("approved");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="mt-3 space-y-2 rounded-md border bg-muted/30 p-3">
+      <p className="text-sm font-medium">Set accreditation status</p>
+      <p className="text-xs text-muted-foreground">Records the accredited-investor category and its status for this investor. The person who set it and any note are saved with the record, and an investor attestation is never fabricated.</p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <select aria-label="Accreditation category" className="min-h-10 rounded-md border bg-background px-3 text-sm" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="">Choose category</option>
+          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select aria-label="Status" className="min-h-10 rounded-md border bg-background px-3 text-sm" value={decision} onChange={(e) => setDecision(e.target.value as "approved" | "review")}>
+          <option value="approved">Verified</option>
+          <option value="review">Under review</option>
+        </select>
+      </div>
+      <Input aria-label="Note for the record" placeholder="Note for the record (optional)" value={notes} maxLength={600} onChange={(e) => setNotes(e.target.value)} />
+      <Button size="sm" disabled={busy || category.length < 2} onClick={async () => {
+        setBusy(true);
+        try {
+          await setFn({ data: { onboardingId, category, decision, notes: notes.trim() } });
+          toast.success(decision === "approved" ? "Accreditation recorded as verified." : "Accreditation recorded as under review.");
+          setNotes("");
+          onChanged();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "The accreditation status could not be saved.");
+        } finally {
+          setBusy(false);
+        }
+      }}>{busy ? "Saving…" : "Save accreditation status"}</Button>
     </div>
   );
 }
