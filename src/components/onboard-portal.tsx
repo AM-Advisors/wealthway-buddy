@@ -29,7 +29,7 @@ import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-porta
 import { cn } from "@/lib/utils";
 import { kycFieldsFor } from "@/lib/kyc-fields";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
-import { CertificationsPanel, EligibilityPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { CertificationsPanel, EligibilityPanel, FinancialBackgroundPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 import { OnboardingUploadsCard } from "@/components/investor-onboarding-extras";
 import { isReconciledFunding } from "@/lib/funding-status";
 
@@ -147,7 +147,10 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
         </li>
       </ol>
 
-      <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
+      {!d.complete ? <section aria-label="Investor questionnaire" className="space-y-4">
+        <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
+        <FinancialBackgroundPanel onboardingId={onboardingId} done={refresh} />
+      </section> : null}
 
 
       {view === "verification" ? <VerificationStep d={d} onboardingId={onboardingId} done={refresh} /> : null}

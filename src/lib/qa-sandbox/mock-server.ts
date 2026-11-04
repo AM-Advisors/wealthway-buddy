@@ -44,6 +44,7 @@ import { fictionalFeeFacts, QA_FEE_ID } from "./fee-fixture";
 import { generatedDocumentReviewError } from "@/lib/fund-document-generation-policy";
 import { IRS_FORM_REVISIONS } from "@/lib/onboarding-compliance-model";
 import { taxReviewDetails } from "@/lib/investor-step-prefill";
+import { amlFields, evaluateAml } from "@/lib/onboarding-intake-model";
 
 export type QaRole = "staff" | "manager";
 
@@ -59,6 +60,8 @@ export type QaState = {
   investorCopies?: { id: string; fileName: string; kind: string; status: string; note: string | null; canReview: boolean }[];
   routineMinimum?: number;
   taxSigned?: boolean;
+  financialAnswers?: Record<string, string>;
+  financialReview?: string;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -79,7 +82,7 @@ const KNOWN_FNS = [
   "getFundLinkFn",
   "uploadOnboardingDocForFn", "managerUploadReviewsFn", "managerReviewUploadFn", "managerUploadUrlFn",
   "getFundSetupOverview", "saveFundSetupFieldsFn",
-  "investorComplianceFn", "previewTaxFormFn", "certifyTaxFormFn", "myTaxDocumentUrlFn",
+  "investorComplianceFn", "previewTaxFormFn", "certifyTaxFormFn", "myTaxDocumentUrlFn", "submitAmlFn",
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -104,8 +107,19 @@ export class QaBlockedError extends Error {}
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
   switch (fnName) {
     case "investorComplianceFn": {
+      if (data?.onboardingId === "qa-financial-investment") return {
+        aml: { state: state.financialReview === "review_required" ? "review_required" : state.financialReview ? "valid" : "missing", answers: state.financialAnswers ?? { occupation: "Engineer" }, fields: amlFields({}, { profileType: "individual", commitmentCents: 25000000, known: { citizenship: "US", residence: "US" }, answers: state.financialAnswers as any }) },
+      };
       if (data?.onboardingId !== "qa-tax-investment") throw new QaBlockedError("Only the fictional tax investment is available.");
       return { profileName: "Casey Alden", profileType: "individual", taxIntake: { answers: { usPerson: "yes" }, questions: [], state: "valid" }, tax: { state: state.taxSigned ? "valid" : "missing", form: IRS_FORM_REVISIONS.w9, needsTin: true, tinKind: "ssn", uploadedCopy: null, reviewDetails: taxReviewDetails({ address_line1: "10 Fictional St", city: "Denver" }, { profile_type: "individual", legal_name: "Casey Alden" }), current: state.taxSigned ? { formType: "w9", revision: IRS_FORM_REVISIONS.w9.revision, tinMasked: "•••-••-6789" } : null } };
+    }
+    case "submitAmlFn": {
+      if (data?.onboardingId !== "qa-financial-investment" || data?.certifiedName !== "Casey Alden") throw new QaBlockedError("Only the fictional financial questionnaire is available.");
+      const result = evaluateAml({}, { profileType: "individual", commitmentCents: 25000000, known: { citizenship: "US", residence: "US" }, answers: data.answers });
+      if (!result.complete) throw new Error("Please answer every question shown.");
+      state.financialAnswers = { ...data.answers };
+      state.financialReview = result.reviewStatus;
+      return { ok: true, reviewStatus: result.reviewStatus };
     }
     case "previewTaxFormFn": {
       if (data?.onboardingId !== "qa-tax-investment") throw new QaBlockedError("Only the fictional tax investment is available.");

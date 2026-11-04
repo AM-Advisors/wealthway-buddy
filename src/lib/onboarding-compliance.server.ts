@@ -4,6 +4,7 @@
  * functions after the caller's access to the onboarding is checked.
  */
 import { usPersonFromVerification } from "@/lib/subscription-prefill";
+import { financialBackgroundKnown } from "@/lib/investor-financial-background";
 import { taxIntakeDefaults, taxReviewDetails } from "@/lib/investor-step-prefill";
 import { pendingTaxUpload, taxStateWithUpload, type TaxUpload } from "@/lib/tax-upload-state";
 import {
@@ -444,7 +445,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
   const policy = await amlPolicy(ob.offering_id);
   const wording = await wordingMap();
   const preflight = await onboardingPreflight(ob.id);
-  const known = { citizenship: person?.citizenship_country ?? null, residence: person?.residence_country ?? null, occupation: null, businessNature: null };
+  const known = financialBackgroundKnown(person, profile, ob.questionnaire_responses ?? {});
   const { data: amlLatest } = await d
     .from("compliance_questionnaire_responses")
     .select("answers, review_status")
@@ -478,6 +479,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
     aml: {
       state: r.amlState.state,
       fields: amlFields(policy, { profileType: profile.profile_type, commitmentCents: r.commitmentCents, known, answers: (amlLatest?.[0]?.answers ?? {}) as any }),
+      answers: amlLatest?.[0]?.answers ?? {},
       submitted: Boolean(amlLatest?.[0]),
     },
     demographics: { submitted: Boolean(demo?.[0]) },
@@ -692,7 +694,7 @@ export async function submitAml(userId: string, input: { onboardingId: string; a
   const facts = {
     profileType: profile.profile_type,
     commitmentCents: Number(obRow?.accepted_amount_cents ?? obRow?.requested_amount_cents ?? 0) || null,
-    known: { citizenship: person?.citizenship_country ?? null, residence: person?.residence_country ?? null, occupation: null, businessNature: null },
+    known: financialBackgroundKnown(person, profile, ob.questionnaire_responses ?? {}),
     answers: input.answers as any,
   };
   const ev = evaluateAml(policy, facts);

@@ -1,5 +1,11 @@
 # Roadmap
 
+## Applicable financial background within investor questionnaire (2026-11-04)
+- [x] Group applicable financial background inside Investor questionnaire, not a separate Sign task or Verification form. Reuse exact-party citizenship/residence/occupation/business nature and current compliance answers; required-answer counter excludes optional questions. Staff BSA records remain private.
+- [x] Conditional source-of-funds/wealth follow-ups appear before save; existing server risk review and investor certification stay intact. No unsupported compliance exemption introduced.
+- [x] 100 focused tests passed; actual financial questionnaire fictional saved occupation → conditional fields → confirmation → completed panel removal verified on desktop/440px without runtime errors or overflow. Preview build OK; no live records/emails changed.
+- [ ] Durable complete investor questionnaire and signatures require independently isolated synthetic QA; fictional financial-panel verification is not full journey acceptance. Not published.
+
 ## Outside-signed subscription review (2026-11-04)
 - [x] Share outside-signing facts between investor steps, readiness and protected approval checks; conditionally advance completed subscriptions to manager review after saves.
 - [x] Make the checklist approval button open confirmation directly, derive its availability from canonical facts and refresh related screens after saves/approval.

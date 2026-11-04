@@ -13,6 +13,13 @@ const newInvestor = {
 };
 
 describe("QA sandbox mock server", () => {
+  it("saves and reads fictional financial answers through the protected model only", () => {
+    const state = createQaState();
+    const answers = { occupation: "Engineer", sourceOfFunds: "employment_income", fundsOriginCountry: "US", thirdPartyFunding: "no", politicallyExposed: "no", expectedActivity: "single_investment" };
+    handleQaServerCall("submitAmlFn", { onboardingId: "qa-financial-investment", certifiedName: "Casey Alden", answers }, state);
+    expect((handleQaServerCall("investorComplianceFn", { onboardingId: "qa-financial-investment" }, state) as any).aml).toMatchObject({ state: "valid", answers });
+    expect(() => handleQaServerCall("submitAmlFn", { onboardingId: "real-investment", certifiedName: "Casey Alden", answers }, state)).toThrow(QaBlockedError);
+  });
   it("reuses fictional tax details and saves only the fictional confirmation", () => {
     const state = createQaState();
     const view = handleQaServerCall("investorComplianceFn", { onboardingId: "qa-tax-investment" }, state) as any;

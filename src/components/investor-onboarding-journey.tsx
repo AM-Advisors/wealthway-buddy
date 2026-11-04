@@ -444,8 +444,8 @@ function QuestionUpload({ fundId, value, onUploaded }: { fundId: string | null; 
   );
 }
 
-function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboardingId: string; done: boolean; locked: boolean; onSave: (answers: Record<string, string>, submit: boolean) => void; saving: boolean }) {
-  const questions: any[] = d.questionnaire.questions ?? [];
+function QuestionnaireForm({ d, done, locked, onSave, saving, financialBackground }: { d: any; onboardingId: string; done: boolean; locked: boolean; onSave: (answers: Record<string, string>, submit: boolean) => void; saving: boolean; financialBackground?: React.ReactNode }) {
+  const questions: any[] = d.questionnaire?.questions ?? [];
   const saved = (d.questionnaireResponses ?? {}) as Record<string, unknown>;
   const [open, setOpen] = useState(!done);
   const [answers, setAnswers] = useState<Record<string, string>>(() => Object.fromEntries(questions.map((q) => [q.key, saved[q.key] == null ? "" : String(saved[q.key])])));
@@ -508,7 +508,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium">Investor questionnaire</p>
-          <p className="text-xs text-muted-foreground">{done ? "Your answers are saved." : toAsk.length ? `${toAsk.length} question${toAsk.length === 1 ? "" : "s"} to answer · page ${pg + 1} of ${pages}` : "Everything is filled in. Check it and submit."}</p>
+          <p className="text-xs text-muted-foreground">{done ? "Your answers are saved." : missing.length ? `${missing.length} required answer${missing.length === 1 ? "" : "s"} remaining · page ${pg + 1} of ${pages}` : "Everything required is filled in. Check it and submit."}</p>
         </div>
         {done && !locked ? <Button variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>{open ? "Close" : "Review answers"}</Button> : done ? <Badge>Complete</Badge> : null}
       </div>
@@ -542,6 +542,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
           ) : null}
         </fieldset>
       ) : null}
+      {financialBackground}
     </div>
   );
 }
@@ -731,7 +732,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const body = (k: SignTaskKey) => {
     switch (k) {
       case "subscription_questionnaire":
-        return <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} />;
+        return <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} financialBackground={<FinancialBackgroundPanel onboardingId={onboardingId} done={done} />} />;
       case "accreditation":
         return <AccreditationStep d={d} onboardingId={onboardingId} questionnaireDone={questionnaireDone} done={done} />;
       case "bsa_aml":
