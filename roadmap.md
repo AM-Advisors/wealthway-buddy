@@ -2,7 +2,8 @@
 
 ## Document-open analytics (2026-11-04)
 - [x] Instrument existing investor fund document render, successful tax preview and issued signing-session handlers; category/evidence only, no recipient, record IDs or URLs.
-- [ ] Per-investor sent/opened/unsigned matching cannot be supplied by anonymous visit analytics; no cross-visit identity or email opens are available. Existing signature records remain authoritative. No new directory or guessed open statuses.
+- [x] One event catalog registered and validated; 40 document/signing/prefill regressions passed, preview build OK. Existing legal readership already records named source access separately.
+- [ ] After-send exact-investor unsigned matching remains unimplemented; anonymous visit analytics cannot supply cross-visit identity or email opens. Existing readership and signature records need a separately authorized exact-record projection; collection landing remains unverified until published use. No new directory or guessed open statuses.
 
 ## Pre-account subscription emails (2026-11-04)
 - [x] Send prepared subscription requests to the recorded investor email with their authorized personal invitation when no account exists; manual sends retain both invite and document request.
