@@ -42,6 +42,30 @@ describe("Attention Needed", () => {
   });
 });
 
+describe("accreditation waiting detail", () => {
+  const withAccreditation = {
+    ...base,
+    items: [...base.items, { key: "accreditation", stage: "subscription", label: "Provide accreditation information", status: "needs_investor", owner: "investor", required: true }],
+  };
+  it("shows the accreditation detail to staff in Attention Needed", () => {
+    const h = html(<AttentionNeeded r={withAccreditation} viewer="staff" />);
+    expect(h).toContain("Accreditation information or proof needed");
+  });
+  it("hides the accreditation detail from investors", () => {
+    const h = html(<AttentionNeeded r={withAccreditation} viewer="investor" />);
+    expect(h).not.toContain("Accreditation information or proof needed");
+  });
+  it("shows the same detail under the journey item in Investor 360", () => {
+    const h = html(<StageJourney r={withAccreditation} viewer="staff" defaultOpen="subscription" />);
+    expect(h).toContain("Accreditation information or proof needed");
+  });
+  it("says verification awaits review when proof is submitted", () => {
+    const underReview = { ...withAccreditation, items: withAccreditation.items.map((i: any) => i.key === "accreditation" ? { ...i, status: "under_review" } : i) };
+    const h = html(<StageJourney r={underReview} viewer="staff" defaultOpen="subscription" />);
+    expect(h).toContain("Accreditation verification awaiting review");
+  });
+});
+
 describe("stage timeline", () => {
   it("expands and collapses one stage at a time", () => {
     expect(toggleStage(null, "tax")).toBe("tax");
