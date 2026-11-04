@@ -2,7 +2,7 @@
 
 ## Subscription preparation availability error (2026-11-04)
 - [x] Replace the preparer's investor-ownership fee lookup with existing exact-investment access and current-version acceptance checks; investor acceptance/signing remain unchanged.
-- [ ] Run focused regressions and check preview diagnostics.
+- [x] 118 focused preparation, readiness, signing and investor-record tests passed; preview build OK.
 - [ ] Authenticated preparation and Chris's signing read-back require independently isolated synthetic QA; no real records, emails or signatures used for testing. Not published.
 
 ## Government ID fund-card clarity
