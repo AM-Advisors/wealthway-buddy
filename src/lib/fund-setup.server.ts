@@ -667,7 +667,7 @@ export async function saveEconomics(
     if (!current) fail("That economics version was not found.");
     const error = economicsEditError(current);
     if (error) fail(error);
-    const { data } = await db()
+    const { data, error: saveError } = await db()
       .from("fund_economics_versions")
       .update({
         terms: input.terms,
@@ -680,6 +680,8 @@ export async function saveEconomics(
       .eq("id", input.versionId)
       .select("*")
       .single();
+    if (saveError || !data) fail("The fees and terms could not be saved.");
+    await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id);
     return data;
   }
 

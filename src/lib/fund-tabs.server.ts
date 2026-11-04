@@ -210,6 +210,7 @@ export async function setFees(uid: string, fundId: string, f: { managementFeePct
   }
   const { data: request, error } = await d.from("fund_fee_terms").insert({ ...row, status: "pending_approval" }).select("id").single();
   if (error || !request) throw new Error("The fee change could not be recorded.");
+  await (await import("./fund-review-notify.server")).notifyFundReview("fee_change", request.id);
   await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId, ref: request.id, title: "Fund fee terms", status: "requested", actorId: uid });
   return { applied: false };
 }

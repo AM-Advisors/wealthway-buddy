@@ -274,12 +274,15 @@ const ensureLaunchLink = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/fund-onboarding-link.server", () => ({ ensureFundLaunchLink: ensureLaunchLink }));
 vi.mock("@/lib/drive.server", () => ({ onFundLaunched: vi.fn(async () => {}) }));
 vi.mock("@/lib/fund-alerts-kick.server", () => ({ kickFundAlerts: vi.fn(async () => {}) }));
+const notifyReview = vi.hoisted(() => vi.fn(async () => ({ sent: true })));
+vi.mock("@/lib/fund-review-notify.server", () => ({ notifyFundReview: notifyReview }));
 
 const server = await import("@/lib/fund-setup.server");
 const model = await import("@/lib/fund-setup-model");
 
 beforeEach(() => {
   writes = [];
+  notifyReview.mockClear();
   ensureLaunchLink.mockReset();
   ensureLaunchLink.mockResolvedValue(`https://app.harmonious.co/join/${"a".repeat(43)}`);
 });
@@ -397,6 +400,11 @@ describe("launch gate", () => {
 });
 
 describe("document and economics history", () => {
+  it("emails the approver after updating a pending fee or carry draft", async () => {
+    const draft = await server.saveEconomics(MANAGER_A, { setupId: SETUP_A, versionId: "econ-v2", terms: { managementFeePct: 3, carryPct: 20 } });
+    expect(draft.status).toBe("draft");
+    expect(notifyReview).toHaveBeenCalledExactlyOnceWith("terms", "econ-v2");
+  });
   it("lets the exact-fund manager create a new fees draft", async () => {
     const draft = await server.saveEconomics(MANAGER_A, { setupId: SETUP_A, terms: { managementFeePct: 3 } });
     expect(draft.status).toBe("draft");
