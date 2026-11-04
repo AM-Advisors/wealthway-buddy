@@ -19,4 +19,9 @@ describe("investor progress dashboard", () => {
   it("held investments say so", () => {
     expect(signingProgressRow({ ...base, blocked: true }).nextStep).toMatch(/^On hold for review/);
   });
+  it("a submitted questionnaire with required blanks is not complete", () => {
+    const r = signingProgressRow({ ...base, questionnaireSubmitted: true, questionnaireAnswered: 1, questionnaireMissingRequired: 24, taxFormType: "w9" });
+    expect(r.questionnaire).toBe("in_progress");
+    expect(r.nextStep).toBe("Investor submits the questionnaire (draft saved)");
+  });
 });
