@@ -1078,6 +1078,8 @@ export async function prepareSubscriptionDocuments(userId: string, onboardingId:
   const { actor, row } = access;
   const prepRole = access.role === "staff" ? "harmonious" : access.role;
   if (row.executed_snapshot) return { alreadyPrepared: true };
+  if (row.removed_at) fail("This investment is no longer available.");
+  if (row.document_template_version) return { alreadyPrepared: true };
 
   const facts = await gatherFacts(row);
   const missing = outstandingRequirements(facts.requirements).filter(
@@ -2700,9 +2702,18 @@ export async function readinessForMany(rows: any[]) {
  */
 export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { actorUserId: string | null; trigger: string }) {
   const { readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
-  const row = await onboardingRow(onboardingId);
-  const { result, facts } = await computeReadinessFor(row);
+  let row = await onboardingRow(onboardingId);
+  let { result, facts } = await computeReadinessFor(row);
   const blocking = (await openExceptions(row.id)).filter(e => e.severity === "blocking").length;
+  // Canonical mutation/webhook completion, never a page read or separate team task.
+  const { shouldAutoPrepareSubscription } = await import("./subscription-auto-prepare");
+  if (shouldAutoPrepareSubscription({ stage: row.stage, removed: Boolean(row.removed_at), prepared: Boolean(row.document_template_version || row.executed_snapshot), hasInvestor: Boolean(row.investor_user_id), blockingExceptions: blocking, requirements: facts.requirements })) {
+    const prepared = await autoPrepareSubscriptionDocuments(row.investor_user_id, row.id);
+    if (prepared) {
+      row = await onboardingRow(onboardingId);
+      ({ result, facts } = await computeReadinessFor(row));
+    }
+  }
   await advanceSubscriptionToReview(row, facts.requirements, blocking, ctx);
   const { shouldAdvanceVerifiedInvestor } = await import("./verification-auto-advance");
   if (shouldAdvanceVerifiedInvestor(row.stage, facts.requirements, Boolean(row.removed_at))) {

@@ -784,7 +784,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
             </ol>
             {!signed && docs.some((x) => x.requiresSignature && !x.signed) ? (
               <Button disabled={prepare.isPending} onClick={() => prepare.mutate()}>
-                {prepare.isPending ? "Preparing documents…" : "Review & Sign Documents"}
+                {prepare.isPending ? "Opening documents…" : "Review & Sign Documents"}
               </Button>
             ) : null}
             <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it, this can take a minute.</p>

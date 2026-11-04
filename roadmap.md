@@ -1,5 +1,11 @@
 # Roadmap
 
+## Automatic subscription preparation (2026-11-04)
+- [x] Prepare through canonical mutation/webhook reconciliation, including final fee acceptance; retain access, review, signature and funding checks and prepared versions.
+- [x] Remove routine preparation tasks and staff preparation button; signing retains a defensive checked opening path.
+- [ ] Run focused regressions and fictional shared-checklist verification.
+- [ ] Durable personalized document/signing read-back requires independently isolated synthetic signing QA; not published.
+
 ## Chris’s completed W-9 status (2026-11-04)
 - [x] Reuse current exact-profile certified tax routing when legacy tax facts are absent; retain changed answers, review, expiration and supersession boundaries. Chris’s certified W-9 read back at 19:05:55 UTC with no legacy tax-fact row, explaining both false tax tasks.
 - [x] 80 focused regressions passed; shared fictional staff checklist shows Tax complete without duplicate tax actions on desktop/440px, no runtime errors or overflow. Preview build OK. No live answers, signatures or emails changed.

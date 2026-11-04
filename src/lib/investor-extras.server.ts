@@ -182,6 +182,8 @@ export async function acceptFees(userId: string, onboardingId: string, termsId: 
     terms: { management_fee_pct: t.management_fee_pct, management_fee_basis: t.management_fee_basis, carry_pct: t.carry_pct, hurdle_pct: t.hurdle_pct, notes: t.notes },
   });
   if (error && !String(error.message).includes("duplicate")) throw new Error(error.message);
+  const { reconcileAfter } = await import("./investor-onboarding.server");
+  await reconcileAfter([ob.id], { actorUserId: userId, trigger: "fees_accepted" });
   return { ok: true };
 }
 

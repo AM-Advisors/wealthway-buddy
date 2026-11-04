@@ -2,7 +2,7 @@
 export type OpenTarget =
   | { kind: "review"; section: "accreditation" }
   | { kind: "tab"; tab: "overview" | "details" | "documents" }
-  | { kind: "action"; action: "send_tax_form" | "prepare_documents" }
+  | { kind: "action"; action: "send_tax_form" }
   | { kind: "fund"; area: "approvals" | "banking" }
   | { kind: "ops_onboarding" };
 
@@ -13,7 +13,7 @@ export function openTargetFor(key: string): OpenTarget {
       return { kind: "tab", tab: "details" };
     // A copy is never certification: the completing step is the investor signing their tax form in Sign.
     case "tax_documentation": case "tax_classification": return { kind: "action", action: "send_tax_form" };
-    case "subscription_documents": return { kind: "action", action: "prepare_documents" };
+    case "subscription_documents": return { kind: "tab", tab: "documents" };
     case "accreditation": return { kind: "review", section: "accreditation" };
     case "funding": return { kind: "fund", area: "banking" };
     case "approved_to_fund": return { kind: "tab", tab: "overview" };
@@ -26,7 +26,7 @@ export function openLabelFor(key: string, owner: string | null | undefined): str
   const t = openTargetFor(key);
   if (key === "aml") return "Open screening review";
   if (t.kind === "review") return "Review accreditation";
-  if (t.kind === "action") return t.action === "send_tax_form" ? "Send tax form to sign" : "Prepare documents";
+  if (t.kind === "action") return "Send tax form to sign";
   if (t.kind === "fund") return t.area === "approvals" ? "Review accreditation" : "Match wire in Banking";
   if (t.kind === "ops_onboarding") return key === "acceptance" ? "Accept subscription" : "Resolve exception";
   if (key === "approved_to_fund") return "Approve to send funds";
