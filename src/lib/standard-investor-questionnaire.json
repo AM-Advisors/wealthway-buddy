@@ -82,7 +82,18 @@
       "Yes",
       "No"
     ],
-    "required": true
+    "required": true,
+    "appliesTo": [
+      "llc",
+      "corporation",
+      "partnership",
+      "trust",
+      "ira",
+      "retirement_plan",
+      "family_office",
+      "foundation",
+      "other_entity"
+    ]
   },
   {
     "key": "is_the_subscriber_a_life_insurance_company_using_the_assets_",
