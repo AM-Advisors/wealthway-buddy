@@ -1,5 +1,9 @@
 # Roadmap
 
+## Direct investor accreditation review
+- [x] Route Review accreditation to the exact investor's existing evidence/review section instead of Fund Approvals, including Investor 360; preserve approval authority.
+- [ ] Verify focused navigation regressions and fictional review click-through. No approvals changed; not published.
+
 ## Accreditation waiting details
 - [x] Add small accreditation-only detail beneath the staff/manager checklist waiting status using existing canonical states; no approval, document or investor-flow changes.
 - [x] 40 focused regressions passed; real checklist rendered with fictional missing/review states at desktop and 522px, no overflow or runtime errors. Preview build OK. No decisions changed; not published. Durable authenticated review remains outside this presentation-only update.

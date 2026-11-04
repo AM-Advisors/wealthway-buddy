@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export const INVESTOR_RECORD_TABS = ["overview", "investment", "profile", "onboarding", "readiness", "documents", "activity", "history"] as const;
+export const INVESTOR_RECORD_TABS = ["overview", "investment", "profile", "onboarding", "readiness", "documents", "activity", "history", "accreditation"] as const;
 export type InvestorRecordTab = (typeof INVESTOR_RECORD_TABS)[number];
 /** Four visible tabs; older links to merged tabs still land in the right place. */
 const VISIBLE_TABS = ["overview", "details", "documents", "activity"] as const;
@@ -71,6 +71,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const p = data.person; const inv = data.investment as any;
   const openItem = async (key: string) => {
     const t = openTargetFor(key);
+    if (t.kind === "review") { setTab("overview"); return; }
     if (t.kind === "tab") { setTab(t.tab); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); return; }
     if (t.kind === "fund") {
       if (onOps) navigate({ to: "/ops/fund/$fundId", params: { fundId }, search: { tab: t.area } });
@@ -128,7 +129,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
         {!data.overview.removed && <PersonalInvestmentLinkCard onboardingId={onboardingId} email={p?.email ?? undefined} />}
         {!data.overview.removed && !data.investorHasAccount ? <Card className="md:col-span-2"><CardContent className="pt-6 text-sm text-muted-foreground">Investor has not created an account yet. Send the invite above so they can sign in and complete their steps.</CardContent></Card> : null}
-        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} /></CardContent></Card>
+        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} initialAccreditationReview={initial === "accreditation"} /></CardContent></Card>
         {staff && data.suggestions.length ? <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Information conflicts & suggested updates</CardTitle></CardHeader><CardContent className="divide-y">
           {data.suggestions.map((s) => <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? s.source}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>
