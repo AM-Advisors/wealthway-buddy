@@ -1,5 +1,9 @@
 # Roadmap
 
+## Accreditation waiting details
+- [x] Add small accreditation-only detail beneath the staff/manager checklist waiting status using existing canonical states; no approval, document or investor-flow changes.
+- [ ] Verify focused regressions and fictional desktop/mobile display; durable authenticated review remains outside this presentation-only update.
+
 ## Applicable financial background within investor questionnaire (2026-11-04)
 - [x] Group applicable financial background inside Investor questionnaire, not a separate Sign task or Verification form. Reuse exact-party citizenship/residence/occupation/business nature and current compliance answers; required-answer counter excludes optional questions. Staff BSA records remain private.
 - [x] Conditional source-of-funds/wealth follow-ups appear before save; existing server risk review and investor certification stay intact. No unsupported compliance exemption introduced.
