@@ -100,11 +100,11 @@ export function AttentionNeeded({ r, viewer, onOpenItem, onOpenAccreditation, fu
           <li key={i.key} className="grid grid-cols-1 items-center gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_11rem_12rem] sm:gap-4">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{i.owner ? `${ownerText(i.owner)} action` : "Action"}</p>
-              <p className="truncate text-sm font-medium">{i.action ?? i.label}</p>
+              <p className="truncate text-sm font-medium">{actionText(i, r.items)}</p>
             </div>
             <div className="min-w-0 space-y-1 sm:text-left">
               <p className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</p>
-              {i.key === "accreditation" && viewer !== "investor" ? <p className="break-words text-xs text-muted-foreground">{accreditationDetail(i)}</p> : null}
+              {viewer !== "investor" && waitingDetail(i, r.items) ? <p className="break-words text-xs text-muted-foreground" data-testid="waiting-detail">{waitingDetail(i, r.items)}</p> : null}
             </div>
             {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : i.key === "accreditation" && onOpenAccreditation ? <Button variant="outline" size="sm" className="w-full" onClick={onOpenAccreditation}>{openLabelFor(i.key, i.owner)}</Button> : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
@@ -151,7 +151,7 @@ export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer
                 <ul className="mb-2 space-y-1.5 border-l-2 border-muted pl-3">
                   {items.length ? items.map((i: any) => (
                     <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}{i.key === "accreditation" && viewer !== "investor" ? <span className="block text-xs text-muted-foreground">{accreditationDetail(i)}</span> : null}</span>
+                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}{viewer !== "investor" && !i.reason && waitingDetail(i, r.items) ? <span className="block text-xs text-muted-foreground">{waitingDetail(i, r.items)}</span> : null}</span>
                       <span className="flex items-center gap-2 text-xs">
                         {i.owner && i.status !== "complete" ? <span className="text-muted-foreground">{ownerText(i.owner)}</span> : null}
                         <span className={tone(i.status)}>{plainStatus(i.status, viewer)}</span>
