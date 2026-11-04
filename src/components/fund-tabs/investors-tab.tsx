@@ -512,7 +512,8 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
 /** Staff or this fund's managers record the accredited-investor category and its status for the investor. */
 function SetAccreditationStatus({ onboardingId, onChanged }: { onboardingId: string; onChanged: () => void }) {
   const setFn = useServerFn(setAccreditationStatusFn);
-  const options: string[] = ((standardQuestions as any).questions ?? []).find((q: any) => q.key === ACCREDITATION_QUESTION_KEY)?.options ?? [];
+  const qList: any[] = Array.isArray(standardQuestions) ? (standardQuestions as any[]) : ((standardQuestions as any).questions ?? []);
+  const options: string[] = qList.find((q: any) => q.key === ACCREDITATION_QUESTION_KEY)?.options ?? [];
   const [category, setCategory] = useState("");
   const [decision, setDecision] = useState<"approved" | "review">("approved");
   const [notes, setNotes] = useState("");
