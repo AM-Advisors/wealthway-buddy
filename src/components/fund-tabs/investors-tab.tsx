@@ -2,7 +2,7 @@ import { versionLabel } from "@/lib/version-label";
 import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { InvestorEconomicsCard } from "@/components/fund-tabs/investor-economics";
 import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { remindInvestorItemFn } from "@/lib/document-reminders.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -301,7 +301,10 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   );
 }
 
-export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }: { fundId: string; id: string | null; embedded?: boolean; onOpenItem?: (key: string) => void }) {
+export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, initialAccreditationReview = false }: { fundId: string; id: string | null; embedded?: boolean; onOpenItem?: (key: string) => void; initialAccreditationReview?: boolean }) {
+  const [reviewTab, setReviewTab] = useState(initialAccreditationReview ? "documents" : "details");
+  const [reviewRequest, setReviewRequest] = useState(initialAccreditationReview ? 1 : 0);
+  const accreditationRef = useRef<HTMLElement>(null);
   const qc = useQueryClient();
   const load = useServerFn(investorDetailFn);
   const approve = useServerFn(approveToFundFn);
@@ -319,6 +322,22 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
     return load({ data: { fundId, onboardingId: id } });
   }, enabled: !!id });
   const d = q.data;
+  useEffect(() => {
+    if (!reviewRequest || reviewTab !== "documents" || !d) return;
+    const frame = requestAnimationFrame(() => {
+      accreditationRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
+      accreditationRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [reviewRequest, reviewTab, d]);
+  const openReviewItem = (key: string) => {
+    if (key === "accreditation") {
+      setReviewTab("documents");
+      setReviewRequest(n => n + 1);
+      return;
+    }
+    onOpenItem?.(key);
+  };
   const fundingApprovalAction = d?.canApproveSubscription ? <ApprovalButton title="Approve this investor to send funds?" description="The investor will be notified to view this fund’s released bank details in their account. This does not record a payment or complete final admission." disabled={approving} onApprove={async () => {
     if (!id) return;
     setApproving(true);
@@ -343,13 +362,13 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
               <p className="text-base">The investor can view the fund’s released bank details after approval and completed checks. No separate Harmonious admission is needed to send the wire.</p>
             </section>
           )}
-          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} onOpenItem={onOpenItem} fundingApprovalAction={fundingApprovalAction} /></section>}
+          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} onOpenItem={onOpenItem ? openReviewItem : undefined} onOpenAccreditation={() => openReviewItem("accreditation")} fundingApprovalAction={fundingApprovalAction} /></section>}
           <section className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
               <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>
           </section>
-          <Tabs defaultValue="details" className="space-y-4">
+          <Tabs value={reviewTab} onValueChange={setReviewTab} className="space-y-4">
             <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
               <TabsTrigger value="details">Details</TabsTrigger><TabsTrigger value="documents">Documents</TabsTrigger><TabsTrigger value="terms">Terms</TabsTrigger><TabsTrigger value="actions">Actions</TabsTrigger>
             </TabsList>
@@ -411,7 +430,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
                 </CollapsibleContent>
               </Collapsible>
             </section>
-            <section className="space-y-2" aria-label="Accreditation">
+            <section ref={accreditationRef} tabIndex={-1} className="space-y-2 scroll-mt-4" aria-label="Accreditation">
               <h4 className="font-medium">Accreditation</h4>
               {d.reviewEvidence.accreditation ? (() => { const a = d.reviewEvidence.accreditation; return <dl className="space-y-2">
                 <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Status</dt><dd className="font-medium">{a.status}</dd></div>
