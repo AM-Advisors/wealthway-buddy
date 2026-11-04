@@ -16,6 +16,7 @@ import {
   badActorApplies,
   badActorRequirementState,
   certificationState,
+  certifiedTaxRouting,
   effectiveEligibility,
   eligibilityChecklistState,
   eligibilityOutcome,
@@ -152,7 +153,7 @@ export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promis
     readIn(offIds, (c) => d.from("offerings").select("id, reg_type").in("id", c)),
     readIn(offIds, (c) => d.from("fund_setups").select("id, offering_id").in("offering_id", c)),
     readIn(profIds, (c) => d.from("investor_tax_facts").select("id, answers, created_at, investment_profile_id").in("investment_profile_id", c).is("superseded_by", null).order("created_at", { ascending: false })),
-    readIn(profIds, (c) => d.from("investor_tax_forms").select("id, investment_profile_id, form_type, classification, status, tin_fingerprint, legal_name, expires_on, certified_at").in("investment_profile_id", c)),
+    readIn(profIds, (c) => d.from("investor_tax_forms").select("id, investment_profile_id, form_type, classification, status, tin_fingerprint, legal_name, expires_on, certified_at, superseded_by").in("investment_profile_id", c)),
     readIn(obIds, (c) => d.from("compliance_questionnaire_responses").select("id, onboarding_id, kind, review_status, superseded_by, created_at").in("onboarding_id", c).in("kind", ["bad_actor", "bsa_aml"]).is("superseded_by", null).order("created_at", { ascending: false })),
     readIn(obIds, (c) => d.from("investor_certifications").select("onboarding_id, certification_key, certification_version, evidence, created_at").in("onboarding_id", c).order("created_at", { ascending: true })),
     readIn(obIds, (c) => d.from("investor_onboardings").select("id, requested_amount_cents, accepted_amount_cents").in("id", c)),
@@ -238,7 +239,7 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
 
   // Tax: the investor's own factual answers (re-derived here, never trusted as stored) win over legacy records.
   const facts = (profileId ? (p.taxFacts.get(profileId)?.[0] ?? null) : null) as { id: string; answers: TaxIntakeAnswers } | null;
-  const routing = facts
+  const currentRouting = facts
     ? routeTaxIntake(input.profileType, facts.answers ?? {})
     : resolveTaxForm({
         profileType: input.profileType,
@@ -249,6 +250,8 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
         claimsEffectivelyConnectedIncome: rules['taxFacts']?.eci ?? null,
       });
   const forms = profileId ? (p.forms.get(profileId) ?? []) : [];
+  const routing = certifiedTaxRouting({ routing: currentRouting, hasTaxFacts: Boolean(facts),
+    profileId, profileType: input.profileType, forms, nowIso: input.nowIso });
   const responses = (p.badActor.get(input.onboarding.id) ?? []).slice(0, 1);
   const certs = p.certs.get(input.onboarding.id) ?? [];
   const amlRows = (p.aml.get(input.onboarding.id) ?? []).slice(0, 1);

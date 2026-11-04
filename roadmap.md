@@ -1,5 +1,9 @@
 # Roadmap
 
+## Chris’s completed W-9 status (2026-11-04)
+- [ ] Reuse current exact-profile certified tax routing when legacy tax facts are absent; retain changed answers, review, expiration and supersession boundaries.
+- [ ] Test shared single/batch readiness and inspect fictional staff checklist. No live answers, signatures or emails changed; durable isolated QA remains required.
+
 ## Direct investor accreditation review
 - [x] Route Review accreditation to the exact investor's existing evidence/review section instead of Fund Approvals, including Investor 360; preserve approval authority.
 - [x] 21 focused regressions passed; actual investor review button selects Documents and focuses Accreditation on desktop and 522px with fictional data, no runtime errors. Preview build OK. No approvals changed; not published. Durable authenticated review and Investor 360 navigation remain unverified.

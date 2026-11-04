@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
-  badActorApplies, badActorRequirementState, canReuseTaxForm, certificationState, effectiveEligibility,
+  badActorApplies, badActorRequirementState, canReuseTaxForm, certificationState, certifiedTaxRouting, effectiveEligibility,
   eligibilityChecklistState, eligibilityOutcome, evaluateBadActor, managerTaxLabel, requiredCertifications,
   resolveTaxForm, taxFormExpiresOn, taxRequirementState, BAD_ACTOR_CATEGORIES,
 } from "./onboarding-compliance-model";
@@ -11,6 +11,21 @@ const now = "2026-09-24T12:00:00Z";
 const allNo = Object.fromEntries(BAD_ACTOR_CATEGORIES.map((c) => [c.key, "no"]));
 
 describe("tax routing", () => {
+  const signed = { investment_profile_id: "p1", form_type: "w9", classification: "us_individual", status: "certified", certified_at: "2026-09-24T11:00:00Z" };
+  const recover = (forms = [signed], extra = {}) => certifiedTaxRouting({ routing: resolveTaxForm({ profileType: "individual", usPerson: null }), hasTaxFacts: false, profileId: "p1", profileType: "individual", forms, nowIso: now, ...extra });
+  it("reuses a certified exact-profile W-9 when old tax answers are absent", () => {
+    const routing = recover();
+    expect(routing).toEqual({ status: "determined", formType: "w9", classification: "us_individual" });
+    expect(taxRequirementState({ required: true, routing, profileId: "p1", forms: [signed], nowIso: now }).state).toBe("valid");
+  });
+  it("never replaces newer uncertain tax answers with an older certification", () => expect(recover([signed], { hasTaxFacts: true }).status).toBe("needs_review"));
+  it("never overrides current foreign routing with a W-9", () => expect(recover([signed], { routing: resolveTaxForm({ profileType: "individual", usPerson: false }) })).toMatchObject({ formType: "w8ben" }));
+  it("does not recover another profile's certification", () => expect(recover([{ ...signed, investment_profile_id: "p2" }]).status).toBe("needs_review"));
+  it("does not recover superseded certification", () => expect(recover([{ ...signed, superseded_by: "replacement" } as typeof signed]).status).toBe("needs_review"));
+  it("does not recover expired certification", () => expect(recover([{ ...signed, expires_on: "2025-12-31" } as typeof signed]).status).toBe("needs_review"));
+  it("does not bypass tax review", () => expect(recover([signed, { ...signed, status: "needs_review" }]).status).toBe("needs_review"));
+  it("does not infer a changed investing profile's classification", () => expect(recover([signed], { profileType: "trust" }).status).toBe("needs_review"));
+  it("does not select between conflicting current certifications", () => expect(recover([signed, { ...signed, form_type: "w8ben", classification: "foreign_individual" }]).status).toBe("needs_review"));
   it("U.S. individual → W-9", () => expect(resolveTaxForm({ profileType: "individual", usPerson: true })).toMatchObject({ formType: "w9" }));
   it("U.S. LLC → W-9 with entity classification", () =>
     expect(resolveTaxForm({ profileType: "llc", usPerson: true })).toMatchObject({ formType: "w9", classification: "us_llc" }));

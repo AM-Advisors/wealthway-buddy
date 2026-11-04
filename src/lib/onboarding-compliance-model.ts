@@ -113,6 +113,41 @@ export interface StoredTaxForm {
   legal_name?: string | null;
   expires_on?: string | null;
   certified_at?: string | null;
+  superseded_by?: string | null;
+}
+
+/** Missing legacy facts must not erase the investing profile's current certification.
+ * Only restores absent routing; explicit current answers/routing always win.
+ */
+export function certifiedTaxRouting(input: {
+  routing: TaxRouting;
+  hasTaxFacts: boolean;
+  profileId: string | null;
+  profileType: string | null;
+  forms: StoredTaxForm[];
+  nowIso: string;
+}): TaxRouting {
+  if (input.hasTaxFacts || input.routing.status === "determined" || !input.profileId || !input.profileType) return input.routing;
+  const mine = input.forms.filter((f) => f.investment_profile_id === input.profileId && !f.superseded_by && f.status !== "superseded");
+  if (mine.some((f) => f.status === "needs_review")) return input.routing;
+  const candidates = mine.filter((f) => {
+    if (!f.certified_at || f.certified_at > input.nowIso || !(f.form_type in IRS_FORM_REVISIONS)) return false;
+    const expected = resolveTaxForm({
+      profileType: input.profileType,
+      usPerson: f.form_type === "w9",
+      claimsEffectivelyConnectedIncome: f.form_type === "w8eci",
+      foreignGovernmentOrExempt: f.form_type === "w8exp",
+      intermediaryOrFlowThrough: f.form_type === "w8imy",
+    });
+    return expected.status === "determined" && canReuseTaxForm(f, {
+      profileId: input.profileId ?? "", formType: expected.formType,
+      classification: expected.classification, nowIso: input.nowIso,
+    });
+  });
+  if (candidates.length !== 1) return input.routing;
+  const form = candidates[0];
+  if (!form) return input.routing;
+  return { status: "determined", formType: form.form_type as TaxFormType, classification: form.classification };
 }
 
 /** Reuse only for the SAME profile, form, classification, TIN and legal name, unexpired and certified. */
@@ -120,7 +155,7 @@ export function canReuseTaxForm(
   form: StoredTaxForm,
   want: { profileId: string; formType: string; classification: string; tinFingerprint?: string | null; legalName?: string | null; nowIso: string },
 ): boolean {
-  if (form.status !== "certified") return false;
+  if (form.status !== "certified" || form.superseded_by) return false;
   if (form.investment_profile_id !== want.profileId) return false;
   if (form.form_type !== want.formType) return false;
   if (form.classification !== want.classification) return false;

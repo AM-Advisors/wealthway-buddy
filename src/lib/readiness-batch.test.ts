@@ -118,6 +118,19 @@ describe("batch readiness equals single readiness", () => {
     expect(four).toBeLessThanOrEqual(35);
   });
 
+  it("completed W-9 removes both duplicate tax tasks in single and batch staff readiness", async () => {
+    tables["investor_tax_profiles"] = [];
+    tables["investor_tax_facts"] = [];
+    tables["investor_tax_forms"] = [{ id: "signed-tax", investment_profile_id: "ip1", form_type: "w9", classification: "us_individual", status: "certified", certified_at: "2026-10-14T11:00:00Z", superseded_by: null }];
+    const { computeReadinessFor, readinessForMany } = await import("@/lib/investor-onboarding.server");
+    const single = await computeReadinessFor(ROWS[0]);
+    const [batch] = await readinessForMany([ROWS[0]]);
+    expect(batch).toEqual(single);
+    for (const key of ["tax_classification", "tax_documentation"]) {
+      expect(single.result.items.find((i) => i.key === key)?.status).toBe("complete");
+    }
+  });
+
   it("a failed read is logged and treated as no rows, never thrown", async () => {
     const { readinessForMany, computeReadinessFor } = await import("@/lib/investor-onboarding.server");
     const errors: unknown[][] = [];
