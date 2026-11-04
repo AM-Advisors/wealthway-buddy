@@ -826,6 +826,8 @@ export interface Question {
   options?: string[];
   /** Shown only when another answer equals one of these values. */
   showWhen?: { key: string; equals: (string | boolean | number)[] } | { anyOf: { key: string; equals: (string | boolean | number)[] }[] };
+  /** Shown only for these investing-party types (individual, joint, llc, trust, ...). Empty/absent = everyone. */
+  appliesTo?: string[];
   /** Filled from verified records; the investor cannot change it. */
   locked?: boolean;
   /** Required unless the investor's Verification already supplied it. */
