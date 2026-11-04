@@ -1049,4 +1049,5 @@
 
 ## Unified investor sends (2026-11-04)
 - [x] Consolidate tax and unsigned-document send controls into the existing Send to investor card, visible above review tabs; keep protected fund countersignature actions separate.
-- [ ] Verify shared send card and document review navigation with fictional data; no live email QA.
+- [x] 32 checklist regressions passed; shared card stayed visible on Documents at desktop/440px, single tax/subscription and send-all calls reached a fictional-only handler. Preview build OK.
+- [ ] Live email delivery and authenticated document-review navigation remain unverified; no real records or emails used, not published.
