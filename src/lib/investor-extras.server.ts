@@ -187,8 +187,18 @@ export async function acceptFees(userId: string, onboardingId: string, termsId: 
 
 /** Throws unless the investor accepted the fund's current fees (no fees set = nothing to accept). */
 export async function assertFeesAccepted(userId: string, onboardingId: string) {
-  const s = await feeStatus(userId, onboardingId);
-  if (s.terms && !s.accepted) throw new Error("Please review and accept the fund's fees before signing.");
+  // Preparation is also available to staff and this fund's managers. Check
+  // their existing access without pretending the preparer is the investor.
+  const { assertOnboardingAccess } = await import("./investor-onboarding.server");
+  const { row } = await assertOnboardingAccess(userId, onboardingId);
+  if (row.removed_at) throw new Error("This investment isn't available.");
+  const d = await db();
+  const terms = await activeTerms(d, row.offering_id);
+  if (!terms) return;
+  const { data: accepted, error } = await d.from("investor_fee_acceptances").select("id")
+    .eq("onboarding_id", row.id).eq("fee_terms_id", terms.id).maybeSingle();
+  if (error) throw new Error("We couldn't check fee acceptance. Please try again.");
+  if (!accepted) throw new Error("The investor must review and accept the fund's current fees before signing.");
 }
 
 export type UpdateAttachment = { file: { name: string; url: string | null } | null; asset: { name: string; assetClass: string | null } | null };
