@@ -1,5 +1,10 @@
 # Roadmap
 
+## Government ID fund-card clarity
+- [x] Show approved login ID evidence on canonically approved fund cards, retaining original investment evidence and unchanged decisions/access.
+- [x] 43 focused identity/evidence regressions passed; preview build OK. No decisions, records or permissions changed.
+- [ ] Visual check remains unverified: fictional component harness did not render. Authenticated real-record display requires isolated synthetic QA; not published.
+
 ## Investor 360 and fund status alignment
 - [x] Replace legacy application check summaries with exact-investment canonical readiness, including onboardings without an application.
 - [x] Reuse the shared InvestmentChecklist on Overview, Profiles, Investments and Identity; retain separately labeled historical evidence and unchanged permissions.
