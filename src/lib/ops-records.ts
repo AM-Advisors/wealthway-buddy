@@ -355,3 +355,49 @@ export function investorListMatches(row: InvestorListRow, search: string): boole
     .toLowerCase();
   return hay.includes(needle);
 }
+
+/* ------------------------------------ investor 360: canonical readiness */
+
+type StageStatus = { stage: string; status: string };
+export type InvestorCheckRow = {
+  onboardingId: string;
+  offering_id: string;
+  fundName: string | null;
+  profileLabel: string | null;
+  stage: string | null;
+  identity: string | null;
+  eligibility: string | null;
+  tax: string | null;
+  subscription: string | null;
+  funding: string | null;
+  nextAction: string | null;
+};
+
+/**
+ * Investor 360 check rows from the same canonical per-investment readiness the
+ * fund investor page shows. Legacy application status columns are never used.
+ */
+export function investorCheckRows(
+  onboardings: { id: string; offering_id: string; investment_profile_id: string | null; stage: string | null }[],
+  results: { stages: StageStatus[]; nextAction: { label: string } | null }[],
+  fundName: Map<string, string>,
+  profileLabel: Map<string, string>,
+): InvestorCheckRow[] {
+  return onboardings.map((o, index) => {
+    const r = results[index];
+    const status = (stage: string) => r?.stages.find((s) => s.stage === stage)?.status ?? null;
+    return {
+      onboardingId: o.id,
+      offering_id: o.offering_id,
+      fundName: fundName.get(o.offering_id) ?? null,
+      profileLabel: o.investment_profile_id ? (profileLabel.get(o.investment_profile_id) ?? null) : null,
+      stage: o.stage ? (STAGE_LABEL[o.stage] ?? o.stage) : null,
+      identity: status("identity"),
+      eligibility: status("eligibility"),
+      tax: status("tax"),
+      subscription: status("subscription"),
+      funding: status("funding"),
+      nextAction: r?.nextAction?.label ?? null,
+    };
+  });
+}

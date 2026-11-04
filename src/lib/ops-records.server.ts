@@ -16,6 +16,7 @@ import {
   bankingDetailVisible,
   investorListMatches,
   canOpenRecord,
+  investorCheckRows,
   maskAccount,
   redactActivity,
   tabDefinition,
@@ -674,23 +675,27 @@ export async function investorTab(context: any, data: { id: string; tab: string 
     );
 
     if (data.tab === "overview" || data.tab === "profiles") {
-      const applications = rows(
+      // Same canonical readiness as the fund investor page; old application status copies are not shown.
+      const onboardings = rows(
         await s
-          .from("investor_applications")
-          .select("id, offering_id, status, kyc_status, aml_status, accreditation_status, commitment_cents")
-          .eq("user_id", data.id)
-          .limit(50),
+          .from("investor_onboardings")
+          .select("*")
+          .eq("investor_user_id", data.id)
+          .not("stage", "in", "(declined,cancelled)")
+          .limit(25),
       );
+      const fundIds = [...new Set(onboardings.map((o: any) => o.offering_id).filter(Boolean))];
+      const funds = fundIds.length ? rows(await s.from("offerings").select("id, name").in("id", fundIds)) : [];
+      const { readinessForMany } = await import("@/lib/investor-onboarding.server");
+      const results = await readinessForMany(onboardings);
       return {
         profiles: profileRows,
-        checks: applications.map((a: any) => ({
-          applicationId: a.id,
-          offeringId: a.offering_id,
-          status: a.status,
-          kyc: a.kyc_status,
-          aml: a.aml_status,
-          accreditation: a.accreditation_status,
-        })),
+        checks: investorCheckRows(
+          onboardings,
+          results.map((x) => x.result),
+          new Map(funds.map((f: any) => [f.id, f.name])),
+          new Map(profileRows.map((p: any) => [p.id, p.display_label])),
+        ),
       };
     }
 

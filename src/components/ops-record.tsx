@@ -162,7 +162,7 @@ function linkedCell(row: any, key: string) {
         ? null
         : key === "person" && row.investorUserId
           ? recordPath("investor", row.investorUserId)
-          : (key === "profileLabel" || key === "stage") && row.onboardingId && row.offering_id
+          : (key === "profileLabel" || key === "stage" || key === "nextAction") && row.onboardingId && row.offering_id
             ? `/manager/fund/${row.offering_id}/investor/${row.onboardingId}`
             : null;
   if (!link || text === "-") return text;

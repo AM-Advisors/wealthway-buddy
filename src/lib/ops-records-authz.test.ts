@@ -147,6 +147,19 @@ function builder(table: string) {
 const contextFor = (userId: string) => ({ userId, supabase: { from: (t: string) => builder(t) } });
 
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));
+vi.mock("@/lib/investor-onboarding.server", () => ({
+  readinessForMany: async (rows: any[]) =>
+    rows.map(() => ({
+      result: {
+        stages: [
+          { stage: "identity", status: "complete" },
+          { stage: "eligibility", status: "not_applicable" },
+          { stage: "tax", status: "needs_investor" },
+        ],
+        nextAction: { label: "Complete tax form" },
+      },
+    })),
+}));
 
 const ops = await import("@/lib/ops-records.server");
 
@@ -204,6 +217,13 @@ describe("one record never leaks another", () => {
   it("keeps Investor Two's profiles out of Investor One", async () => {
     const tab = (await ops.investorTab(admin(), { id: INVESTOR_1, tab: "profiles" })) as any;
     expect(tab.profiles.map((p: any) => p.id).sort()).toEqual(["prof-individual", "prof-trust"]);
+  });
+
+  it("shows Investor 360 checks from canonical readiness, not stale application statuses", async () => {
+    const tab = (await ops.investorTab(admin(), { id: INVESTOR_1, tab: "overview" })) as any;
+    expect(tab.checks).toHaveLength(2);
+    expect(tab.checks[0]).toMatchObject({ identity: "complete", eligibility: "not_applicable", tax: "needs_investor", nextAction: "Complete tax form" });
+    expect(JSON.stringify(tab.checks)).not.toContain("accreditation");
   });
 });
 
