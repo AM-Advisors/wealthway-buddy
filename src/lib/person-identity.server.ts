@@ -72,7 +72,7 @@ export async function fanOutPersonIdentity(personId: string | null, sessionId: s
         await db().from("investor_onboardings").update({ questionnaire_didit_session_id: sessionId }).eq("id", ob.id);
         if (linked) {
           await db().from("person_onboarding_events").insert({
-            person_id: personId, from_state: null, to_state: null, actor_kind: actorUserId ? "staff" : "provider", actor_user_id: actorUserId,
+            person_id: personId, from_state: null, to_state: "kyc_pending", actor_kind: actorUserId ? "staff" : "provider", actor_user_id: actorUserId,
             reason: "Investment linked to the person's newer approved identity check",
             detail: { onboarding_id: ob.id, previous_session: linked, session: sessionId },
           });
