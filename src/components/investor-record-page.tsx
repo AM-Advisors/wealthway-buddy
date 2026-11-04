@@ -16,7 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
-import { CLAIM_STATE_LABELS, SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
+import { CLAIM_STATE_LABELS, SOURCE_LABELS, entrySourceLabel, type EntrySource } from "@/lib/investor-record-model";
 import { prettyStatus, statusTone } from "@/lib/status";
 import { verificationLabel } from "@/lib/verification-status";
 import { Badge } from "@/components/ui/badge";
@@ -159,7 +159,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <Card ref={contactRef} className="scroll-mt-4"><CardHeader><CardTitle className="text-base">Investor details</CardTitle>
           {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
-            : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "the Fund team"}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
+            : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {entrySourceLabel(data.overview.enteredBy)}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
         </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
           {field("firstName", "Legal first name", p?.firstName)}{field("middleName", "Middle name", p?.middleName)}{field("lastName", "Last name", p?.lastName)}{field("preferredName", "Preferred name", p?.preferredName)}
           {field("email", "Email", p?.email)}{field("phone", "Phone", p?.phone)}{field("citizenship", "Citizenship", p?.citizenship)}
