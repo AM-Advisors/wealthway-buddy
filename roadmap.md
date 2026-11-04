@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Connected investor steps (2026-11-04)
-- [ ] Reuse exact-party details and questionnaire tax choices in later tax review without duplicate entry or invented confirmations.
-- [ ] Sequence subscription preparation before opening signing, preserving readiness and signed versions.
-- [ ] Run focused data-reuse regressions and verify fictional UI where available; no real signatures or emails.
+- [x] Reuse exact-party name/address/birthday and questionnaire fallbacks in tax review; reuse canonical determined W-9 routing without writing inferred answers. Saved tax answers and required confirmations stay authoritative.
+- [x] Wait for successful subscription preparation before opening the existing signing page; preserve readiness and signed versions. Changed tax details require a fresh review.
+- [x] 108 focused regressions passed; actual TaxSignPanel fictional name reuse → preview → changed-name re-review → fictional signature → masked read-back checked on desktop/mobile with no runtime errors. Preview build OK, no real records/emails/signatures used.
+- [ ] Durable real signing and automatic personalized subscription PDF generation remain unverified; require independently isolated signing-provider QA. Not published.
 
 ## Subscription preparation availability error (2026-11-04)
 - [x] Replace the preparer's investor-ownership fee lookup with existing exact-investment access and current-version acceptance checks; investor acceptance/signing remain unchanged.

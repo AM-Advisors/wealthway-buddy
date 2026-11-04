@@ -687,7 +687,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const saveQ = useAction(questionnaireFn, "Answers saved.", done);
   const prepare = useMutation({
     mutationFn: () => prepareThenOpen(Boolean(d.documentTemplateVersion), () => prepareFn({ data: { onboardingId } }), () => {
-      void navigate({ to: "/fund/$offeringId/documents", params: { offeringId: d.offering.id }, search: { onboardingId } as any });
+      void navigate({ to: "/fund/$offeringId/documents", params: { offeringId: d.offering.id } });
     }),
     onError: (e: Error) => toast.error(e.message),
   });
