@@ -1,5 +1,9 @@
 # Roadmap
 
+## Fee and carry review emails (2026-11-04)
+- [ ] Connect every pending fee/carry save to the existing exact-fund approver email sender, with event-specific deduplication and unchanged approvals.
+- [ ] Verify recipient routing and focused regressions; do not make live fee changes for testing.
+
 ## Automatic subscription preparation (2026-11-04)
 - [x] Prepare through canonical mutation/webhook reconciliation, including final fee acceptance; retain access, review, signature and funding checks and prepared versions.
 - [x] Remove routine preparation tasks and staff preparation button; signing retains a defensive checked opening path.
