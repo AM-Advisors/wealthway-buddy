@@ -29,7 +29,7 @@ export async function reviewInvestorUpload(userId: string, input: { id: string; 
   const { d, row, actor } = await uploadReviewContext(userId, input.id);
   // Accreditation proof on an investment goes through the accreditation decision so approval
   // records the fund-scoped accreditation and advances readiness, instead of only marking the copy.
-  if (row.doc_kind === "accreditation_proof" && row.onboarding_id) {
+  if (row.doc_kind === "accreditation_proof" && row.onboarding_id && input.status !== "new") {
     const { decideOnboardingProof } = await import("./accreditation-review.server");
     return decideOnboardingProof(userId, { documentId: row.id, decision: input.status === "accepted" ? "approved" : "more_needed", notes: input.note?.trim() ?? "" });
   }
