@@ -12,8 +12,10 @@ import {
   matchBankActivity,
   progressChecklist,
   queueBucket,
+  questionVisible,
   reuseState,
   signatureAttribution,
+  stripHiddenAnswers,
   signatureTransitionError,
   stageTransitionError,
   validateQuestionnaire,
@@ -407,7 +409,7 @@ describe("party-type applicability", () => {
   });
 
   it("does not require answers to questions that do not apply to the party", () => {
-    expect(validateQuestionnaire(qs, { name: "Kim" }, "individual").valid).toBe(true);
+    expect(validateQuestionnaire(qs, { name: "Kim", date_of_birth: "1980-01-01" }, "individual").valid).toBe(true);
     expect(validateQuestionnaire(qs, { name: "Kim" }, "llc").valid).toBe(false);
     expect(validateQuestionnaire(qs, { name: "Kim" }, null).valid).toBe(false);
   });
