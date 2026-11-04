@@ -236,6 +236,7 @@ function TabBody({ type, id, tab }: { type: OpsRecordType; id: string; tab: stri
 }
 
 function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; tab: string }) {
+  const navigate = useNavigate();
   const load = useServerFn(TAB_FN[type] as any);
   const query = useQuery({
     queryKey: ["ops-record-tab", type, id, tab],

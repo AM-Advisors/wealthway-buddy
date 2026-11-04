@@ -89,7 +89,7 @@ function accreditationDetail(i: { status: string; action?: string | null }) {
   return "Accreditation needs attention";
 }
 
-export function AttentionNeeded({ r, viewer, onOpenItem, fundingApprovalAction }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
+export function AttentionNeeded({ r, viewer, onOpenItem, onOpenAccreditation, fundingApprovalAction }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined; onOpenAccreditation?: (() => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   const list = blockersOf(r);
   if (!list.length || r.terminal) return null;
   return (
@@ -106,7 +106,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem, fundingApprovalAction }
               <p className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</p>
               {i.key === "accreditation" && viewer !== "investor" ? <p className="break-words text-xs text-muted-foreground">{accreditationDetail(i)}</p> : null}
             </div>
-            {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
+            {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : i.key === "accreditation" && onOpenAccreditation ? <Button variant="outline" size="sm" className="w-full" onClick={onOpenAccreditation}>{openLabelFor(i.key, i.owner)}</Button> : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
         ))}
       </ul>
@@ -194,11 +194,11 @@ function AuditDetails({ r }: { r: any }) {
   );
 }
 
-export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem, fundingApprovalAction }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string) => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
+export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem, onOpenAccreditation, fundingApprovalAction }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string) => void) | undefined; onOpenAccreditation?: (() => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   return (
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
-      <AttentionNeeded r={r} viewer={viewer} onOpenItem={onOpenItem} fundingApprovalAction={fundingApprovalAction} />
+      <AttentionNeeded r={r} viewer={viewer} onOpenItem={onOpenItem} onOpenAccreditation={onOpenAccreditation} fundingApprovalAction={fundingApprovalAction} />
       {viewer === "staff" ? <><StageJourney r={r} viewer={viewer} /><AuditDetails r={r} /></> : (
         <details className="group">
           <summary className="cursor-pointer text-sm font-medium text-muted-foreground">Show all steps</summary>
