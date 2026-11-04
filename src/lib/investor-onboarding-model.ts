@@ -826,6 +826,8 @@ export interface Question {
   options?: string[];
   /** Shown only when another answer equals one of these values. */
   showWhen?: { key: string; equals: (string | boolean | number)[] } | { anyOf: { key: string; equals: (string | boolean | number)[] }[] };
+  /** Shown only for these investing-party types (individual, joint, llc, trust, ...). Empty/absent = everyone. */
+  appliesTo?: string[];
   /** Filled from verified records; the investor cannot change it. */
   locked?: boolean;
   /** Required unless the investor's Verification already supplied it. */
@@ -834,17 +836,25 @@ export interface Question {
   highRisk?: boolean;
 }
 
-export function questionVisible(question: Question, answers: Record<string, unknown>): boolean {
+/** Whether a question applies to this investing party. No profile type yet = show everything. */
+export function questionAppliesToProfile(question: Question, profileType?: string | null): boolean {
+  const types = question.appliesTo;
+  if (!types || types.length === 0 || !profileType) return true;
+  return types.includes(profileType);
+}
+
+export function questionVisible(question: Question, answers: Record<string, unknown>, profileType?: string | null): boolean {
+  if (!questionAppliesToProfile(question, profileType)) return false;
   const cond = question.showWhen;
   if (!cond) return true;
   const one = (c: { key: string; equals: (string | boolean | number)[] }) => c.equals.some((v) => v === answers[c.key]);
   return "anyOf" in cond ? cond.anyOf.some(one) : one(cond);
 }
 
-/** Drop answers to questions that are hidden by the investor's other answers. */
-export function stripHiddenAnswers(questions: Question[], answers: Record<string, unknown>): Record<string, unknown> {
+/** Drop answers to questions that are hidden by the investor's other answers or party type. */
+export function stripHiddenAnswers(questions: Question[], answers: Record<string, unknown>, profileType?: string | null): Record<string, unknown> {
   const next = { ...answers };
-  for (const q of questions) if (!questionVisible(q, next)) delete next[q.key];
+  for (const q of questions) if (!questionVisible(q, next, profileType)) delete next[q.key];
   return next;
 }
 
@@ -861,11 +871,12 @@ export const HIGH_RISK_REVIEW_MESSAGE = "Your investment is under review. We'll 
 export function validateQuestionnaire(
   questions: Question[],
   answers: Record<string, unknown>,
+  profileType?: string | null,
 ): { valid: boolean; errors: { key: string; message: string }[] } {
   const errors: { key: string; message: string }[] = [];
   for (const q of questions) {
     if (q.key === ACCREDITATION_QUESTION_KEY) continue; // answered in the Accreditation section
-    if (!questionVisible(q, answers)) continue;
+    if (!questionVisible(q, answers, profileType)) continue;
     const value = answers[q.key];
     const empty =
       value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
