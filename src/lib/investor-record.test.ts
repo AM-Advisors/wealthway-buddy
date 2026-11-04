@@ -1,7 +1,7 @@
 // @ts-nocheck - in-memory fakes of the service-role client; runtime behavior is what is under test.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  activityFor, bulkSummary, classifyBulk, committable, createNewBlocker, dbProfileType, maskEmail, parseCsv, planIncoming,
+  activityFor, bulkSummary, classifyBulk, committable, createNewBlocker, dbProfileType, entrySourceLabel, maskEmail, parseCsv, planIncoming,
   isPaperworkContactRole, profileNameMismatch, rankMatches, recordStatus, removalBlocker, sanitizePatch, relatedRoleLabel, validateQuickAdd, validPaperworkContact, type PersonCandidate,
 } from "@/lib/investor-record-model";
 
@@ -384,6 +384,14 @@ const people: PersonCandidate[] = [
   { personId: "p1", email: "alyssa@example.com", firstName: "Alyssa", lastName: "Smith", profiles: [{ id: "pr1", type: "individual", legalName: "Alyssa Smith" }], inFund: false },
 ];
 describe("model", () => {
+  it("labels staff-entered records as Harmonious, never Investor", () => {
+    expect(entrySourceLabel("staff")).toBe("Harmonious");
+    expect(entrySourceLabel("fund_signatory")).toBe("Fund signatory");
+    expect(entrySourceLabel("harmonious")).toBe("Harmonious");
+    expect(entrySourceLabel("investor")).toBe("Investor");
+    expect(entrySourceLabel(null)).not.toBe("Investor");
+    expect(entrySourceLabel("something-new-later")).not.toBe("Investor");
+  });
   it("masks email and exposes only safe match facts", () => {
     expect(maskEmail("alyssa@example.com")).toBe("a•••••@example.com");
     const m = rankMatches({ email: "ALYSSA@example.com" }, people);
