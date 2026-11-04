@@ -632,7 +632,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
       const answers = (row.questionnaire_responses ?? {}) as Record<string, unknown>;
       return {
         items: ((q?.questions ?? []) as any[]).map((x) => ({ key: x.key as string, label: x.label as string, answer: answers[x.key] == null ? null : String(answers[x.key]) })),
-        source: (row.questionnaire_source ?? null) as "harmonious" | "didit" | null,
+        source: (row.questionnaire_source ?? null) as "harmonious" | "didit" | "fund_team" | null,
         submittedAt: (row.questionnaire_submitted_at ?? null) as string | null,
         diditSession: row.questionnaire_didit_session_id ? `••••${String(row.questionnaire_didit_session_id).slice(-6)}` : null,
       };
