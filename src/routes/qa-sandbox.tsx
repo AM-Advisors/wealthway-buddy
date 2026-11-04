@@ -20,7 +20,7 @@ import { InvestorOnboardingGuide } from "@/components/investor-onboarding-guide"
 import { QaCommercialWorkflow } from "@/components/qa-commercial-workflow";
 import { QaFundDocuments } from "@/components/qa-fund-documents";
 import { QaSelfServeFund } from "@/components/qa-self-serve-fund";
-import { TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 
 export const Route = createFileRoute("/qa-sandbox")({
   head: () => ({
@@ -118,7 +118,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -140,11 +140,12 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "fund" ? "default" : "outline"} onClick={() => setTab("fund")}>Self Serve fund</Button>
             <Button size="sm" variant={tab === "guide" ? "default" : "outline"} onClick={() => setTab("guide")}>Investor walkthrough</Button>
             <Button size="sm" variant={tab === "tax" ? "default" : "outline"} onClick={() => setTab("tax")}>Investor tax review</Button>
+            <Button size="sm" variant={tab === "questionnaire" ? "default" : "outline"} onClick={() => setTab("questionnaire")}>Investor questionnaire</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>
