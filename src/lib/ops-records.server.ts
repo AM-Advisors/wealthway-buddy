@@ -16,7 +16,6 @@ import {
   bankingDetailVisible,
   investorListMatches,
   canOpenRecord,
-  investorCheckRows,
   maskAccount,
   redactActivity,
   tabDefinition,
@@ -675,45 +674,33 @@ export async function investorTab(context: any, data: { id: string; tab: string 
     );
 
     if (data.tab === "overview" || data.tab === "profiles") {
-      // Same canonical readiness as the fund investor page; old application status copies are not shown.
-      const onboardings = rows(
-        await s
-          .from("investor_onboardings")
-          .select("*")
-          .eq("investor_user_id", data.id)
-          .not("stage", "in", "(declined,cancelled)")
-          .limit(25),
-      );
-      const fundIds = [...new Set(onboardings.map((o: any) => o.offering_id).filter(Boolean))];
-      const funds = fundIds.length ? rows(await s.from("offerings").select("id, name").in("id", fundIds)) : [];
-      const { readinessForMany } = await import("@/lib/investor-onboarding.server");
-      const results = await readinessForMany(onboardings);
+      const { opsInvestorReadiness } = await import("@/lib/ops-investor-readiness.server");
+      const { checks, investmentReadiness } = await opsInvestorReadiness(s, data.id);
       return {
         profiles: profileRows,
-        checks: investorCheckRows(
-          onboardings,
-          results.map((x) => x.result),
-          new Map(funds.map((f: any) => [f.id, f.name])),
-          new Map(profileRows.map((p: any) => [p.id, p.display_label])),
-        ),
+        checks,
+        investmentReadiness,
       };
     }
 
     if (data.tab === "investments") {
-      const onboardings = rows(
-        await s
-          .from("investor_onboardings")
-          .select("id, offering_id, investment_profile_id, stage, funding_status, accepted_amount_cents, funded_amount_cents")
-          .eq("investor_user_id", data.id)
-          .limit(100),
-      );
+      const { opsInvestorReadiness } = await import("@/lib/ops-investor-readiness.server");
+      const { onboardings, investmentReadiness } = await opsInvestorReadiness(s, data.id);
       const fundIds = [...new Set(onboardings.map((o: any) => o.offering_id))];
       const funds = fundIds.length ? rows(await s.from("offerings").select("id, name").in("id", fundIds)) : [];
       const fundName = new Map(funds.map((f: any) => [f.id, f.name]));
       const profileLabel = new Map(profileRows.map((p: any) => [p.id, p.display_label]));
       return {
+        investmentReadiness,
         investments: onboardings.map((o: any) => ({
-          ...o,
+          id: o.id,
+          onboardingId: o.id,
+          offering_id: o.offering_id,
+          investment_profile_id: o.investment_profile_id,
+          stage: o.stage,
+          funding_status: o.funding_status,
+          accepted_amount_cents: o.accepted_amount_cents,
+          funded_amount_cents: o.funded_amount_cents,
           fundName: fundName.get(o.offering_id) ?? null,
           profileLabel: profileLabel.get(o.investment_profile_id) ?? null,
         })),
@@ -817,8 +804,10 @@ export async function investorTab(context: any, data: { id: string; tab: string 
     }
 
     if (data.tab === "identity") {
+      const { opsInvestorReadiness } = await import("@/lib/ops-investor-readiness.server");
+      const { checks: currentChecks, investmentReadiness } = await opsInvestorReadiness(s, data.id);
       const applications = rows(
-        await s.from("investor_applications").select("id, offering_id, kyc_status, aml_status, accreditation_status, status").eq("user_id", data.id).limit(50),
+        await s.from("investor_applications").select("id, offering_id").eq("user_id", data.id).limit(50),
       );
       const appIds = applications.map((a: any) => a.id);
       const [kyc, aml, accreditation] = appIds.length
@@ -868,7 +857,8 @@ export async function investorTab(context: any, data: { id: string; tab: string 
       // Operational summary only: full document numbers, provider payloads and
       // temporary provider document links never leave the compliance store.
       return {
-        applications,
+        checks: currentChecks,
+        investmentReadiness,
         governmentId: verifications.map((k: any) => ({
           applicationId: k.application_id,
           documentType: k.document_type,
@@ -942,7 +932,7 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           lastSynced: k.last_synced_at,
           reconciled: k.reconciled_at,
         })),
-        kyc: verifications.map((k: any) => ({
+        identityHistory: verifications.map((k: any) => ({
           applicationId: k.application_id,
           provider: k.provider,
           status: k.status,
@@ -955,8 +945,8 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           completedAt: k.completed_at,
           expiresAt: k.expired_at,
         })),
-        aml: rows(aml).map((a: any) => ({ applicationId: a.application_id, provider: a.provider, status: a.status, completedAt: a.completed_at })),
-        accreditation: rows(accreditation).map((a: any) => ({ applicationId: a.application_id, method: a.method, status: a.status, verifiedAt: a.verified_at, expiresAt: a.expires_at })),
+        screeningHistory: rows(aml).map((a: any) => ({ applicationId: a.application_id, status: a.status, completedAt: a.completed_at })),
+        accreditationHistory: rows(accreditation).map((a: any) => ({ applicationId: a.application_id, method: a.method, status: a.status, verifiedAt: a.verified_at, expiresAt: a.expires_at })),
       };
     }
 

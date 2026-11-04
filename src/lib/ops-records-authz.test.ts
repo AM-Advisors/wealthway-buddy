@@ -292,7 +292,7 @@ describe("activity shows what happened, not what was stored", () => {
 
   it("keeps identity provider payloads out of the investor identity summary", async () => {
     const tab = (await ops.investorTab(admin(), { id: INVESTOR_1, tab: "identity" })) as any;
-    expect(tab.kyc[0].status).toBe("approved");
+    expect(tab.identityHistory[0].status).toBe("approved");
     expect(JSON.stringify(tab)).not.toContain("sensitive");
     expect(JSON.stringify(tab)).not.toContain("vendor_data");
   });
