@@ -256,7 +256,7 @@ function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; ta
   }
 
   const payload = (query.data ?? {}) as Record<string, any>;
-  const readinessRows = type === "investor" && Array.isArray(payload.investmentReadiness) ? payload.investmentReadiness : [];
+  const readinessRows = type === "investor" && Array.isArray(payload["investmentReadiness"]) ? payload["investmentReadiness"] : [];
   const sections = Object.entries(payload).filter(([key, value]) => Array.isArray(value) && key !== "investmentReadiness" && !(type === "investor" && key === "checks"));
   const scalars = Object.entries(payload).filter(
     ([, value]) => value !== null && typeof value === "object" && !Array.isArray(value),
@@ -266,7 +266,7 @@ function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; ta
     <div className="space-y-4">
       {readinessRows.map((investment: any) => (
         <section key={investment.onboardingId} className="space-y-2">
-          <InvestmentChecklist onboardingId={investment.onboardingId} />
+          <InvestmentChecklist onboardingId={investment.onboardingId} providedData={{ ...investment, viewer: "staff" }} />
           <Button asChild variant="outline" size="sm">
             <Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId: investment.offeringId, onboardingId: investment.onboardingId }}>Open investment</Link>
           </Button>
