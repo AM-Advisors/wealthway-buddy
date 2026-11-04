@@ -142,7 +142,7 @@ export const reviewWixMemberFn = createServerFn({ method: "POST" }).middleware([
         const { data: dup } = await db.from("persons").select("id").ilike("email", m.email).limit(1);
         if ((dup ?? []).length) throw new Error("A person with this email now exists — import again to link.");
       }
-      const { data: row, error } = await db.from("persons").insert({ legal_first_name: m.first_name, legal_last_name: m.last_name, email: m.email, phone: m.phone, created_by: context.userId, entry_source: "staff" }).select("id").single();
+      const { data: row, error } = await db.from("persons").insert({ legal_first_name: m.first_name, legal_last_name: m.last_name, email: m.email, phone: m.phone, created_by: context.userId, entry_source: "harmonious" }).select("id").single();
       if (error) throw new Error(error.message);
       personId = row.id;
     }

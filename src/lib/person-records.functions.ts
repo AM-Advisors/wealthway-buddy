@@ -94,7 +94,7 @@ export const savePersonRecordFn = createServerFn({ method: "POST" }).middleware(
       return { id: data.id };
     }
     if (!f["legal_first_name"] && !f["email"]) throw new Error("Add at least a first name or an email.");
-    const { data: row, error } = await d.from("persons").insert({ ...f, created_by: context.userId, entry_source: "staff" }).select("id").single();
+    const { data: row, error } = await d.from("persons").insert({ ...f, created_by: context.userId, entry_source: "harmonious" }).select("id").single();
     if (error) throw new Error(error.message);
     return { id: row.id as string };
   });
