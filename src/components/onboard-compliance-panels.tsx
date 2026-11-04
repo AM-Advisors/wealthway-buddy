@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadError } from "@/components/load-error";
 import { taxPreviewMatches } from "@/lib/investor-step-prefill";
+import { financialBackgroundFields } from "@/lib/investor-financial-background";
+import type { AmlAnswers, AmlField } from "@/lib/onboarding-intake-model";
 import {
   certifyFn,
   certifyTaxFormFn,
@@ -133,10 +135,10 @@ const AML_LABEL: Record<string, string> = {
   sourceOfWealthDetail: "Brief description of source of wealth",
 };
 
-/** Verify: BSA/AML questions that apply to this investment only. */
+/** Investor questionnaire: applicable financial facts, using the existing protected submission. */
 function AmlCard({ onboardingId, d, refresh }: { onboardingId: string; d: any; refresh: () => void }) {
   const fn = useServerFn(submitAmlFn);
-  const [a, setA] = useState<Record<string, string>>({});
+  const [a, setA] = useState<Record<string, string>>(d.aml.answers ?? {});
   const [sig, setSig] = useState("");
   const m = useMutation({
     mutationFn: () => fn({ data: { onboardingId, answers: a, certifiedName: sig } }),
@@ -145,20 +147,16 @@ function AmlCard({ onboardingId, d, refresh }: { onboardingId: string; d: any; r
   });
   if (d.aml.state === "valid" || d.aml.state === "not_applicable") return null;
   if (d.aml.state === "review_required") {
-    return <Card><CardContent className="pt-6 text-sm"><strong>Compliance Review Required.</strong> Harmonious is reviewing your financial background answers.</CardContent></Card>;
+    return <p role="status" className="text-sm text-muted-foreground">Your financial background answers are saved and under review. You do not need to enter them again.</p>;
   }
-  const fields: string[] = [...d.aml.fields];
-  if (a["sourceOfFunds"] === "other" && !fields.includes("sourceOfFundsDetail")) fields.splice(fields.indexOf("sourceOfFunds") + 1, 0, "sourceOfFundsDetail");
+  const fields = financialBackgroundFields(d.aml.fields as AmlField[], a as Partial<AmlAnswers>);
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Financial background</CardTitle>
-        <CardDescription>Required by anti-money-laundering rules. We only ask what we don't already have.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <section aria-label="Financial background" className="space-y-4 border-t pt-4" data-private>
+      <h3 className="text-lg font-semibold">Financial background</h3>
+      <div className="space-y-4">
         {fields.map((f) => (
           <div key={f} className="space-y-2">
-            <Label>{AML_LABEL[f] ?? f}</Label>
+            <Label htmlFor={`financial-${f}`}>{AML_LABEL[f] ?? f}</Label>
             {f === "sourceOfFunds" ? (
               <Choice value={a[f]} options={SOURCE_OF_FUNDS.map((o) => [o.value, o.label] as const)} onChange={(v) => setA({ ...a, [f]: v })} />
             ) : f === "sourceOfWealth" ? (
@@ -168,14 +166,14 @@ function AmlCard({ onboardingId, d, refresh }: { onboardingId: string; d: any; r
             ) : f === "expectedActivity" ? (
               <Choice value={a[f]} options={[["single_investment", "This single investment"], ["ongoing", "Ongoing investments and capital calls"]]} onChange={(v) => setA({ ...a, [f]: v })} />
             ) : (
-              <Input value={a[f] ?? ""} onChange={(e) => setA({ ...a, [f]: e.target.value })} maxLength={600} />
+              <Input id={`financial-${f}`} value={a[f] ?? ""} onChange={(e) => setA({ ...a, [f]: e.target.value })} maxLength={600} />
             )}
           </div>
         ))}
-        <div><Label>Type your full name to confirm these answers are accurate</Label><Input value={sig} onChange={(e) => setSig(e.target.value)} maxLength={200} /></div>
-        <Button disabled={m.isPending || sig.trim().length < 2} onClick={() => m.mutate()}>Save</Button>
-      </CardContent>
-    </Card>
+        <div><Label htmlFor="financial-confirm-name">Type your full name to confirm these answers are accurate</Label><Input id="financial-confirm-name" value={sig} onChange={(e) => setSig(e.target.value)} maxLength={200} /></div>
+        <Button disabled={m.isPending || sig.trim().length < 2 || fields.some(f => !a[f]?.trim())} onClick={() => m.mutate()}>Confirm financial answers</Button>
+      </div>
+    </section>
   );
 }
 
@@ -259,7 +257,6 @@ export function TaxAndCompliancePanel({ onboardingId, done }: { onboardingId: st
   return (
     <div className="space-y-4">
       <TaxIntakeCard key={JSON.stringify(d.taxIntake.answers)} onboardingId={onboardingId} d={d} refresh={refresh} />
-      <AmlCard onboardingId={onboardingId} d={d} refresh={refresh} />
       <BadActorCard onboardingId={onboardingId} d={d} refresh={refresh} />
       <DemographicsCard onboardingId={onboardingId} d={d} refresh={refresh} />
     </div>
@@ -271,8 +268,9 @@ export function FinancialBackgroundPanel({ onboardingId, done }: { onboardingId:
   const q = useCompliance(onboardingId);
   const qc = useQueryClient();
   const refresh = () => { qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); };
-  if (!q.data) return null;
-  return <AmlCard onboardingId={onboardingId} d={q.data} refresh={refresh} />;
+  if (q.isPending) return <p className="text-sm text-muted-foreground">Loading questionnaire details…</p>;
+  if (q.error || !q.data) return <LoadError error={q.error} what="Your questionnaire details" onRetry={() => void q.refetch()} audience="account" />;
+  return <AmlCard key={JSON.stringify(q.data.aml.answers)} onboardingId={onboardingId} d={q.data} refresh={refresh} />;
 }
 
 const OUTCOME_LABEL: Record<string, string> = {
