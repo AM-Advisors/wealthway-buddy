@@ -823,7 +823,62 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           ])
         : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
 
-      const verifications = rows(kyc);
+      // One identity check per person: the login check is the person's identity record and is
+      // reused across investments, so it is shown first even when no per-investment row exists.
+      const acctRows = rows(
+        await s
+          .from("account_identity_checks")
+          .select("id, provider, status, review_details, decision_summary, decided_at, updated_at, session_id, decision_note")
+          .eq("user_id", data.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+      );
+      const login = acctRows.find((c: any) => c.status === "approved") ?? acctRows[0] ?? null;
+      const rd = (login?.review_details ?? {}) as any;
+      const loginDoc = rd.idDocument ?? {};
+      const loginVerification = login
+        ? {
+            id: null,
+            application_id: "Login identity check (all investments)",
+            provider: login.provider,
+            status: login.status,
+            completed_at: login.decided_at ?? login.updated_at,
+            expired_at: null,
+            document_type: loginDoc.subtype ?? loginDoc.type ?? null,
+            document_issuing_country: loginDoc.country ?? login.decision_summary?.document?.country ?? null,
+            document_issuing_region: loginDoc.region ?? null,
+            document_issue_date: loginDoc.issued ?? null,
+            document_expiration_date: loginDoc.expires ?? null,
+            document_number_last4: loginDoc.numberLast4 ?? null,
+            document_expired: loginDoc.expires ? new Date(loginDoc.expires) < new Date() : null,
+            verified_full_name: loginDoc.fullName ?? null,
+            liveness_status: rd.liveness?.status ?? null,
+            face_match_status: rd.faceMatch?.status ?? null,
+            address_check_status: rd.address?.status ?? null,
+            proof_of_address_status: null,
+            provider_decision: login.status,
+            provider_warnings: [],
+            harmonious_decision: login.status,
+            harmonious_decision_reason: login.decision_note ?? null,
+            last_synced_at: login.updated_at,
+            reconciled_at: null,
+            workflow_id: login.session_id ?? null,
+          }
+        : null;
+      // Per-investment rows that never started (no completion) duplicate the person check; hide them.
+      const perInvestment = rows(kyc).filter((k: any) => !loginVerification || k.completed_at || k.harmonious_decision);
+      const verifications = loginVerification ? [loginVerification, ...perInvestment] : perInvestment;
+      const loginChecks = loginVerification
+        ? (["idDocument", "liveness", "faceMatch", "aml", "address"] as const)
+            .filter((k) => rd[k])
+            .map((k) => ({
+              check_kind: k === "idDocument" ? "government_id" : k === "faceMatch" ? "face_match" : k,
+              provider_status: rd[k].raw ?? rd[k].status ?? null,
+              harmonious_status: rd[k].status ?? null,
+              warnings: rd[k].warnings ?? [],
+              evaluated_at: login!.decided_at ?? login!.updated_at,
+            }))
+        : [];
       const verificationIds = verifications.map((k: any) => k.id).filter(Boolean);
       const person = (await s.from("persons").select("id").eq("user_id", data.id).maybeSingle()).data as any;
 
@@ -869,7 +924,7 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           expired: k.document_expired,
           verifiedName: k.verified_full_name,
         })),
-        identityChecks: rows(checks).map((c: any) => ({
+        identityChecks: [...loginChecks, ...rows(checks)].map((c: any) => ({
           check: c.check_kind,
           provider: c.provider_status,
           harmonious: c.harmonious_status,
