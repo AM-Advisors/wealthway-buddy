@@ -147,8 +147,10 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
         </li>
       </ol>
 
-      <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
-      <FinancialBackgroundPanel onboardingId={onboardingId} done={refresh} />
+      {!d.complete ? <section aria-label="Investor questionnaire" className="space-y-4">
+        <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
+        <FinancialBackgroundPanel onboardingId={onboardingId} done={refresh} />
+      </section> : null}
 
 
       {view === "verification" ? <VerificationStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
