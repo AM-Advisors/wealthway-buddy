@@ -57,7 +57,11 @@ export function buildSignTasks(input: {
   if (input.feesRequired) add("fees", input.feesAccepted ? "complete" : "todo");
 
   const left = input.documents.filter((d) => !docComplete(d)).length;
-  const docsUnlocked = done(q) && done(tax) && (!input.feesRequired || input.feesAccepted);
+  // The server refuses document preparation until accreditation is chosen and certifications are done.
+  // Accreditation under review (506(c) paperwork in flight) does not block signing or preparation.
+  const acc = fromReq(req("accreditation"));
+  const cert = fromReq(req("certifications"));
+  const docsUnlocked = done(q) && done(tax) && done(cert) && acc !== "todo" && (!input.feesRequired || input.feesAccepted);
   const docState: SignTaskState = signed || (input.documents.length > 0 && left === 0)
     ? "complete" : docsUnlocked ? "todo" : "locked";
   add("subscription_documents", docState,

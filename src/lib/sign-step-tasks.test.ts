@@ -25,6 +25,24 @@ describe("sign step tasks", () => {
     expect(t.find((x) => x.key === "tax_documentation")!.state).toBe("locked");
   });
 
+  it("keeps documents locked until accreditation is chosen", () => {
+    const t = buildSignTasks({ ...base, requirements: [{ key: "subscription_questionnaire", state: "valid" }, { key: "accreditation", state: "missing" }] });
+    expect(t.find((x) => x.key === "accreditation")!.state).toBe("todo");
+    expect(t.find((x) => x.key === "subscription_documents")!.state).toBe("locked");
+    expect(t.find((x) => x.key === "submit")!.state).toBe("locked");
+  });
+
+  it("lets signing and preparation continue while accreditation is under review", () => {
+    const t = buildSignTasks({ ...base, requirements: [{ key: "subscription_questionnaire", state: "valid" }, { key: "accreditation", state: "review_required" }] });
+    expect(t.find((x) => x.key === "accreditation")!.state).toBe("review");
+    expect(t.find((x) => x.key === "subscription_documents")!.state).toBe("todo");
+  });
+
+  it("keeps documents locked until certifications are done", () => {
+    const t = buildSignTasks({ ...base, requirements: [{ key: "certifications", state: "missing" }] });
+    expect(t.find((x) => x.key === "subscription_documents")!.state).toBe("locked");
+  });
+
   it("blocks submit while financial background is missing even with documents signed", () => {
     const t = buildSignTasks({ ...base, documents: [{ requiresSignature: true, signed: true }], requirements: [
       { key: "subscription_questionnaire", state: "valid" }, { key: "tax_documentation", state: "valid" }, { key: "bsa_aml", state: "missing" },
