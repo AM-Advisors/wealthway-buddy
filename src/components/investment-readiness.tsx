@@ -220,7 +220,7 @@ function Empty({ title, body, icon }: { title: string; body: string; icon?: Reac
 }
 
 /** Investor / manager / staff view of one Investment's canonical checklist. */
-export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, providedData, fundingApprovalAction }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined; providedData?: { readiness: any; viewer: "staff"; fundName: string; profileLabel: string | null }; fundingApprovalAction?: React.ReactNode }) {
+export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, onOpenAccreditation, providedData, fundingApprovalAction }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined; onOpenAccreditation?: () => void; providedData?: { readiness: any; viewer: "staff"; fundName: string; profileLabel: string | null }; fundingApprovalAction?: React.ReactNode }) {
   const load = useServerFn(investmentReadinessFn);
   const loadAs = useServerFn(viewAsInvestmentFn);
   // In View As the server resolves the investment from the live perspective; no ID is sent.
@@ -239,6 +239,7 @@ export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, 
       title={d.profileLabel ?? "Investment Readiness"}
       subtitle={subtitle}
       onOpenItem={!viewAs ? onOpenItem : undefined}
+      onOpenAccreditation={!viewAs ? onOpenAccreditation : undefined}
       fundingApprovalAction={!viewAs ? fundingApprovalAction : undefined}
       action={!viewAs && d.viewer === "staff" ? <ViewAsPicker onboardingId={onboardingId} label="View client perspective" /> : undefined}
     />

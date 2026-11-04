@@ -266,7 +266,9 @@ function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; ta
     <div className="space-y-4">
       {readinessRows.map((investment: any) => (
         <section key={investment.onboardingId} className="space-y-2">
-          <InvestmentChecklist onboardingId={investment.onboardingId} providedData={{ ...investment, viewer: "staff" }} />
+          <InvestmentChecklist onboardingId={investment.onboardingId} providedData={{ ...investment, viewer: "staff" }} onOpenAccreditation={() => {
+            void navigate({ to: "/ops/fund/$fundId/investor/$onboardingId", params: { fundId: investment.offeringId, onboardingId: investment.onboardingId }, search: { tab: "accreditation" } });
+          }} />
           <Button asChild variant="outline" size="sm">
             <Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId: investment.offeringId, onboardingId: investment.onboardingId }}>Open investment</Link>
           </Button>
