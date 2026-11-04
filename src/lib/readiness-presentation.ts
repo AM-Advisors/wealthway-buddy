@@ -66,10 +66,11 @@ export function waitingDetail(i: any, items: any[] = []): string | null {
   if (!ACTIVE.has(i.status)) return null;
   const qDone = done(items, "subscription_questionnaire");
   const taxDone = done(items, "tax_documentation");
+  if (i.status === "under_review" && i.key === "accreditation") return "Accreditation verification awaiting review";
   if (i.status === "under_review") return i.key === "tax_documentation" ? "Uploaded tax form is waiting for review" : `${i.label} is waiting for review`;
   if (i.status === "blocked") return i.reason ?? "An open issue must be resolved first";
   switch (i.key) {
-    case "accreditation": return i.status === "needs_harmonious" ? "Accreditation proof awaiting review" : i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed";
+    case "accreditation": return i.status === "needs_harmonious" ? "Accreditation verification awaiting review" : i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed";
     case "tax_documentation": return "Investor signs the W-9 or W-8 online, or staff uploads a signed copy";
     case "tax_classification": return qDone ? "Questionnaire is complete. Tax status is confirmed when the W-9 or W-8 is signed" : "Tax status questions in the questionnaire not answered yet";
     case "subscription_questionnaire": return "Questionnaire not submitted yet";
