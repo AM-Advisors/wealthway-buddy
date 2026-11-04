@@ -296,9 +296,24 @@ export const proposeSideLetterChange = createServerFn({ method: "POST" })
       actor_id: context.userId,
       detail: { change_request_id: req.id, reason: data.reason },
     });
+    // Terms entered by someone who may already approve (staff, this fund's
+    // managers, live routine reviewers) take effect at once — one explicit
+    // authorized action. Assistants' entries still wait for review.
+    if (canApprove({ actorId: context.userId, actorKind: kind, proposedBy: context.userId })) {
+      const { error: decErr } = await db.rpc("decide_routine_side_letter", {
+        _request: req.id,
+        _actor: context.userId,
+        _decision: "approved",
+        _reason: "Applied on entry by an authorized fund approver.",
+      });
+      if (!decErr) {
+        await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: data.fundId, ref: req.id, title: "Side letter change", status: "approved", actorId: context.userId });
+        return { ok: true, requestId: req.id as string, applied: true };
+      }
+    }
     await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: data.fundId, ref: req.id, title: "Side letter change", status: "requested", actorId: context.userId });
     await (await import("./fund-review-notify.server")).notifyFundReview("side_letter", req.id);
-    return { ok: true, requestId: req.id as string };
+    return { ok: true, requestId: req.id as string, applied: false };
   });
 
 export const decideSideLetterChange = createServerFn({ method: "POST" })
