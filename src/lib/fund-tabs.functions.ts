@@ -14,9 +14,9 @@ export const investorDetailFn = createServerFn({ method: "POST" }).middleware([r
   .handler(async ({ data, context }) => {
     const s = await srv(); const access = await s.assertFund(context.userId, data.fundId);
     const detail = await s.investorDetail(data.fundId, data.onboardingId);
-    const actor = await (await import("@/lib/investor-onboarding.server")).onboardingActor(context.userId);
+    const canApproveSubscription = await (await import("@/lib/investor-onboarding.server")).subscriptionApprovalAvailable(context.userId, data.onboardingId);
     const reviewEvidence = await (await import("./investor-review-evidence.server")).investorReviewEvidence(await s.db(), context.userId, data.fundId, data.onboardingId);
-    return { ...detail, canManageTermAssociations: access.staff, reviewEvidence, canApproveSubscription: (actor.isStaff || actor.managedOfferingIds.includes(data.fundId)) && detail.investorUserId !== context.userId && detail.stage === "harmonious_review" };
+    return { ...detail, canManageTermAssociations: access.staff, reviewEvidence, canApproveSubscription };
   });
 
 export const managerInvestorSignedCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

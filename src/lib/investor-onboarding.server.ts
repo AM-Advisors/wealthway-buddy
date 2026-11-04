@@ -1,5 +1,6 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
 import { currentFundMinimum } from "@/lib/fund-minimum";
+import { outsideSignedRequirements, subscriptionReadyForReview } from "./subscription-review-readiness";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 import { profileDocumentRequirements, reusableProfileAccreditation } from "./profile-document-requirements";
 import { selectProfileDocumentEvidence } from "./profile-document-evidence.server";
@@ -472,7 +473,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       }, I.stage2)
     : null;
 
-  const requirements = determineOnboardingRequirements({
+  const requirements = outsideSignedRequirements(determineOnboardingRequirements({
     compliance: stage2
       ? {
           tax: stage2.taxState,
@@ -520,7 +521,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       fundingStatus: row.funding_status,
     },
     nowIso: nowIso(),
-  });
+  }), I.outside?.get(String(row.id)));
 
   const { investorDocumentRank } = await import("@/lib/offering-document-model");
   const uploads = selectProfileDocumentEvidence(I.profileDocuments, row);
@@ -1692,6 +1693,8 @@ export async function approveToFund(userId: string, input: { onboardingId: strin
   const accepted = Number(input.acceptedAmountCents ?? row.requested_amount_cents ?? 0);
   if (accepted <= 0) fail("Record the accepted subscription amount.");
 
+  if (!subscriptionReadyForReview(row.stage, facts.requirements, Boolean(row.removed_at), Boolean(row.approved_to_fund_at), blocking)) fail("This investment is not available for subscription approval.");
+  await advanceSubscriptionToReview(row, facts.requirements, blocking, { actorUserId: userId, trigger: "approveToFund" });
   const problem = stageTransitionError(row.stage, "approved_to_fund");
   if (problem) fail(problem);
 
@@ -1717,6 +1720,30 @@ export async function approveToFund(userId: string, input: { onboardingId: strin
   const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
   await notifyInvestorApproval({ onboardingId: row.id, action: 'fund', ref: `approved:${row.id}` });
   return { approved: true, acceptedAmountCents: accepted };
+}
+
+/** Canonical facts, not an import's stale stage, determine review eligibility. Never approves. */
+async function advanceSubscriptionToReview(row: any, requirements: RequirementResult[], blocking: number, ctx: { actorUserId: string | null; trigger: string }) {
+  if (row.stage === "harmonious_review" || !subscriptionReadyForReview(row.stage, requirements, Boolean(row.removed_at), Boolean(row.approved_to_fund_at), blocking)) return;
+  const from = row.stage;
+  const { data: advanced, error } = await db().from("investor_onboardings")
+    .update({ stage: "harmonious_review", updated_at: nowIso() }).eq("id", row.id).eq("stage", from).is("removed_at", null).is("approved_to_fund_at", null).select("id").maybeSingle();
+  if (error) fail("The completed subscription could not be sent for review.");
+  if (!advanced) fail("This investment changed. Refresh before approving.");
+  row.stage = "harmonious_review";
+  await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "subscription_ready_for_review", fromStatus: from, toStatus: row.stage, actorUserId: ctx.actorUserId, actorRole: "system", detail: { trigger: ctx.trigger } });
+  const { notifyInvestorApproval } = await import("./investor-approval-notify.server");
+  await notifyInvestorApproval({ onboardingId: row.id, action: "review", ref: `subscription-ready:${row.id}` });
+}
+
+/** Read-only eligibility for the existing exact-investment approval button. */
+export async function subscriptionApprovalAvailable(userId: string, onboardingId: string) {
+  const row = await onboardingRow(onboardingId);
+  const actor = await onboardingActor(userId);
+  if ((!actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) || row.investor_user_id === userId) return false;
+  const facts = await gatherFacts(row);
+  const blocking = (await openExceptions(row.id)).filter(e => e.severity === "blocking").length;
+  return subscriptionReadyForReview(row.stage, facts.requirements, Boolean(row.removed_at), Boolean(row.approved_to_fund_at), blocking);
 }
 
 export async function setOnboardingStage(userId: string, input: { onboardingId: string; stage: string }) {
@@ -2640,6 +2667,8 @@ export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { 
   const { readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
   const row = await onboardingRow(onboardingId);
   const { result, facts } = await computeReadinessFor(row);
+  const blocking = (await openExceptions(row.id)).filter(e => e.severity === "blocking").length;
+  await advanceSubscriptionToReview(row, facts.requirements, blocking, ctx);
   const { shouldAdvanceVerifiedInvestor } = await import("./verification-auto-advance");
   if (shouldAdvanceVerifiedInvestor(row.stage, facts.requirements, Boolean(row.removed_at))) {
     const { data: advanced, error } = await db().from("investor_onboardings")

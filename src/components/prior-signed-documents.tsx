@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listPriorDocsFn, markOutsideSubscriptionFn, openPriorDocFn, outsideSubscriptionFn, recordPriorDocFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
 
-const refreshFund = (qc: ReturnType<typeof useQueryClient>) => qc.invalidateQueries({ predicate: (q) => ["fund-investor", "fund-investor-grid", "fund-readiness"].includes(String(q.queryKey[0])) });
+const refreshFund = (qc: ReturnType<typeof useQueryClient>) => qc.invalidateQueries({ predicate: (q) => ["fund-investor", "fund-investor-grid", "fund-readiness", "investment-readiness", "investor-record", "onboarding", "readiness-queue"].includes(String(q.queryKey[0])) });
 
 const KINDS: Record<string, string> = {
   subscription_agreement: "Subscription Agreement",

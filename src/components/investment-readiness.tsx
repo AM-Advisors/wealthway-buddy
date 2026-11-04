@@ -82,7 +82,7 @@ function ReadinessHeader({ r, title, subtitle, action }: { r: any; title: string
   );
 }
 
-export function AttentionNeeded({ r, viewer, onOpenItem }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined }) {
+export function AttentionNeeded({ r, viewer, onOpenItem, fundingApprovalAction }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   const list = blockersOf(r);
   if (!list.length || r.terminal) return null;
   return (
@@ -96,7 +96,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem }: { r: any; viewer: Vie
               <p className="truncate text-sm font-medium">{i.action ?? i.label}</p>
             </div>
             <span className={cn("text-xs font-medium sm:text-left", tone(i.status))}>{plainStatus(i.status, viewer)}</span>
-            {onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
+            {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
         ))}
       </ul>
@@ -184,11 +184,11 @@ function AuditDetails({ r }: { r: any }) {
   );
 }
 
-export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string) => void) | undefined }) {
+export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem, fundingApprovalAction }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string) => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   return (
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
-      <AttentionNeeded r={r} viewer={viewer} onOpenItem={onOpenItem} />
+      <AttentionNeeded r={r} viewer={viewer} onOpenItem={onOpenItem} fundingApprovalAction={fundingApprovalAction} />
       {viewer === "staff" ? <><StageJourney r={r} viewer={viewer} /><AuditDetails r={r} /></> : (
         <details className="group">
           <summary className="cursor-pointer text-sm font-medium text-muted-foreground">Show all steps</summary>
@@ -210,7 +210,7 @@ function Empty({ title, body, icon }: { title: string; body: string; icon?: Reac
 }
 
 /** Investor / manager / staff view of one Investment's canonical checklist. */
-export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, providedData }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined; providedData?: { readiness: any; viewer: "staff"; fundName: string; profileLabel: string | null } }) {
+export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, providedData, fundingApprovalAction }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined; providedData?: { readiness: any; viewer: "staff"; fundName: string; profileLabel: string | null }; fundingApprovalAction?: React.ReactNode }) {
   const load = useServerFn(investmentReadinessFn);
   const loadAs = useServerFn(viewAsInvestmentFn);
   // In View As the server resolves the investment from the live perspective; no ID is sent.
@@ -229,6 +229,7 @@ export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, 
       title={d.profileLabel ?? "Investment Readiness"}
       subtitle={subtitle}
       onOpenItem={!viewAs ? onOpenItem : undefined}
+      fundingApprovalAction={!viewAs ? fundingApprovalAction : undefined}
       action={!viewAs && d.viewer === "staff" ? <ViewAsPicker onboardingId={onboardingId} label="View client perspective" /> : undefined}
     />
   );
