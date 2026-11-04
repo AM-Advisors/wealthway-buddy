@@ -47,10 +47,9 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
     read("onboarding_readiness_summaries", "onboarding_id, blocked, next_owner", "onboarding_id", rows.map((r) => r.id)),
   ]);
   const profileType = new Map(profiles.map((p) => [p.id, p.profile_type as string | null]));
-  const { publishedQuestionnaire } = await import("@/lib/investor-onboarding.server");
-  const { validateQuestionnaire } = await import("@/lib/investor-onboarding-model");
-  const questions = new Map<string, any[]>();
-  for (const id of ids("offering_id")) questions.set(id, (((await publishedQuestionnaire(id)) as any)?.questions ?? []) as any[]);
+  const { loadCompletionQuestions } = await import("@/lib/questionnaire-completion.server");
+  const { questionnaireCompletion } = await import("@/lib/questionnaire-completion");
+  const questions = await loadCompletionQuestions(d, ids("offering_id"));
   const fund = new Map(offerings.map((o) => [o.id, o.name as string]));
   const person = new Map(persons.map((p) => [p.id, p]));
   const ready = new Map(readiness.map((r) => [r.onboarding_id, r]));
@@ -67,8 +66,8 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
         fundName: fund.get(r.offering_id) ?? null,
         investorName: name ?? null,
         stage: String(r.stage ?? ""),
-        questionnaireSubmitted: Boolean(r.questionnaire_submitted_at || r.questionnaire_version),
-        questionnaireMissingRequired: validateQuestionnaire((questions.get(r.offering_id) ?? []) as any, (r.questionnaire_responses ?? {}) as Record<string, unknown>, profileType.get(r.investment_profile_id) ?? null).errors.length,
+        questionnaireSubmitted: Boolean(r.questionnaire_submitted_at && r.questionnaire_version),
+        questionnaireMissingRequired: questionnaireCompletion({ submittedAt: r.questionnaire_submitted_at, version: r.questionnaire_version, questions: questions.get(r.offering_id) ?? null, answers: r.questionnaire_responses, profileType: profileType.get(r.investment_profile_id) }).missingRequired,
         questionnaireAnswered: Object.values((r.questionnaire_responses ?? {}) as Record<string, unknown>).filter((v) => v !== null && v !== "" && !(Array.isArray(v) && !v.length)).length,
         taxFormType: tax?.form_type ?? null,
         taxFormSigned: Boolean(tax?.certified_at),

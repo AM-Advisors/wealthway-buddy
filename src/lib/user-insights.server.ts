@@ -41,15 +41,16 @@ export async function directoryInsights(db: any, people: any[]) {
   const [invitations, { data: persons, error }, { data: onboardings, error: onboardingError }] = await Promise.all([
     invitationSummaries(db),
     db.from("persons").select(PERSON_FIELDS).limit(20000),
-    db.from("investor_onboardings").select("person_id,investor_user_id,questionnaire_submitted_at,stage,funding_status").is("removed_at", null).limit(20000),
+    db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,investor_user_id,questionnaire_submitted_at,questionnaire_version,questionnaire_responses,stage,funding_status").is("removed_at", null).limit(20000),
   ]);
   if (error || onboardingError) throw new Error("Could not load setup progress.");
+  const completions = await (await import("@/lib/questionnaire-completion.server")).questionnaireCompletionForRows(db, onboardings ?? []);
   const provider = invitations.some((i: any) => i.attempts[0]?.messageId) ? await brevoEvents({ limit: "1000" }) : { events: [], error: null };
   const confirmed = invitations.map((i: any) => ({ ...i, outcome: emailOutcome(i.attempts[0] ?? null, provider.events, !!provider.error) }));
   return { invitations: confirmed, providerError: provider.error, people: people.map(p => {
     const linked = (persons ?? []).filter((x: any) => x.user_id === p.id);
     const gaps = [...new Set(linked.length ? linked.flatMap((x: any) => setupGaps(x, p.types.includes("Employee"))) : setupGaps(null, p.types.includes("Employee")))];
-    if (!p.types.includes("Employee") && (onboardings ?? []).some((o: any) => (o.investor_user_id === p.id || linked.some((x: any) => x.id === o.person_id)) && !o.questionnaire_submitted_at)) gaps.push("Questionnaire");
+    if (!p.types.includes("Employee") && (onboardings ?? []).some((o: any) => (o.investor_user_id === p.id || linked.some((x: any) => x.id === o.person_id)) && !completions.get(o.id)?.complete)) gaps.push("Questionnaire");
     const mine = confirmed.filter((i: any) => i.email === String(p.email).toLowerCase());
     const latest = [...mine].sort((a: any, b: any) => String(b.attempts[0]?.at ?? b.createdAt).localeCompare(String(a.attempts[0]?.at ?? a.createdAt)))[0];
     return { ...p, gaps, latestInvite: latest ?? null };

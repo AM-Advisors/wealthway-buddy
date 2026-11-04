@@ -59,10 +59,13 @@ export const remindInvestorItemFn = createServerFn({ method: "POST" }).middlewar
     const k = KINDS[data.kind];
     const out: Array<{ id: string; outcome: "sent" | "skipped"; reason?: string }> = [];
     for (const id of data.onboardingIds) {
-      const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, questionnaire_submitted_at, removed_at").eq("id", id).maybeSingle();
+      const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id, questionnaire_submitted_at, questionnaire_version, questionnaire_responses, removed_at").eq("id", id).maybeSingle();
       if (!ob || ob.offering_id !== data.fundId || ob.removed_at) { out.push({ id, outcome: "skipped", reason: "not in this fund" }); continue; }
       if (!ob.investor_user_id) { out.push({ id, outcome: "skipped", reason: "no investor account yet" }); continue; }
-      if (data.kind === "questionnaire" && ob.questionnaire_submitted_at) { out.push({ id, outcome: "skipped", reason: "questionnaire already submitted" }); continue; }
+      if (data.kind === "questionnaire") {
+        const completions = await (await import("@/lib/questionnaire-completion.server")).questionnaireCompletionForRows(d, [ob]);
+        if (completions.get(ob.id)?.complete) { out.push({ id, outcome: "skipped", reason: "questionnaire already complete" }); continue; }
+      }
       if (data.kind === "w9") {
         const { data: doc } = await d.from("investor_documents").select("id").eq("onboarding_id", id).eq("doc_kind", "tax_form").neq("review_status", "rejected").limit(1);
         if ((doc ?? []).length) { out.push({ id, outcome: "skipped", reason: "tax form already uploaded" }); continue; }

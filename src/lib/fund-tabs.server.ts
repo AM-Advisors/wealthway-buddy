@@ -56,7 +56,7 @@ export async function investorGrid(fundId: string) {
   const classApplicable = fund?.has_multiple_classes === true;
   const fundRelease = await (await import("@/lib/wire-release.server")).wireReleaseState(fundId).catch(() => ({ available: false }));
   const { data } = await (await db()).from("investor_onboardings")
-    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type, tax_id_last4)")
+    .select("id, offering_id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, questionnaire_version, questionnaire_responses, investment_profiles(legal_name, profile_type, tax_id_last4)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
   // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
   const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
@@ -64,6 +64,7 @@ export async function investorGrid(fundId: string) {
     ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status, date_of_birth, citizenship_country, address_line1, city, postal_code, tax_id_last4").in("id", ids)
     : { data: [] as any[] };
   const byId = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
+  const completions = await (await import("@/lib/questionnaire-completion.server")).questionnaireCompletionForRows(await db(), data ?? []);
   const appIds = [...new Set(((data ?? []) as any[]).map((o) => o.application_id).filter(Boolean))] as string[];
   const { data: appRows } = appIds.length
     ? await (await db()).from("investor_applications").select("id, funding_status").in("id", appIds)
@@ -107,7 +108,7 @@ export async function investorGrid(fundId: string) {
     if (!dateOfBirth && !entity) missing.push("Date of birth");
     if (!taxIdLast4) missing.push("Tax ID");
     if (!committedCents) missing.push("Commitment amount");
-    if (!o.questionnaire_submitted_at) missing.push("Questionnaire");
+    if (!completions.get(o.id)?.complete) missing.push("Questionnaire");
     if (!kycOk) missing.push(entity ? "KYB/AML check" : "KYC/AML check");
     if (docs !== "Signed" && docs !== "Signed (outside platform)") missing.push("Signed subscription");
     return {
@@ -129,7 +130,7 @@ export async function investorGrid(fundId: string) {
       kycOk,
       docs,
       wiring: CANONICAL_FUNDING_LABELS[funding],
-      steps: investorSteps({ stage: o.stage, claimed: !!o.investor_user_id, profileChosen: !!o.investment_profiles?.profile_type, questionnaireDone: !!o.questionnaire_submitted_at,
+      steps: investorSteps({ stage: o.stage, claimed: !!o.investor_user_id, profileChosen: !!o.investment_profiles?.profile_type, questionnaireDone: completions.get(o.id)?.complete === true,
         kyc, aml, signed: docs === "Signed" || docs === "Signed (outside platform)", outForSignature: docs === "Out for signature", funding }),
       lastActivity: o.last_activity_at ?? o.updated_at ?? null,
       stage: o.stage as string,
