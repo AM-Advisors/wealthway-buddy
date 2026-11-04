@@ -135,7 +135,7 @@ export function SidebarAccountFooter({
               <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("hm:record-screen"))} className="flex items-center gap-2">
                 <Video className="size-4" /> Record my screen
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onSignOut()} className="flex items-center gap-2">
+              <DropdownMenuItem onSelect={() => { window.dispatchEvent(new Event("hm:flush-replay")); onSignOut(); }} className="flex items-center gap-2">
                 <LogOut className="size-4" /> Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
