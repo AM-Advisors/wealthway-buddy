@@ -3,7 +3,7 @@
 ## Automatic subscription preparation (2026-11-04)
 - [x] Prepare through canonical mutation/webhook reconciliation, including final fee acceptance; retain access, review, signature and funding checks and prepared versions.
 - [x] Remove routine preparation tasks and staff preparation button; signing retains a defensive checked opening path.
-- [ ] Run focused regressions and fictional shared-checklist verification.
+- [x] 83 focused regressions passed; fictional shared checklist checked on desktop/440px with no preparation task/button, premature signature action, overflow or runtime errors. Preview build OK. No live records, emails or signatures changed.
 - [ ] Durable personalized document/signing read-back requires independently isolated synthetic signing QA; not published.
 
 ## Chris’s completed W-9 status (2026-11-04)
