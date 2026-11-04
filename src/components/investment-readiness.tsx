@@ -82,6 +82,13 @@ function ReadinessHeader({ r, title, subtitle, action }: { r: any; title: string
   );
 }
 
+/** Small accreditation-only detail under waiting statuses; mirrors the same canonical states. */
+function accreditationDetail(i: { status: string; action?: string | null }) {
+  if (i.status === "under_review" || i.status === "needs_harmonious") return "Accreditation verification awaiting review";
+  if (i.status === "needs_investor") return i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed";
+  return "Accreditation needs attention";
+}
+
 export function AttentionNeeded({ r, viewer, onOpenItem, fundingApprovalAction }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   const list = blockersOf(r);
   if (!list.length || r.terminal) return null;
@@ -97,7 +104,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem, fundingApprovalAction }
             </div>
             <div className="min-w-0 space-y-1 sm:text-left">
               <p className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</p>
-              {i.key === "accreditation" && viewer !== "investor" ? <p className="break-words text-xs text-muted-foreground">{i.status === "under_review" || i.status === "needs_harmonious" ? "Accreditation verification awaiting review" : i.status === "needs_investor" ? i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed" : "Accreditation needs attention"}</p> : null}
+              {i.key === "accreditation" && viewer !== "investor" ? <p className="break-words text-xs text-muted-foreground">{accreditationDetail(i)}</p> : null}
             </div>
             {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
@@ -144,7 +151,7 @@ export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer
                 <ul className="mb-2 space-y-1.5 border-l-2 border-muted pl-3">
                   {items.length ? items.map((i: any) => (
                     <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}</span>
+                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}{i.key === "accreditation" && viewer !== "investor" ? <span className="block text-xs text-muted-foreground">{accreditationDetail(i)}</span> : null}</span>
                       <span className="flex items-center gap-2 text-xs">
                         {i.owner && i.status !== "complete" ? <span className="text-muted-foreground">{ownerText(i.owner)}</span> : null}
                         <span className={tone(i.status)}>{plainStatus(i.status, viewer)}</span>
