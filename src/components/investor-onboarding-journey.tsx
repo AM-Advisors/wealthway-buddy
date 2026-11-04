@@ -719,6 +719,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const doneCount = tasks.filter((t) => t.state === "complete").length;
   const firstOpen = tasks.find((t) => t.state === "todo" || t.state === "review")?.key ?? null;
   const current = userPicked ? open : firstOpen;
+  // Name exactly what still blocks the subscription documents instead of going quiet.
+  const docBlockers = tasks.filter((t) => t.state === "todo" && t.key !== "subscription_documents" && t.key !== "submit");
 
   const go = (k: SignTaskKey) => {
     setUserPicked(true);
