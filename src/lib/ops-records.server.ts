@@ -914,16 +914,7 @@ export async function investorTab(context: any, data: { id: string; tab: string 
       return {
         checks: currentChecks,
         investmentReadiness,
-        governmentId: verifications.map((k: any) => ({
-          applicationId: k.application_id,
-          documentType: k.document_type,
-          issuingJurisdiction: [k.document_issuing_region, k.document_issuing_country].filter(Boolean).join(", ") || null,
-          issued: k.document_issue_date,
-          expires: k.document_expiration_date,
-          documentNumber: k.document_number_last4 ? `••••${k.document_number_last4}` : null,
-          expired: k.document_expired,
-          verifiedName: k.verified_full_name,
-        })),
+        // Government ID details render once, in the shared Government ID review card.
         identityChecks: [...loginChecks, ...rows(checks)].map((c: any) => ({
           check: c.check_kind,
           provider: c.provider_status,
