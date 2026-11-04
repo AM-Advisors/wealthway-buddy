@@ -86,6 +86,7 @@ export function DocumentSignCard({
       });
       setUrl(res.signingUrl);
       setOpen(true);
+      window.__lovableEvents?.track?.("project.document_opened", { document_kind: "signing_document", evidence: "signing_session_ready" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not open the signing session.");
     } finally {
@@ -187,7 +188,7 @@ export function DocumentSignCard({
           <CardContent className="border-t pt-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Required signers</p>
             <ul className="mt-2 space-y-1 text-sm">
-              {signing!.signers.map((s) => (
+              {signing?.signers.map((s) => (
                 <li key={s.id} className="flex flex-wrap justify-between gap-2">
                   <span>
                     {s.name} · {s.capacityLabel}

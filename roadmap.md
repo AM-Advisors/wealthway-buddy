@@ -1,5 +1,9 @@
 # Roadmap
 
+## Document-open analytics (2026-11-04)
+- [x] Instrument existing investor fund document render, successful tax preview and issued signing-session handlers; category/evidence only, no recipient, record IDs or URLs.
+- [ ] Per-investor sent/opened/unsigned matching cannot be supplied by anonymous visit analytics; no cross-visit identity or email opens are available. Existing signature records remain authoritative. No new directory or guessed open statuses.
+
 ## Pre-account subscription emails (2026-11-04)
 - [x] Send prepared subscription requests to the recorded investor email with their authorized personal invitation when no account exists; manual sends retain both invite and document request.
 - [x] Thirteen fictional email/invitation regressions passed; preview build OK. No live recipients, links or emails used for testing.
