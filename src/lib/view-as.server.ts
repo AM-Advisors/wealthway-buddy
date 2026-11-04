@@ -13,9 +13,18 @@ import { editContextIsLive, sessionIsLive, subjectAllowed, VIEW_AS_MINUTES, PERS
 const db = () => supabaseAdmin as any;
 const deny = (m: string): never => { throw new Error(`View As refused: ${m}`); };
 
-async function nameOf(userId: string) {
+async function nameOf(userId: string, personId?: string | null) {
   const { data } = await db().from("profiles").select("legal_name").eq("user_id", userId).maybeSingle();
-  return (data?.legal_name as string | null) ?? "Unnamed person";
+  if (data?.legal_name) return data.legal_name as string;
+  const join = (p: any) => [p?.preferred_name || p?.legal_first_name, p?.legal_last_name].filter(Boolean).join(" ").trim();
+  if (personId) {
+    const { data: p } = await db().from("persons").select("preferred_name, legal_first_name, legal_last_name").eq("id", personId).maybeSingle();
+    if (join(p)) return join(p);
+  }
+  const { data: ps } = await db().from("persons").select("preferred_name, legal_first_name, legal_last_name").eq("user_id", userId).limit(1);
+  if (join(ps?.[0])) return join(ps![0]);
+  const { data: u } = await db().auth.admin.getUserById(userId);
+  return (u?.user?.email as string | undefined) ?? "Unnamed person";
 }
 
 /** Canonical relationship check - fund_managers row or the investment's own investor. */
@@ -40,11 +49,11 @@ export async function listPerspectives(staffUserId: string, input: { onboardingI
   let offeringId = input.offeringId ?? null;
   const out: { perspective: Perspective; subjectUserId: string; name: string; offeringId: string; onboardingId: string | null; preview?: boolean }[] = [];
   if (input.onboardingId) {
-    const { data } = await db().from("investor_onboardings").select("investor_user_id, offering_id").eq("id", input.onboardingId).maybeSingle();
+    const { data } = await db().from("investor_onboardings").select("investor_user_id, offering_id, person_id").eq("id", input.onboardingId).maybeSingle();
     if (!data) deny("that investment was not found.");
     offeringId = data.offering_id;
     const subject = await onboardingActor(data.investor_user_id);
-    if (subjectAllowed(subject)) out.push({ perspective: "investor", subjectUserId: data.investor_user_id, name: await nameOf(data.investor_user_id), offeringId: data.offering_id, onboardingId: input.onboardingId });
+    if (subjectAllowed(subject)) out.push({ perspective: "investor", subjectUserId: data.investor_user_id, name: await nameOf(data.investor_user_id, data.person_id), offeringId: data.offering_id, onboardingId: input.onboardingId });
   }
   if (offeringId) {
     const { data } = await db().from("fund_managers").select("user_id").eq("offering_id", offeringId);
