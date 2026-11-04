@@ -268,7 +268,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     if (input.priorSubscription && stage === "subscription" && m.status !== "complete" && m.status !== "not_applicable") {
       m = { status: "complete", owner: null, action: null };
       reason = `Signed before Harmonious on ${input.priorSubscription.signedOn} (prior subscription confirmed).`;
-    } else if (input.outsideSubscription && (stage === "subscription" || OUTSIDE_SIGNED_ANSWERS.has(r.key)) && m.status !== "complete" && m.status !== "not_applicable") {
+    } else if (input.outsideSubscription && (stage === "subscription" || OUTSIDE_SIGNED_ANSWERS.has(r.key)) && r.state === "missing") {
       m = { status: "complete", owner: null, action: null };
       reason = `Signed outside the platform on ${input.outsideSubscription.signedOn}; copy loaded by Harmonious.`;
     }

@@ -1,5 +1,11 @@
 # Roadmap
 
+## Outside-signed subscription review (2026-11-04)
+- [x] Share outside-signing facts between investor steps, readiness and protected approval checks; conditionally advance completed subscriptions to manager review after saves.
+- [x] Make the checklist approval button open confirmation directly, derive its availability from canonical facts and refresh related screens after saves/approval.
+- [x] 129 focused tests passed, including fictional server approval/read-back and idempotent review advancement; preview build OK. Direct confirmation inspected at desktop and 522px.
+- [ ] Durable signed-in approval/email delivery and pre-submit undo click-through remain unverified, requiring independently isolated synthetic QA. Not published; Doug was not approved and no live emails were sent.
+
 ## Connected investor steps (2026-11-04)
 - [x] Reuse exact-party name/address/birthday and questionnaire fallbacks in tax review; reuse canonical determined W-9 routing without writing inferred answers. Saved tax answers and required confirmations stay authoritative.
 - [x] Wait for successful subscription preparation before opening the existing signing page; preserve readiness and signed versions. Changed tax details require a fresh review.

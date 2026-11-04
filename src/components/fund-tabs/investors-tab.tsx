@@ -4,7 +4,7 @@ import { InvestorEconomicsCard } from "@/components/fund-tabs/investor-economics
 import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";
 import { useState, type ReactNode } from "react";
 import { remindInvestorItemFn } from "@/lib/document-reminders.functions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
 
@@ -302,6 +302,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
 }
 
 export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }: { fundId: string; id: string | null; embedded?: boolean; onOpenItem?: (key: string) => void }) {
+  const qc = useQueryClient();
   const load = useServerFn(investorDetailFn);
   const approve = useServerFn(approveToFundFn);
   const downloadSigned = useServerFn(managerInvestorSignedCopyFn);
@@ -318,6 +319,16 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
     return load({ data: { fundId, onboardingId: id } });
   }, enabled: !!id });
   const d = q.data;
+  const fundingApprovalAction = d?.canApproveSubscription ? <ApprovalButton title="Approve this investor to send funds?" description="The investor will be notified to view this fund’s released bank details in their account. This does not record a payment or complete final admission." disabled={approving} onApprove={async () => {
+    if (!id) return;
+    setApproving(true);
+    try {
+      await approve({ data: { onboardingId: id } });
+      toast.success("Investor approved to send funds");
+      await qc.invalidateQueries({ predicate: query => ["fund-investor", "fund-investor-grid", "fund-investor-records", "fund-readiness", "investment-readiness", "investor-record", "onboarding", "readiness-queue"].includes(String(query.queryKey[0])) });
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
+    finally { setApproving(false); }
+  }}>{approving ? "Approving…" : "Approve to send funds"}</ApprovalButton> : undefined;
   const pct = d && d.committedCents ? Math.min(100, Math.round(((d.receivedCents ?? 0) / d.committedCents) * 100)) : 0;
   return (
     <div>
@@ -330,16 +341,9 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
             <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
               <h4 className="mb-1 text-lg font-medium">Approve investor to send funds</h4>
               <p className="text-base">The investor can view the fund’s released bank details after approval and completed checks. No separate Harmonious admission is needed to send the wire.</p>
-              {<ApprovalButton title="Approve this investor to send funds?" description="The investor will be notified to view this fund’s released bank details in their account. This does not record a payment or complete final admission." className="mt-3" disabled={approving} onApprove={async () => {
-                if (!id) return;
-                setApproving(true);
-                try { await approve({ data: { onboardingId: id } }); toast.success("Investor approved to send funds"); await q.refetch(); }
-                catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
-                finally { setApproving(false); }
-              }}>{approving ? "Approving…" : "Approve to send funds"}</ApprovalButton>}
             </section>
           )}
-          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} onOpenItem={onOpenItem} /></section>}
+          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} onOpenItem={onOpenItem} fundingApprovalAction={fundingApprovalAction} /></section>}
           <section className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
