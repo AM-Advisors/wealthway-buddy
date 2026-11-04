@@ -344,7 +344,7 @@ export function TaxSignPanel({ onboardingId, done, locked = false, subscriberNam
       {q.data.tax.state !== "valid" && !q.data.tax.uploadedCopy && !q.data.tax.form && q.data.taxIntake.state !== "valid" ? (
         <TaxIntakeCard key={JSON.stringify(q.data.taxIntake.answers)} onboardingId={onboardingId} d={q.data} refresh={refresh} />
       ) : null}
-      <TaxFormSignaturePanel onboardingId={onboardingId} done={done} defaultName={subscriberName ?? null} />
+      <TaxFormSignaturePanel onboardingId={onboardingId} done={done} defaultName={q.data.tax.reviewDetails?.legalName || q.data.profileName || subscriberName || null} />
     </section>
   );
 }
@@ -357,6 +357,8 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
   const taxFn = useServerFn(certifyTaxFormFn);
   const docFn = useServerFn(myTaxDocumentUrlFn);
   const [legalName, setLegalName] = useState(defaultName ?? "");
+  const [nameEdited, setNameEdited] = useState(false);
+  useEffect(() => { if (!nameEdited && defaultName) setLegalName(defaultName); }, [defaultName, nameEdited]);
   const [tin, setTin] = useState("");
   const [foreignTin, setForeignTin] = useState("");
   const [sig, setSig] = useState("");
@@ -410,7 +412,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
         <CardDescription>The official IRS {form.title} ({form.revision}), filled in with your details. Review it, then certify and sign.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div><Label>Name as shown on your tax return</Label><Input value={legalName} onChange={(e) => setLegalName(e.target.value)} maxLength={200} /></div>
+        <div><Label>Name as shown on your tax return</Label><Input value={legalName} onChange={(e) => { setNameEdited(true); setLegalName(e.target.value); }} maxLength={200} /></div>
         {d.tax.needsTin ? (
           <div><Label>{d.tax.tinKind === "ssn" ? "Social Security number" : "Employer identification number (EIN)"}</Label><Input value={tin} onChange={(e) => setTin(e.target.value)} inputMode="numeric" autoComplete="off" maxLength={11} type="password" /></div>
         ) : form.formType === "w8ben" ? (

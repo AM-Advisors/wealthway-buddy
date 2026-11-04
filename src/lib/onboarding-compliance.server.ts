@@ -4,6 +4,7 @@
  * functions after the caller's access to the onboarding is checked.
  */
 import { usPersonFromVerification } from "@/lib/subscription-prefill";
+import { taxIntakeDefaults, taxReviewDetails } from "@/lib/investor-step-prefill";
 import { pendingTaxUpload, taxStateWithUpload, type TaxUpload } from "@/lib/tax-upload-state";
 import {
   BAD_ACTOR_QUESTIONNAIRE_VERSION,
@@ -322,12 +323,12 @@ async function loadOwnOnboarding(userId: string, onboardingId: string) {
   const d = await db();
   const { data: ob } = await d
     .from("investor_onboardings")
-    .select("id, offering_id, investor_user_id, investment_profile_id")
+    .select("id, offering_id, investor_user_id, investment_profile_id, person_id, questionnaire_responses")
     .eq("id", onboardingId)
     .maybeSingle();
   if (!ob || ob.investor_user_id !== userId) fail("Forbidden: this investment is not yours.");
   if (!ob.investment_profile_id) fail("Choose who is making this investment first.");
-  const { data: profile } = await d.from("investment_profiles").select("id, profile_type, legal_name, display_label").eq("id", ob.investment_profile_id).maybeSingle();
+  const { data: profile } = await d.from("investment_profiles").select("id, profile_type, legal_name, display_label, country, address_line1, address_line2, city, region, postal_code").eq("id", ob.investment_profile_id).maybeSingle();
   if (!profile) fail("Investment profile not found.");
   return { d, ob, profile };
 }
@@ -356,7 +357,7 @@ async function raiseOpsException(onboardingId: string, type: string, detail: str
 async function loadFacts(d: any, ob: any, userId: string) {
   const [{ data: tax }, { data: person }] = await Promise.all([
     d.from("investor_tax_profiles").select("classification, tax_residency_country").eq("investment_profile_id", ob.investment_profile_id).maybeSingle(),
-    d.from("persons").select("id, legal_first_name, legal_last_name, tax_residency_country, residence_country, citizenship_country, address_line1, city, region, postal_code, date_of_birth").eq("user_id", userId).maybeSingle(),
+    d.from("persons").select("id, legal_first_name, legal_last_name, tax_residency_country, residence_country, citizenship_country, country, address_line1, address_line2, city, region, postal_code, date_of_birth").eq(ob.person_id ? "id" : "user_id", ob.person_id ?? userId).maybeSingle(),
   ]);
   if (person?.id && !person.citizenship_country) {
     const { approvedPersonVerification } = await import("@/lib/person-identity.server");
@@ -452,7 +453,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
   const { data: demo } = await d
     .from("compliance_questionnaire_responses")
     .select("id").eq("onboarding_id", ob.id).eq("kind", "demographics").is("superseded_by", null).limit(1);
-  const answers = (r.taxFactsAnswers ?? {}) as TaxIntakeAnswers;
+  const answers = taxIntakeDefaults(r.taxFactsAnswers, r.routing.status === "determined" ? r.routing.formType : null);
   return {
     profileName: profile.legal_name ?? profile.display_label ?? "",
     profileType: profile.profile_type as string,
@@ -463,6 +464,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
       reason: r.routing.status === "needs_review" && r.taxFactsId ? r.routing.reason : null,
     },
     tax: {
+      reviewDetails: taxReviewDetails(person, profile, ob.questionnaire_responses ?? {}),
       state: r.taxState.state,
       reason: r.taxState.reason ?? null,
       form: r.routing.status === "determined" ? IRS_FORM_REVISIONS[r.routing.formType] : null,
@@ -539,26 +541,20 @@ export async function submitTaxFacts(userId: string, input: { onboardingId: stri
 
 async function buildFill(ob: any, profile: any, person: any, routing: { formType: TaxFormType }, input: { legalName: string; tin?: string | null | undefined; foreignTin?: string | null | undefined; certifiedName: string }, signedDate: string) {
   const individual = isIndividualProfile(profile.profile_type) || profile.profile_type === "ira";
-  // Fall back to the Subscription Agreement answers (Q1 name, Q5 address) when records are blank.
-  let q: Record<string, unknown> = {};
-  if (ob?.id && (!person?.address_line1 || !input.legalName.trim())) {
+  let q: Record<string, unknown> = ob.questionnaire_responses ?? {};
+  if (ob?.id && !ob.questionnaire_responses) {
     const { data } = await (await db()).from("investor_onboardings").select("questionnaire_responses").eq("id", ob.id).maybeSingle();
     q = (data?.questionnaire_responses ?? {}) as Record<string, unknown>;
   }
-  const address = [person?.address_line1 ?? (q["subscriber_s_address_of_residence"] as string | undefined)].filter(Boolean).join(" ");
-  if (!input.legalName.trim() && q["name_of_subscriber"]) input = { ...input, legalName: String(q["name_of_subscriber"]) };
-  const csz = [person?.city, person?.region, person?.postal_code].filter(Boolean).join(", ");
+  const details = taxReviewDetails(person, profile, q);
   return {
-    legalName: input.legalName.trim(),
+    ...details,
+    legalName: input.legalName.trim() || details.legalName || "",
     businessName: null,
-    country: String(person?.tax_residency_country ?? person?.residence_country ?? "") || null,
-    addressLine: address || null,
-    cityStateZip: csz || null,
     federalClassification: routing.formType === "w9" ? w9ClassificationFor(profile.profile_type) : null,
     tinKind: individual ? ("ssn" as const) : ("ein" as const),
     tin: input.tin ?? null,
     foreignTin: input.foreignTin ?? null,
-    dateOfBirth: individual ? (person?.date_of_birth ?? null) : null,
     signerName: input.certifiedName.trim(),
     signedDate,
   };
@@ -574,7 +570,14 @@ async function requireFormFacts(userId: string, ob: any, formType: string, fill:
 
 async function requireDeterminedRouting(userId: string, ob: any, profile: any) {
   const facts = await latestTaxFacts(ob.investment_profile_id);
-  if (!facts) fail("Answer the tax questions first.");
+  if (!facts) {
+    // Reuse the same canonical routing shown by the checklist. No new tax
+    // answers, certifications or records are invented by opening a preview.
+    const { tax, person } = await loadFacts(await db(), ob, userId);
+    const state = await resolveStage2({ onboarding: ob, profileType: profile.profile_type, tax, person, nowIso: new Date().toISOString(), taxRequired: true });
+    if (state.routing.status === "determined" && state.routing.formType === "w9") return { routing: state.routing, factsId: null };
+    fail("Answer the remaining tax questions first.");
+  }
   const routing = routeTaxIntake(profile.profile_type, facts.answers ?? {});
   if (routing.status !== "determined") {
     await raiseOpsException(ob.id, "tax_classification_review", routing.reason, userId);
