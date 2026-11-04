@@ -144,7 +144,7 @@ export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer
                 <ul className="mb-2 space-y-1.5 border-l-2 border-muted pl-3">
                   {items.length ? items.map((i: any) => (
                     <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}</span>
+                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}{i.key === "accreditation" && viewer !== "investor" ? <span className="block text-xs text-muted-foreground">{accreditationDetail(i)}</span> : null}</span>
                       <span className="flex items-center gap-2 text-xs">
                         {i.owner && i.status !== "complete" ? <span className="text-muted-foreground">{ownerText(i.owner)}</span> : null}
                         <span className={tone(i.status)}>{plainStatus(i.status, viewer)}</span>
