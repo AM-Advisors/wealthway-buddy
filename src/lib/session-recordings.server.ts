@@ -10,11 +10,11 @@ async function ownRecording(db: any, userId: string, id: string, kind: "replay" 
   return data;
 }
 
-export async function startRecording(userId: string, d: { kind: "replay" | "screen"; path: string; userAgent?: string | undefined }) {
+export async function startRecording(userId: string, d: { kind: "replay" | "screen"; path: string; userAgent?: string | undefined; deviceId?: string | undefined }) {
   const db = await admin();
   const id = crypto.randomUUID();
   const prefix = `${d.kind}/${userId}/${id}`;
-  const { error } = await db.from("session_recordings").insert({ id, user_id: userId, kind: d.kind, storage_prefix: prefix, first_path: d.path, last_path: d.path, user_agent: d.userAgent?.slice(0, 300) ?? null });
+  const { error } = await db.from("session_recordings").insert({ id, user_id: userId, kind: d.kind, storage_prefix: prefix, first_path: d.path, last_path: d.path, user_agent: d.userAgent?.slice(0, 300) ?? null, device_id: d.deviceId ?? null });
   if (error) throw new Error("Recording couldn't start.");
   if (d.kind === "screen") {
     const up = await db.storage.from(BUCKET).createSignedUploadUrl(`${prefix}/screen.webm`);
