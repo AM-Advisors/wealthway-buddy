@@ -211,3 +211,73 @@ export async function decideOnboardingProof(userId: string, input: { documentId:
   } catch { /* readiness refresh never undoes the decision */ }
   return { ok: true };
 }
+
+/** True when this user may verify accreditation for the fund: staff roles or a fund manager. */
+export async function canVerify(userId: string, offeringId: string) {
+  const d = await db();
+  const { data: mgr } = await d.from("fund_managers").select("id").eq("offering_id", offeringId).eq("user_id", userId).maybeSingle();
+  if (mgr) return true;
+  const { data: roles } = await d.from("user_roles").select("role").eq("user_id", userId);
+  return ((roles ?? []) as any[]).some((r) => ["admin", "super_admin", "operations", "compliance", "fund_administration"].includes(r.role));
+}
+
+/**
+ * Lets the fund's managers or Harmonious set the investor's accredited-investor
+ * category and its status directly, when the investor can't complete that step
+ * themself. The choice is recorded with who set it and any note; the investor's
+ * own attestation is never fabricated. Approval follows the same rules as
+ * paperwork review, and a verified status is never moved back to review.
+ */
+export async function setStatus(userId: string, input: { onboardingId: string; category: string; decision: "approved" | "review"; notes: string }) {
+  const d = await db();
+  const { data: ob } = await d.from("investor_onboardings").select("id, investor_user_id, application_id, offering_id, investment_profile_id, questionnaire_responses").eq("id", input.onboardingId).maybeSingle();
+  if (!ob) throw new Error("Investment not found.");
+  await assertManager(d, userId, ob.offering_id);
+  if (ob.investor_user_id === userId) throw new Error("You can't set your own accreditation.");
+  const category = input.category.trim();
+  if (category.length < 2) throw new Error("Choose the accredited-investor category first.");
+  const { ACCREDITATION_QUESTION_KEY, basisFromAnswer, accreditationSetGuard } = await import("@/lib/accreditation-step");
+  const basis = basisFromAnswer(category);
+  if (!basis) throw new Error("That category doesn't map to an accreditation basis.");
+  const { data: offering } = await d.from("offerings").select("reg_type, accreditation_required").eq("id", ob.offering_id).maybeSingle();
+  if (offering && offering.accreditation_required === false) throw new Error("This fund doesn't require accreditation.");
+  const profileId = ob.investment_profile_id as string | null;
+  const { data: existingAcc } = profileId
+    ? await d.from("profile_accreditations").select("id, status, evidence").eq("profile_id", profileId).eq("offering_id", ob.offering_id).maybeSingle()
+    : { data: null };
+  const guard = accreditationSetGuard({ currentApproved: existingAcc?.status === "approved", decision: input.decision });
+  if (guard) throw new Error(guard);
+  const now = new Date().toISOString();
+  const status = input.decision === "approved" ? "approved" : "review";
+  const previous = (ob.questionnaire_responses ?? {})[ACCREDITATION_QUESTION_KEY] ?? null;
+  await d.from("investor_onboardings").update({ questionnaire_responses: { ...(ob.questionnaire_responses ?? {}), [ACCREDITATION_QUESTION_KEY]: category }, updated_at: now }).eq("id", ob.id);
+  if (profileId) {
+    const patch = input.decision === "approved"
+      ? { status: "approved" as const, basis, verification_method: "reviewer_selection", verifier_kind: "reviewer", verified_at: now, expires_at: new Date(Date.now() + 90 * 86400000).toISOString(), updated_at: now }
+      : { status: "pending" as const, basis, verification_method: "reviewer_selection", updated_at: now };
+    const evidence = { ...(existingAcc?.evidence ?? {}), selection: { by: userId, at: now, category, notes: input.notes || null } };
+    const res = existingAcc
+      ? await d.from("profile_accreditations").update({ ...patch, evidence }).eq("id", existingAcc.id)
+      : await d.from("profile_accreditations").insert({ profile_id: profileId, offering_id: ob.offering_id, evidence, ...patch });
+    if (res.error) throw new Error(res.error.message);
+    await d.from("investment_profile_events").insert({ profile_id: profileId, actor_id: userId, event: "accreditation_status_set", detail: { category, previous_category: previous, decision: input.decision, notes: input.notes || null, onboarding_id: ob.id } });
+  }
+  if (ob.application_id) {
+    const payload = {
+      application_id: ob.application_id, reg_type: (offering?.reg_type ?? "506b") as string, method: basis,
+      questionnaire: { source: "harmonious_selection", category, set_at: now },
+      status, reviewer_id: userId, review_notes: input.notes || null,
+      verified_at: input.decision === "approved" ? now : null, updated_at: now,
+    };
+    const { data: rec } = await d.from("accreditation_records").select("id").eq("application_id", ob.application_id).maybeSingle();
+    const rres = rec ? await d.from("accreditation_records").update(payload).eq("id", rec.id) : await d.from("accreditation_records").insert(payload);
+    if (rres.error) throw new Error(rres.error.message);
+    const up = await d.from("investor_applications").update({ accreditation_status: status, updated_at: now }).eq("id", ob.application_id);
+    if (up.error) throw new Error(up.error.message);
+    await d.from("admin_notes").insert({ application_id: ob.application_id, author_id: userId, body: `[accreditation → ${status}] Category set to "${category}"${input.notes ? `. ${input.notes}` : ""}` });
+  }
+  try {
+    await (await import("@/lib/investor-onboarding.server")).reconcileInvestmentReadiness(ob.id, { actorUserId: userId, trigger: "accreditation_status_set" } as any);
+  } catch { /* readiness refresh never undoes the decision */ }
+  return { ok: true, status };
+}

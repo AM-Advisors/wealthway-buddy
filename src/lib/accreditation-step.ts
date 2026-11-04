@@ -47,3 +47,9 @@ export function accreditationStepDone(state: string | null | undefined): boolean
 export function accreditationOutcome(exemption: string | null | undefined): "approved" | "review" {
   return selfCertificationAllowed(exemption) ? "approved" : "review";
 }
+
+/** Guard for setting accreditation on an investor's behalf: a verified status is never moved back to review. */
+export function accreditationSetGuard(input: { currentApproved: boolean; decision: "approved" | "review" }): string | null {
+  if (input.decision === "review" && input.currentApproved) return "This accreditation is already verified. Verified stays verified.";
+  return null;
+}
