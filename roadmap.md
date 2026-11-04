@@ -3,7 +3,8 @@
 ## Investor 360 and fund status alignment
 - [x] Replace legacy application check summaries with exact-investment canonical readiness, including onboardings without an application.
 - [x] Reuse the shared InvestmentChecklist on Overview, Profiles, Investments and Identity; retain separately labeled historical evidence and unchanged permissions.
-- [ ] Run status, authorization and readiness regressions; verify fictional presentation. Authenticated live comparison requires independently isolated synthetic QA.
+- [x] 72 status, authorization and readiness regressions passed; shared fictional checklist inspected on desktop and 522px, preview build OK. No live records, approvals or emails changed.
+- [ ] Authenticated end-to-end comparison requires independently isolated backend and synthetic sessions; not published.
 
 ## Automatic Verification to Sign
 - [x] Advance completed Verification during canonical reconciliation, not page reads or investor Continue clicks. Person identity fanout reconciles even when no facts changed; open Verification pages refresh and move to Sign.
