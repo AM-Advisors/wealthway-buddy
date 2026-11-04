@@ -66,3 +66,34 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
   if (result && result.sent === false) return { sent: false, invited, reason: result.reason ?? 'not_sent' }
   return { sent: true, invited }
 }
+
+/**
+ * Automatic notice once subscription documents are prepared: the investor is emailed
+ * the signing link without anyone pressing Send. Sent once per investment (idempotent),
+ * only to the investment's own signed-in investor. Never signs or approves anything.
+ */
+export async function autoSendSubscriptionReady(db: any, onboardingId: string) {
+  const { data: ob } = await db.from('investor_onboardings')
+    .select('id, offering_id, investor_user_id, stage, removed_at').eq('id', onboardingId).maybeSingle()
+  if (!ob || ob.removed_at || !ob.investor_user_id || CLOSED.includes(ob.stage)) return { sent: false }
+  const { data: auth } = await db.auth.admin.getUserById(ob.investor_user_id)
+  const recipient = auth?.user?.email
+  if (!recipient) return { sent: false }
+  const { data: fund } = await db.from('offerings').select('name').eq('id', ob.offering_id).maybeSingle()
+  const spec = DOCUMENT_REQUESTS.subscription
+  const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
+  const result: any = await sendTemplateEmail('signing-reminder', recipient, {
+    managed: true,
+    inboxForAnyUser: true,
+    idempotencyKey: `subscription-ready:${ob.id}`,
+    templateData: {
+      recipientName: auth.user.user_metadata?.name || 'there',
+      documentTitle: spec.title,
+      fundName: fund?.name ?? 'your fund',
+      steps: ['Sign in to Harmonious', 'Review your Subscription Agreement', 'Sign'],
+      ctaUrl: `https://app.harmonious.co/investment/${ob.id}?step=${spec.step}`,
+      ctaLabel: spec.label,
+    },
+  } as any)
+  return { sent: !(result && result.sent === false) }
+}
