@@ -1,5 +1,10 @@
 # Roadmap
 
+## Subscription preparation availability error (2026-11-04)
+- [x] Replace the preparer's investor-ownership fee lookup with existing exact-investment access and current-version acceptance checks; investor acceptance/signing remain unchanged.
+- [ ] Run focused regressions and check preview diagnostics.
+- [ ] Authenticated preparation and Chris's signing read-back require independently isolated synthetic QA; no real records, emails or signatures used for testing. Not published.
+
 ## Government ID fund-card clarity
 - [x] Show approved login ID evidence on canonically approved fund cards, retaining original investment evidence and unchanged decisions/access.
 - [x] 43 focused identity/evidence regressions passed; preview build OK. No decisions, records or permissions changed.
