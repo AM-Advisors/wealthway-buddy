@@ -2633,6 +2633,13 @@
       "when": 1793771713860,
       "tag": "0375_session_recordings_device_link",
       "breakpoints": true
+    },
+    {
+      "idx": 376,
+      "version": "7",
+      "when": 1793820589335,
+      "tag": "0376_record_steven_approved_accreditation",
+      "breakpoints": true
     }
   ]
 }
