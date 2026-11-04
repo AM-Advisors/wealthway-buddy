@@ -836,17 +836,25 @@ export interface Question {
   highRisk?: boolean;
 }
 
-export function questionVisible(question: Question, answers: Record<string, unknown>): boolean {
+/** Whether a question applies to this investing party. No profile type yet = show everything. */
+export function questionAppliesToProfile(question: Question, profileType?: string | null): boolean {
+  const types = question.appliesTo;
+  if (!types || types.length === 0 || !profileType) return true;
+  return types.includes(profileType);
+}
+
+export function questionVisible(question: Question, answers: Record<string, unknown>, profileType?: string | null): boolean {
+  if (!questionAppliesToProfile(question, profileType)) return false;
   const cond = question.showWhen;
   if (!cond) return true;
   const one = (c: { key: string; equals: (string | boolean | number)[] }) => c.equals.some((v) => v === answers[c.key]);
   return "anyOf" in cond ? cond.anyOf.some(one) : one(cond);
 }
 
-/** Drop answers to questions that are hidden by the investor's other answers. */
-export function stripHiddenAnswers(questions: Question[], answers: Record<string, unknown>): Record<string, unknown> {
+/** Drop answers to questions that are hidden by the investor's other answers or party type. */
+export function stripHiddenAnswers(questions: Question[], answers: Record<string, unknown>, profileType?: string | null): Record<string, unknown> {
   const next = { ...answers };
-  for (const q of questions) if (!questionVisible(q, next)) delete next[q.key];
+  for (const q of questions) if (!questionVisible(q, next, profileType)) delete next[q.key];
   return next;
 }
 
