@@ -871,11 +871,12 @@ export const HIGH_RISK_REVIEW_MESSAGE = "Your investment is under review. We'll 
 export function validateQuestionnaire(
   questions: Question[],
   answers: Record<string, unknown>,
+  profileType?: string | null,
 ): { valid: boolean; errors: { key: string; message: string }[] } {
   const errors: { key: string; message: string }[] = [];
   for (const q of questions) {
     if (q.key === ACCREDITATION_QUESTION_KEY) continue; // answered in the Accreditation section
-    if (!questionVisible(q, answers)) continue;
+    if (!questionVisible(q, answers, profileType)) continue;
     const value = answers[q.key];
     const empty =
       value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
