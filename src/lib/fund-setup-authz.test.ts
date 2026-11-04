@@ -416,8 +416,8 @@ describe("document and economics history", () => {
     expect(updates("fund_economics_versions").some(w => w.payload.approved_by === MANAGER_A)).toBe(true);
   });
   it("denies another fund's manager fees approval and save", async () => {
-    await expect(server.approveEconomics(MANAGER_B, "econ-v2")).rejects.toThrow(/Forbidden/);
-    await expect(server.saveEconomics(MANAGER_B, { setupId: SETUP_A, terms: {} })).rejects.toThrow(/Forbidden/);
+    await expect(server.approveEconomics(MANAGER_B, "econ-v2")).rejects.toThrow(/not authorized/);
+    await expect(server.saveEconomics(MANAGER_B, { setupId: SETUP_A, terms: {} })).rejects.toThrow(/not authorized/);
     expect(writes).toHaveLength(0);
   });
   it("does not let managers overwrite approved fees", async () => {
