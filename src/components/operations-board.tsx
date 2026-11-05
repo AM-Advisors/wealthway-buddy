@@ -821,17 +821,9 @@ export function OperationsTeam() {
 /* -------------------------------------------------------------- One fund */
 
 export function OperationsFund({ fundId }: { fundId: string }) {
-  const q = useOpsQueue();
-  const fundName =
-    q.data?.bankRequests.find((r) => r.offeringId === fundId)?.fundName ??
-    q.data?.entities.find((e) => e.offeringId === fundId)?.fundName ??
-    q.data?.taxDocuments.find((t) => t.offeringId === fundId)?.fundName ??
-    "This fund";
-
+  // Embedded in the fund workspace: no global /ops navigation, no Banking (it has its own tab).
   return (
-    <Shell title={fundName} description="Everything operations holds for this fund.">
-      <h2 className="text-lg">Banking</h2>
-      <OperationsBanking fundId={fundId} />
+    <div className="space-y-6">
       <h2 className="text-lg">EIN and Form SS-4</h2>
       <Ss4RequestPanel fundId={fundId} />
       <OperationsSs4 fundId={fundId} />
@@ -839,6 +831,6 @@ export function OperationsFund({ fundId }: { fundId: string }) {
       <OperationsTaxDocuments fundId={fundId} />
       <h2 className="text-lg">Sign-off queue</h2>
       <FundSignoffQueue fundId={fundId} />
-    </Shell>
+    </div>
   );
 }
