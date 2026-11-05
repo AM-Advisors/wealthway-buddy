@@ -1010,7 +1010,6 @@ export async function teamPrepareContext(userId: string, onboardingId: string) {
  */
 export async function teamSaveInvestorAnswers(userId: string, input: { onboardingId: string; answers: Record<string, unknown> }) {
   const { actor, row, role } = await assertTeamPreparer(userId, input.onboardingId);
-  if (row.questionnaire_submitted_at) fail("The investor already confirmed their answers. Ask them to update the answers themselves.");
   const questionnaire = await publishedQuestionnaire(row.offering_id);
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const { applyLocked } = await import("@/lib/subscription-prefill");
@@ -1023,7 +1022,8 @@ export async function teamSaveInvestorAnswers(userId: string, input: { onboardin
   const merged: Record<string, unknown> = { ...existing };
   for (const [k, v] of Object.entries(input.answers)) if (editable.has(k)) merged[k] = typeof v === "string" ? v.slice(0, 2000) : v;
   const answers = stripHiddenAnswers(questions, applyLocked(merged, locks.locked, keys), locks.profileType);
-  await touch(row.id, { questionnaire_responses: answers, questionnaire_source: "fund_team" });
+  // Team edits after a submission reopen it: the investor confirms the updated answers again.
+  await touch(row.id, { questionnaire_responses: answers, questionnaire_source: "fund_team", ...(row.questionnaire_submitted_at ? { questionnaire_submitted_at: null } : {}) });
   await recordEvent({
     onboardingId: row.id,
     offeringId: row.offering_id,
