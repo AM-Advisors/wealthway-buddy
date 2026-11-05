@@ -115,7 +115,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       <nav aria-label="Jump to section" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b bg-background px-1 py-1">{([...VISIBLE_TABS, ...(staff ? ["bsa" as const] : [])] as VisibleTab[]).map((t) => <Button key={t} size="sm" variant="ghost" className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</nav>
 
       <h3 id="ir-sec-overview" className="scroll-mt-14 pt-2 text-lg font-semibold">Overview</h3>
-      {<div className="grid gap-4 md:grid-cols-2">
+      {true ? <div className="grid gap-4 md:grid-cols-2">
         {!data.overview.removed && <PersonalInvestmentLinkCard onboardingId={onboardingId} email={p?.email ?? undefined} />}
         {!data.overview.removed && !data.investorHasAccount ? <Card className="md:col-span-2"><CardContent className="pt-6 text-sm text-muted-foreground">Investor has not created an account yet. Send the invite above so they can sign in and complete their steps.</CardContent></Card> : null}
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} initialAccreditationReview={initial === "accreditation"} /></CardContent></Card>
@@ -127,7 +127,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </div> : null}
 
       <h3 id="ir-sec-details" className="scroll-mt-14 pt-2 text-lg font-semibold">Details</h3>
-      {<Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
+      {true ? <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
         {field("amount", "Investment amount (USD)", inv.amountCents ? inv.amountCents / 100 : "")}
         {field("commitment", "Commitment amount (USD)", inv.commitmentCents ? inv.commitmentCents / 100 : "")}
         {staff ? field("accepted", "Accepted amount (USD)", inv.acceptedCents ? inv.acceptedCents / 100 : "") : null}
@@ -151,7 +151,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         </div>
         <p className="text-muted-foreground">This investor has no portal login yet, so there are no identity checks to review. Verification starts after they accept their invite and sign in.</p>
       </CardContent></Card> : null}
-      {<div className="space-y-4">
+      {true ? <div className="space-y-4">
         {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <Card ref={contactRef} className="scroll-mt-4"><CardHeader><CardTitle className="text-base">Investor details</CardTitle>
           {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
@@ -179,13 +179,13 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </div> : null}
 
       <h3 id="ir-sec-documents" className="scroll-mt-14 pt-2 text-lg font-semibold">Documents</h3>
-      {<div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
+      {true ? <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
         <div className="mt-2"><Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/documents"} params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div> : null}
 
       <h3 id="ir-sec-activity" className="scroll-mt-14 pt-2 text-lg font-semibold">Activity</h3>
-      {<InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
+      {true ? <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
       {staff ? <InvestorSessionActivity onboardingId={onboardingId} /> : null}
-      {<Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
+      {true ? <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
       {staff ? <h3 id="ir-sec-bsa" className="scroll-mt-14 pt-2 text-lg font-semibold">BSA (staff only)</h3> : null}
       {staff ? <BsaProfilePanel onboardingId={onboardingId} /> : null}
     </section>
