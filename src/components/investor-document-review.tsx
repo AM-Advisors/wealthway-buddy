@@ -59,12 +59,15 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
           {d.signed ? (
             <p className="text-xs text-muted-foreground">Signed{d.signed.signerName ? ` by ${d.signed.signerName}` : ""} on {new Date(d.signed.signedAt).toLocaleDateString()}</p>
           ) : null}
+          {!d.signed && d.outsideSigned ? (
+            <p className="text-xs text-muted-foreground">Signed on {new Date(d.outsideSigned.signedOn + "T00:00:00").toLocaleDateString()}, copy on file with Harmonious</p>
+          ) : null}
           {d.signed && d.decision === "returned" && d.note ? (
             <p className="text-xs text-muted-foreground">Declined: {d.note}</p>
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {!d.signed ? <Badge variant="outline">Investor hasn't signed yet</Badge> : d.decision === "approved" ? <Badge>Approved</Badge> : d.decision === "returned" ? <Badge variant="destructive">Declined</Badge> : <Badge variant="secondary">Signed - awaiting your decision</Badge>}
+          {!d.signed && d.outsideSigned ? <Badge>Signed outside the platform</Badge> : !d.signed ? <Badge variant="outline">Investor hasn't signed yet</Badge> : d.decision === "approved" ? <Badge>Approved</Badge> : d.decision === "returned" ? <Badge variant="destructive">Declined</Badge> : <Badge variant="secondary">Signed - awaiting your decision</Badge>}
           {d.signed && d.decision === "approved" && d.countersignSignerId && !readOnly ? (
             <Button size="sm" onClick={() => navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } })}>Sign now</Button>
           ) : null}

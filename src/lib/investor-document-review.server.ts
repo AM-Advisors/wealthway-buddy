@@ -56,7 +56,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   const db = await admin();
   const [{ data: obs }, { data: docs }] = await Promise.all([
     db.from("investor_onboardings").select("id, application_id, person_id, investor_user_id, stage, entry_source, created_by").eq("offering_id", offeringId).is("removed_at", null),
-    db.from("offering_documents").select("id, title, active_version, requires_signature").eq("offering_id", offeringId).eq("requires_signature", true).order("sort_order"),
+    db.from("offering_documents").select("id, title, doc_type, active_version, requires_signature").eq("offering_id", offeringId).eq("requires_signature", true).order("sort_order"),
   ]);
   const rows = (obs ?? []) as any[];
   const creatorIds = [...new Set(rows.filter((r) => r.entry_source === "fund_manager").map((r) => r.created_by).filter(Boolean))];
@@ -65,10 +65,11 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   const managerIds = new Set((managers.data ?? []).map((r: any) => r.user_id));
   const personIds = rows.map((r) => r.person_id).filter(Boolean);
   const appIds = rows.map((r) => r.application_id).filter(Boolean);
-  const [{ data: persons }, { data: decisions }, { data: sigs }] = await Promise.all([
+  const [{ data: persons }, { data: decisions }, { data: sigs }, { data: priors }] = await Promise.all([
     personIds.length ? db.from("persons").select("id, email, preferred_name, legal_first_name, legal_last_name").in("id", personIds) : { data: [] },
     rows.length ? db.from("investor_document_approvals").select("*").in("onboarding_id", rows.map((r) => r.id)).order("decided_at", { ascending: false }) : { data: [] },
     appIds.length ? db.from("document_signatures").select("id, application_id, offering_document_id, signer_name, provider_status, provider_completed_at, signed_at, pdf_path, executed_pdf_path, executed_at, cancelled_at, superseded_by").in("application_id", appIds) : { data: [] },
+    rows.length ? db.from("prior_signed_documents").select("id, onboarding_id, document_kind, signed_on, replaces_id, created_at").in("onboarding_id", rows.map((r) => r.id)).order("created_at", { ascending: false }) : { data: [] },
   ]);
   const pMap = new Map(((persons ?? []) as any[]).map((p) => [p.id, p]));
   // Where this manager is also the fund signatory, approval and countersigning happen in one step.
@@ -105,12 +106,21 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
             decidedAt: (dec?.decided_at ?? null) as string | null,
             countersignSignerId: (sig ? mySigner.get(sig.id) ?? null : null) as string | null,
             hasPendingFundSignature: Boolean(sig && pendingFundSignatures.has(sig.id)),
+            outsideSigned: (!sig ? outsideSignedFor((priors ?? []) as any[], r.id, d.doc_type) : null) as { signedOn: string } | null,
             signed: sig ? { hasCopy: Boolean(sig.pdf_path), signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string, fullyExecuted: Boolean(sig.executed_pdf_path), executedAt: (sig.executed_at ?? null) as string | null } : null,
           };
         }),
       };
     }),
   };
+}
+
+/** Pure: a Harmonious-held copy of an outside-signed agreement shows as signed (evidence only, no approval). */
+export function outsideSignedFor(priors: any[], onboardingId: string, docType: string | null): { signedOn: string } | null {
+  if (docType !== "subscription_agreement") return null;
+  const replaced = new Set(priors.map((p) => p.replaces_id).filter(Boolean));
+  const hit = priors.find((p) => p.onboarding_id === onboardingId && p.document_kind === "subscription_agreement" && !replaced.has(p.id));
+  return hit ? { signedOn: hit.signed_on as string } : null;
 }
 
 /** Pure: a manager decides only after the investor has signed; declining needs a reason. */
