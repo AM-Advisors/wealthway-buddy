@@ -271,7 +271,7 @@ function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; ta
             void navigate({ to: "/ops/fund/$fundId/investor/$onboardingId", params: { fundId: investment.offeringId, onboardingId: investment.onboardingId }, search: { tab: "accreditation" } });
           }} />
           <Button asChild variant="outline" size="sm">
-            <Link to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: investment.offeringId, onboardingId: investment.onboardingId }} search={{ tab: undefined }}>Open full investment record (steps, documents, activity)</Link>
+            <Link to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: investment.offeringId, onboardingId: investment.onboardingId }} search={{}}>Open full investment record (steps, documents, activity)</Link>
           </Button>
         </section>
       ))}
