@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { requiresPreExistingRelationship, type RegTypeValue } from "@/lib/reg-types";
 import { kycSchema } from "@/lib/onboarding.functions";
 
@@ -96,10 +97,11 @@ export const getRoomApplication = createServerFn({ method: "GET" })
         .order("uploaded_at", { ascending: false }),
     ]);
 
+    const [canonApp] = await canonicalizeApplications(supabase, [application as any], userId);
     return {
       offering,
       profile,
-      application,
+      application: (canonApp ?? application) as typeof application,
       kyc: kyc.data ?? null,
       accreditation: accreditation.data ?? null,
       uploads: uploads.data ?? [],

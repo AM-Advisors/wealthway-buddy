@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { activeApplicationId, ensureActivePersona } from "@/lib/active-application";
 
 const investorType = z.enum(["individual", "joint", "entity", "trust", "ira"]);
@@ -176,7 +177,8 @@ export const getOnboarding = createServerFn({ method: "GET" })
         ).data
       : null;
 
-    return { offering, profile: profileView, persona, application, kyc, aml, invited: true };
+    const [canonApp] = application ? await canonicalizeApplications(supabase, [application as any], userId) : [null];
+    return { offering, profile: profileView, persona, application: (canonApp ?? application) as typeof application, kyc, aml, invited: true };
 
   });
 
