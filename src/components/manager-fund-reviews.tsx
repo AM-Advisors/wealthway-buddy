@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadError } from "@/components/load-error";
 import { InvestorSheet } from "@/components/fund-tabs/investors-tab";
-import { InvestorDocumentReview } from "@/components/investor-document-review";
 import { ManagerBankingSummary } from "@/components/manager-banking-summary";
 import { WireFromBankForm } from "@/components/wire-from-bank-form";
 import { StatementUpload } from "@/components/fund-tabs/statement-upload";
@@ -26,7 +25,6 @@ export function ManagerFundReviews({ fundId }: { fundId: string }) {
         <TabsList className="h-auto w-max justify-start">
           <TabsTrigger value="kyc">KYC / KYB</TabsTrigger>
           <TabsTrigger value="banking">Banking complete</TabsTrigger>
-          <TabsTrigger value="investors">Investor approval</TabsTrigger>
           <TabsTrigger value="receipts">Money received</TabsTrigger>
         </TabsList>
       </div>
@@ -34,10 +32,6 @@ export function ManagerFundReviews({ fundId }: { fundId: string }) {
       <TabsContent value="banking">{tab === "banking" && <div className="space-y-5">
         <ManagerBankingSummary fundId={fundId} />
         <section className="space-y-3"><h3 className="font-semibold">Bank details &amp; evidence</h3><WireFromBankForm fundId={fundId} allowPrefill={false} /></section>
-      </div>}</TabsContent>
-      <TabsContent value="investors">{tab === "investors" && <div className="space-y-5">
-        <p className="text-sm text-muted-foreground">Document approval permits signing; approval to fund remains a separate review.</p>
-        <InvestorDocumentReview offeringId={fundId} />
       </div>}</TabsContent>
       <TabsContent value="receipts">{tab === "receipts" && <ReceiptReview fundId={fundId} />}</TabsContent>
     </Tabs>

@@ -17,13 +17,13 @@ export function FundDocumentsHub({ fundId, staff }: { fundId: string; staff: boo
         <TabsTrigger value="files">Fund files</TabsTrigger>
         <TabsTrigger value="approve">Review &amp; approve</TabsTrigger>
         <TabsTrigger value="send">Send to investors</TabsTrigger>
-        <TabsTrigger value="review">Investor uploads</TabsTrigger>
+        <TabsTrigger value="review">Investor signatures</TabsTrigger>
         {!staff && <TabsTrigger value="more">More</TabsTrigger>}
       </TabsList>
       <TabsContent value="files">{tab === "files" && <DocumentsTab fundId={fundId} />}</TabsContent>
       <TabsContent value="approve">{tab === "approve" && <OfferingDocumentsSetup offeringId={fundId} />}</TabsContent>
       <TabsContent value="send">{tab === "send" && <SendFundDocuments offeringId={fundId} />}</TabsContent>
-      <TabsContent value="review">{tab === "review" && <InvestorDocumentReview offeringId={fundId} />}</TabsContent>
+      <TabsContent value="review">{tab === "review" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Document approval permits signing; approval to fund remains a separate review.</p><InvestorDocumentReview offeringId={fundId} /></div>}</TabsContent>
       {!staff && <TabsContent value="more">{tab === "more" && <FundWorkspaceSection title="More document tools" description="Other document areas for your funds." items={[
         { title: "Document inbox", description: "Review investor uploads and signed copies filed back.", to: "/manager/inbox" },
         { title: "Diligence room", description: "Organize investor materials, NDA access, and file versions.", to: "/manager/diligence" },
