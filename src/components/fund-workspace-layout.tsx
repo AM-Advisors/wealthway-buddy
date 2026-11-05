@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 
 const groups = [
   { label: "Fund", items: [
-    { slug: "", label: "Manage fund", icon: Building2 },
+    { slug: "", label: "Overview", icon: Building2 },
     { slug: "approvals", label: "Approvals", icon: CheckSquare },
     { slug: "requests", label: "Requests", icon: Inbox },
     { slug: "calendar", label: "Calendar", icon: CalendarDays },

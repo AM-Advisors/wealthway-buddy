@@ -179,7 +179,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
 
       <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
         <FundQuestionSectionCard offeringId={offeringId} />
-        {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : workspace ? <Button asChild variant="outline"><Link to="/manager/fund/$fundId" params={{ fundId: offeringId }} search={{ area: "documents" }}>Manage fund documents</Link></Button> : <FundDocumentsHub fundId={offeringId} staff={false} />}
+        {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : workspace ? <Button asChild variant="outline"><Link to="/manager/fund/$fundId/documents" params={{ fundId: offeringId }}>Manage fund documents</Link></Button> : <FundDocumentsHub fundId={offeringId} staff={false} />}
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
       </SetupSection>
 

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { ManagerFundInvestors } from "@/components/manager-fund-investors";
+import { ManagerInvestorTodoList } from "@/components/manager-investor-todos";
 import { FundReadiness } from "@/components/investment-readiness";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/investors")({
@@ -16,5 +17,5 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/inves
 });
 function Page() {
   const { fundId } = Route.useParams();
-  return <ManagerFundInvestors fundId={fundId} moreSections={<><FundReadiness fundId={fundId} /><InvestorStepHistory offeringId={fundId} /></>} />;
+  return <div className="space-y-6"><ManagerInvestorTodoList fundId={fundId} /><ManagerFundInvestors fundId={fundId} moreSections={<><FundReadiness fundId={fundId} /><InvestorStepHistory offeringId={fundId} /></>} /></div>;
 }
