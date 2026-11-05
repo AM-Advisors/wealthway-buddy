@@ -673,13 +673,42 @@ export async function investorTab(context: any, data: { id: string; tab: string 
         .eq("owner_user_id", data.id),
     );
 
-    if (data.tab === "overview" || data.tab === "profiles") {
+    if (data.tab === "overview") {
+      // Overview: investment checklists and blockers only; legal profiles live on the Profiles tab.
       const { opsInvestorReadiness } = await import("@/lib/ops-investor-readiness.server");
       const { checks, investmentReadiness } = await opsInvestorReadiness(s, data.id);
+      return { checks, investmentReadiness };
+    }
+
+    if (data.tab === "profiles") {
+      // Profiles: legal investing vehicles only, with the funds each one invests in. No checklists.
+      const profileIds = profileRows.map((p: any) => p.id);
+      const onboardings = profileIds.length
+        ? rows(await s.from("investor_onboardings").select("investment_profile_id, offering_id").in("investment_profile_id", profileIds))
+        : [];
+      const fundIds = [...new Set(onboardings.map((o: any) => o.offering_id).filter(Boolean))];
+      const funds = fundIds.length ? rows(await s.from("offerings").select("id, name").in("id", fundIds)) : [];
+      const fundName = new Map(funds.map((f: any) => [f.id, f.name]));
       return {
-        profiles: profileRows,
-        checks,
-        investmentReadiness,
+        profiles: profileRows.map((p: any) => {
+          const names = [
+            ...new Set(
+              onboardings
+                .filter((o: any) => o.investment_profile_id === p.id)
+                .map((o: any) => fundName.get(o.offering_id))
+                .filter(Boolean),
+            ),
+          ];
+          return {
+            id: p.id,
+            profile: p.display_label,
+            legal_name: p.legal_name,
+            profile_type: p.profile_type,
+            status: p.status,
+            funds: names.length ? names.join(", ") : "None yet",
+            created_at: p.created_at,
+          };
+        }),
       };
     }
 

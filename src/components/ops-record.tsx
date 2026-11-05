@@ -293,7 +293,7 @@ function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; ta
       {sections.map(([key, value]) => (
         <Table key={key} title={humanise(key)} rows={value as any[]} />
       ))}
-      {!sections.length && !scalars.length ? (
+      {!sections.length && !scalars.length && !readinessRows.length ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Nothing to show</CardTitle>
