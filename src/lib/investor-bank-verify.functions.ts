@@ -46,8 +46,9 @@ export const finishInvestorBankVerifyFn = createServerFn({ method: "POST" })
         if (p?.legal_name) expected.push(p.legal_name);
       }
       if (row.person_id) {
-        const { data: p } = await db.from("persons").select("legal_first_name, legal_last_name, first_name, last_name").eq("id", row.person_id).maybeSingle();
-        const n = [p?.legal_first_name ?? p?.first_name, p?.legal_last_name ?? p?.last_name].filter(Boolean).join(" ");
+        const { data: p, error: pErr } = await db.from("persons").select("legal_first_name, legal_last_name").eq("id", row.person_id).maybeSingle();
+        if (pErr) throw new Error("Couldn't check the account holder name. Please try again.");
+        const n = [p?.legal_first_name, p?.legal_last_name].filter(Boolean).join(" ");
         if (n) expected.push(n);
       }
       const match = bankOwnerMatches(owners, expected);
