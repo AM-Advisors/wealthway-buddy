@@ -271,7 +271,7 @@ function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; ta
             void navigate({ to: "/ops/fund/$fundId/investor/$onboardingId", params: { fundId: investment.offeringId, onboardingId: investment.onboardingId }, search: { tab: "accreditation" } });
           }} />
           <Button asChild variant="outline" size="sm">
-            <Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId: investment.offeringId, onboardingId: investment.onboardingId }}>Open investment</Link>
+            <Link to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: investment.offeringId, onboardingId: investment.onboardingId }} search={{ tab: undefined }}>Open full investment record (steps, documents, activity)</Link>
           </Button>
         </section>
       ))}
@@ -404,6 +404,22 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         </p>
       </header>
 
+      {type === "investor" ? (
+        <>
+          <nav aria-label="Jump to section" className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b bg-background py-1">
+            {tabs.filter((tab) => !tab.hidden).map((tab) => (
+              <Button key={tab.id} size="sm" variant="ghost" className="shrink-0" onClick={() => document.getElementById(`i360-${tab.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}>{tab.title}</Button>
+            ))}
+          </nav>
+          <InvestorSectionScroll active={search.tab} />
+          {tabs.filter((tab) => !tab.hidden).map((tab) => (
+            <section key={tab.id} id={`i360-${tab.id}`} className="scroll-mt-14 space-y-3">
+              <h2 className="text-lg font-semibold">{tab.title}</h2>
+              <TabBody type={type} id={id} tab={tab.id} />
+            </section>
+          ))}
+        </>
+      ) : <>
       <div className="flex flex-wrap gap-2 border-b pb-2">
         {tabs.filter((tab) => !tab.hidden).map((tab) => (
           <Button
@@ -437,8 +453,19 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
       ) : (
         <TabBody type={type} id={id} tab={active} />
       )}
+      </>}
     </div>
   );
+}
+
+/** Older ?tab= links to Investor 360 now scroll to that section on the single page. */
+function InvestorSectionScroll({ active }: { active?: string | undefined }) {
+  useEffect(() => {
+    if (!active || active === "overview") return;
+    const t = setTimeout(() => document.getElementById(`i360-${active}`)?.scrollIntoView({ block: "start" }), 600);
+    return () => clearTimeout(t);
+  }, [active]);
+  return null;
 }
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
