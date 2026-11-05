@@ -65,7 +65,8 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
       {q.data.canDraft && !draft && live && !newVersion && <Button size="sm" variant="outline" onClick={() => { setNewVersion(true); setDirty(true); }}>Start a new version</Button>}
       {q.data.canDraft && <FundDocumentQuestionDraft offeringId={offeringId} documents={q.data.documents} blocked={q.data.aiBlocked} staff={staff} disabled={dirty || save.isPending || approve.isPending} onReset={() => void refresh()} onDraft={(result) => { setTitle(result.title); setQs(result.questions); setAiDraft(result); setNewVersion(true); setDirty(true); }} />}
       {shown?.source_note && <p className="rounded-lg bg-muted p-3 text-xs">{shown.source_note}</p>}
-      {editable && <Input aria-label="Section title" value={title} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} />}
+      {editable && <label htmlFor="fund-question-title" className="block text-sm font-medium">Section title investors see</label>}
+      {editable && <Input id="fund-question-title" aria-label="Section title" value={title} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} />}
       <ol className="space-y-4">
         {qs.map((x, i) => (
           <li key={x.key} className="space-y-2 rounded-xl border bg-background p-4">
