@@ -72,10 +72,9 @@ function FillDialog({ onboardingId, name, onClose }: { onboardingId: string; nam
         </DialogHeader>
         {ctx.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : ctx.error ? (
           <p className="text-sm text-destructive">{(ctx.error as Error).message}</p>
-        ) : ctx.data?.confirmedByInvestor ? (
-          <p className="text-sm">{name} already confirmed their answers. Only they can change them now.</p>
         ) : (
           <div className="space-y-4">
+            {ctx.data?.confirmedByInvestor && <p className="rounded-md border bg-muted p-3 text-sm">{name} already submitted answers. If you save changes, the questionnaire goes back to in progress and {name} confirms it again before signing.</p>}
             {questions.map((q) => (
               <div key={q.key} className="space-y-1.5">
                 <Label htmlFor={`fill-${q.key}`} className="leading-snug">{q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
