@@ -126,8 +126,20 @@ export const getMyComplianceCase = createServerFn({ method: "GET" })
       trailFor(supabase, [String(application.id)]),
     ]);
 
+    // The exact investing person's result wins; only a not-yet-recorded result
+    // falls back to the canonical reader the manager views use.
+    const verified: any = await loadApplicationVerification(supabase, application);
+    const { syncInvestorApplications } = await import("@/lib/investor-status-sync");
+    const [canon]: any[] = await syncInvestorApplications(supabase, [{ ...application, user_id: userId } as any], userId);
+    const unset = (s: unknown) => !s || s === "not_started" || s === "pending";
+    const merged = {
+      ...verified,
+      kyc_status: unset(verified.kyc_status) ? canon.kyc_status : verified.kyc_status,
+      aml_status: unset(verified.aml_status) ? canon.aml_status : verified.aml_status,
+      funding_status: canon.funding_status ?? verified.funding_status,
+    };
     return {
-      application: await loadApplicationVerification(supabase, application),
+      application: merged,
       offering: offering ?? null,
       documents: (documents ?? []) as any[],
       trail: trailMap.get(String(application.id)) ?? [],

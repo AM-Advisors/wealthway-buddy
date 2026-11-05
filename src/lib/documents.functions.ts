@@ -47,7 +47,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
   .handler(async ({ data: scope, context }) => {
     const { supabase, userId } = context;
 
-    const { data: application } = await supabase
+    const { data: rawApplication } = await supabase
       .from("investor_applications")
       .select(
         "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
@@ -55,6 +55,8 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .eq("id", await applicationIdForOffering(supabase, userId, scope.offering_id))
       .maybeSingle();
+    const { syncInvestorApplications } = await import("@/lib/investor-status-sync");
+    const [application] = rawApplication ? await syncInvestorApplications(supabase, [rawApplication as any], userId) : [null];
 
     if (!application) {
       return { application: null, offering: null, documents: [], signatures: [], subscription: null, profile: null };

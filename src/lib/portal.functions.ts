@@ -95,7 +95,8 @@ export const getPortal = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .order("created_at", { ascending: true });
 
-    const applicationRows = (allApplications ?? []) as any[];
+    const { syncInvestorApplications } = await import("@/lib/investor-status-sync");
+    const applicationRows = (await syncInvestorApplications(supabase, (allApplications ?? []) as any[], userId)) as any[];
     const requested = data?.applicationId
       ? applicationRows.find((a) => a.id === data.applicationId)
       : null;
