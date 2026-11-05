@@ -34,15 +34,22 @@ export async function investorReviewEvidence(db: any, userId: string, fundId: st
   if (documentResult.error) throw new Error("Acknowledged document names could not be loaded.");
   const questions = (questionResult.data?.[0]?.questions ?? standardQuestions) as Question[];
   const answers = (row.questionnaire_responses ?? {}) as Record<string, unknown>;
-  const questionnaire = row.questionnaire_submitted_at ? questions
-    .filter((q) => questionVisible(q, answers) && !SENSITIVE_TITLE.test(`${q.key} ${q.label}`))
-    .map((q) => ({ key: q.key, label: q.label, answer: displayAnswer(answers[q.key]) })) : [];
+  // Show only answers actually recorded; a submission stamp without required answers reads as in progress.
+  const visible = questions.filter((q) => questionVisible(q, answers) && !SENSITIVE_TITLE.test(`${q.key} ${q.label}`));
+  const questionnaire = visible
+    .filter((q) => answers[q.key] != null && answers[q.key] !== "")
+    .map((q) => ({ key: q.key, label: q.label, answer: displayAnswer(answers[q.key]) }));
+  const { questionnaireCompletion } = await import("./questionnaire-completion");
+  const complete = questionnaireCompletion({ submittedAt: row.questionnaire_submitted_at, version: row.questionnaire_version, questions, answers }).complete;
+  const questionnaireStatus: "submitted" | "in_progress" | "not_started" = complete ? "submitted" : questionnaire.length ? "in_progress" : "not_started";
   const accreditation = await loadAccreditation(db, row.application_id, row.id);
   return {
     signedDocuments,
     acknowledgments: (ackResult.data ?? []).map((a: any) => ({ id: a.id as string, title: documentResult.data?.find((d: any) => d.id === a.offering_document_id)?.title ?? "Fund document", version: a.version as number, acknowledgedAt: a.acknowledged_at as string })),
     questionnaire,
-    questionnaireSubmittedAt: row.questionnaire_submitted_at as string | null,
+    questionnaireSubmittedAt: complete ? (row.questionnaire_submitted_at as string | null) : null,
+    questionnaireStatus,
+    questionnaireTotal: visible.length,
     taxForms: currentTaxForms(taxResult.data ?? []),
     accreditation,
   };

@@ -471,10 +471,10 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
                 <CollapsibleTrigger className="flex w-full items-center gap-2 p-3 text-left transition-colors hover:bg-muted/50">
                   {questionnaireOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
                   <span className="flex-1 font-medium">Investor questionnaire</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{d.reviewEvidence.questionnaireSubmittedAt ? `${d.reviewEvidence.questionnaire.length} answers · Submitted ${fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}` : "Not submitted"}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{d.reviewEvidence.questionnaireSubmittedAt ? `${d.reviewEvidence.questionnaire.length} answers · Submitted ${fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}` : d.reviewEvidence.questionnaire.length ? `In progress · ${d.reviewEvidence.questionnaire.length} of ${d.reviewEvidence.questionnaireTotal ?? d.reviewEvidence.questionnaire.length} answered` : "Not started"}</span>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="px-3 pb-3">
-                  {d.reviewEvidence.questionnaireSubmittedAt ? <dl className="space-y-3 border-t pt-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl> : <p className="border-t pt-3 text-muted-foreground">Questionnaire has not been submitted.</p>}
+                  {d.reviewEvidence.questionnaire.length ? <dl className="space-y-3 border-t pt-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl> : <p className="border-t pt-3 text-muted-foreground">Questionnaire has not been submitted.</p>}
                 </CollapsibleContent>
               </Collapsible>
             </section>

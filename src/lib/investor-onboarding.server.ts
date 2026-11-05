@@ -1010,7 +1010,6 @@ export async function teamPrepareContext(userId: string, onboardingId: string) {
  */
 export async function teamSaveInvestorAnswers(userId: string, input: { onboardingId: string; answers: Record<string, unknown> }) {
   const { actor, row, role } = await assertTeamPreparer(userId, input.onboardingId);
-  if (row.executed_snapshot) fail("The investor already signed. Answers can no longer be changed.");
   const questionnaire = await publishedQuestionnaire(row.offering_id);
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const { applyLocked } = await import("@/lib/subscription-prefill");
