@@ -177,8 +177,12 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       <BankBox offeringId={offeringId} isStaff={isStaff} onChanged={refresh} />
       {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />}
 
-      <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
+      <SetupSection open={open} setOpen={setOpen} id="questions" title="Investor questions" status={null}>
+        <p className="text-sm text-muted-foreground">Extra questions investors answer during onboarding, beyond the standard questionnaire.</p>
         <FundQuestionSectionCard offeringId={offeringId} />
+      </SetupSection>
+
+      <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
         {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : workspace ? <Button asChild variant="outline"><Link to="/manager/fund/$fundId/documents" params={{ fundId: offeringId }}>Manage fund documents</Link></Button> : <FundDocumentsHub fundId={offeringId} staff={false} />}
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
       </SetupSection>
