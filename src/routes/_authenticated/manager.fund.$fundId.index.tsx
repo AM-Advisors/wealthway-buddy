@@ -1,27 +1,28 @@
 import { ManagerLaunchCard } from "@/components/manager-launch-card";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FundSetupForm } from "@/components/fund-setup-form";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { FundCommandCenter, type CommandTarget } from "@/components/fund-command-center";
-
 import { ManagerFundDashboard } from "@/components/manager-fund-dashboard";
 import { FundUpdatesFeed } from "@/components/fund-updates-feed";
-import { FormationRecordCard } from "@/components/formation-record-card";
 import { ManagerCloseSheets } from "@/components/accounting-phase5";
-import { SELF_SERVE_AREAS, SelfServeFundPage, type SelfServeArea } from "@/components/self-serve-fund-page";
-import { ManagerFundInvestors } from "@/components/manager-fund-investors";
-import { ManagerInvestorTodoList } from "@/components/manager-investor-todos";
-import { FundDocumentsHub } from "@/components/fund-documents-hub";
-import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
-import { FundTeamAccessBox } from "@/components/fund-team-access-box";
-import { ManagerDraftReview } from "@/components/fund-team-drafts";
+
+/** Old in-page areas now live in the fund's top tabs; keep emailed links working. */
+const AREA_TO_TAB = {
+  setup: "settings", investors: "investors", documents: "documents", link: "onboarding-link", team: "team",
+} as const;
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
-  validateSearch: (search: Record<string, unknown>): { area?: SelfServeArea | undefined } => ({ area: SELF_SERVE_AREAS.find(a => a === search["area"]) }),
+  validateSearch: (search: Record<string, unknown>): { area?: string | undefined } => ({
+    area: typeof search["area"] === "string" ? search["area"] : undefined,
+  }),
+  beforeLoad: ({ search, params }) => {
+    const tab = search.area ? AREA_TO_TAB[search.area as keyof typeof AREA_TO_TAB] : undefined;
+    if (tab) throw redirect({ to: `/manager/fund/$fundId/${tab}` as never, params: { fundId: params.fundId } as never });
+  },
   head: () => ({ meta: [
-    { title: "Manage your fund | Harmonious" },
-    { name: "description", content: "Set up your fund, invite investors, manage versioned documents and share your investor onboarding link." },
-    { property: "og:title", content: "Manage your fund | Harmonious" },
-    { property: "og:description", content: "Fund setup, investor invitations, document review and onboarding in your client workspace." },
+    { title: "Fund overview | Harmonious" },
+    { name: "description", content: "Next step, launch status, investor progress and recent activity for your fund." },
+    { property: "og:title", content: "Fund overview | Harmonious" },
+    { property: "og:description", content: "One overview per fund: next step, launch status and recent activity." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   component: Overview,
@@ -30,18 +31,15 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
 function Overview() {
   const { fundId } = Route.useParams();
   const navigate = useNavigate();
-  const { area = "setup" } = Route.useSearch();
   const go = (t: CommandTarget) => {
-    if (t === "setup" || t === "documents") return navigate({ to: "/manager/fund/$fundId", params: { fundId }, search: { area: t } });
     if (t === "banking" || t === "accounting") return navigate({ to: "/manager/fund-banking/$fundId", params: { fundId } });
-    return navigate({ to: ({ calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
+    return navigate({ to: ({ setup: "/manager/fund/$fundId/settings", documents: "/manager/fund/$fundId/documents", calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
   };
-  return <SelfServeFundPage area={area} onAreaChange={next => { void navigate({ to: "/manager/fund/$fundId", params: { fundId }, search: { area: next } }); }} sections={{
-    setup: () => <div className="space-y-6"><FundCommandCenter fundId={fundId} nextActionOnly onNavigate={go} /><FundSetupForm offeringId={fundId} mode="manager" workspace /><ManagerLaunchCard fundId={fundId} onNavigate={go} /></div>,
-    investors: () => <div className="space-y-6"><ManagerInvestorTodoList fundId={fundId} /><ManagerFundInvestors fundId={fundId} /></div>,
-    documents: () => <FundDocumentsHub fundId={fundId} staff={false} />,
-    link: () => <FundOnboardingLinkCard fundId={fundId} />,
-    team: () => <div className="space-y-6"><FundTeamAccessBox fundId={fundId} /><ManagerDraftReview fundId={fundId} /></div>,
-    overview: () => <div className="space-y-6"><FundCommandCenter fundId={fundId} onNavigate={go} /><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><FormationRecordCard offeringId={fundId} /><ManagerCloseSheets offeringId={fundId} /></div>,
-  }} />;
+  return <div className="space-y-6">
+    <FundCommandCenter fundId={fundId} onNavigate={go} />
+    <ManagerLaunchCard fundId={fundId} onNavigate={go} />
+    <ManagerFundDashboard fundId={fundId} />
+    <FundUpdatesFeed offeringId={fundId} limit={6} />
+    <ManagerCloseSheets offeringId={fundId} />
+  </div>;
 }
