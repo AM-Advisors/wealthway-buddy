@@ -15,6 +15,7 @@ export function PersonalInvestmentLinkCard({ onboardingId, email }: { onboarding
   const key = ["personal-investment-link", onboardingId];
   const { data, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
   const run = async (fn: () => Promise<unknown>, ok: string) => { setBusy(true); try { await fn(); toast.success(ok); await qc.invalidateQueries({ queryKey: key }); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   const copy = async (url: string) => { try { if (!navigator.clipboard) throw new Error("Copy isn't available in this browser."); await navigator.clipboard.writeText(url); toast.success("Link copied"); void copied({ data: { onboardingId } }).catch(() => null); } catch { toast.error("Couldn't copy the link. Please try again."); } };
   const status = personalLinkStatus(data?.link ?? null);
@@ -29,7 +30,15 @@ export function PersonalInvestmentLinkCard({ onboardingId, email }: { onboarding
         <div className="flex flex-wrap gap-2">
           {status.usable && <Button variant="outline" onClick={() => { if (data.link) void copy(data.link.url); }}>Copy investor link</Button>}
           {data.canSend && <Button disabled={busy} onClick={() => run(async () => { const result = await send({ data: { onboardingId } }); if (!result.emailSent) throw new Error("The invite email wasn't sent. Please try again."); }, "Invite email sent")}>{busy ? "Sending…" : data.link.lastSentAt ? "Resend invite" : "Send invite"}</Button>}
-          <Button variant="ghost" disabled={busy} onClick={() => refetch()}>Check status</Button>
+          <Button variant="ghost" disabled={busy || checking} onClick={async () => {
+            setChecking(true);
+            try {
+              const r = await refetch();
+              if (r.error) throw r.error;
+              toast.success(`Invitation status: ${personalLinkStatus(r.data?.link ?? null).label}`);
+            } catch { toast.error("Couldn't check this invitation. Please try again."); }
+            finally { setChecking(false); }
+          }}>{checking ? "Checking…" : "Check status"}</Button>
         </div>
       </> : <>
         <Badge variant="outline">Not invited</Badge>
