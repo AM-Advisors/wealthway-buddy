@@ -131,6 +131,13 @@ export async function listRecords(context: any, data: { type: OpsRecordType; sea
     if (clientError) throw new Error(clientError.message);
 
     let records = attachInvestorRelations(profiles, onboardings, offerings, clientRows ?? []);
+    // Staff-grouped logins of one person show as one row (display only; accounts stay separate).
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: gm } = await (supabaseAdmin as any).from("person_account_group_members").select("user_id, group_id").in("user_id", records.map((r) => r.id)).is("removed_at", null);
+      const { collapseSamePersonRows } = await import("@/lib/ops-records");
+      records = collapseSamePersonRows(records, new Map(((gm ?? []) as any[]).map((m) => [m.user_id, m.group_id])));
+    } catch (e) { console.error("[ops-records] same-person grouping", e instanceof Error ? e.message : String(e)); }
     if (data.search) records = records.filter((r) => investorListMatches(r, data.search!));
     return { records: records.slice(0, 100) };
 }
