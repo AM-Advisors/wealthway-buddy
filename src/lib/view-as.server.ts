@@ -224,7 +224,7 @@ export async function returnToClientView(staffUserId: string, authSessionId: str
   return { ok: true };
 }
 
-export type ViewAsItem = { title: string; subtitle?: string | null; date?: string | null; badge?: string | null };
+export type ViewAsItem = { title: string; subtitle?: string | null; date?: string | null; badge?: string | null; details?: { label: string; value: string }[]; onboardingId?: string; offeringId?: string };
 const fmtUsd = (c: number | null | undefined) => (c == null ? null : (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }));
 const human = (s: string | null | undefined) => (s ? s.replace(/_/g, " ").replace(/^./, (m) => m.toUpperCase()) : null);
 
@@ -263,8 +263,20 @@ export async function viewAsPage(staffUserId: string, authSessionId: string | nu
       return docs.map((x) => ({ title: x.file_name, subtitle: [fn.get(x.offering_id), x.tax_year ? `Tax year ${x.tax_year}` : null].filter(Boolean).join(" · "), date: x.published_at, badge: x.document_type === "k1" ? "K-1" : human(x.document_type) }));
     };
     switch (page) {
-      case "/my-funds":
-        return { items: rows.map((r) => ({ title: fund.get(r.offering_id) ?? "Fund", subtitle: [fmtUsd(r.commitment_amount_cents ?? r.requested_amount_cents) && `Commitment ${fmtUsd(r.commitment_amount_cents ?? r.requested_amount_cents)}`, r.funded_amount_cents ? `Funded ${fmtUsd(r.funded_amount_cents)}` : null].filter(Boolean).join(" · "), date: r.created_at, badge: human(r.stage) })) };
+      case "/my-funds": {
+        const pids = [...new Set(rows.map((r) => r.investment_profile_id).filter(Boolean))];
+        const { data: pr } = pids.length ? await d.from("investment_profiles").select("id, display_label, legal_name").in("id", pids) : { data: [] };
+        const pname = new Map(((pr ?? []) as any[]).map((x) => [x.id, x.display_label || x.legal_name]));
+        return { items: rows.map((r) => ({
+          onboardingId: r.id, offeringId: r.offering_id,
+          details: [
+            { label: "Investing as", value: pname.get(r.investment_profile_id) ?? "Not chosen yet" },
+            { label: "Commitment", value: fmtUsd(r.commitment_amount_cents ?? r.requested_amount_cents) || "Not set" },
+            { label: "Funded", value: fmtUsd(r.funded_amount_cents) || "$0" },
+            { label: "Status", value: human(r.stage) ?? "In progress" },
+            { label: "Started", value: r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : "Unknown" },
+          ], title: fund.get(r.offering_id) ?? "Fund", subtitle: [fmtUsd(r.commitment_amount_cents ?? r.requested_amount_cents) && `Commitment ${fmtUsd(r.commitment_amount_cents ?? r.requested_amount_cents)}`, r.funded_amount_cents ? `Funded ${fmtUsd(r.funded_amount_cents)}` : null].filter(Boolean).join(" · "), date: r.created_at, badge: human(r.stage) })) };
+      }
       case "/activity": {
         if (!rows.length) return { items: [] };
         const { data } = await d.from("investor_onboarding_events").select("event, offering_id, to_status, created_at").in("onboarding_id", rows.map((r) => r.id)).order("created_at", { ascending: false }).limit(50);

@@ -65,10 +65,10 @@ function MyFundsPage() {
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {shown.map((f) => (
-            <Card key={f.id}>
+            <Card key={f.id} className="relative transition-colors hover:bg-muted/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">
-                  <Link to={f.path as any} className="hover:underline">{f.name}</Link>
+                  <Link to={f.path as any} className="after:absolute after:inset-0 hover:underline">{f.name}</Link>
                 </CardTitle>
                 <CardDescription>
                   {f.typeLabel}
@@ -82,7 +82,7 @@ function MyFundsPage() {
                 {f.setupStatus ? <span className="text-xs text-muted-foreground">{f.setupStatus}</span> : null}
                 {f.outstandingActions ? <span className="text-xs text-muted-foreground">· {f.outstandingActions} to review</span> : null}
                 {f.relationships.includes("investor") && f.relationships.includes("fund_manager") ? (
-                  <Link to="/my-funds/$fundId" params={{ fundId: f.id }} className="text-xs text-primary underline">Investor view</Link>
+                  <Link to="/my-funds/$fundId" params={{ fundId: f.id }} className="relative z-10 text-xs text-primary underline">Investor view</Link>
                 ) : null}
               </CardContent>
             </Card>
