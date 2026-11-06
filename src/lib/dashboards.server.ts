@@ -7,7 +7,7 @@ import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { assertStaff, computeReadinessFor, onboardingActor, readinessForMany } from "@/lib/investor-onboarding.server";
 import {
-  agreementCounts, attentionFromItems, bucketOf, capital, funnel, isActive, isFunded, kpis, managerReadiness,
+  agreementCounts, attentionFromItems, bucketOf, capital, fundedSummary, funnel, isActive, isFunded, kpis, managerReadiness,
   readinessDistribution, trend, clientStepIndex, fundingStateOf, managerBucketOf, funnelStageOf,
   type InvestmentFact, type TrendRange,
 } from "@/lib/dashboard-metrics";
@@ -96,6 +96,7 @@ export async function opsDashboard(userId: string, filters: { clientId?: string 
   }).sort((a, b) => b.needsAttention - a.needsAttention || a.name.localeCompare(b.name));
   return {
     kpis: { activeFunds: offerings.filter((o) => o.is_open).length, ...k },
+    fundedSummary: fundedSummary(facts),
     funnel: funnel(facts, (invites ?? []).length),
     readiness: readinessDistribution(facts),
     capital: capital(facts),
@@ -155,6 +156,7 @@ export async function managerFundDashboard(userId: string, offeringId: string, r
   const cap = capital(facts);
   return {
     kpis: { investors: k.investors, onboarding: k.onboarding, needsInvestor: k.needsInvestor, needsMe: needsMe.length, ready: k.ready, funded: k.funded },
+    fundedSummary: fundedSummary(facts),
     funnel: funnel(facts, (invites ?? []).length),
     readiness: managerReadiness(facts),
     capital: { ...cap, targetCents: (setup as any)?.target_size_cents ?? null },
