@@ -15,3 +15,7 @@ export const linkPersonAccountFn = createServerFn({ method: "POST" }).middleware
 export const unlinkPersonAccountFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).unlinkPersonAccount(context.userId, data.userId));
+
+export const fundPersonAccountsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: { offeringId: string }) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).fundPersonAccounts(context.userId, data.offeringId));

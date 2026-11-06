@@ -68,3 +68,20 @@ export async function unlinkPersonAccount(actor: string, userId: string) {
   await db().from("person_account_group_members").update({ removed_at: new Date().toISOString(), removed_by: actor }).eq("user_id", userId).is("removed_at", null);
   return { ok: true };
 }
+
+/** Staff-only: investors in this fund whose person uses more than one account. */
+export async function fundPersonAccounts(actor: string, offeringId: string) {
+  await assertStaff(actor);
+  const { data: obs } = await db().from("investor_onboardings").select("investor_user_id").eq("offering_id", offeringId).not("investor_user_id", "is", null);
+  const users = [...new Set(((obs ?? []) as any[]).map((o) => o.investor_user_id as string))];
+  if (!users.length) return [];
+  const { data: mine } = await db().from("person_account_group_members").select("user_id, group_id").in("user_id", users).is("removed_at", null);
+  const out: { userId: string; email: string; accountCount: number; otherEmails: string[] }[] = [];
+  for (const m of (mine ?? []) as any[]) {
+    const { data: all } = await db().from("person_account_group_members").select("user_id").eq("group_id", m.group_id).is("removed_at", null);
+    const others = ((all ?? []) as any[]).map((a) => a.user_id as string).filter((u) => u !== m.user_id);
+    if (!others.length) continue;
+    out.push({ userId: m.user_id, email: await email(m.user_id), accountCount: others.length + 1, otherEmails: await Promise.all(others.map(email)) });
+  }
+  return out;
+}

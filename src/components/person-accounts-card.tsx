@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { linkPersonAccountFn, personAccountsFn, unlinkPersonAccountFn } from "@/lib/person-accounts.functions";
+import { fundPersonAccountsFn, linkPersonAccountFn, personAccountsFn, unlinkPersonAccountFn } from "@/lib/person-accounts.functions";
 
 const STATUS: Record<string, string> = { not_started: "No ID check", pending: "ID check in progress", review: "ID needs review", approved: "ID verified", declined: "ID declined", expired: "ID expired", sent_back: "Sent back" };
 
@@ -51,6 +51,21 @@ export function PersonAccountsCard({ userId }: { userId: string }) {
           <Button type="submit" size="sm" disabled={add.isPending || !email.trim()}>Add account</Button>
         </form>
       </>}
+    </section>
+  );
+}
+
+/** Staff-only on the fund compliance page: investors with more than one account. Hidden for non-staff. */
+export function FundPersonAccountsNote({ offeringId }: { offeringId: string }) {
+  const load = useServerFn(fundPersonAccountsFn);
+  const q = useQuery({ queryKey: ["person-accounts", "fund", offeringId], queryFn: () => load({ data: { offeringId } }), retry: false });
+  if (q.error || !q.data?.length) return null;
+  return (
+    <section className="space-y-2 rounded-md border p-4 text-sm">
+      <h3 className="font-medium">Same verified person as another account (staff only)</h3>
+      <ul className="space-y-1">{q.data.map((r) => (
+        <li key={r.userId}><Link to="/ops/investors/$investorId" params={{ investorId: r.userId }} className="text-primary hover:underline break-all">{r.email}</Link> · {r.accountCount} accounts, also {r.otherEmails.join(", ")}. Accounts stay separate.</li>
+      ))}</ul>
     </section>
   );
 }
