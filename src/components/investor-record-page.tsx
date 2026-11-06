@@ -44,7 +44,6 @@ function visibleTab(t?: InvestorRecordTab): VisibleTab {
 export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: string; onboardingId: string; initial?: InvestorRecordTab | undefined }) {
   // Staff open records on the Operations address; links stay there so the sign-in is kept.
   const onOps = useRouterState({ select: (st) => st.location.pathname.startsWith("/ops") });
-  // One page with sections; the old tab names now scroll to the matching section.
   // Real tabs: the header stays on top and only the chosen tab's content shows below it.
   const [tab, setTab] = useState<VisibleTab>(visibleTab(initial));
   useEffect(() => { if (initial) setTab(visibleTab(initial)); }, [initial]);
