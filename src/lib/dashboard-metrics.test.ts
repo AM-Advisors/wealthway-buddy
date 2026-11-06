@@ -72,3 +72,17 @@ describe("dashboard metrics", () => {
     expect(readinessDistribution([]).every((r) => r.count === 0 && r.percent === null)).toBe(true);
   });
 });
+
+import { fundedSummary as __fs } from "./dashboard-metrics";
+describe("fundedSummary", () => {
+  it("counts funded/closed as closed, other active as pending, skips declined", () => {
+    const base = { offeringId: "o", readiness: null } as any;
+    const r = __fs([
+      { ...base, onboardingId: "a", fundingStatus: "funded", intendedCents: 10000 },
+      { ...base, onboardingId: "b", fundingStatus: null, stage: "closed", intendedCents: 5000 },
+      { ...base, onboardingId: "c", fundingStatus: null, intendedCents: 2500 },
+      { ...base, onboardingId: "d", fundingStatus: null, intendedCents: 900, readiness: { terminal: "declined" } },
+    ]);
+    expect(r).toEqual({ closedCount: 2, closedCents: 15000, pendingCount: 1, pendingCents: 2500 });
+  });
+});

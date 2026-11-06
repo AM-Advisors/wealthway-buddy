@@ -1,3 +1,4 @@
+import { FundedSummaryCard } from "@/components/funded-summary-card";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -43,6 +44,7 @@ export function ManagerFundDashboard({ fundId }: { fundId: string }) {
         </div>
       ) : null}
 
+      {d ? <FundedSummaryCard summary={(d as any).fundedSummary} /> : null}
       <div className="grid min-w-0 gap-4 lg:grid-cols-3">
         <ChartCard title="Onboarding funnel" description="Tap a stage to see those investors.">
           {q.isPending ? <Skeleton className="h-40" /> : d ? <BarList ariaLabel="Onboarding funnel" rows={d.funnel} empty="No investors yet. Share the onboarding link to begin." onSelect={(k) => k !== "invited" && roster({ stage: k })} /> : null}
