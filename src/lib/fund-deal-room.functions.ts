@@ -25,8 +25,7 @@ export const getFundDealRoomBasics = createServerFn({ method: "POST" })
     if (!f) throw new Error("Fund not found.");
     const ids = ((mgrs ?? []) as any[]).map((m) => m.user_id);
     const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
-    let minimum = f.min_investment_cents as number | null;
-    try { const m = await import("@/lib/fund-minimum.server"); if (typeof (m as any).currentFundMinimum === "function") minimum = (await (m as any).currentFundMinimum(db, data.offeringId)) ?? minimum; } catch { /* fall back to offering minimum */ }
+    const minimum = (f.min_investment_cents ?? null) as number | null;
     return {
       name: f.name as string,
       legalName: (f.legal_entity_name ?? null) as string | null,
