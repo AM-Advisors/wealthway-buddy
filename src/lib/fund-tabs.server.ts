@@ -44,7 +44,7 @@ export function docStatus(o: any, outside?: { marked: boolean; complete: boolean
 }
 
 export async function anyInvestorSigned(fundId: string) {
-  const { data } = await (await db()).from("investor_onboardings").select("stage, executed_snapshot").eq("offering_id", fundId).is("removed_at", null);
+  let gridQuery = (await db()).from("investor_onboardings").select("stage, executed_snapshot").eq("offering_id", fundId).is("removed_at", null);
   return ((data ?? []) as any[]).some((o) => docStatus(o) === "Signed");
 }
 
@@ -57,7 +57,10 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
   const fundRelease = await (await import("@/lib/wire-release.server")).wireReleaseState(fundId).catch(() => ({ available: false }));
   const { data } = await (await db()).from("investor_onboardings")
     .select("id, offering_id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, questionnaire_version, questionnaire_responses, investment_profiles(legal_name, profile_type, tax_id_last4)")
-    .eq("offering_id", fundId).is("removed_at", null).match(onlyOnboardingId ? { id: onlyOnboardingId } : {}).order("created_at");
+    .eq("offering_id", fundId).is("removed_at", null);
+  // A single investor's detail reads only that row, not the whole fund.
+  if (onlyOnboardingId) gridQuery = gridQuery.eq("id", onlyOnboardingId);
+  const { data } = await gridQuery.order("created_at");
   // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
   const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
   const { data: people } = ids.length
