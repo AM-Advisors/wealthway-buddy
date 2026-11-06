@@ -45,8 +45,9 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   // Staff open records on the Operations address; links stay there so the sign-in is kept.
   const onOps = useRouterState({ select: (st) => st.location.pathname.startsWith("/ops") });
   // One page with sections; the old tab names now scroll to the matching section.
-  const setTab = (t: VisibleTab) => requestAnimationFrame(() => document.getElementById(`ir-sec-${t}`)?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  useEffect(() => { if (initial && initial !== "overview") setTab(visibleTab(initial)); }, [initial]);
+  // Real tabs: the header stays on top and only the chosen tab's content shows below it.
+  const [tab, setTab] = useState<VisibleTab>(visibleTab(initial));
+  useEffect(() => { if (initial) setTab(visibleTab(initial)); }, [initial]);
   const contactRef = useRef<HTMLDivElement>(null);
   const correctDetails = () => {
     setTab("details");
