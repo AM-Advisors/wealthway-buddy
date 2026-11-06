@@ -8,11 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATEMENT_CATEGORIES } from "@/lib/fund-books-model";
 import { applyStatementFn, listStatementsFn, updateStatementLineFn, uploadStatementFn } from "@/lib/fund-books.functions";
 import { ManualLineForm, ManualStatementForm, RemoveManualLine } from "./manual-books-entry";
 import { fileToBase64, fmtDate, usd } from "./shared";
+
+const keep = (l: any) => ({ onboardingId: l.matched_onboarding_id ?? null, assetId: l.matched_asset_id ?? null, vendor: l.matched_vendor ?? null });
+const assignValue = (l: any) => l.matched_onboarding_id ? `inv:${l.matched_onboarding_id}` : l.matched_asset_id ? `asset:${l.matched_asset_id}` : l.matched_vendor ? `vendor:${l.matched_vendor}` : "none";
+const assignLabel = (l: any, investors: { id: string; name: string }[], u: any) =>
+  l.matched_onboarding_id ? (investors.find((i) => i.id === l.matched_onboarding_id)?.name ?? "Investor")
+  : l.matched_asset_id ? (u.investments?.find((a: any) => a.id === l.matched_asset_id)?.name ?? "Investment")
+  : l.matched_vendor ?? "-";
 
 /** Upload a bank statement, check the lines the reader found, then apply them to the books. Never moves money. */
 export function StatementUpload({ fundId, investors, canEnter = false }: { fundId: string; investors: { id: string; name: string }[]; canEnter?: boolean }) {
@@ -58,23 +65,35 @@ export function StatementUpload({ fundId, investors, canEnter = false }: { fundI
               {u.tie.known && <p className="text-xs text-muted-foreground">Opening {usd(Number(u.opening_balance_cents))} · Closing {usd(Number(u.closing_balance_cents))}</p>}
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead className="text-left text-muted-foreground"><tr><th className="py-1">Date</th><th>Description</th><th className="text-right">Amount</th><th>What it is</th><th>Investor</th><th>Skip</th>{open && u.entered_manually && canEnter ? <th /> : null}</tr></thead>
+                  <thead className="text-left text-muted-foreground"><tr><th className="py-1">Date</th><th>Description</th><th className="text-right">Amount</th><th>What it is</th><th>Assigned to</th><th>Skip</th>{open && u.entered_manually && canEnter ? <th /> : null}</tr></thead>
                   <tbody>{u.lines.map((l: any) => (
                     <tr key={l.id} className={`border-t ${l.skip ? "opacity-50" : ""}`}>
                       <td className="py-1 whitespace-nowrap">{fmtDate(l.posted_on)}</td>
                       <td className="max-w-56 truncate" title={l.description}>{l.description}{l.duplicate_of && <span className="ml-1 text-muted-foreground">(already in books)</span>}</td>
                       <td className="text-right whitespace-nowrap">{l.direction === "in" ? "+" : "−"}{usd(Number(l.amount_cents))}</td>
                       <td className="min-w-44">{open && !l.applied_tx_id ? (
-                        <Select value={l.confirmed_category ?? l.suggested_category ?? ""} onValueChange={(v) => lineM.mutate({ lineId: l.id, category: v, onboardingId: l.matched_onboarding_id, skip: l.skip })}>
+                        <Select value={l.confirmed_category ?? l.suggested_category ?? ""} onValueChange={(v) => lineM.mutate({ lineId: l.id, category: v, ...keep(l), skip: l.skip })}>
                           <SelectTrigger className="h-8"><SelectValue placeholder="Pick one" /></SelectTrigger>
                           <SelectContent>{STATEMENT_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                         </Select>) : (l.confirmed_category ?? l.suggested_category ?? "-")}</td>
                       <td className="min-w-40">{open && !l.applied_tx_id ? (
-                        <Select value={l.matched_onboarding_id ?? "none"} onValueChange={(v) => lineM.mutate({ lineId: l.id, category: l.confirmed_category ?? l.suggested_category, onboardingId: v === "none" ? null : v, skip: l.skip })}>
+                        <Select value={assignValue(l)} onValueChange={(v) => {
+                          const base = { lineId: l.id, category: l.confirmed_category ?? l.suggested_category, skip: l.skip, onboardingId: null as string | null, assetId: null as string | null, vendor: null as string | null };
+                          if (v.startsWith("inv:")) base.onboardingId = v.slice(4);
+                          else if (v.startsWith("asset:")) base.assetId = v.slice(6);
+                          else if (v.startsWith("vendor:")) base.vendor = v.slice(7);
+                          else if (v === "new-vendor") { const name = window.prompt("Vendor name")?.trim(); if (!name) return; base.vendor = name.slice(0, 120); }
+                          lineM.mutate(base);
+                        }}>
                           <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                          <SelectContent><SelectItem value="none">None</SelectItem>{investors.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
-                        </Select>) : (investors.find((i) => i.id === l.matched_onboarding_id)?.name ?? "-")}</td>
-                      <td>{open && !l.applied_tx_id ? <input type="checkbox" aria-label="Skip line" checked={l.skip} onChange={(e) => lineM.mutate({ lineId: l.id, category: l.confirmed_category ?? l.suggested_category, onboardingId: l.matched_onboarding_id, skip: e.target.checked })} /> : l.skip ? "Yes" : ""}</td>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectGroup><SelectLabel>Investors</SelectLabel>{investors.map((i) => <SelectItem key={i.id} value={`inv:${i.id}`}>{i.name}</SelectItem>)}</SelectGroup>
+                            {(u.investments ?? []).length > 0 && <SelectGroup><SelectLabel>Investments</SelectLabel>{u.investments.map((a: any) => <SelectItem key={a.id} value={`asset:${a.id}`}>{a.name}</SelectItem>)}</SelectGroup>}
+                            <SelectGroup><SelectLabel>Vendors</SelectLabel>{(u.vendors ?? []).map((n: string) => <SelectItem key={n} value={`vendor:${n}`}>{n}</SelectItem>)}<SelectItem value="new-vendor">+ New vendor…</SelectItem></SelectGroup>
+                          </SelectContent>
+                        </Select>) : assignLabel(l, investors, u)}</td>
+                      <td>{open && !l.applied_tx_id ? <input type="checkbox" aria-label="Skip line" checked={l.skip} onChange={(e) => lineM.mutate({ lineId: l.id, category: l.confirmed_category ?? l.suggested_category, ...keep(l), skip: e.target.checked })} /> : l.skip ? "Yes" : ""}</td>
                       {open && u.entered_manually && canEnter ? <td>{!l.applied_tx_id && <RemoveManualLine fundId={fundId} lineId={l.id} />}</td> : null}
                     </tr>
                   ))}</tbody>

@@ -2661,6 +2661,13 @@
       "when": 1794007171209,
       "tag": "0379_document_staff_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 380,
+      "version": "7",
+      "when": 1794008443030,
+      "tag": "0380_statement_line_vendor_investment",
+      "breakpoints": true
     }
   ]
 }

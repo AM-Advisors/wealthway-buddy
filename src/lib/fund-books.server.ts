@@ -110,21 +110,30 @@ export async function listStatements(uid: string, fundId: string) {
   const { data: ups } = await d.from("bank_statement_uploads").select("*").eq("offering_id", fundId).order("created_at", { ascending: false }).limit(20);
   const ids = ((ups ?? []) as any[]).map((u) => u.id);
   const { data: lines } = ids.length ? await d.from("bank_statement_lines").select("*").in("upload_id", ids).order("line_no") : { data: [] };
+  const [{ data: assets }, { data: vend }] = await Promise.all([
+    d.from("portfolio_assets").select("id, issuer_name, asset_name").eq("offering_id", fundId).limit(200),
+    d.from("fund_expense_records").select("vendor").eq("offering_id", fundId).limit(500),
+  ]);
+  const investments = ((assets ?? []) as any[]).map((a) => ({ id: a.id as string, name: [a.issuer_name, a.asset_name].filter(Boolean).join(" · ") || "Investment" }));
+  const vendors = [...new Set([...((vend ?? []) as any[]).map((v) => String(v.vendor ?? "").trim()), ...((lines ?? []) as any[]).map((l) => String(l.matched_vendor ?? "").trim())].filter(Boolean))].sort();
   return ((ups ?? []) as any[]).map((u) => {
     const ls = ((lines ?? []) as any[]).filter((l) => l.upload_id === u.id);
-    return { ...u, lines: ls, tie: balanceTie(u.opening_balance_cents == null ? null : Number(u.opening_balance_cents), u.closing_balance_cents == null ? null : Number(u.closing_balance_cents), ls.map((l) => ({ amount_cents: Number(l.amount_cents), direction: l.direction }))) };
+    return { ...u, lines: ls, investments, vendors, tie: balanceTie(u.opening_balance_cents == null ? null : Number(u.opening_balance_cents), u.closing_balance_cents == null ? null : Number(u.closing_balance_cents), ls.map((l) => ({ amount_cents: Number(l.amount_cents), direction: l.direction }))) };
   });
 }
 
-export async function updateLine(uid: string, fundId: string, i: { lineId: string; category: string | null; onboardingId: string | null; skip: boolean }) {
+export async function updateLine(uid: string, fundId: string, i: { lineId: string; category: string | null; onboardingId: string | null; assetId?: string | null | undefined; vendor?: string | null | undefined; skip: boolean }) {
   await assertFund(uid, fundId);
   const d = await db();
   if (i.category && !STATEMENT_CATEGORIES.includes(i.category)) throw new Error("Pick a category from the list.");
   if (i.onboardingId) { const { data } = await d.from("investor_onboardings").select("id").eq("id", i.onboardingId).eq("offering_id", fundId).maybeSingle(); if (!data) throw new Error("That investor is not in this fund."); }
+  const assetId = i.onboardingId ? null : (i.assetId ?? null);
+  const vendor = i.onboardingId || assetId ? null : (i.vendor?.trim() || null);
+  if (assetId) { const { data } = await d.from("portfolio_assets").select("id").eq("id", assetId).eq("offering_id", fundId).maybeSingle(); if (!data) throw new Error("That investment is not in this fund."); }
   const { data: l } = await d.from("bank_statement_lines").select("id, applied_tx_id").eq("id", i.lineId).eq("offering_id", fundId).maybeSingle();
   if (!l) throw new Error("Line not found.");
   if ((l as any).applied_tx_id) throw new Error("This line is already applied.");
-  await d.from("bank_statement_lines").update({ confirmed_category: i.category, matched_onboarding_id: i.onboardingId, skip: i.skip }).eq("id", i.lineId);
+  await d.from("bank_statement_lines").update({ confirmed_category: i.category, matched_onboarding_id: i.onboardingId, matched_asset_id: assetId, matched_vendor: vendor, skip: i.skip }).eq("id", i.lineId);
   return { ok: true };
 }
 
@@ -142,6 +151,9 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
   const todo = lines.filter((l) => !l.skip && !l.applied_tx_id);
   const missing = todo.filter((l) => !(l.confirmed_category ?? l.suggested_category));
   if (missing.length) throw new Error(`${missing.length} line(s) still need a category.`);
+  const assetIds = [...new Set(todo.map((l) => l.matched_asset_id).filter(Boolean))];
+  const { data: an } = assetIds.length ? await d.from("portfolio_assets").select("id, issuer_name, asset_name").in("id", assetIds) : { data: [] };
+  const assetNames = new Map(((an ?? []) as any[]).map((a) => [a.id, [a.issuer_name, a.asset_name].filter(Boolean).join(" · ")]));
   let applied = 0;
   for (const l of todo) {
     const category = l.confirmed_category ?? l.suggested_category;
@@ -151,7 +163,10 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
       dedupe_key: dedupeKey(l.posted_on, Number(l.amount_cents), l.direction, l.description), reference: `statement:${uploadId}`,
     }).select("id").single();
     if (error) throw new Error("Couldn't record a bank line.");
-    if (l.matched_onboarding_id) await d.from("fund_transaction_tags").upsert({ bank_transaction_id: tx.id, offering_id: fundId, onboarding_id: l.matched_onboarding_id, asset_label: null, tagged_by: uid, updated_at: new Date().toISOString() });
+    if (l.matched_onboarding_id || l.matched_asset_id || l.matched_vendor) {
+      const assetName = l.matched_asset_id ? assetNames.get(l.matched_asset_id) ?? null : null;
+      await d.from("fund_transaction_tags").upsert({ bank_transaction_id: tx.id, offering_id: fundId, onboarding_id: l.matched_onboarding_id ?? null, portfolio_asset_id: l.matched_asset_id ?? null, vendor_name: l.matched_vendor ?? null, asset_label: assetName ?? l.matched_vendor ?? null, tagged_by: uid, updated_at: new Date().toISOString() });
+    }
     const { data: linkedRows } = await d.from("fund_expense_records").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
     const { data: linkedInv } = await d.from("fund_investment_transactions").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
     const { data: linkedSet } = await d.from("fund_payable_settlements").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
