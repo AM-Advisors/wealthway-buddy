@@ -115,8 +115,9 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </div>
       <nav aria-label="Jump to section" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b bg-background px-1 py-1">{([...VISIBLE_TABS, ...(staff ? ["bsa" as const] : [])] as VisibleTab[]).map((t) => <Button key={t} size="sm" variant="ghost" className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</nav>
 
+      {tab === "overview" ? <>
       <h3 id="ir-sec-overview" className="scroll-mt-14 pt-2 text-lg font-semibold">Overview</h3>
-      {true ? <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {!data.overview.removed && <PersonalInvestmentLinkCard onboardingId={onboardingId} email={p?.email ?? undefined} />}
         {!data.overview.removed && !data.investorHasAccount ? <Card className="md:col-span-2"><CardContent className="pt-6 text-sm text-muted-foreground">Investor has not created an account yet. Send the invite above so they can sign in and complete their steps.</CardContent></Card> : null}
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} initialAccreditationReview={initial === "accreditation"} /></CardContent></Card>
@@ -126,10 +127,12 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? entrySourceLabel(s.source)}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>
             <div className="flex gap-1">{(["accept", "reject", "review_later"] as const).map((a) => <Button key={a} size="sm" variant={a === "accept" ? "default" : "outline"} onClick={async () => { try { await resolve({ data: { id: s.id, action: a } }); toast.success("Recorded"); refresh(); } catch (e) { toast.error((e as Error).message); } }}>{a === "review_later" ? "Review later" : prettyStatus(a)}</Button>)}</div>
           </div>)}</CardContent></Card> : null}
-      </div> : null}
+      </div>
+      </> : null}
 
+      {tab === "details" ? <>
       <h3 id="ir-sec-details" className="scroll-mt-14 pt-2 text-lg font-semibold">Details</h3>
-      {true ? <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
+      <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
         {field("amount", "Investment amount (USD)", inv.amountCents ? inv.amountCents / 100 : "")}
         {field("commitment", "Commitment amount (USD)", inv.commitmentCents ? inv.commitmentCents / 100 : "")}
         {staff ? field("accepted", "Accepted amount (USD)", inv.acceptedCents ? inv.acceptedCents / 100 : "") : null}
@@ -178,7 +181,19 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         </CardContent></Card> : null}
         {data.profile ? <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} /> : null}
         {!data.overview.removed ? <DistributionBankCard onboardingId={onboardingId} hasAccount={Boolean((data as any).investorHasAccount)} /> : null}
-      </div> : null}
+      </div>
+      </> : null}
+
+      {tab === "actions" ? <>
+      <h3 id="ir-sec-actions" className="scroll-mt-14 pt-2 text-lg font-semibold">Verification &amp; actions</h3>
+      <div className="space-y-4">
+        <InvestorPriorVerification onboardingId={onboardingId} onSaved={refresh} />
+        <InvestorQuickEdit onboardingId={onboardingId} onSaved={refresh} />
+        <InvestorHelpers onboardingId={onboardingId} />
+        <InvestorEmailHistory onboardingId={onboardingId} />
+        {!data.overview.removed ? <InvestorPeopleAndContacts onboardingId={onboardingId} onSaved={refresh} /> : null}
+      </div>
+      </> : null}
 
       <h3 id="ir-sec-documents" className="scroll-mt-14 pt-2 text-lg font-semibold">Documents</h3>
       {true ? <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
