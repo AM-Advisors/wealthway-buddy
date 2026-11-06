@@ -155,6 +155,16 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           console.error("[didit] processing failed", processingError);
         }
 
+        // Manual (no-login) investor records link by the session saved on the investment.
+        let manual: { linked: number; applied: number } = { linked: 0, applied: 0 };
+        try {
+          const { autoApplyDiditSession } = await import("@/lib/didit-auto-apply.server");
+          manual = (await autoApplyDiditSession(sessionId)) ?? manual;
+        } catch (e) {
+          console.error("[didit] auto-apply failed", e);
+        }
+        if (!applicationId && manual.linked > 0 && processingError === "no matching application") processingError = null;
+
         await supabaseAdmin
           .from("didit_webhook_events")
           .update({
@@ -172,13 +182,6 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           } catch (e) {
             console.error("[didit] readiness reconcile failed", e);
           }
-        }
-
-        try {
-          const { autoApplyDiditSession } = await import("@/lib/didit-auto-apply.server");
-          await autoApplyDiditSession(sessionId);
-        } catch (e) {
-          console.error("[didit] auto-apply failed", e);
         }
 
         try {
