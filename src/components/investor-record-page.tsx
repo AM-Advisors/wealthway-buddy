@@ -159,7 +159,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         </div>
         {((p as any)?.screeningEvidence ?? []).length ? <div className="space-y-2">
           {((p as any).screeningEvidence as any[]).map((e) => <div key={e.id} className="space-y-1 rounded-md border p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{e.mode === "prior" ? "Earlier verification loaded" : e.mode === "document" ? "Compliance screening rerun" : "Identity check"}</span><Badge variant="outline">{e.amlStatus ? `Screening: ${verificationLabel(e.amlStatus)}` : prettyStatus(e.status)}</Badge></div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{e.mode === "prior" ? "Earlier verification loaded" : e.mode === "document" ? "Compliance screening rerun" : "Identity check"}</span><Badge variant="outline">{e.superseded ? "Replaced by approved screening" : e.amlStatus ? `Screening: ${verificationLabel(e.amlStatus)}` : prettyStatus(e.status)}</Badge></div>
             <p className="text-xs text-muted-foreground">Recorded {new Date(e.createdAt).toLocaleDateString()}{e.checkedOn ? ` · originally checked ${e.checkedOn}` : ""}{e.documentType ? ` · ID ${e.documentType}` : ""}{e.idStatus ? ` · ID ${verificationLabel(e.idStatus)}` : ""}{e.fieldsLoaded ? ` · ${e.fieldsLoaded} details loaded` : ""}</p>
             {e.note ? <p className="text-xs">{e.note}</p> : null}
           </div>)}

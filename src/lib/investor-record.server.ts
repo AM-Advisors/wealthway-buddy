@@ -611,6 +611,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     documentType: (r.document_type ?? null) as string | null, createdAt: r.created_at as string,
     checkedOn: (r.result_summary?.checkedOn ?? null) as string | null, note: (r.result_summary?.note ?? r.result_summary?.info ?? null) as string | null,
     fieldsLoaded: Array.isArray(r.result_summary?.fields) ? r.result_summary.fields.length : 0,
+    // A tentative result recorded before the person's current approved screening is history, not the live status.
+    superseded: person.aml_status === "approved" && !!r.aml_status && r.aml_status !== "approved" && (!person.aml_screened_at || new Date(r.created_at) <= new Date(person.aml_screened_at)),
   })) : [];
   // Sensitive boundary: tax IDs, KYC/AML status fields, ID images and DOB never leave for managers.
   const safePerson = person ? {
