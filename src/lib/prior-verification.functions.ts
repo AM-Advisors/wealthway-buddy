@@ -9,6 +9,10 @@ export const investorMissingInfoFn = createServerFn({ method: "POST" }).middlewa
   .validator(z.object({ onboardingId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await srv()).missingInfo(context.userId, data.onboardingId));
 
+export const syncProviderSessionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: z.string().uuid(), sessionId: z.string().trim().uuid().optional() }).parse)
+  .handler(async ({ data, context }) => (await srv()).syncProviderSession(context.userId, data.onboardingId, data.sessionId ?? null));
+
 export const loadPriorVerificationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({
     onboardingId: z.string().uuid(),

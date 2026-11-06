@@ -124,7 +124,7 @@ async function screen(body: Record<string, unknown>) {
 export async function loadPriorVerification(userId: string, input: PriorInput) {
   const { row, role } = await access(userId, input.onboardingId);
   const d = await db();
-  const out: { saved: number; suggested: number; aml?: string; kycLink?: "emailed" | "created"; kyb?: string; entityAml?: string; warnings: string[] } = { saved: 0, suggested: 0, warnings: [] };
+  const out: { saved: number; suggested: number; aml?: string; sessionKyc?: string; kycLink?: "emailed" | "created"; kyb?: string; entityAml?: string; warnings: string[] } = { saved: 0, suggested: 0, warnings: [] };
 
   // 1) Fill in details through the normal investor-record path (edit window, suggestions, history).
   const p = input.person ?? {};
@@ -166,6 +166,16 @@ export async function loadPriorVerification(userId: string, input: PriorInput) {
   // 4) Reruns.
   const { data: cur } = row.person_id ? await d.from("persons").select("*").eq("id", row.person_id).maybeSingle() : { data: null };
   const now = new Date().toISOString();
+  // Earlier check was done by our identity provider: apply that session's result instead of a fresh name-only search.
+  if (/didit/i.test(input.provider) && cur) {
+    try {
+      const s = await syncProviderSession(userId, input.onboardingId, input.reference ?? null);
+      if (s.aml) out.aml = s.aml;
+      out.sessionKyc = s.kyc ?? undefined;
+      if (!s.applied && s.reason) out.warnings.push(`Verification session not applied: ${s.reason}.`);
+      input = { ...input, rerun: { ...input.rerun, aml: false } };
+    } catch (e) { out.warnings.push((e as Error).message); }
+  }
   if (input.rerun.aml) {
     if (!cur) out.warnings.push("No person on this investment to screen.");
     else {
