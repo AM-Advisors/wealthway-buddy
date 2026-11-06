@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATEMENT_CATEGORIES } from "@/lib/fund-books-model";
 import { applyStatementFn, listStatementsFn, updateStatementLineFn, uploadStatementFn } from "@/lib/fund-books.functions";
 import { ManualLineForm, ManualStatementForm, RemoveManualLine } from "./manual-books-entry";
