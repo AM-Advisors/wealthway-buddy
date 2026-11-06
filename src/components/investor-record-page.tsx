@@ -2,6 +2,9 @@ import { AccountIdentityQueue } from "@/components/account-identity-queue";
 import { InvestorVerificationCard } from "@/components/investor-verification-card";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { InvestorReviewPanel } from "@/components/fund-tabs/investors-tab";
+import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
+import { InvestorPeopleAndContacts } from "@/components/investor-people-contacts";
+import { InvestorPriorVerification } from "@/components/investor-prior-verification";
 import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
@@ -31,9 +34,9 @@ import { Textarea } from "@/components/ui/textarea";
 export const INVESTOR_RECORD_TABS = ["overview", "investment", "profile", "onboarding", "readiness", "documents", "activity", "history", "accreditation"] as const;
 export type InvestorRecordTab = (typeof INVESTOR_RECORD_TABS)[number];
 /** Four visible tabs; older links to merged tabs still land in the right place. */
-const VISIBLE_TABS = ["overview", "details", "documents", "activity"] as const;
+const VISIBLE_TABS = ["overview", "details", "actions", "documents", "activity"] as const;
 type VisibleTab = (typeof VISIBLE_TABS)[number] | "bsa";
-const TAB_LABEL: Record<VisibleTab, string> = { overview: "Overview", details: "Details", documents: "Documents", activity: "Activity", bsa: "BSA (staff only)" };
+const TAB_LABEL: Record<VisibleTab, string> = { overview: "Overview", details: "Details", actions: "Verification & actions", documents: "Documents", activity: "Activity", bsa: "BSA (staff only)" };
 function visibleTab(t?: InvestorRecordTab): VisibleTab {
   if (t === "investment" || t === "profile") return "details";
   if (t === "documents") return "documents";
@@ -195,16 +198,22 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </div>
       </> : null}
 
+      {tab === "documents" ? <>
       <h3 id="ir-sec-documents" className="scroll-mt-14 pt-2 text-lg font-semibold">Documents</h3>
-      {true ? <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
-        <div className="mt-2"><Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/documents"} params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div> : null}
+      <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
+        <div className="mt-2"><Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/documents"} params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div>
+      </> : null}
 
+      {tab === "activity" ? <>
       <h3 id="ir-sec-activity" className="scroll-mt-14 pt-2 text-lg font-semibold">Activity</h3>
-      {true ? <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
+      <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} />
       {staff ? <InvestorSessionActivity onboardingId={onboardingId} /> : null}
-      {true ? <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
-      {staff ? <h3 id="ir-sec-bsa" className="scroll-mt-14 pt-2 text-lg font-semibold">BSA (staff only)</h3> : null}
-      {staff ? <BsaProfilePanel onboardingId={onboardingId} /> : null}
+      <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card>
+      </> : null}
+      {staff && tab === "bsa" ? <>
+      <h3 id="ir-sec-bsa" className="scroll-mt-14 pt-2 text-lg font-semibold">BSA (staff only)</h3>
+      <BsaProfilePanel onboardingId={onboardingId} />
+      </> : null}
     </section>
   );
 }
