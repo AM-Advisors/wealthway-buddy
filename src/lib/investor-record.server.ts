@@ -597,15 +597,19 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     db().from("investor_record_suggestions").select("*").eq("onboarding_id", row.id).in("status", ["open", "review_later"]).order("created_at", { ascending: false }),
     db().from("offerings").select("id, name").eq("id", row.offering_id).maybeSingle(),
   ]);
-  const { result } = await computeReadinessFor(row);
+  // Independent reads run together instead of one after another.
+  const [{ result }, reviewSet, directEdits, questionnaireDef] = await Promise.all([
+    computeReadinessFor(row),
+    (async () => (await import("@/lib/related-person.server")).relationshipsUnderReview(((rel ?? []) as any[]).map((r) => r.id)))(),
+    staff ? Promise.resolve(true) : investorEditWindow(row),
+    (async () => (await import("@/lib/investor-onboarding.server")).publishedQuestionnaire(row.offering_id))(),
+  ]);
   const readiness = {
     ready: Boolean((result as any).closeReady), label: (result as any).closeReady ? "Ready to Close" : "Not Ready to Close",
     nextAction: (result as any).nextAction?.label ?? null,
     stages: ((result as any).stages ?? []).map((s: any) => ({ key: s.stage, label: s.title, status: s.status })),
   };
-  const reviewSet = await (await import("@/lib/related-person.server")).relationshipsUnderReview(((rel ?? []) as any[]).map((r) => r.id));
-  const directEdits = staff || await investorEditWindow(row);
-  const directContact = staff || (directEdits && await exclusiveRecord(row, "person_id"));
+  const [directContact, profileDirect] = staff ? [true, true] : directEdits ? await Promise.all([exclusiveRecord(row, "person_id"), row.investment_profile_id ? exclusiveRecord(row, "investment_profile_id") : Promise.resolve(false)]) : [false, false];
   const screeningEvidence = staff && person?.id ? (((await db().from("person_kyc_requests").select("id, mode, status, aml_status, id_status, document_type, result_summary, created_at").eq("person_id", person.id).order("created_at", { ascending: false }).limit(10)).data ?? []) as any[]).map((r) => ({
     id: r.id as string, mode: r.mode as string, status: r.status as string, amlStatus: (r.aml_status ?? null) as string | null, idStatus: (r.id_status ?? null) as string | null,
     documentType: (r.document_type ?? null) as string | null, createdAt: r.created_at as string,
@@ -636,7 +640,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     },
     readiness,
     questionnaire: await (async () => {
-      const q = await (await import("@/lib/investor-onboarding.server")).publishedQuestionnaire(row.offering_id);
+      const q = questionnaireDef;
       const answers = (row.questionnaire_responses ?? {}) as Record<string, unknown>;
       return {
         items: ((q?.questions ?? []) as any[]).map((x) => ({ key: x.key as string, label: x.label as string, answer: answers[x.key] == null ? null : String(answers[x.key]) })),
@@ -650,7 +654,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     pendingReviewCount: (sugg ?? []).length,
     contactEditMode: directContact ? "direct" as const : "suggest" as const,
     detailsEditMode: directEdits ? "direct" as const : "suggest" as const,
-    profileEditMode: (staff || (directEdits && row.investment_profile_id && await exclusiveRecord(row, "investment_profile_id"))) ? "direct" as const : "locked" as const,
+    profileEditMode: (staff || (directEdits && row.investment_profile_id && profileDirect)) ? "direct" as const : "locked" as const,
     investorHasAccount: Boolean(row.investor_user_id),
     claimState: claimState({ hasAccount: Boolean(row.investor_user_id), entrySource: row.entry_source }),
     actor: { isStaff: actor.isStaff },
