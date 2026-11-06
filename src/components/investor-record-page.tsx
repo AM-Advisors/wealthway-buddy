@@ -151,23 +151,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         } })}>{data.detailsEditMode === "suggest" ? "Submit investment changes" : "Save investment"}</Button>
       </CardContent></Card>
 
-      {staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} investorName={[p?.firstName, p?.middleName, p?.lastName].filter(Boolean).join(" ")} investorEmail={p?.email ?? undefined} /> : null}
-      {staff && !data.overview.investorUserId ? <Card><CardHeader><CardTitle className="text-base">Identity & compliance screening</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
-        <div className="flex flex-wrap gap-2">
-          <Badge variant={statusTone((p as any)?.kycStatus ?? "not_started")}>Identity: {verificationLabel((p as any)?.kycStatus)}</Badge>
-          <Badge variant={statusTone((p as any)?.amlStatus ?? "not_started")}>Screening: {verificationLabel((p as any)?.amlStatus)}</Badge>
-        </div>
-        {((p as any)?.screeningEvidence ?? []).length ? <div className="space-y-2">
-          {((p as any).screeningEvidence as any[]).map((e) => <div key={e.id} className="space-y-1 rounded-md border p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{e.mode === "prior" ? "Earlier verification loaded" : e.mode === "document" ? "Compliance screening rerun" : "Identity check"}</span><Badge variant="outline">{e.superseded ? "Replaced by approved screening" : e.amlStatus ? `Screening: ${verificationLabel(e.amlStatus)}` : prettyStatus(e.status)}</Badge></div>
-            <p className="text-xs text-muted-foreground">Recorded {new Date(e.createdAt).toLocaleDateString()}{e.checkedOn ? ` · originally checked ${e.checkedOn}` : ""}{e.documentType ? ` · ID ${e.documentType}` : ""}{e.idStatus ? ` · ID ${verificationLabel(e.idStatus)}` : ""}{e.fieldsLoaded ? ` · ${e.fieldsLoaded} details loaded` : ""}</p>
-            {e.note ? <p className="text-xs">{e.note}</p> : null}
-          </div>)}
-          <p className="text-xs text-muted-foreground">No portal login yet. A full identity check with photo ID and selfie appears here after they accept their invite and verify.</p>
-        </div> : <p className="text-muted-foreground">This investor has no portal login yet and no screening is recorded. Verification starts after they accept their invite and sign in.</p>}
-      </CardContent></Card> : null}
       <div className="space-y-4">
-        {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <Card ref={contactRef} className="scroll-mt-4"><CardHeader><CardTitle className="text-base">Investor details</CardTitle>
           {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
             : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {entrySourceLabel(data.overview.enteredBy)}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
@@ -197,6 +181,22 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       {tab === "actions" ? <>
       <h3 id="ir-sec-actions" className="scroll-mt-14 pt-2 text-lg font-semibold">Verification &amp; actions</h3>
       <div className="space-y-4">
+      {staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} investorName={[p?.firstName, p?.middleName, p?.lastName].filter(Boolean).join(" ")} investorEmail={p?.email ?? undefined} /> : null}
+      {staff && !data.overview.investorUserId ? <Card><CardHeader><CardTitle className="text-base">Identity & compliance screening</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant={statusTone((p as any)?.kycStatus ?? "not_started")}>Identity: {verificationLabel((p as any)?.kycStatus)}</Badge>
+          <Badge variant={statusTone((p as any)?.amlStatus ?? "not_started")}>Screening: {verificationLabel((p as any)?.amlStatus)}</Badge>
+        </div>
+        {((p as any)?.screeningEvidence ?? []).length ? <div className="space-y-2">
+          {((p as any).screeningEvidence as any[]).map((e) => <div key={e.id} className="space-y-1 rounded-md border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{e.mode === "prior" ? "Earlier verification loaded" : e.mode === "document" ? "Compliance screening rerun" : "Identity check"}</span><Badge variant="outline">{e.superseded ? "Replaced by approved screening" : e.amlStatus ? `Screening: ${verificationLabel(e.amlStatus)}` : prettyStatus(e.status)}</Badge></div>
+            <p className="text-xs text-muted-foreground">Recorded {new Date(e.createdAt).toLocaleDateString()}{e.checkedOn ? ` · originally checked ${e.checkedOn}` : ""}{e.documentType ? ` · ID ${e.documentType}` : ""}{e.idStatus ? ` · ID ${verificationLabel(e.idStatus)}` : ""}{e.fieldsLoaded ? ` · ${e.fieldsLoaded} details loaded` : ""}</p>
+            {e.note ? <p className="text-xs">{e.note}</p> : null}
+          </div>)}
+          <p className="text-xs text-muted-foreground">No portal login yet. A full identity check with photo ID and selfie appears here after they accept their invite and verify.</p>
+        </div> : <p className="text-muted-foreground">This investor has no portal login yet and no screening is recorded. Verification starts after they accept their invite and sign in.</p>}
+      </CardContent></Card> : null}
+        {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <InvestorPriorVerification onboardingId={onboardingId} onSaved={refresh} />
         <InvestorQuickEdit onboardingId={onboardingId} onSaved={refresh} />
         <InvestorHelpers onboardingId={onboardingId} />
