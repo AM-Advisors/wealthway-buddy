@@ -38456,6 +38456,39 @@ export type Database = {
           },
         ]
       }
+      person_account_group_members: {
+        Row: {
+          added_at: string
+          added_by: string
+          group_id: string
+          id: string
+          note: string | null
+          removed_at: string | null
+          removed_by: string | null
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by: string
+          group_id: string
+          id?: string
+          note?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string
+          group_id?: string
+          id?: string
+          note?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       person_addresses: {
         Row: {
           address_kind: string
