@@ -418,7 +418,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
           })()}
           <Tabs value={reviewTab} onValueChange={setReviewTab} className="space-y-4">
             <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
-              <TabsTrigger value="details">Details</TabsTrigger><TabsTrigger value="documents">Documents</TabsTrigger><TabsTrigger value="terms">Terms</TabsTrigger>{!embedded && <TabsTrigger value="actions">Actions</TabsTrigger>}
+              <TabsTrigger value="details">Details</TabsTrigger><TabsTrigger value="documents">Documents</TabsTrigger><TabsTrigger value="terms">Terms</TabsTrigger><TabsTrigger value="actions">Actions</TabsTrigger>
             </TabsList>
             <TabsContent value="details" className="space-y-6">
           <section>
@@ -507,14 +507,14 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
             <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Edit investor fees & minimum</Button>
           </section>
             </TabsContent>
-            {!embedded && <TabsContent value="actions" className="space-y-6">
-          {id && <PersonalInvestmentLinkCard onboardingId={id} />}
+            <TabsContent value="actions" className="space-y-6">
+          {id && !embedded && <PersonalInvestmentLinkCard onboardingId={id} />}
           {id && <InvestorEmailHistory onboardingId={id} />}
           {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
           {id && <InvestorPriorVerification onboardingId={id} onSaved={() => q.refetch()} />}
           {id && <InvestorHelpers onboardingId={id} />}
           {id && <InvestorPeopleAndContacts onboardingId={id} onSaved={() => q.refetch()} />}
-            </TabsContent>}
+            </TabsContent>
           </Tabs>
         </div>
       )}
