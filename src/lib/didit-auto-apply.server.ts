@@ -105,6 +105,14 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
     reason: amlAuto ? "Approved identity check applied automatically; screening cleared automatically (no real match)" : "Approved identity check applied automatically",
     detail: { fields: changes.map((c) => c.field), aml: x.amlStatus, aml_automatic: amlAuto, aml_hits: x.amlHits.length },
   });
+  // Keep the staff screening history in step with the applied identity check.
+  try {
+    await db().from("person_kyc_requests").insert({
+      person_id: person.id, mode: "link", status: "completed", session_id: ob.questionnaire_didit_session_id,
+      id_status: "approved", aml_status: update.aml_status ?? person.aml_status ?? null, created_by: actorUserId,
+      result_summary: { note: "Full identity check applied", amlHits: x.amlHits.length, amlAutomatic: amlAuto },
+    });
+  } catch (e) { console.error("[didit-auto] history", (e as Error).message); }
   try {
     const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
     await reconcileReadinessForSubjects({ investmentProfileId: ob.investment_profile_id }, "didit_auto_apply");
