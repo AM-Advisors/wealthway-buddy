@@ -16187,6 +16187,39 @@ export type Database = {
         }
         Relationships: []
       }
+      document_staff_tags: {
+        Row: {
+          created_at: string
+          created_by: string
+          doc_id: string
+          doc_source: string
+          id: string
+          removed_at: string | null
+          removed_by: string | null
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          doc_id: string
+          doc_source: string
+          id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          tag: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          doc_id?: string
+          doc_source?: string
+          id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          tag?: string
+        }
+        Relationships: []
+      }
       document_template_uses: {
         Row: {
           fund_version: number
