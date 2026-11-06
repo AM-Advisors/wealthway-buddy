@@ -34,6 +34,7 @@ import {
   publishDistributionNoticeFn,
   resolveDistributionExceptionFn,
   reviewDistributionFn,
+  requestDistributionBankDetailsFn,
 } from "@/lib/distributions.functions";
 
 const money = (cents: number | null | undefined) =>
@@ -60,6 +61,7 @@ export function DistributionsWorkspace() {
   const approveReversal = useServerFn(approveDistributionReversalFn);
   const propose = useServerFn(proposeDistributionFn);
   const request = useServerFn(requestDistributionFn);
+  const askBank = useServerFn(requestDistributionBankDetailsFn);
 
   const [bucket, setBucket] = useState("all");
   const [fundId, setFundId] = useState("");
@@ -94,6 +96,7 @@ export function DistributionsWorkspace() {
   const postM = act(post, "Posted to the ledger and the investor's capital account.");
   const noticeM = act(notice, "Distribution notice published.");
   const resolveM = act(resolve, "Exception closed.");
+  const askBankM = act(askBank, "Bank details request emailed to the investor.");
 
   const lines = useMemo(() => {
     const all = (data?.lines ?? []) as any[];
@@ -188,7 +191,21 @@ export function DistributionsWorkspace() {
               {b.finalApproved ? " · final approved" : ""}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
+          <CardContent className="space-y-3">
+            <ApprovalSteps
+              steps={[
+                { label: "Prepared", done: true },
+                { label: "Manager approved", done: b.managerApproved },
+                { label: "Withholding reviewed", done: b.withholdingReviewed },
+                { label: "Final approval", done: b.finalApproved },
+                {
+                  label: "Investors ready",
+                  done: lines.filter((l) => l.batchId === b.id).length > 0 &&
+                    lines.filter((l) => l.batchId === b.id).every((l) => l.identityVerified && l.destinationStatus === "approved"),
+                },
+              ]}
+            />
+            <div className="flex flex-wrap gap-2">
             {b.status === "draft" ? <Button size="sm" variant="outline" onClick={() => requestM.run({ batchId: b.id })}>Request manager approval</Button> : null}
             <Button size="sm" variant="outline" onClick={() => reviewM.run({ batchId: b.id })}>
               Send for approval
@@ -211,6 +228,7 @@ export function DistributionsWorkspace() {
             >
               Cancel
             </Button>
+            </div>
           </CardContent>
         </Card>
       ))}
@@ -240,7 +258,43 @@ export function DistributionsWorkspace() {
                   {l.destinationEnding ? ` · to account ending ${l.destinationEnding}` : " · no destination on file"}
                 </span>
               </div>
+              <div className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
+                <CheckItem
+                  label="Identity check"
+                  ok={l.identityVerified}
+                  detail={l.identityVerified ? "Verified" : "Not verified yet"}
+                />
+                <CheckItem
+                  label="Bank details"
+                  ok={l.destinationStatus === "approved" && !l.coolingOffActive}
+                  detail={
+                    !l.destinationStatus
+                      ? "None on file"
+                      : l.destinationStatus === "approved"
+                        ? l.coolingOffActive
+                          ? `Account ending ${l.destinationEnding ?? "?"} · waiting period`
+                          : `Account ending ${l.destinationEnding ?? "?"} · confirmed`
+                        : `Account ending ${l.destinationEnding ?? "?"} · ${String(l.destinationStatus).replace(/_/g, " ")}`
+                  }
+                />
+                <CheckItem
+                  label="Payment"
+                  ok={l.stage === "posted" || l.stage === "completed"}
+                  detail={l.stageLabel ?? String(l.stage).replace(/_/g, " ")}
+                />
+              </div>
               <div className="mt-2 flex flex-wrap gap-2">
+                {l.destinationStatus !== "approved" ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!l.hasInvestorAccount || askBankM.pending}
+                    title={l.hasInvestorAccount ? undefined : "The investor needs an account first."}
+                    onClick={() => askBankM.run({ lineId: l.id })}
+                  >
+                    Ask investor for bank details
+                  </Button>
+                ) : null}
                 <Button
                   size="sm"
                   variant="outline"
@@ -371,6 +425,33 @@ export function DistributionsWorkspace() {
         capital account change.
       </p>
 
+    </div>
+  );
+}
+
+function ApprovalSteps({ steps }: { steps: { label: string; done: boolean }[] }) {
+  const next = steps.findIndex((st) => !st.done);
+  return (
+    <ol className="flex flex-wrap gap-2" aria-label="Approval steps">
+      {steps.map((st, i) => (
+        <li key={st.label}>
+          <Badge variant={st.done ? "default" : i === next ? "secondary" : "outline"}>
+            {i + 1}. {st.label}{st.done ? " ✓" : i === next ? " · next" : ""}
+          </Badge>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function CheckItem({ label, ok, detail }: { label: string; ok: boolean; detail: string }) {
+  return (
+    <div className="rounded-md border p-2">
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{label}</span>
+        <Badge variant={ok ? "default" : "outline"}>{ok ? "Done" : "Needed"}</Badge>
+      </div>
+      <p className="text-muted-foreground">{detail}</p>
     </div>
   );
 }

@@ -2876,9 +2876,25 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
   const paymentByLine = new Map<string, any>();
   for (const p of (payments ?? []) as any[]) paymentByLine.set(String(p.distribution_line_id), p);
 
+  // Identity per investor: the person's single approved check (login identity), never inferred.
+  const investorIds = [...new Set(((lines ?? []) as any[]).map((l) => l.investor_user_id).filter(Boolean).map(String))];
+  const { data: obs } = investorIds.length
+    ? await db().from("investor_onboardings").select("investor_user_id, offering_id, person_id").in("investor_user_id", investorIds).not("person_id", "is", null)
+    : { data: [] };
+  const personByKey = new Map<string, string>();
+  for (const o of (obs ?? []) as any[]) {
+    personByKey.set(`${o.offering_id}:${o.investor_user_id}`, String(o.person_id));
+    if (!personByKey.has(`*:${o.investor_user_id}`)) personByKey.set(`*:${o.investor_user_id}`, String(o.person_id));
+  }
+  const { approvedPersonVerification } = await import("@/lib/person-identity.server");
+  const identityByPerson = new Map<string, boolean>();
+  for (const pid of new Set(personByKey.values())) identityByPerson.set(pid, Boolean(await approvedPersonVerification(pid)));
+
   const now = nowIso();
   const rows = ((lines ?? []) as any[]).map((l) => {
     const batch = batchById.get(String(l.batch_id));
+    const personId = personByKey.get(`${l.offering_id}:${l.investor_user_id}`) ?? personByKey.get(`*:${l.investor_user_id}`) ?? null;
+    const identityVerified = personId ? identityByPerson.get(personId) ?? false : false;
     const instruction = instructionById.get(String(l.payment_instruction_id ?? ""));
     const coolingOffActive = instruction?.cooling_off_until
       ? new Date(instruction.cooling_off_until).getTime() > new Date(now).getTime() &&
@@ -2906,6 +2922,10 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
       netCents: Number(l.net_cents),
       destinationEnding: instruction?.masked_account ?? null,
       destinationStatus: instruction?.status ?? null,
+      coolingOffActive,
+      identityVerified,
+      hasInvestorAccount: Boolean(l.investor_user_id),
+      approvalState: String(l.approval_state),
       paymentState: String(l.payment_state),
       reconciliationState: String(l.reconciliation_state),
       accountingState: String(l.accounting_state),
@@ -3110,4 +3130,42 @@ export async function setDistributionPaymentSentDate(userId: string, input: { pa
     actorRole: "harmonious",
   });
   return { ok: true };
+}
+
+
+/**
+ * Email the investor asking them to add (or confirm) their distribution bank details on
+ * their own payouts page. Sends a request only: it never records, verifies or approves a
+ * destination, and never moves money. One email per line per day.
+ */
+export async function requestDistributionBankDetails(userId: string, lineId: string) {
+  await assertStaff(userId);
+  const { data: line } = await db().from("distribution_lines").select("id, offering_id, investor_user_id, display_name, net_cents").eq("id", lineId).maybeSingle();
+  if (!line) throw new Error("That investor payment wasn't found.");
+  if (!line.investor_user_id) throw new Error("This investor hasn't created an account yet, so they can't add bank details. Send their invitation first.");
+  const { data: u } = await db().auth.admin.getUserById(String(line.investor_user_id));
+  const email = u?.user?.email;
+  if (!email) throw new Error("No email is recorded for this investor.");
+  const { data: fund } = await db().from("offerings").select("name").eq("id", line.offering_id).maybeSingle();
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  const day = new Date().toISOString().slice(0, 10);
+  const result: any = await sendTemplateEmail("signing-reminder", email, {
+    managed: true,
+    inboxForAnyUser: true,
+    idempotencyKey: `distribution-bank-details:${line.id}:${day}`,
+    templateData: {
+      recipientName: line.display_name || "there",
+      documentTitle: "Bank details for your distribution",
+      fundName: fund?.name ?? "your fund",
+      steps: [
+        "Sign in to your account",
+        "Open Payouts and add the bank account you want paid",
+        "We confirm the details with you before any payment is made",
+      ],
+      ctaUrl: "https://app.harmonious.co/investor-distributions",
+      ctaLabel: "Add bank details",
+    },
+  });
+  if (result && result.sent === false) return { sent: false, reason: result.reason ?? "not_sent" };
+  return { sent: true };
 }

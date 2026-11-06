@@ -316,3 +316,13 @@ export const setDistributionPaymentSentDateFn = createServerFn({ method: "POST" 
     const { setDistributionPaymentSentDate } = await import("@/lib/distributions.server");
     return setDistributionPaymentSentDate(context.userId, data);
   });
+
+export const requestDistributionBankDetailsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((input: { lineId: string }) => {
+    if (!/^[0-9a-f-]{36}$/i.test(String(input?.lineId ?? ""))) throw new Error("Invalid payment.");
+    return { lineId: String(input.lineId) };
+  })
+  .handler(async ({ data, context }) => {
+    const { requestDistributionBankDetails } = await import("@/lib/distributions.server");
+    return requestDistributionBankDetails(context.userId, data.lineId);
+  });
