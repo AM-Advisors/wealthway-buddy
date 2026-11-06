@@ -149,7 +149,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           investmentDate: edit['investmentDate'], unitCount: edit['units'] ? Number(edit['units']) : undefined, sourceReferral: edit['referral'],
           managerNotes: edit['managerNotes'], internalNotes: staff ? edit['internalNotes'] : undefined,
         } })}>{data.detailsEditMode === "suggest" ? "Submit investment changes" : "Save investment"}</Button>
-      </CardContent></Card> : null}
+      </CardContent></Card>
 
       {staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} investorName={[p?.firstName, p?.middleName, p?.lastName].filter(Boolean).join(" ")} investorEmail={p?.email ?? undefined} /> : null}
       {staff && !data.overview.investorUserId ? <Card><CardHeader><CardTitle className="text-base">Identity & compliance screening</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
@@ -159,7 +159,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         </div>
         <p className="text-muted-foreground">This investor has no portal login yet, so there are no identity checks to review. Verification starts after they accept their invite and sign in.</p>
       </CardContent></Card> : null}
-      {true ? <div className="space-y-4">
+      <div className="space-y-4">
         {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <Card ref={contactRef} className="scroll-mt-4"><CardHeader><CardTitle className="text-base">Investor details</CardTitle>
           {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
