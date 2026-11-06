@@ -3480,7 +3480,9 @@ export type Database = {
           duplicate_of: string | null
           id: string
           line_no: number
+          matched_asset_id: string | null
           matched_onboarding_id: string | null
+          matched_vendor: string | null
           offering_id: string
           posted_on: string
           skip: boolean
@@ -3497,7 +3499,9 @@ export type Database = {
           duplicate_of?: string | null
           id?: string
           line_no: number
+          matched_asset_id?: string | null
           matched_onboarding_id?: string | null
+          matched_vendor?: string | null
           offering_id: string
           posted_on: string
           skip?: boolean
@@ -3514,7 +3518,9 @@ export type Database = {
           duplicate_of?: string | null
           id?: string
           line_no?: number
+          matched_asset_id?: string | null
           matched_onboarding_id?: string | null
+          matched_vendor?: string | null
           offering_id?: string
           posted_on?: string
           skip?: boolean
@@ -3534,6 +3540,13 @@ export type Database = {
             columns: ["duplicate_of"]
             isOneToOne: false
             referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_lines_matched_asset_id_fkey"
+            columns: ["matched_asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
             referencedColumns: ["id"]
           },
           {
@@ -25230,24 +25243,30 @@ export type Database = {
           bank_transaction_id: string
           offering_id: string
           onboarding_id: string | null
+          portfolio_asset_id: string | null
           tagged_by: string
           updated_at: string
+          vendor_name: string | null
         }
         Insert: {
           asset_label?: string | null
           bank_transaction_id: string
           offering_id: string
           onboarding_id?: string | null
+          portfolio_asset_id?: string | null
           tagged_by: string
           updated_at?: string
+          vendor_name?: string | null
         }
         Update: {
           asset_label?: string | null
           bank_transaction_id?: string
           offering_id?: string
           onboarding_id?: string | null
+          portfolio_asset_id?: string | null
           tagged_by?: string
           updated_at?: string
+          vendor_name?: string | null
         }
         Relationships: [
           {
@@ -25255,6 +25274,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_transaction_tags_portfolio_asset_id_fkey"
+            columns: ["portfolio_asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
             referencedColumns: ["id"]
           },
         ]
