@@ -51,10 +51,10 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const contactRef = useRef<HTMLDivElement>(null);
   const correctDetails = () => {
     setTab("details");
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       contactRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
       document.getElementById("ir-firstName")?.focus({ preventScroll: true });
-    });
+    }, 50);
   };
   const load = useServerFn(investorRecordDetailFn);
   const update = useServerFn(updateInvestorRecordFn);
