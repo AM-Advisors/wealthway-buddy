@@ -1,0 +1,2 @@
+ALTER TABLE public.investor_documents DROP CONSTRAINT IF EXISTS investor_documents_completed_outside_tax_only;
+ALTER TABLE public.investor_documents ADD CONSTRAINT investor_documents_completed_outside_kinds CHECK (review_status <> 'completed_outside' OR doc_kind IN ('tax_form', 'identification'));

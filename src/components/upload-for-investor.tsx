@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ApprovalButton } from '@/components/approval-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { uploadOnboardingDocForFn, managerUploadReviewsFn, managerUploadUrlFn, managerReviewUploadFn, completeTaxFormOutsideFn } from '@/lib/investor-extras.functions';
+import { uploadOnboardingDocForFn, managerUploadReviewsFn, managerUploadUrlFn, managerReviewUploadFn, completeTaxFormOutsideFn, completeVerificationOutsideFn } from '@/lib/investor-extras.functions';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -14,7 +14,9 @@ const KINDS = [['identification', 'Government ID'], ['proof_of_address', 'Proof 
 /** Manager/Harmonious upload on the investor's behalf. Uploading never verifies anyone. */
 export function UploadForInvestor({ onboardingId }: { onboardingId: string }) {
   const upload = useServerFn(uploadOnboardingDocForFn), qc = useQueryClient();
-  const load = useServerFn(managerUploadReviewsFn), open = useServerFn(managerUploadUrlFn), review = useServerFn(managerReviewUploadFn), completeOutside = useServerFn(completeTaxFormOutsideFn);
+  const load = useServerFn(managerUploadReviewsFn), open = useServerFn(managerUploadUrlFn), review = useServerFn(managerReviewUploadFn), completeOutside = useServerFn(completeTaxFormOutsideFn), verifyOutside = useServerFn(completeVerificationOutsideFn);
+  const [verifying, setVerifying] = useState<string | null>(null), [vf, setVf] = useState({ provider: '', checkedOn: '', reference: '', note: '' });
+  const saveVerify = async (id: string) => { setBusy(true); try { await verifyOutside({ data: { id, ...vf, reference: vf.reference || null } }); toast.success('Identity and screening marked approved'); setVerifying(null); await qc.invalidateQueries(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   const q = useQuery({ queryKey: ['manager-upload-reviews', onboardingId], queryFn: () => load({ data: { onboardingId } }) });
   const [reviewing, setReviewing] = useState<string | null>(null), [note, setNote] = useState('');
   const decide = async (id: string, status: 'accepted' | 'needs_followup') => {
@@ -48,7 +50,15 @@ export function UploadForInvestor({ onboardingId }: { onboardingId: string }) {
             const tab = window.open('about:blank', '_blank');
             try { const result = await open({ data: { onboardingId, id: row.id } }); if (tab) { tab.opener = null; tab.location.href = result.url; } else window.location.assign(result.url); }
             catch (e) { tab?.close(); toast.error((e as Error).message); }
-          }}>View document</Button>{row.kind === 'tax_form' && (row.status === 'new' || row.status === 'accepted') && <ApprovalButton title="Mark this tax form completed?" description={`${row.fileName}. Use this when the investor signed this W-9 or W-8 outside the platform. It will count as their completed tax form.`} disabled={busy} onApprove={async () => { setBusy(true); try { await completeOutside({ data: { id: row.id } }); toast.success('Tax form marked completed'); await qc.invalidateQueries(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } }}>Mark completed outside platform</ApprovalButton>}{row.canReview && <Button size="sm" disabled={busy} onClick={() => { setReviewing(row.id); setNote(''); }}>Review</Button>}</div>
+          }}>View document</Button>{row.kind === 'tax_form' && (row.status === 'new' || row.status === 'accepted') && <ApprovalButton title="Mark this tax form completed?" description={`${row.fileName}. Use this when the investor signed this W-9 or W-8 outside the platform. It will count as their completed tax form.`} disabled={busy} onApprove={async () => { setBusy(true); try { await completeOutside({ data: { id: row.id } }); toast.success('Tax form marked completed'); await qc.invalidateQueries(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } }}>Mark completed outside platform</ApprovalButton>}{row.kind === 'identification' && (row.status === 'new' || row.status === 'accepted') && <Button size="sm" disabled={busy} onClick={() => { setVerifying(row.id); setVf({ provider: '', checkedOn: '', reference: '', note: '' }); }}>Mark verification completed outside platform</Button>}{row.canReview && <Button size="sm" disabled={busy} onClick={() => { setReviewing(row.id); setNote(''); }}>Review</Button>}</div>
+          {verifying === row.id && <div className="space-y-3 border-t pt-3">
+            <p className="text-sm text-muted-foreground">Use this when identity and screening were done by another provider. Saving marks identity (KYC) and screening (AML) approved for this investor and keeps this file as proof. Harmonious compliance staff only.</p>
+            <input aria-label="Provider" placeholder="Who did the check" className="h-11 w-full rounded-md border bg-background px-3 text-base" value={vf.provider} onChange={e => setVf({ ...vf, provider: e.target.value })} />
+            <label className="block text-sm">Date of check<input aria-label="Date of check" type="date" className="mt-1 h-11 w-full rounded-md border bg-background px-3 text-base" value={vf.checkedOn} onChange={e => setVf({ ...vf, checkedOn: e.target.value })} /></label>
+            <input aria-label="Reference" placeholder="Reference number (optional)" className="h-11 w-full rounded-md border bg-background px-3 text-base" value={vf.reference} onChange={e => setVf({ ...vf, reference: e.target.value })} />
+            <Textarea aria-label="Confirmation note" placeholder="Confirm identity and screening passed" value={vf.note} onChange={e => setVf({ ...vf, note: e.target.value })} />
+            <div className="flex flex-wrap gap-2"><ApprovalButton title="Mark identity and screening approved?" description={`${row.fileName}. This records that ${vf.provider || 'the outside provider'} verified this investor and marks KYC and AML approved.`} disabled={busy || !vf.provider.trim() || !vf.checkedOn || !vf.note.trim()} onApprove={() => { void saveVerify(row.id); }}>Save and approve</ApprovalButton><Button className="min-h-11 text-base" variant="ghost" disabled={busy} onClick={() => setVerifying(null)}>Go back</Button></div>
+          </div>}
           {reviewing === row.id && <div className="space-y-3 border-t pt-3">
             {row.kind === 'tax_form' && <p className="text-sm text-muted-foreground">Approve this signed copy only. The investor’s certification and required tax checks remain separate.</p>}
             <Textarea aria-label="Review note" placeholder="Review note" value={note} onChange={e => setNote(e.target.value)} />

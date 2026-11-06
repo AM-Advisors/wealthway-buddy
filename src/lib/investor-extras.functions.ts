@@ -82,3 +82,7 @@ export const managerReviewUploadFn = createServerFn({ method: "POST" }).middlewa
 export const completeTaxFormOutsideFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ id: uuid, note: z.string().trim().max(1000).nullish() }).parse)
   .handler(async ({ data, context }) => (await import("./investor-upload-review.server")).completeTaxFormOutside(context.userId, data));
+
+export const completeVerificationOutsideFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ id: uuid, provider: z.string().trim().min(1).max(120), checkedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reference: z.string().trim().max(200).nullish(), note: z.string().trim().min(1).max(600) }).parse)
+  .handler(async ({ data, context }) => (await import("./investor-upload-review.server")).completeVerificationOutside(context.userId, data));

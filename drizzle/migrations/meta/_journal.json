@@ -2640,6 +2640,13 @@
       "when": 1793820589335,
       "tag": "0376_record_steven_approved_accreditation",
       "breakpoints": true
+    },
+    {
+      "idx": 377,
+      "version": "7",
+      "when": 1793994923685,
+      "tag": "0377_identification_completed_outside",
+      "breakpoints": true
     }
   ]
 }
