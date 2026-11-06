@@ -13,10 +13,14 @@ export const investorGridFn = createServerFn({ method: "POST" }).middleware([req
 export const investorDetailFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ onboardingId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); const access = await s.assertFund(context.userId, data.fundId);
-    const detail = await s.investorDetail(data.fundId, data.onboardingId);
-    const canApproveSubscription = await (await import("@/lib/investor-onboarding.server")).subscriptionApprovalAvailable(context.userId, data.onboardingId);
-    const reviewEvidence = await (await import("./investor-review-evidence.server")).investorReviewEvidence(await s.db(), context.userId, data.fundId, data.onboardingId);
-    const canVerifyAccreditation = await (await import("./accreditation-review.server")).canVerify(context.userId, data.fundId);
+    // Independent reads run together; each one keeps its own authorization.
+    const d = await s.db();
+    const [detail, canApproveSubscription, reviewEvidence, canVerifyAccreditation] = await Promise.all([
+      s.investorDetail(data.fundId, data.onboardingId),
+      (async () => (await import("@/lib/investor-onboarding.server")).subscriptionApprovalAvailable(context.userId, data.onboardingId))(),
+      (async () => (await import("./investor-review-evidence.server")).investorReviewEvidence(d, context.userId, data.fundId, data.onboardingId))(),
+      (async () => (await import("./accreditation-review.server")).canVerify(context.userId, data.fundId))(),
+    ]);
     return { ...detail, canManageTermAssociations: access.staff, reviewEvidence, canApproveSubscription, canVerifyAccreditation };
   });
 
