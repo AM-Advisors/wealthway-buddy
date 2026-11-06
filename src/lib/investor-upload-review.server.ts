@@ -80,7 +80,7 @@ export function canCompleteVerificationOutside(input: { isStaff: boolean; actorI
 }
 
 /** Records identity (KYC) and screening (AML) completed by an outside provider, using a retained Government ID copy as evidence. */
-export async function completeVerificationOutside(userId: string, input: { id: string; provider: string; checkedOn: string; reference?: string | null; note: string }) {
+export async function completeVerificationOutside(userId: string, input: { id: string; provider: string; checkedOn: string; reference?: string | null | undefined; note: string }) {
   const { d, row, actor } = await uploadReviewContext(userId, input.id);
   let personId: string | null = row.prepared_for_person_id ?? null;
   if (row.onboarding_id) { const { data: ob } = await d.from("investor_onboardings").select("person_id").eq("id", row.onboarding_id).maybeSingle(); personId = ob?.person_id ?? personId; }
