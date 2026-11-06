@@ -24,9 +24,6 @@ export const getDocumentLibrary = createServerFn({ method: "POST" })
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const by = (q: any) => (data.investorUserId ? q.eq(q.__col ?? "", "") : q);
-    void by;
-
     const obQ = db.from("investor_onboardings").select("id, application_id, investor_user_id, offering_id").is("removed_at", null);
     const { data: obs } = data.investorUserId ? await obQ.eq("investor_user_id", data.investorUserId) : await obQ.eq("offering_id", data.offeringId);
     const onboardings = (obs ?? []) as any[];
