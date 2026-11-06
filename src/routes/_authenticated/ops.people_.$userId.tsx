@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { getPersonActivity } from "@/lib/user-access.functions";
 import { UserInsights } from "@/components/user-insights";
 import { PersonKycUpdate } from "@/components/person-kyc-update";
+import { PersonAccountsCard } from "@/components/person-accounts-card";
 import { KycReport } from "@/components/kyc-report";
 import { SidebarAccessCard } from "@/components/sidebar-access-card";
 import { RefreshCw } from "lucide-react";
@@ -64,6 +65,7 @@ function PersonActivityPage() {
         <AccountOverview d={d} />
         {d.roles.length > 0 && <SidebarAccessCard userId={userId} />}
         <KycReport d={d} userId={userId} />
+        <PersonAccountsCard userId={userId} />
         <IdentityResults checks={d.identityChecks ?? []} />
         {d.people.filter((p: any) => p.linked).map((p: any) => <PersonKycUpdate key={p.id} personId={p.id} />)}
         {d.email && <UserInsights email={d.email} />}

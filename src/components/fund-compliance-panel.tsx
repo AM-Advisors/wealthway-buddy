@@ -1,3 +1,4 @@
+import { FundPersonAccountsNote } from "@/components/person-accounts-card";
 import { verificationLabel } from "@/lib/verification-status";
 import { useMemo, useState } from "react";
 
@@ -97,6 +98,7 @@ export function FundCompliancePanel({ offeringId }: { offeringId: string }) {
 
   return (
     <div className="space-y-4">
+      <FundPersonAccountsNote offeringId={offeringId} />
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Investor checks</CardTitle>
