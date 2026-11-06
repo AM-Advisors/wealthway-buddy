@@ -80,7 +80,31 @@ function ViewAsPageList({ page, title, subject }: { page: string; title: string;
   }
   return (
     <ul className="divide-y rounded-lg border">
-      {items.map((it, i) => (
+      {items.map((it, i) => it.details?.length ? (
+        <li key={i}>
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-3 p-3 hover:bg-muted">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{it.title} <span className="text-xs text-primary group-open:hidden">View details</span></p>
+                {it.subtitle ? <p className="text-xs text-muted-foreground">{it.subtitle}</p> : null}
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                {it.badge ? <Badge variant="secondary">{it.badge}</Badge> : null}
+                {it.date ? <span className="text-xs text-muted-foreground">{new Date(it.date).toLocaleDateString()}</span> : null}
+              </div>
+            </summary>
+            <div className="space-y-3 border-t bg-muted/40 p-3">
+              <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5">
+                {it.details.map((d) => <div key={d.label}><dt className="text-xs text-muted-foreground">{d.label}</dt><dd className="font-medium">{d.value}</dd></div>)}
+              </dl>
+              <p className="text-xs text-muted-foreground">The investor opens this fund to see these details, documents and the deal room.</p>
+              {it.onboardingId && it.offeringId ? (
+                <Link className="text-xs text-primary underline" to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: it.offeringId, onboardingId: it.onboardingId }} search={{}}>Open staff investment record</Link>
+              ) : null}
+            </div>
+          </details>
+        </li>
+      ) : (
         <li key={i} className="flex items-start justify-between gap-3 p-3">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{it.title}</p>

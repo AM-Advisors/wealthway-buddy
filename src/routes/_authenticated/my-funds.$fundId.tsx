@@ -86,6 +86,7 @@ function InvestorFundPage() {
           <Link to="/my-funds" className="text-xs text-muted-foreground hover:underline">← My Funds</Link>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{v.fund.name}</h1>
           <p className="text-sm text-muted-foreground">{[v.fund.legalName, human(v.fund.fundType)].filter((x) => x && x !== " · ").join(" · ")}</p>
+          <Button asChild size="sm" className="mt-3"><Link to="/investor/fund/$offeringId" params={{ offeringId: fundId }} search={{ tab: "deal-room" }}>Open deal room</Link></Button>
         </div>
 
         <div role="tablist" className="flex items-center gap-1 overflow-x-auto border-b pb-2">
