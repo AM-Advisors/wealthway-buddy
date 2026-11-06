@@ -70,6 +70,42 @@ export async function missingInfo(userId: string, onboardingId: string) {
   };
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Pull a completed identity-provider session onto this investment's person (manual records included).
+ * Uses the session already linked to the investment, or a session id entered by staff/managers,
+ * which must match the person's date of birth or email before it is linked. Results apply only
+ * through the normal provider auto-apply (approved sessions; ruled-out matches don't hold review).
+ */
+export async function syncProviderSession(userId: string, onboardingId: string, sessionRef?: string | null) {
+  const { row } = await access(userId, onboardingId);
+  const d = await db();
+  const { data: ob } = await d.from("investor_onboardings").select("id, person_id, questionnaire_didit_session_id").eq("id", row.id).maybeSingle();
+  if (!ob?.person_id) throw new Error("This investment has no person linked yet.");
+  const ref = sessionRef?.trim() || null;
+  let sessionId: string | null = ob.questionnaire_didit_session_id ?? null;
+  if (ref && UUID.test(ref) && ref !== sessionId) {
+    const { fetchDiditSessionDecision } = await import("@/lib/didit.server");
+    const dec: any = await fetchDiditSessionDecision(ref);
+    if (!dec) throw new Error("That verification session couldn't be found.");
+    const { data: p } = await d.from("persons").select("date_of_birth, email").eq("id", ob.person_id).maybeSingle();
+    const id = (Array.isArray(dec.id_verifications) ? dec.id_verifications[0] : dec.id_verification) ?? {};
+    const dob = String(id.date_of_birth ?? "").slice(0, 10);
+    const emails = JSON.stringify(dec).toLowerCase();
+    const dobOk = !!dob && !!p?.date_of_birth && String(p.date_of_birth).slice(0, 10) === dob;
+    const emailOk = !!p?.email && emails.includes(String(p.email).toLowerCase());
+    if (!dobOk && !emailOk) throw new Error("That session doesn't match this investor's date of birth or email, so it wasn't linked.");
+    await d.from("investor_onboardings").update({ questionnaire_didit_session_id: ref }).eq("id", ob.id);
+    sessionId = ref;
+  }
+  if (!sessionId) throw new Error("No verification session is linked. Paste the session ID from the verification provider in Reference.");
+  const { autoApplyDiditForOnboarding } = await import("@/lib/didit-auto-apply.server");
+  const r: any = await autoApplyDiditForOnboarding(ob.id, userId);
+  const { data: after } = await d.from("persons").select("kyc_status, aml_status").eq("id", ob.person_id).maybeSingle();
+  return { applied: !!r.applied, reason: r.reason ?? null, changed: r.changed ?? 0, kyc: after?.kyc_status ?? null, aml: after?.aml_status ?? null, sessionId };
+}
+
 export type PriorInput = {
   onboardingId: string; provider: string; checkedOn: string; reference?: string | null;
   person?: Record<string, string>; entity?: Record<string, string>;
