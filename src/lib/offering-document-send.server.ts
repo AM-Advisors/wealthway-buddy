@@ -56,6 +56,27 @@ export async function listSendableDocuments(userId: string, offeringId: string) 
     db().from("offering_document_sends").select("offering_document_id, version, onboarding_id, sent_at").eq("offering_id", offeringId).order("sent_at", { ascending: false }),
   ]);
   const sendList = (sends ?? []) as any[];
+  const { investmentsForDocument } = await import("@/lib/offering-document-setup.server");
+  const { followUpStatus } = await import("@/lib/document-follow-up-model");
+  const docIds = docs.map((d) => d.id);
+  const userIds = roster.map((r) => r.userId).filter(Boolean) as string[];
+  const [execs, { data: opens }, { data: acks }] = await Promise.all([
+    Promise.all(docs.map((d) => investmentsForDocument(offeringId, d.id))),
+    userIds.length && docIds.length
+      ? db().from("diligence_activity").select("actor_id, created_at, metadata").eq("offering_id", offeringId).in("event_type", ["legal_document_viewed", "legal_document_downloaded"]).in("actor_id", userIds).order("created_at", { ascending: true }).limit(5000)
+      : { data: [] },
+    roster.length ? db().from("investment_document_acknowledgments").select("onboarding_id, offering_document_id, version").in("onboarding_id", roster.map((r) => r.onboardingId)) : { data: [] },
+  ]);
+  const openList = (opens ?? []) as any[];
+  const tracking = (r: (typeof roster)[number]) => docs.filter((d) => documentApplies(d.applicability, r)).map((d, _i) => {
+    const di = docs.indexOf(d);
+    const exec = execs[di]?.find((x) => x.onboardingId === r.onboardingId)?.execution ?? "not_sent";
+    const docOpens = r.userId ? openList.filter((o) => o.actor_id === r.userId && o.metadata?.offering_document_id === d.id) : [];
+    const sentAt = (sendList.find((s) => s.onboarding_id === r.onboardingId && s.offering_document_id === d.id)?.sent_at as string) ?? null;
+    const openedAt = (docOpens[0]?.created_at as string) ?? null;
+    const acknowledged = ((acks ?? []) as any[]).some((a) => a.onboarding_id === r.onboardingId && a.offering_document_id === d.id && a.version === d.active_version);
+    return { documentId: d.id as string, sentAt, openedAt, opens: docOpens.length, status: followUpStatus({ usage: d.usage ?? null, execution: exec, acknowledged, sentAt, openedAt }) };
+  });
   return {
     documents: docs.map((d) => ({
       id: d.id as string,
@@ -70,6 +91,7 @@ export async function listSendableDocuments(userId: string, offeringId: string) 
       name: r.name ?? r.email ?? "Unnamed investor",
       hasEmail: Boolean(r.email || r.userId),
       signedIn: Boolean(r.userId),
+      tracking: tracking(r),
       sent: sendList.filter((s) => s.onboarding_id === r.onboardingId).map((s) => ({ documentId: s.offering_document_id as string, version: s.version as number, sentAt: s.sent_at as string })),
     })),
   };

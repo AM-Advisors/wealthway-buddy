@@ -9,6 +9,49 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { listSendableDocumentsFn, sendDocumentsFn } from "@/lib/offering-document-send.functions";
+import { FOLLOW_UP_LABELS, needsFollowUp, type FollowUpStatus } from "@/lib/document-follow-up-model";
+
+type FollowUpDoc = { id: string; title: string; version: number };
+type FollowUpInv = { onboardingId: string; name: string; tracking: { documentId: string; sentAt: string | null; openedAt: string | null; opens: number; status: FollowUpStatus }[] };
+
+function DocumentFollowUp({ documents, investors }: { documents: FollowUpDoc[]; investors: FollowUpInv[] }) {
+  const [onlyOpen, setOnlyOpen] = useState(true);
+  const tone = (s: FollowUpStatus) => (s === "signed" ? "default" : needsFollowUp(s) ? "destructive" : "outline") as "default" | "destructive" | "outline";
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium">Who has signed</p>
+        <Button variant="ghost" size="sm" onClick={() => setOnlyOpen(!onlyOpen)}>{onlyOpen ? "Show everyone" : "Only unsigned"}</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">"Opened" means the investor opened the document while signed in. Email opens are not counted, and opening is never treated as signing.</p>
+      {documents.map((d) => {
+        const rows = investors.map((i) => ({ i, t: i.tracking.find((t) => t.documentId === d.id) })).filter((x) => x.t);
+        const signed = rows.filter((x) => x.t!.status === "signed" || x.t!.status === "awaiting_fund").length;
+        const opened = rows.filter((x) => x.t!.openedAt).length;
+        const shown = onlyOpen ? rows.filter((x) => needsFollowUp(x.t!.status)) : rows;
+        return (
+          <div key={d.id} className="rounded-md border p-3 text-sm">
+            <p className="font-medium">{d.title} <span className="text-muted-foreground">v{d.version}</span></p>
+            <p className="text-muted-foreground">{signed} of {rows.length} signed · {opened} opened</p>
+            {shown.length ? (
+              <ul className="mt-2 space-y-1">
+                {shown.map(({ i, t }) => (
+                  <li key={i.onboardingId} className="flex flex-wrap items-center justify-between gap-2">
+                    <span>{i.name}</span>
+                    <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {t!.openedAt ? `Opened ${new Date(t!.openedAt).toLocaleDateString()}${t!.opens > 1 ? ` (${t!.opens}×)` : ""}` : t!.sentAt ? `Sent ${new Date(t!.sentAt).toLocaleDateString()}` : null}
+                      <Badge variant={tone(t!.status)}>{FOLLOW_UP_LABELS[t!.status]}</Badge>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : onlyOpen ? <p className="mt-1 text-xs text-muted-foreground">Nobody waiting to sign.</p> : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function SendFundDocuments({ offeringId }: { offeringId: string }) {
   const list = useServerFn(listSendableDocumentsFn);
@@ -98,6 +141,7 @@ export function SendFundDocuments({ offeringId }: { offeringId: string }) {
                 </div>
               )}
             </div>
+            <DocumentFollowUp documents={data.documents} investors={data.investors} />
             <div>
               <p className="mb-2 text-sm font-medium">3. Note (optional)</p>
               <Textarea value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} placeholder="Add a short message for investors" />

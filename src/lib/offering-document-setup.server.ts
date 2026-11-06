@@ -268,7 +268,7 @@ export async function saveSigningConfig(userId: string, input: { documentId: str
   return { ok: true };
 }
 
-async function investmentsForDocument(offeringId: string, documentId: string) {
+export async function investmentsForDocument(offeringId: string, documentId: string) {
   const { data: rows } = await db().from("investor_onboardings").select("id, application_id, investment_profile_id, offering_class_key, removed_at").eq("offering_id", offeringId).is("removed_at", null);
   const list = (rows ?? []) as any[];
   const profileIds = list.map((r) => r.investment_profile_id).filter(Boolean);
