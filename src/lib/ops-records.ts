@@ -405,15 +405,16 @@ export function investorCheckRows(
 /** Display-only: one row per person when staff grouped several logins as the same person. Accounts stay separate. */
 export function collapseSamePersonRows(rows: InvestorListRow[], groupOf: Map<string, string>): (InvestorListRow & { otherAccounts?: string[] })[] {
   const out: (InvestorListRow & { otherAccounts?: string[] })[] = [];
+  const base = new Map<string, string | null>();
   const lead = new Map<string, InvestorListRow & { otherAccounts?: string[] }>();
   for (const r of rows) {
     const g = groupOf.get(r.id);
     const first = g ? lead.get(g) : undefined;
-    if (!first) { const row = { ...r, funds: [...r.funds], clients: [...r.clients] }; if (g) lead.set(g, row); out.push(row); continue; }
-    for (const f of r.funds) if (!first.funds.some((x) => x.id === f.id)) first.funds.push(f);
+    if (!first) { const row = { ...r, funds: [...r.funds], clients: [...r.clients] }; if (g) { lead.set(g, row); base.set(g, r.subtitle); } out.push(row); continue; }
+    for (const f of r.funds) if (!first.funds.some((x) => x.fundId === f.fundId)) first.funds.push(f);
     for (const c of r.clients) if (!first.clients.some((x) => x.id === c.id)) first.clients.push(c);
     first.otherAccounts = [...(first.otherAccounts ?? []), r.subtitle ?? r.title];
-    first.subtitle = `${first.subtitle ?? ""} · also ${first.otherAccounts.join(", ")}`.replace(/^ · /, "");
+    first.subtitle = `${base.get(g!) ?? ""} · also ${first.otherAccounts.join(", ")}`.replace(/^ · /, "");
   }
   return out;
 }
