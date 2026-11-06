@@ -157,7 +157,14 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           <Badge variant={statusTone((p as any)?.kycStatus ?? "not_started")}>Identity: {verificationLabel((p as any)?.kycStatus)}</Badge>
           <Badge variant={statusTone((p as any)?.amlStatus ?? "not_started")}>Screening: {verificationLabel((p as any)?.amlStatus)}</Badge>
         </div>
-        <p className="text-muted-foreground">This investor has no portal login yet, so there are no identity checks to review. Verification starts after they accept their invite and sign in.</p>
+        {((p as any)?.screeningEvidence ?? []).length ? <div className="space-y-2">
+          {((p as any).screeningEvidence as any[]).map((e) => <div key={e.id} className="space-y-1 rounded-md border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{e.mode === "prior" ? "Earlier verification loaded" : e.mode === "document" ? "Compliance screening rerun" : "Identity check"}</span><Badge variant="outline">{e.amlStatus ? `Screening: ${verificationLabel(e.amlStatus)}` : prettyStatus(e.status)}</Badge></div>
+            <p className="text-xs text-muted-foreground">Recorded {new Date(e.createdAt).toLocaleDateString()}{e.checkedOn ? ` · originally checked ${e.checkedOn}` : ""}{e.documentType ? ` · ID ${e.documentType}` : ""}{e.idStatus ? ` · ID ${verificationLabel(e.idStatus)}` : ""}{e.fieldsLoaded ? ` · ${e.fieldsLoaded} details loaded` : ""}</p>
+            {e.note ? <p className="text-xs">{e.note}</p> : null}
+          </div>)}
+          <p className="text-xs text-muted-foreground">No portal login yet. A full identity check with photo ID and selfie appears here after they accept their invite and verify.</p>
+        </div> : <p className="text-muted-foreground">This investor has no portal login yet and no screening is recorded. Verification starts after they accept their invite and sign in.</p>}
       </CardContent></Card> : null}
       <div className="space-y-4">
         {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}

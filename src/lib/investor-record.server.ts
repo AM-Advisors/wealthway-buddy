@@ -606,13 +606,19 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   const reviewSet = await (await import("@/lib/related-person.server")).relationshipsUnderReview(((rel ?? []) as any[]).map((r) => r.id));
   const directEdits = staff || await investorEditWindow(row);
   const directContact = staff || (directEdits && await exclusiveRecord(row, "person_id"));
+  const screeningEvidence = staff && person?.id ? (((await db().from("person_kyc_requests").select("id, mode, status, aml_status, id_status, document_type, result_summary, created_at").eq("person_id", person.id).order("created_at", { ascending: false }).limit(10)).data ?? []) as any[]).map((r) => ({
+    id: r.id as string, mode: r.mode as string, status: r.status as string, amlStatus: (r.aml_status ?? null) as string | null, idStatus: (r.id_status ?? null) as string | null,
+    documentType: (r.document_type ?? null) as string | null, createdAt: r.created_at as string,
+    checkedOn: (r.result_summary?.checkedOn ?? null) as string | null, note: (r.result_summary?.note ?? r.result_summary?.info ?? null) as string | null,
+    fieldsLoaded: Array.isArray(r.result_summary?.fields) ? r.result_summary.fields.length : 0,
+  })) : [];
   // Sensitive boundary: tax IDs, KYC/AML status fields, ID images and DOB never leave for managers.
   const safePerson = person ? {
     firstName: person.legal_first_name, middleName: person.legal_middle_name, lastName: person.legal_last_name, preferredName: person.preferred_name,
     email: person.email, phone: person.phone, citizenship: person.citizenship_country,
     addressLine1: person.address_line1, addressLine2: person.address_line2, city: person.city, region: person.region, postalCode: person.postal_code, country: person.country,
     mailingAddress: person.mailing_address ?? null, hasAccount: Boolean(person.user_id), enteredBy: person.entry_source,
-    ...(staff ? { dateOfBirth: person.date_of_birth, taxIdOnFile: Boolean(person.tax_id_last4 || person.tax_id_reference), kycStatus: person.kyc_status ?? null, amlStatus: person.aml_status ?? null, identityVerifiedAt: person.identity_verified_at ?? null } : {}),
+    ...(staff ? { dateOfBirth: person.date_of_birth, taxIdOnFile: Boolean(person.tax_id_last4 || person.tax_id_reference), kycStatus: person.kyc_status ?? null, amlStatus: person.aml_status ?? null, identityVerifiedAt: person.identity_verified_at ?? null, screeningEvidence } : {}),
     verificationLabel: person.identity_verified_at ? "Identity verification complete" : person.kyc_status === "pending" ? "Verification pending" : "Verification not started",
   } : null;
   return {
