@@ -108,7 +108,7 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   // Keep the staff screening history in step with the applied identity check.
   try {
     await db().from("person_kyc_requests").insert({
-      person_id: person.id, mode: "identity_check", status: "completed", session_id: ob.questionnaire_didit_session_id,
+      person_id: person.id, mode: "link", status: "completed", session_id: ob.questionnaire_didit_session_id,
       id_status: "approved", aml_status: update.aml_status ?? person.aml_status ?? null, created_by: actorUserId,
       result_summary: { note: "Full identity check applied", amlHits: x.amlHits.length, amlAutomatic: amlAuto },
     });
