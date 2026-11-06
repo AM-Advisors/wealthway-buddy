@@ -15,7 +15,7 @@ export const listStatementsFn = createServerFn({ method: "POST" }).middleware([r
   .handler(async ({ data, context }) => (await srv()).listStatements(context.userId, data.fundId) as Promise<any[]>);
 
 export const updateStatementLineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(fund.extend({ lineId: uuid, category: z.string().max(60).nullable(), onboardingId: uuid.nullable(), skip: z.boolean() }).parse)
+  .validator(fund.extend({ lineId: uuid, category: z.string().max(60).nullable(), onboardingId: uuid.nullable(), assetId: uuid.nullable().optional(), vendor: z.string().trim().max(120).nullable().optional(), skip: z.boolean() }).parse)
   .handler(async ({ data, context }) => (await srv()).updateLine(context.userId, data.fundId, data));
 
 export const applyStatementFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
