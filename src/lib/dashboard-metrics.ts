@@ -32,6 +32,8 @@ export const METRIC_DEFINITIONS = {
   intended: "Amounts investors have requested or been accepted for on active investments. Not funded money.",
   awaitingFunding: "Intended amounts on investments approved to fund whose money has not yet been reconciled.",
   funded: "Capital matched and reconciled to the investment. A wire the investor reports sending does not count until reconciled.",
+  closedInvestments: "Investors whose money is reconciled to the investment or whose investment is closed. Declined and cancelled investments are excluded.",
+  pendingInvestments: "Active investments not yet funded or closed, with their requested amounts still outstanding.",
   ready: "Investments whose readiness checklist is complete for close.",
   onboarding: "Active investments that are not yet ready to close.",
   needsHarmonious: "Active investments whose next action belongs to Harmonious (including reviews and blocked items).",
@@ -144,6 +146,19 @@ export function capital(facts: InvestmentFact[]): Capital {
     if (isClosed(f)) continue;
     out.intendedCents += amt;
     if (f.approved) out.awaitingFundingCents += amt;
+  }
+  return out;
+}
+
+export type FundedSummary = { closedCount: number; closedCents: number; pendingCount: number; pendingCents: number };
+/** Closed = reconciled funded or closed; pending = every other active investment. */
+export function fundedSummary(facts: InvestmentFact[]): FundedSummary {
+  const out = { closedCount: 0, closedCents: 0, pendingCount: 0, pendingCents: 0 };
+  for (const f of facts) {
+    if (isTerminal(f)) continue;
+    const amt = Number(f.intendedCents ?? 0);
+    if (isFunded(f) || isClosed(f)) { out.closedCount++; out.closedCents += amt; }
+    else { out.pendingCount++; out.pendingCents += amt; }
   }
   return out;
 }

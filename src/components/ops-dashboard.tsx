@@ -1,3 +1,4 @@
+import { FundedSummaryCard } from "@/components/funded-summary-card";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -78,6 +79,7 @@ export function OpsDashboard() {
           <Kpi label="Funded" value={d.kpis.funded} definition={METRIC_DEFINITIONS.funded} />
         </div>
       ) : null}
+      {d ? <FundedSummaryCard summary={(d as any).fundedSummary} /> : null}
       {d ? <p className="text-xs text-muted-foreground">Assets / capital administered isn't shown: there are no reconciled accounting balances to report it from yet.</p> : null}
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
