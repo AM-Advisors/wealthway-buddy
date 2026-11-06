@@ -45,3 +45,12 @@ export function isBenignSelfDuplicate(i: SelfDuplicateInput): boolean {
     return false;
   });
 }
+
+export interface CheckFingerprint { dateOfBirth: string | null; idLast4: string | null; livenessStatus: string | null; faceMatchStatus: string | null }
+
+/** Staff hint only: two checks may be the same person when date of birth AND ID last-4 match and both
+ *  passed liveness and face match. Names are never compared; same name means different people. Never merges. */
+export function samePersonCandidate(a: CheckFingerprint, b: CheckFingerprint): boolean {
+  const ok = (c: CheckFingerprint) => c.livenessStatus === "pass" && c.faceMatchStatus === "pass" && !!c.dateOfBirth && !!c.idLast4;
+  return ok(a) && ok(b) && a.dateOfBirth === b.dateOfBirth && a.idLast4 === b.idLast4;
+}

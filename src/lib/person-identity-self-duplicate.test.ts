@@ -15,3 +15,11 @@ describe("same person on a second account", () => {
   it("stays in review with any other warning", () => expect(isBenignSelfDuplicate({ ...base, warnings: [...base.warnings, "Document may be tampered"] })).toBe(false));
   it("needs a duplicate warning to apply at all", () => expect(isBenignSelfDuplicate({ ...base, warnings: [] })).toBe(false));
 });
+
+import { samePersonCandidate } from "./person-identity-model";
+describe("same-person staff hint", () => {
+  const a = { dateOfBirth: "1986-03-10", idLast4: "9454", livenessStatus: "pass", faceMatchStatus: "pass" };
+  it("same DOB and ID number is a candidate", () => expect(samePersonCandidate(a, { ...a })).toBe(true));
+  it("different DOB is not, whatever the name", () => expect(samePersonCandidate(a, { ...a, dateOfBirth: "1990-01-01" })).toBe(false));
+  it("failed liveness is not", () => expect(samePersonCandidate(a, { ...a, livenessStatus: "review" })).toBe(false));
+});

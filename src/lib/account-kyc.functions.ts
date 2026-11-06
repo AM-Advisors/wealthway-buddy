@@ -36,3 +36,7 @@ export const amlMatchReviewFn = createServerFn({ method: "POST" }).middleware([r
 export const clearAmlMatchesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .validator(z.object({ checkId: z.string().uuid(), keys: z.array(z.string().min(1).max(500)).min(1).max(100), reason: z.string().min(5).max(2000) }).parse)
   .handler(async ({ data, context }) => (await srv()).clearAmlMatches(context.userId, data.checkId, data.keys, data.reason));
+
+export const useIdNameForCheckFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator((d: { checkId: string }) => z.object({ checkId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).useIdNameForCheck(context.userId, data.checkId));

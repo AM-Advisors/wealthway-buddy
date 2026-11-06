@@ -162,7 +162,35 @@ export async function accountCheckQueue(uid: string) {
   const rows = (data ?? []) as any[];
   const emails = new Map<string, string>();
   await Promise.all([...new Set(rows.map((r) => r.user_id))].map(async (id) => { const { data: u } = await db().auth.admin.getUserById(id); if (u?.user?.email) emails.set(id, u.user.email); }));
-  return rows.map((r) => ({ ...r, email: emails.get(r.user_id) ?? "Unknown" }));
+  const { samePersonCandidate } = await import("@/lib/person-identity-model");
+  const fp = (r: any) => ({ dateOfBirth: r.review_details?.idDocument?.dateOfBirth ?? null, idLast4: r.review_details?.idDocument?.numberLast4 ?? null, livenessStatus: r.review_details?.liveness?.status ?? null, faceMatchStatus: r.review_details?.faceMatch?.status ?? null });
+  const { data: ps } = await db().from("account_identity_checks").select("id, person_id").in("id", rows.map((r) => r.id));
+  const personOf = new Map(((ps ?? []) as any[]).map((p) => [p.id, p.person_id]));
+  const pids = [...new Set([...personOf.values()].filter(Boolean))];
+  const { data: persons } = pids.length ? await db().from("persons").select("id, legal_first_name, legal_last_name").in("id", pids) : { data: [] };
+  const nameOf = new Map(((persons ?? []) as any[]).map((p) => [p.id, `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim()]));
+  return rows.map((r) => {
+    // Staff hint only: matching date of birth + ID number, never name. Accounts stay separate.
+    const samePerson = rows.filter((o) => o.id !== r.id && o.user_id !== r.user_id && samePersonCandidate(fp(r), fp(o))).map((o) => ({ checkId: o.id, userId: o.user_id, email: emails.get(o.user_id) ?? "Unknown" }));
+    const personId = personOf.get(r.id) ?? null;
+    return { ...r, email: emails.get(r.user_id) ?? "Unknown", samePerson, personId, personLegalName: personId ? nameOf.get(personId) ?? null : null, idFullName: r.review_details?.idDocument?.fullName ?? null };
+  });
+}
+
+/** Staff: adopt the verified ID name as the person's legal name, logged. */
+export async function useIdNameForCheck(uid: string, checkId: string) {
+  await assertDecider(uid);
+  const { data: c } = await db().from("account_identity_checks").select("person_id, review_details").eq("id", checkId).maybeSingle();
+  const full = String(c?.review_details?.idDocument?.fullName ?? "").trim();
+  if (!c?.person_id || !full) throw new Error("This check has no ID name or linked person.");
+  const parts = full.split(/\s+/); const last = parts.pop()!; const first = parts.join(" ") || last;
+  const { data: p } = await db().from("persons").select("legal_first_name, legal_last_name").eq("id", c.person_id).maybeSingle();
+  const from = `${p?.legal_first_name ?? ""} ${p?.legal_last_name ?? ""}`.trim();
+  if (from.toLowerCase() === full.toLowerCase()) return { ok: true };
+  const { error } = await db().from("persons").update({ legal_first_name: first, legal_last_name: last }).eq("id", c.person_id);
+  if (error) throw new Error(error.message);
+  await db().from("investor_record_changes").insert({ subject_table: "persons", subject_id: c.person_id, field: "legal_name", old_value: from, new_value: full, source: "identity_document", actor_user_id: uid, manager_visible: false } as any);
+  return { ok: true };
 }
 
 export async function decideAccountCheck(uid: string, checkId: string, action: "approve" | "decline" | "send_back", note: string | null) {

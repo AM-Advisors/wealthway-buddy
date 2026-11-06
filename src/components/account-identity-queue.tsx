@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { accountCheckQueueFn, decideAccountCheckFn } from "@/lib/account-kyc.functions";
+import { accountCheckQueueFn, decideAccountCheckFn, useIdNameForCheckFn } from "@/lib/account-kyc.functions";
 import { AmlMatchReview } from "@/components/aml-match-review";
 import { KycReviewPanel } from "@/components/kyc-review-panel";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,6 +30,26 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
     onSuccess: () => { toast.success("Decision saved."); qc.invalidateQueries({ queryKey: ["account-identity-queue"] }); qc.invalidateQueries({ queryKey: ["investor-record"] }); qc.invalidateQueries({ queryKey: ["investment-readiness"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const idName = useServerFn(useIdNameForCheckFn);
+  const nameM = useMutation({
+    mutationFn: (checkId: string) => idName({ data: { checkId } }),
+    onSuccess: () => { toast.success("Legal name updated to the name on the ID."); qc.invalidateQueries({ queryKey: ["account-identity-queue"] }); qc.invalidateQueries({ queryKey: ["investor-record"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const norm = (s: unknown) => String(s ?? "").toLowerCase().replace(/[^a-z]/g, "");
+  const extras = (r: any) => (
+    <>
+      {r.idFullName && r.personId && norm(r.idFullName) !== norm(r.personLegalName) && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted p-2 text-xs">
+          <span>Name on ID: <strong>{r.idFullName}</strong> · Recorded: {r.personLegalName || "None"}</span>
+          <Button size="sm" variant="outline" disabled={nameM.isPending} onClick={() => nameM.mutate(r.id)}>Use ID name</Button>
+        </div>
+      )}
+      {!!r.samePerson?.length && (
+        <p className="rounded-md bg-muted p-2 text-xs">Possibly the same verified person as {r.samePerson.map((o: any) => o.email).join(", ")} (same date of birth and ID number). Staff only. Accounts stay separate.</p>
+      )}
+    </>
+  );
   const rows = (q.data ?? []).filter((r: any) => (!userId || r.user_id === userId) && (userId ? true : filter === "all" || r.status === "review"));
   const selected = (q.data ?? []).find((r: any) => r.id === selectedId);
   const decisionControls = (r: any) => ["review", "approved", "declined", "expired"].includes(r.status) ? (
@@ -61,6 +81,7 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
               {r.decision_note && <p className="text-xs">Note: {r.decision_note}</p>}
               {(d.aml?.hits ?? 0) > 0 && <Button size="sm" variant="outline" onClick={() => setOpenMatches(openMatches === r.id ? null : r.id)}>{openMatches === r.id ? "Hide possible matches" : `Review ${d.aml.hits} possible match${d.aml.hits > 1 ? "es" : ""}`}</Button>}
               {openMatches === r.id && <AmlMatchReview checkId={r.id} />}
+              {extras(r)}
               {decisionControls(r)}
             </div>
           );
