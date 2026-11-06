@@ -1,3 +1,4 @@
+import { FundDealRoomBasics } from "@/components/fund-deal-room-basics";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -102,7 +103,7 @@ function InvestorFund() {
         </TabsContent>
         <TabsContent value="my-share" className="mt-4"><InvestorSharePanel offeringId={offeringId} /></TabsContent>
         <TabsContent value="documents" className="mt-4"><DocumentsStep offeringId={offeringId} /></TabsContent>
-        <TabsContent value="deal-room" className="mt-4"><DiligenceRoom offeringId={offeringId} /></TabsContent>
+        <TabsContent value="deal-room" className="mt-4 space-y-4"><FundDealRoomBasics offeringId={offeringId} /><DiligenceRoom offeringId={offeringId} /></TabsContent>
         <TabsContent value="payments" className="mt-4"><FundCapitalCallsPanel offeringId={offeringId} /></TabsContent>
         <TabsContent value="taxes" className="mt-4"><FundTaxDocumentsPanel offeringId={offeringId} /></TabsContent>
         <TabsContent value="messages" className="mt-4">
