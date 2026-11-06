@@ -189,7 +189,7 @@ export async function useIdNameForCheck(uid: string, checkId: string) {
   if (from.toLowerCase() === full.toLowerCase()) return { ok: true };
   const { error } = await db().from("persons").update({ legal_first_name: first, legal_last_name: last }).eq("id", c.person_id);
   if (error) throw new Error(error.message);
-  await db().from("investor_record_changes").insert({ table_name: "persons", record_id: c.person_id, field: "legal_name", from_value: from, to_value: full, source: "identity_document", actor_user_id: uid } as any);
+  await db().from("investor_record_changes").insert({ subject_table: "persons", subject_id: c.person_id, field: "legal_name", old_value: from, new_value: full, source: "identity_document", actor_user_id: uid, manager_visible: false } as any);
   return { ok: true };
 }
 
