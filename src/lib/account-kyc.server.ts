@@ -97,10 +97,33 @@ export async function applyAccountDecision(c: any, decision: Record<string, any>
   let to: AccountCheckStatus = accountStatusFromProvider(n.providerDecision, n.providerStatus);
   if (exp.expired) to = "expired";
   if (to === "approved" && n.aml.hitCount > 0) to = "review";
+  let selfDupNote: string | null = null;
+  if (to === "review" || to === "pending") {
+    try {
+      const { buildReviewDetails } = await import("@/lib/kyc-review-model");
+      const rd: any = buildReviewDetails(decision);
+      const { isBenignSelfDuplicate } = await import("@/lib/person-identity-model");
+      let personLegalName: string | null = null;
+      if (c.person_id) {
+        const { data: p } = await db().from("persons").select("legal_first_name, legal_last_name").eq("id", c.person_id).maybeSingle();
+        personLegalName = p ? `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim() : null;
+      }
+      const amlDone = rd?.aml == null || (rd.aml.totalHits ?? 0) === 0;
+      if (rd && amlDone && n.aml.hitCount === 0 && isBenignSelfDuplicate({
+        warnings: [...(rd.warnings ?? []), ...(n.warnings ?? [])].map(String),
+        livenessStatus: rd.liveness?.status ?? null, faceMatchStatus: rd.faceMatch?.status ?? null,
+        amlHits: n.aml.hitCount, documentExpired: exp.expired,
+        idFullName: rd.idDocument?.fullName ?? null, personLegalName,
+      }) && String(n.providerStatus ?? "").toLowerCase() !== "pending" && rd.status !== "In Progress") {
+        to = "approved";
+        selfDupNote = "Same verified person on another account; accounts kept separate.";
+      }
+    } catch (e) { console.error("[account-kyc] self-duplicate", e instanceof Error ? e.message : String(e)); }
+  }
   if (to === c.status) return c;
   const summary = { document: { type: n.document.documentType, country: n.document.issuingCountry, last4: n.document.numberLast4, expires: n.document.expirationDate }, liveness: n.liveness.status, faceMatch: n.faceMatch.status, address: n.proofOfAddress.status, aml: { status: n.aml.status, hits: n.aml.hitCount } };
   await db().from("account_identity_checks").update({ status: to, decision_summary: summary, warnings: n.warnings.slice(0, 20), updated_at: now() }).eq("id", c.id);
-  await logEvent(c, "provider_decision", c.status, to, null);
+  await logEvent(c, "provider_decision", c.status, to, null, selfDupNote);
   if (c.status === "review") await emailReviewOutcome(c, to, null);
   if (to === "approved") {
     try { const { fanOutPersonIdentity } = await import("@/lib/person-identity.server"); await fanOutPersonIdentity(c.person_id ?? null, c.session_id ? String(c.session_id) : null, null); }
