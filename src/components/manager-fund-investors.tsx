@@ -98,11 +98,15 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   // Display-only de-duplication: the same person can appear as an investment, an earlier application and an invitation.
   // Investments are the canonical roster; other rows show only when they don't match an investment already listed.
   const norm = (v: unknown) => String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  // Same email = same investor on this list (one row per person); names alone are kept too since this is display-only.
   const itemNames = new Set(items.map((i) => norm(i.name)).filter(Boolean));
-  const legacy = ((home.data?.applications ?? []) as any[]).filter((a) => !linkedRecords.has(a.applicationId) && !itemNames.has(norm(a.name)));
+  const itemEmails = new Set(items.map((i) => norm(i.email)).filter(Boolean));
+  const known = (name: unknown, email: unknown, names: Set<string>, emails: Set<string>) => (norm(email) && emails.has(norm(email))) || (norm(name) && (names.has(norm(name)) || emails.has(norm(name))));
+  const legacy = ((home.data?.applications ?? []) as any[]).filter((a) => !linkedRecords.has(a.applicationId) && !known(a.name, a.email, itemNames, itemEmails));
   const knownNames = new Set([...itemNames, ...legacy.map((a) => norm(a.name)).filter(Boolean)]);
-  const pendingOnboard = (((board.data as any)?.items ?? []) as any[]).filter((i) => String(i.id).startsWith("invite:")).filter((i) => !knownNames.has(norm(i.investorName)));
-  const pendingAccess = (actions.data?.pending ?? []).filter((p: any) => !knownNames.has(norm(p.name)));
+  const knownEmails = new Set([...itemEmails, ...legacy.map((a) => norm(a.email)).filter(Boolean)]);
+  const pendingOnboard = (((board.data as any)?.items ?? []) as any[]).filter((i) => String(i.id).startsWith("invite:")).filter((i) => !known(i.investorName, i.email ?? i.investorEmail, knownNames, knownEmails));
+  const pendingAccess = (actions.data?.pending ?? []).filter((p: any) => !known(p.name, p.email, knownNames, knownEmails));
   const countsLoading = readiness.isLoading || board.isLoading || actions.isLoading || home.isLoading;
   const summary = fundInvestorsSummary(items.map((i) => i.onboardingId), readinessRows, pendingOnboard.length + pendingAccess.length);
 
@@ -154,6 +158,12 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
     if (r.recordStatus === "conflict_detected" || r.recordStatus === "needs_harmonious_review") return { label: r.recordStatusLabel, tone: recordTone[r.recordStatus], rc };
     if (r.recordStatus === "missing_information" && rc.st !== "closed") return { label: "Details missing", tone: "outline" as const, rc };
     return { label: rc.label, tone: readinessTone[rc.st], rc };
+  };
+  const STAGE_TONE: Record<string, string> = { complete: "border-primary bg-primary/10 text-primary", not_applicable: "border-muted text-muted-foreground line-through" };
+  const stageChips = (id: string) => {
+    const st = (readinessById.get(id) as any)?.readiness?.stages as { stage: string; title: string; status: string }[] | undefined;
+    if (!st?.length) return null;
+    return <div className="mt-1 flex flex-wrap gap-1">{st.map((g) => <span key={g.stage} title={g.status === "complete" ? "Done" : g.status.replace(/_/g, " ")} className={`rounded border px-1.5 py-0.5 text-[11px] ${STAGE_TONE[g.status] ?? "border-destructive/40 text-destructive"}`}>{g.status === "complete" ? "✓ " : ""}{g.title}</span>)}</div>;
   };
   const progressLine = (id: string) => { const p = rosterProgress(readinessById.get(id)); return p ? `Done ${p.done} of ${p.total}` : null; };
   const nextLine = (rc: ReturnType<typeof readinessCell>) => rc.owner && rc.owner !== "-" && rc.next !== "No action needed" ? `${rc.owner}: ${rc.next}` : rc.next;
@@ -227,7 +237,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
                     <div className="min-w-0"><p className="truncate font-medium">{r.name}</p>
                       <p className="truncate text-xs text-muted-foreground">{r.profileLabel ?? r.profileType ?? "Profile needed"}{r.claimState === "prepared" ? " · Not signed in yet" : ""}</p></div>
                     <p className="text-sm">{money(r.amountCents)}</p>
-                    <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p></div>
+                    <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p>{stageChips(r.onboardingId)}</div>
                   </Link><FillForInvestorButton onboardingId={r.onboardingId} name={r.name} />{rowMenu(r)}
                 </li>); })}
               {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); const linked = linkedRecords.get(row.applicationId); return (
