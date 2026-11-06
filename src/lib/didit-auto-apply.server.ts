@@ -129,11 +129,13 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
 
 /** Applies every onboarding linked to the given Didit session. */
 export async function autoApplyDiditSession(sessionId: string | null) {
-  if (!sessionId) return;
-  const { data } = await db().from("investor_onboardings").select("id").eq("questionnaire_didit_session_id", sessionId);
+  if (!sessionId) return { linked: 0, applied: 0 };
+  const { data } = await db().from("investor_onboardings").select("id").eq("questionnaire_didit_session_id", sessionId).is("removed_at", null);
+  let applied = 0;
   for (const r of (data ?? []) as any[]) {
-    try { await autoApplyDiditForOnboarding(r.id); } catch (e) { console.error("[didit-auto]", (e as Error).message); }
+    try { if ((await autoApplyDiditForOnboarding(r.id)).applied) applied++; } catch (e) { console.error("[didit-auto]", (e as Error).message); }
   }
+  return { linked: (data ?? []).length, applied };
 }
 
 /**

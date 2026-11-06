@@ -70,6 +70,42 @@ export async function missingInfo(userId: string, onboardingId: string) {
   };
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Pull a completed identity-provider session onto this investment's person (manual records included).
+ * Uses the session already linked to the investment, or a session id entered by staff/managers,
+ * which must match the person's date of birth or email before it is linked. Results apply only
+ * through the normal provider auto-apply (approved sessions; ruled-out matches don't hold review).
+ */
+export async function syncProviderSession(userId: string, onboardingId: string, sessionRef?: string | null) {
+  const { row } = await access(userId, onboardingId);
+  const d = await db();
+  const { data: ob } = await d.from("investor_onboardings").select("id, person_id, questionnaire_didit_session_id").eq("id", row.id).maybeSingle();
+  if (!ob?.person_id) throw new Error("This investment has no person linked yet.");
+  const ref = sessionRef?.trim() || null;
+  let sessionId: string | null = ob.questionnaire_didit_session_id ?? null;
+  if (ref && UUID.test(ref) && ref !== sessionId) {
+    const { fetchDiditSessionDecision } = await import("@/lib/didit.server");
+    const dec: any = await fetchDiditSessionDecision(ref);
+    if (!dec) throw new Error("That verification session couldn't be found.");
+    const { data: p } = await d.from("persons").select("date_of_birth, email").eq("id", ob.person_id).maybeSingle();
+    const id = (Array.isArray(dec.id_verifications) ? dec.id_verifications[0] : dec.id_verification) ?? {};
+    const dob = String(id.date_of_birth ?? "").slice(0, 10);
+    const emails = JSON.stringify(dec).toLowerCase();
+    const dobOk = !!dob && !!p?.date_of_birth && String(p.date_of_birth).slice(0, 10) === dob;
+    const emailOk = !!p?.email && emails.includes(String(p.email).toLowerCase());
+    if (!dobOk && !emailOk) throw new Error("That session doesn't match this investor's date of birth or email, so it wasn't linked.");
+    await d.from("investor_onboardings").update({ questionnaire_didit_session_id: ref }).eq("id", ob.id);
+    sessionId = ref;
+  }
+  if (!sessionId) throw new Error("No verification session is linked. Paste the session ID from the verification provider in Reference.");
+  const { autoApplyDiditForOnboarding } = await import("@/lib/didit-auto-apply.server");
+  const r: any = await autoApplyDiditForOnboarding(ob.id, userId);
+  const { data: after } = await d.from("persons").select("kyc_status, aml_status").eq("id", ob.person_id).maybeSingle();
+  return { applied: !!r.applied, reason: r.reason ?? null, changed: r.changed ?? 0, kyc: after?.kyc_status ?? null, aml: after?.aml_status ?? null, sessionId };
+}
+
 export type PriorInput = {
   onboardingId: string; provider: string; checkedOn: string; reference?: string | null;
   person?: Record<string, string>; entity?: Record<string, string>;
@@ -88,7 +124,7 @@ async function screen(body: Record<string, unknown>) {
 export async function loadPriorVerification(userId: string, input: PriorInput) {
   const { row, role } = await access(userId, input.onboardingId);
   const d = await db();
-  const out: { saved: number; suggested: number; aml?: string; kycLink?: "emailed" | "created"; kyb?: string; entityAml?: string; warnings: string[] } = { saved: 0, suggested: 0, warnings: [] };
+  const out: { saved: number; suggested: number; aml?: string; sessionKyc?: string; kycLink?: "emailed" | "created"; kyb?: string; entityAml?: string; warnings: string[] } = { saved: 0, suggested: 0, warnings: [] };
 
   // 1) Fill in details through the normal investor-record path (edit window, suggestions, history).
   const p = input.person ?? {};
@@ -130,6 +166,16 @@ export async function loadPriorVerification(userId: string, input: PriorInput) {
   // 4) Reruns.
   const { data: cur } = row.person_id ? await d.from("persons").select("*").eq("id", row.person_id).maybeSingle() : { data: null };
   const now = new Date().toISOString();
+  // Earlier check was done by our identity provider: apply that session's result instead of a fresh name-only search.
+  if (/didit/i.test(input.provider) && cur) {
+    try {
+      const s = await syncProviderSession(userId, input.onboardingId, input.reference ?? null);
+      if (s.aml) out.aml = s.aml;
+      out.sessionKyc = s.kyc ?? undefined;
+      if (!s.applied && s.reason) out.warnings.push(`Verification session not applied: ${s.reason}.`);
+      input = { ...input, rerun: { ...input.rerun, aml: false } };
+    } catch (e) { out.warnings.push((e as Error).message); }
+  }
   if (input.rerun.aml) {
     if (!cur) out.warnings.push("No person on this investment to screen.");
     else {

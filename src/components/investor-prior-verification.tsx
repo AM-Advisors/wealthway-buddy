@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { investorMissingInfoFn, loadPriorVerificationFn } from "@/lib/prior-verification.functions";
+import { investorMissingInfoFn, loadPriorVerificationFn, syncProviderSessionFn } from "@/lib/prior-verification.functions";
 
 const PERSON: [string, string][] = [
   ["legal_first_name", "Legal first name"], ["legal_middle_name", "Middle name"], ["legal_last_name", "Last name"],
@@ -28,6 +28,7 @@ export function InvestorPriorVerification({ onboardingId, onSaved }: { onboardin
   const key = ["investor-missing-info", onboardingId];
   const missingFn = useServerFn(investorMissingInfoFn);
   const loadFn = useServerFn(loadPriorVerificationFn);
+  const syncFn = useServerFn(syncProviderSessionFn);
   const q = useQuery({ queryKey: key, queryFn: () => missingFn({ data: { onboardingId } }) });
   const [open, setOpen] = useState(false);
   const [meta, setMeta] = useState({ provider: "", checkedOn: "", reference: "" });
@@ -49,6 +50,15 @@ export function InvestorPriorVerification({ onboardingId, onSaved }: { onboardin
     },
     onError: (err) => toast.error((err as Error).message),
   });
+  const sync = useMutation({
+    mutationFn: () => syncFn({ data: { onboardingId, ...(meta.reference && /^[0-9a-f-]{36}$/i.test(meta.reference.trim()) ? { sessionId: meta.reference.trim() } : {}) } }),
+    onSuccess: (r) => {
+      toast.success(`Identity: ${label(r.kyc)} · Screening: ${label(r.aml)}`);
+      if (!r.applied && r.reason) toast.warning(`Not applied: ${r.reason}`);
+      qc.invalidateQueries(); onSaved?.();
+    },
+    onError: (err) => toast.error((err as Error).message),
+  });
   const d = q.data;
   const missing = [...(d?.person ?? []), ...(d?.entity ?? [])];
 
@@ -56,7 +66,10 @@ export function InvestorPriorVerification({ onboardingId, onSaved }: { onboardin
     <section className="rounded-lg border p-3 space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-medium">Missing information & earlier verification</h4>
-        {!open && <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Add missing info / load earlier check</Button>}
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" disabled={sync.isPending} onClick={() => sync.mutate()}>{sync.isPending ? "Syncing…" : "Sync verification result"}</Button>
+          {!open && <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Add missing info / load earlier check</Button>}
+        </div>
       </div>
       {q.isLoading ? <p className="text-xs text-muted-foreground">Checking…</p> : q.isError ? <p className="text-xs text-destructive">{(q.error as Error).message}</p> : d && (
         <>
@@ -73,7 +86,7 @@ export function InvestorPriorVerification({ onboardingId, onSaved }: { onboardin
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="space-y-1"><Label htmlFor="pv-provider">Earlier check done by</Label><Input id="pv-provider" placeholder="e.g. prior administrator" value={meta.provider} onChange={(x) => setMeta({ ...meta, provider: x.target.value })} /></div>
             <div className="space-y-1"><Label htmlFor="pv-date">Check date</Label><Input id="pv-date" type="date" value={meta.checkedOn} onChange={(x) => setMeta({ ...meta, checkedOn: x.target.value })} /></div>
-            <div className="space-y-1"><Label htmlFor="pv-ref">Reference (optional)</Label><Input id="pv-ref" value={meta.reference} onChange={(x) => setMeta({ ...meta, reference: x.target.value })} /></div>
+            <div className="space-y-1"><Label htmlFor="pv-ref">Reference / session ID (optional)</Label><Input id="pv-ref" value={meta.reference} onChange={(x) => setMeta({ ...meta, reference: x.target.value })} /></div>
           </div>
           <div>
             <p className="mb-1 text-sm font-medium">Person</p>
