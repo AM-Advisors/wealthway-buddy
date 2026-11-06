@@ -64,7 +64,7 @@ export function FundPersonAccountsNote({ offeringId }: { offeringId: string }) {
     <section className="space-y-2 rounded-md border p-4 text-sm">
       <h3 className="font-medium">Same verified person as another account (staff only)</h3>
       <ul className="space-y-1">{q.data.map((r) => (
-        <li key={r.userId}><Link to="/ops/investors/$investorId" params={{ investorId: r.userId }} className="text-primary hover:underline break-all">{r.email}</Link> · {r.accountCount} accounts, also {r.otherEmails.join(", ")}. Accounts stay separate.</li>
+        <li key={r.userId}><Link to="/ops/investors/$investorId" params={{ investorId: r.userId }} search={{ tab: undefined }} className="text-primary hover:underline break-all">{r.email}</Link> · {r.accountCount} accounts, also {r.otherEmails.join(", ")}. Accounts stay separate.</li>
       ))}</ul>
     </section>
   );
