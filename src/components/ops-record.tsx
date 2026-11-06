@@ -1,3 +1,4 @@
+import { DocumentLibrary } from "@/components/document-library";
 import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 import { CommercialAgreementCard } from "@/components/commercial-agreement-card";
 import { HarmoniousTeamCard } from "@/components/harmonious-team-card";
@@ -232,6 +233,7 @@ function summaryFor(type: OpsRecordType, record: any): { label: string; value: s
 
 function TabBody({ type, id, tab }: { type: OpsRecordType; id: string; tab: string }) {
   if (type === "fund" && tab === "investors") return <ManagerFundInvestors fundId={id} />;
+  if (type === "investor" && tab === "documents") return <DocumentLibrary scope={{ investorUserId: id }} />;
   return <GenericTabBody type={type} id={id} tab={tab} />;
 }
 
