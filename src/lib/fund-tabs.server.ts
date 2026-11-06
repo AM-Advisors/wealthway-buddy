@@ -50,14 +50,14 @@ export async function anyInvestorSigned(fundId: string) {
 
 /* ---------------- Investors ---------------- */
 
-export async function investorGrid(fundId: string) {
+export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
   const { data: fund, error: fundError } = await (await db()).from("offerings").select("has_multiple_classes").eq("id", fundId).maybeSingle();
   if (fundError) throw new Error("Fund class settings could not be loaded. Please try again.");
   const classApplicable = fund?.has_multiple_classes === true;
   const fundRelease = await (await import("@/lib/wire-release.server")).wireReleaseState(fundId).catch(() => ({ available: false }));
   const { data } = await (await db()).from("investor_onboardings")
     .select("id, offering_id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, questionnaire_version, questionnaire_responses, investment_profiles(legal_name, profile_type, tax_id_last4)")
-    .eq("offering_id", fundId).is("removed_at", null).order("created_at");
+    .eq("offering_id", fundId).is("removed_at", null).match(onlyOnboardingId ? { id: onlyOnboardingId } : {}).order("created_at");
   // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
   const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
   const { data: people } = ids.length
@@ -158,7 +158,7 @@ export async function investorDetail(fundId: string, onboardingId: string) {
       : d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").eq("onboarding_id", onboardingId),
   ]);
   const p = o.persons ?? {};
-  const grid = (await investorGrid(fundId)).find((r) => r.id === onboardingId);
+  const grid = (await investorGrid(fundId, onboardingId)).find((r) => r.id === onboardingId);
   if (!grid) throw new Error("That investor is not available in this fund.");
   return {
     ...grid,
