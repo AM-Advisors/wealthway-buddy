@@ -68,7 +68,7 @@ export function DocumentLibrary({ scope }: { scope: Scope }) {
 function DocLinks({ doc }: { doc: { investorUserId: string | null; offeringId: string | null; onboardingId: string | null; title: string } }) {
   return (
     <span className="flex flex-wrap gap-2 text-xs">
-      {doc.investorUserId && <Link className="underline" to="/ops/investors/$investorId" params={{ investorId: doc.investorUserId }}>Investor 360</Link>}
+      {doc.investorUserId && <Link className="underline" to="/ops/investors/$investorId" params={{ investorId: doc.investorUserId }} search={{ tab: "documents" } as never}>Investor 360</Link>}
       {doc.offeringId && doc.onboardingId && <Link className="underline" to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: doc.offeringId, onboardingId: doc.onboardingId }} search={{}}>Investment</Link>}
     </span>
   );
