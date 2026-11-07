@@ -247,6 +247,19 @@ export const applyBankActivityFn = createServerFn({ method: "POST" })
     })),
   );
 
+export const recordManualReceiptFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    z.object({
+      onboardingId: z.string().min(1),
+      amountCents: z.number().int().positive(),
+      receivedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      reference: z.string().min(2).max(120),
+      note: z.string().max(500).nullish(),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => reconciled(data.onboardingId, context.userId, "recordManualReceipt", (await engine()).recordManualReceipt(context.userId, data)));
+
 export const acceptSubscriptionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(

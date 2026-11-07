@@ -1991,6 +1991,62 @@ export async function applyBankActivity(
   return { matched: true, onboardingId: row.id, fundingStatus: status, fundedAmountCents: funded };
 }
 
+/**
+ * Harmonious records money received for an investment by hand (no bank
+ * statement loaded). Staff only, append-only event, same funding math as a
+ * bank match. Records what arrived; never moves money.
+ */
+export async function recordManualReceipt(
+  userId: string,
+  input: { onboardingId: string; amountCents: number; receivedOn: string; reference: string; note?: string | null },
+) {
+  const actor = await assertStaff(userId);
+  if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) fail("Enter the amount received.");
+  const reference = input.reference.trim();
+  if (reference.length < 2) fail("Add the wire or check reference.");
+  const row = await onboardingRow(input.onboardingId);
+  if (row.removed_at) fail("This investment was removed from the fund.");
+  if (!["approved_to_fund", "awaiting_funds", "funded"].includes(String(row.stage))) {
+    fail("Approve this investor to fund before recording money received.");
+  }
+  const { data: prior } = await db()
+    .from("investor_onboarding_events")
+    .select("detail")
+    .eq("onboarding_id", row.id)
+    .eq("event", "manual_receipt_recorded");
+  if (((prior ?? []) as any[]).some((p) => String(p.detail?.reference ?? "").toLowerCase() === reference.toLowerCase())) {
+    fail("A receipt with this reference is already recorded for this investment.");
+  }
+  const expected = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+  const funded = Number(row.funded_amount_cents ?? 0) + input.amountCents;
+  const status: FundingStatus = deriveFundingStatus({ acceptedAmountCents: expected, reconciledCents: funded });
+  await touch(row.id, {
+    funded_amount_cents: funded,
+    funding_status: status,
+    ...(status === "funded" ? { stage: "funded" } : {}),
+  });
+  await recordEvent({
+    onboardingId: row.id,
+    offeringId: row.offering_id,
+    event: "manual_receipt_recorded",
+    fromStatus: row.funding_status ?? null,
+    toStatus: status,
+    detail: { amountCents: input.amountCents, receivedOn: input.receivedOn, reference, note: input.note?.trim() || null, source: "manual_entry" },
+    actorUserId: actor.userId,
+    actorRole: "harmonious",
+  });
+  if (status === "overfunded" || status === "partially_funded") {
+    await raiseException(userId, {
+      onboardingId: row.id,
+      type: status === "overfunded" ? "overfunding" : "underfunding",
+      severity: "blocking",
+      detail: `Expected ${expected} cents, received ${funded} cents.`,
+    });
+  }
+  await syncInvitation(row);
+  return { fundingStatus: status, fundedAmountCents: funded, expectedAmountCents: expected };
+}
+
 // ------------------------------------------------------ acceptance & close
 
 export async function acceptSubscription(
