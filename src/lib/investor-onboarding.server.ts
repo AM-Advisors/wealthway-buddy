@@ -1998,7 +1998,7 @@ export async function applyBankActivity(
  */
 export async function recordManualReceipt(
   userId: string,
-  input: { onboardingId: string; amountCents: number; receivedOn: string; reference: string; note?: string | null },
+  input: { onboardingId: string; amountCents: number; receivedOn: string; reference: string; note?: string | null | undefined },
 ) {
   const actor = await assertStaff(userId);
   if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) fail("Enter the amount received.");
