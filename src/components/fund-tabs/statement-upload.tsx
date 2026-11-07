@@ -39,7 +39,7 @@ export function StatementUpload({ fundId, investors, canEnter = false }: { fundI
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   const lineM = useMutation({ mutationFn: (a: { lineId: string; category: string | null; onboardingId: string | null; skip: boolean }) => update({ data: { fundId, ...a } }), onSuccess: refresh, onError: (e: Error) => toast.error(e.message) });
-  const applyM = useMutation({ mutationFn: (uploadId: string) => apply({ data: { fundId, uploadId } }), onSuccess: (r) => { toast.success(`${r.applied} line(s) added to the books.`); refresh(); }, onError: (e: Error) => toast.error(e.message) });
+  const applyM = useMutation({ mutationFn: (uploadId: string) => apply({ data: { fundId, uploadId } }), onSuccess: (r: any) => { toast.success(`${r.applied} line(s) added to the books and Banking. Investor deposits are recorded on their investments.`); for (const n of (r.receiptNotes ?? []) as string[]) toast.warning(n); refresh(); }, onError: (e: Error) => toast.error(e.message) });
 
   return (
     <Card>
