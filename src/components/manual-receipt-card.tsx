@@ -23,7 +23,7 @@ export function ManualReceiptCard({ onboardingId }: { onboardingId: string }) {
   const cents = Math.round(Number(amount.replace(/[$,\s]/g, "")) * 100);
 
   const submit = async () => {
-    if (!(cents > 0)) return toast.error("Enter the amount received.");
+    if (!(cents > 0)) { toast.error("Enter the amount received."); return; }
     if (!window.confirm(`Record ${usd(cents)} received on ${receivedOn}? This is added to the investor's record and cannot be edited later.`)) return;
     setBusy(true);
     try {
