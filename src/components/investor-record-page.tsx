@@ -1,3 +1,4 @@
+import { OpsRecordPage } from "@/components/ops-record";
 import { AccountIdentityQueue } from "@/components/account-identity-queue";
 import { InvestorVerificationCard } from "@/components/investor-verification-card";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
@@ -36,8 +37,8 @@ export const INVESTOR_RECORD_TABS = ["overview", "investment", "profile", "onboa
 export type InvestorRecordTab = (typeof INVESTOR_RECORD_TABS)[number];
 /** Four visible tabs; older links to merged tabs still land in the right place. */
 const VISIBLE_TABS = ["overview", "details", "actions", "documents", "activity"] as const;
-type VisibleTab = (typeof VISIBLE_TABS)[number] | "bsa";
-const TAB_LABEL: Record<VisibleTab, string> = { overview: "Overview", details: "Details", actions: "Verification & actions", documents: "Documents", activity: "Activity", bsa: "BSA (staff only)" };
+type VisibleTab = (typeof VISIBLE_TABS)[number] | "bsa" | "investor360";
+const TAB_LABEL: Record<VisibleTab, string> = { overview: "Overview", details: "Details", actions: "Verification & actions", documents: "Documents", activity: "Activity", bsa: "BSA (staff only)", investor360: "Investor 360" };
 function visibleTab(t?: InvestorRecordTab): VisibleTab {
   if (t === "investment" || t === "profile") return "details";
   if (t === "documents") return "documents";
@@ -111,13 +112,14 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           <p className="text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {entrySourceLabel(data.overview.enteredBy)}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
           {!data.overview.removed ? <Button size="sm" variant="outline" onClick={correctDetails}><Pencil className="mr-2 h-4 w-4" />Correct investor details</Button> : null}
-          {staff && data.overview.investorUserId ? <Button asChild size="sm" variant="outline"><Link to="/ops/investors/$investorId" params={{ investorId: data.overview.investorUserId }} search={{ tab: undefined }}>Open Investor 360</Link></Button> : null}
           {data.overview.removed ? <Badge variant="destructive">Removed from Fund</Badge> : null}
           {data.claimState === "prepared" ? <Badge variant="outline">{CLAIM_STATE_LABELS[data.claimState]}</Badge> : null}
           {data.pendingReviewCount ? <Badge variant="secondary">{data.pendingReviewCount} awaiting Harmonious review</Badge> : null}
         </div>
       </div>
-      <nav aria-label="Jump to section" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b bg-background px-1 py-1">{([...VISIBLE_TABS, ...(staff ? ["bsa" as const] : [])] as VisibleTab[]).map((t) => <Button key={t} size="sm" variant="ghost" className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</nav>
+      <nav aria-label="Jump to section" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b bg-background px-1 py-1">{([...VISIBLE_TABS, ...(staff ? ["investor360" as const, "bsa" as const] : [])] as VisibleTab[]).map((t) => <Button key={t} size="sm" variant="ghost" className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</nav>
+
+      {tab === "investor360" && staff ? <section aria-labelledby="ir-sec-360"><h3 id="ir-sec-360" className="scroll-mt-14 pt-2 text-lg font-semibold">Investor 360</h3>{data.overview.investorUserId ? <OpsRecordPage type="investor" id={data.overview.investorUserId} embedded /> : <p className="text-sm text-muted-foreground">No investor account linked yet.</p>}</section> : null}
 
       {tab === "overview" ? <>
       <h3 id="ir-sec-overview" className="scroll-mt-14 pt-2 text-lg font-semibold">Overview</h3>

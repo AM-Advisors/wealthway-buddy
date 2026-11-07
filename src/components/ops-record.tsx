@@ -307,7 +307,7 @@ function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; ta
   );
 }
 
-export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string }) {
+export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordType; id: string; embedded?: boolean }) {
   const search = useSearch({ strict: false }) as { tab?: string };
   const navigate = useNavigate();
   const load = useServerFn(RECORD_FN[type] as any);
@@ -351,8 +351,8 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
   const actions = allowedActions(RECORD_AREA[type], capabilities);
 
   return (
-    <div className="space-y-6 p-6">
-      <nav className="text-xs text-muted-foreground">
+    <div className={embedded ? "space-y-6" : "space-y-6 p-6"}>
+      <nav className={embedded ? "hidden" : "text-xs text-muted-foreground"}>
         <Link to="/ops" className="hover:underline">
           Operations
         </Link>
