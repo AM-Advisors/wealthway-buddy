@@ -155,6 +155,7 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
   const { data: an } = assetIds.length ? await d.from("portfolio_assets").select("id, issuer_name, asset_name").in("id", assetIds) : { data: [] };
   const assetNames = new Map(((an ?? []) as any[]).map((a) => [a.id, [a.issuer_name, a.asset_name].filter(Boolean).join(" · ")]));
   let applied = 0;
+  const receiptNotes: string[] = [];
   for (const l of todo) {
     const category = l.confirmed_category ?? l.suggested_category;
     const { data: tx, error } = await d.from("bank_transactions").insert({
@@ -176,10 +177,22 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
       if (e.error) throw new Error("Couldn't record a books entry.");
     }
     await d.from("bank_statement_lines").update({ applied_tx_id: tx.id, confirmed_category: category }).eq("id", l.id);
+    // Investor deposits on a statement connect into Banking the same way a bank-feed match does.
+    if (l.matched_onboarding_id && l.direction === "in") {
+      const { data: ob } = await d.from("investor_onboardings").select("application_id").eq("id", l.matched_onboarding_id).maybeSingle();
+      await d.from("bank_transactions").update({ matched_application_id: (ob as any)?.application_id ?? null, matched_by: uid, matched_at: new Date().toISOString() }).eq("id", tx.id);
+      try {
+        const engine = await import("@/lib/investor-onboarding.server");
+        await engine.applyBankActivity(uid, { bankTransactionId: String(tx.id), onboardingId: String(l.matched_onboarding_id) });
+        await engine.reconcileInvestmentReadiness(String(l.matched_onboarding_id), { actorUserId: uid, trigger: "statement_applied" });
+      } catch (e) {
+        receiptNotes.push(`${l.description}: ${e instanceof Error ? e.message : "receipt needs Harmonious review"}`);
+      }
+    }
     applied++;
   }
   await d.from("bank_statement_uploads").update({ status: "applied", applied_by: uid, applied_at: new Date().toISOString() }).eq("id", uploadId);
-  return { applied };
+  return { applied, receiptNotes };
 }
 
 // ---------------------------------------------------------------- assets and marks
