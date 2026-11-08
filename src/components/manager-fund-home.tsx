@@ -253,7 +253,7 @@ export function ManagerFundHome({ offeringId, embedded = false }: { offeringId: 
           </CardHeader>
           <CardContent>
             <Button asChild size="sm">
-              <Link to="/manager/fund-banking/$fundId" params={{ fundId: offeringId }}>
+              <Link to="/manager/fund/$fundId/banking" params={{ fundId: offeringId }}>
                 Open fund banking
               </Link>
             </Button>
