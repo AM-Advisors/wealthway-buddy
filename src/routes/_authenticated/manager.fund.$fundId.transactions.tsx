@@ -9,7 +9,7 @@ const VIEWS = ["activity", "wires", "closing"] as const;
 type View = (typeof VIEWS)[number];
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/transactions")({
-  validateSearch: (search: Record<string, unknown>): { view?: View } => ({
+  validateSearch: (search: Record<string, unknown>): { view?: View | undefined } => ({
     view: VIEWS.includes(search["view"] as View) ? (search["view"] as View) : undefined,
   }),
   head: () => ({ meta: [
