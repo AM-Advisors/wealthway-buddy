@@ -46,7 +46,7 @@ const empty = Object.fromEntries(ALL_WIRE_FIELDS.map((k) => [k, ""])) as Record<
  * Harmonious to help open an account, the connected account and its deposits,
  * and the wires investors have sent.
  */
-export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin" | "manager" }) {
+export function FundBanking({ fundId, backTo, embedded = false }: { fundId: string; backTo: "admin" | "manager"; embedded?: boolean }) {
   const scope = useFundScope(fundId);
   const queryClient = useQueryClient();
 
@@ -118,10 +118,10 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
   const canEdit = Boolean((wireQuery.data as any)?.canEdit);
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
+    <section className={embedded ? "" : "mx-auto max-w-4xl px-4 py-10"}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl">Fund banking</h1>
+          {embedded ? <h2 className="text-xl">Banking</h2> : <h1 className="text-3xl">Fund banking</h1>}
           <p className="text-xs text-muted-foreground">These are the fund's accounts, not Harmonious's. Harmonious's own payment details for quotes and invoices are managed separately by the CEO and CRO.</p>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Enter the fund&apos;s receiving account yourself, or ask Harmonious to help open one.
@@ -129,7 +129,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
             escrow agent.
           </p>
         </div>
-        <Button asChild size="sm" variant="outline">
+        {!embedded && <Button asChild size="sm" variant="outline">
           {backTo === "admin" ? (
             <Link to="/admin/fund/$fundId" params={{ fundId }}>
               Back to the fund
@@ -139,7 +139,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
               Back to the fund
             </Link>
           )}
-        </Button>
+        </Button>}
       </div>
 
       <div className="mt-6 space-y-6">
@@ -309,6 +309,6 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
           <WireTrackingPanel offeringId={fundId} />
         </ScopeSection>
       </div>
-    </main>
+    </section>
   );
 }
