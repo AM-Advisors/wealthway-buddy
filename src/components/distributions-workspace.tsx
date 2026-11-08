@@ -43,7 +43,8 @@ const money = (cents: number | null | undefined) =>
     : "-";
 
 /** Everything Harmonious needs to move a distribution safely from proposal to posted. */
-export function DistributionsWorkspace() {
+/** All distributions, or (batchId) just one, shown inside that fund's distribution. */
+export function DistributionsWorkspace({ batchId }: { batchId?: string } = {}) {
   const queryClient = useQueryClient();
   const load = useServerFn(distributionsWorkspaceFn);
   const review = useServerFn(reviewDistributionFn);
@@ -71,11 +72,21 @@ export function DistributionsWorkspace() {
   const [search, setSearch] = useState("");
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
 
-  const { data, isLoading, error } = useQuery({
+  const { data: rawData, isLoading, error } = useQuery({
     queryKey: ["distributions-workspace"],
     queryFn: () => load({ data: {} }),
     retry: false,
   });
+  const data = useMemo(() => {
+    if (!rawData || !batchId) return rawData;
+    const r = rawData as any;
+    return {
+      ...r,
+      batches: ((r.batches ?? []) as any[]).filter((b) => String(b.id) === batchId),
+      lines: ((r.lines ?? []) as any[]).filter((l) => String(l.batchId) === batchId),
+      exceptions: ((r.exceptions ?? []) as any[]).filter((e) => String(e.batchId ?? "") === batchId),
+    } as typeof rawData;
+  }, [rawData, batchId]);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["distributions-workspace"] });
 
@@ -119,7 +130,7 @@ export function DistributionsWorkspace() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      {!batchId && <Card>
         <CardHeader>
           <CardTitle>Prepare a distribution proposal</CardTitle>
           <CardDescription>Proposal only. The server checks fund access and allocation rules; this never sends money.</CardDescription>
