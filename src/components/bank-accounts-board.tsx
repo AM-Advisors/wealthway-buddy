@@ -281,7 +281,7 @@ export function BankAccountsBoard() {
                     </Link>
                   </Button>
                   <Button asChild variant="ghost" size="sm">
-                    <Link to="/admin/fund-payments/$fundId" params={{ fundId: fund.fundId }}>
+                    <Link to="/ops/fund/$fundId" params={{ fundId: fund.fundId }} search={{ tab: "accounting" }}>
                       Fund payments
                     </Link>
                   </Button>
