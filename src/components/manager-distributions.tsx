@@ -17,7 +17,7 @@ const money = (cents: number | null | undefined) =>
     : "-";
 
 /** What a fund manager sees: progress and totals, never an investor's bank details. */
-export function ManagerDistributions({ offeringId }: { offeringId?: string } = {}) {
+export function ManagerDistributions({ offeringId, batchId }: { offeringId?: string; batchId?: string } = {}) {
   const queryClient = useQueryClient();
   const load = useServerFn(managerDistributionBoardFn);
   const approve = useServerFn(managerApproveDistributionFn);
@@ -46,8 +46,8 @@ export function ManagerDistributions({ offeringId }: { offeringId?: string } = {
     );
   }
 
-  const batches = (data?.batches ?? []) as any[];
-  const lines = (data?.lines ?? []) as any[];
+  const batches = ((data?.batches ?? []) as any[]).filter((b) => !batchId || String(b.id) === batchId);
+  const lines = ((data?.lines ?? []) as any[]).filter((l) => !batchId || String(l.batchId) === batchId);
 
   return (
     <div className="space-y-4">

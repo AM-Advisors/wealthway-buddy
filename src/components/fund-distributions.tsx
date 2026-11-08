@@ -216,9 +216,6 @@ function DistributionDetail({ batchId, fundId, mode, isStaff, onClose }: { batch
           {isStaff && !b.feeApproved && <Button size="sm" variant="outline" onClick={async () => { try { await approveFee({ data: { batchId } }); toast.success("Fee approved."); refresh(); } catch (e) { err(e); } }}>Approve fee quote</Button>}
           {isStaff && approved && hasCash && <Button size="sm" onClick={downloadBank}>Download bank file</Button>}
           {isStaff && approved && hasShares && <Button size="sm" onClick={transferLetter}>Share transfer letter</Button>}
-          <Button size="sm" variant="link" asChild>
-            {mode === "harmonious" ? <Link to="/ops/distributions">Approvals & payment recording</Link> : <Link to="/manager/distributions">Review & approve</Link>}
-          </Button>
         </div>
         <Table>
           <TableHeader><TableRow>
