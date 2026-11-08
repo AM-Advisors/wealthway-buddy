@@ -35,6 +35,7 @@ export function UnpaidInvoicesBoard() {
   const load = useServerFn(listInvoices);
   const [clientFilter, setClientFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["invoices"],
