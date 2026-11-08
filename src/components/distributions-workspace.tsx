@@ -142,7 +142,7 @@ export function DistributionsWorkspace({ batchId }: { batchId?: string } = {}) {
           <div><Label htmlFor="distribution-amount">Declared amount (USD)</Label><Input id="distribution-amount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           <Button disabled={!/^[0-9a-f-]{36}$/i.test(fundId) || !distributionType || !title.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || proposeM.pending} onClick={() => proposeM.run({ offeringId: fundId, title: title.trim(), distributionType, declaredAmountCents: Math.round(Number(amount) * 100) })}>Prepare proposal</Button>
         </CardContent>
-      </Card>
+      </Card>}
       <Card>
         <CardHeader>
           <CardTitle>Distributions and payments</CardTitle>
