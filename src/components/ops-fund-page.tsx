@@ -53,7 +53,7 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
     {d.retired || !d.canSeeOperations ? setupBody : <FundWorkspace fundId={fundId} mode="harmonious" tab={tab} onTab={(v) => onTab(v)}
       headerExtra={<>
         <DemoFundToggle fundId={fundId} />
-        <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
+        <Button size="sm" variant="outline" onClick={() => { onTab("accounting"); setTimeout(() => document.getElementById("fund-payments")?.scrollIntoView({ behavior: "smooth" }), 80); }}>Payments</Button>
       </>}
       extraTabs={[{ value: "setup", label: "Setup", content: <FundSetupForm offeringId={fundId} mode="staff" staffExtras={setupBody} /> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }, { value: "formation", label: "Formation & EIN", content: <OperationsFund fundId={fundId} /> }]} />}
   </main>;

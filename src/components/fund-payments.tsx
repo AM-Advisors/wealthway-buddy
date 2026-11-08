@@ -39,7 +39,7 @@ const STATE_LABEL: Record<string, string> = {
 const today = () => new Date().toISOString().slice(0, 10);
 
 /** One fund's wire fees and closing costs: invoice them, record payment, see the trail. */
-export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admin" | "manager" }) {
+export function FundPayments({ fundId, backTo, embedded = false }: { fundId: string; backTo: "admin" | "manager"; embedded?: boolean }) {
   const qc = useQueryClient();
   const load = useServerFn(getFundBilling);
   const bill = useServerFn(billFundFees);
@@ -120,9 +120,9 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
     .reduce((s, e) => s + Number(e.cents ?? 0), 0);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+    <main id="fund-payments" className={embedded ? "space-y-6" : "mx-auto max-w-5xl space-y-6 px-4 py-10"}>
       <div>
-        <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
+        {!embedded && <><Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
           <Link
             to={backTo === "admin" ? "/admin/fund/$fundId" : "/manager/fund/$fundId"}
             params={{ fundId }}
@@ -130,7 +130,7 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
             ← Back to the fund
           </Link>
         </Button>
-        <h1 className="text-3xl">Fund payments</h1>
+        <h1 className="text-3xl">Fund payments</h1></>}
         <p className="mt-2 text-sm text-muted-foreground">
           {data.fund.name}
           {data.clientName ? ` · ${data.clientName}` : ""} - wire fees and closing costs earned on

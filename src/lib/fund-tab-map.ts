@@ -26,7 +26,7 @@ export const FUND_SUB_LABEL: Record<string, string> = {
 
 /** Old or shorthand tab values → the one place that detail now lives. */
 const REDIRECT: Record<string, string> = {
-  details: "setup", team: "setup", todos: "overview", activity: "audit", capital: "distributions",
+  details: "setup", team: "setup", todos: "overview", activity: "audit", capital: "distributions", payments: "accounting",
 };
 
 export function normalizeFundTab(tab: string | null | undefined): string {
