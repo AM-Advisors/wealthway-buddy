@@ -1,29 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { FundBanking } from "@/components/fund-banking";
-
+/** Fund banking now lives inside the manager's fund workspace; keep old links working. */
 export const Route = createFileRoute("/_authenticated/manager/fund-banking/$fundId")({
-  head: () => ({
-    meta: [
-      { title: "Fund Banking | Harmonious" },
-      {
-        name: "description",
-        content:
-          "Enter your fund's receiving account, apply for an account through Harmonious, and follow deposits and investor wires.",
-      },
-      { property: "og:title", content: "Fund Banking | Harmonious" },
-      {
-        property: "og:description",
-        content: "Bank details, bank applications, deposits and wire tracking for your fund.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: ManagerFundBankingPage,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/manager/fund/$fundId/banking", params: { fundId: params.fundId } });
+  },
+  head: () => ({ meta: [
+    { title: "Fund banking | Harmonious" },
+    { name: "description", content: "Bank details, deposits and wire tracking for your fund." },
+    { property: "og:title", content: "Fund banking | Harmonious" },
+    { property: "og:description", content: "Bank details, deposits and wire tracking for your fund." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
 });
-
-function ManagerFundBankingPage() {
-  const { fundId } = Route.useParams();
-  return <FundBanking fundId={fundId} backTo="manager" />;
-}
