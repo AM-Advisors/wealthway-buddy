@@ -33,6 +33,7 @@ export function ManagerDistributions({ offeringId, batchId }: { offeringId?: str
     onSuccess: () => {
       toast.success("Approved. Harmonious gives the final approval before anything is sent.");
       queryClient.invalidateQueries({ queryKey: ["manager-distributions"] });
+      queryClient.invalidateQueries({ queryKey: ["distribution-sheet"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "That approval didn't go through."),
   });

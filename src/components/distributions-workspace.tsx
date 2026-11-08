@@ -88,7 +88,7 @@ export function DistributionsWorkspace({ batchId }: { batchId?: string } = {}) {
     } as typeof rawData;
   }, [rawData, batchId]);
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["distributions-workspace"] });
+  const refresh = () => { void queryClient.invalidateQueries({ queryKey: ["distributions-workspace"] }); void queryClient.invalidateQueries({ queryKey: ["distribution-sheet"] }); };
 
   const act = (fn: (input: any) => Promise<any>, success: string) =>
     useMutationLike(fn, success, refresh);
