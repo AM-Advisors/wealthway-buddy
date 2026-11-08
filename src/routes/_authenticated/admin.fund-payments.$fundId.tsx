@@ -1,8 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { FundPayments } from "@/components/fund-payments";
+/** Fund payments live in the fund's Accounting tab; keep old links working. */
 
 export const Route = createFileRoute("/_authenticated/admin/fund-payments/$fundId")({
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/ops/fund/$fundId", params: { fundId: params.fundId }, search: { tab: "accounting" } });
+  },
   head: () => ({
     meta: [
       { title: "Fund payments | Harmonious admin" },
@@ -21,5 +24,4 @@ export const Route = createFileRoute("/_authenticated/admin/fund-payments/$fundI
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <FundPayments fundId={Route.useParams().fundId} backTo="admin" />,
 });

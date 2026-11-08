@@ -449,7 +449,7 @@ function FundPage() {
                   </Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <Link to="/admin/fund-payments/$fundId" params={{ fundId }}>
+                  <Link to="/ops/fund/$fundId" params={{ fundId }} search={{ tab: "accounting" }}>
                     Fund payments
                   </Link>
                 </Button>

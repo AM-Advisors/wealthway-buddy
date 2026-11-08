@@ -35,6 +35,7 @@ export function UnpaidInvoicesBoard() {
   const load = useServerFn(listInvoices);
   const [clientFilter, setClientFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["invoices"],
@@ -216,15 +217,47 @@ export function UnpaidInvoicesBoard() {
                     >
                       Copy portal link
                     </Button>
-                    <Button asChild size="sm" variant="ghost">
-                      <a href="/client/invoices" target="_blank" rel="noreferrer">
-                        Open portal view
-                      </a>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-expanded={openId === inv.id}
+                      onClick={() => setOpenId(openId === inv.id ? null : inv.id)}
+                    >
+                      {openId === inv.id ? "Hide invoice" : "View invoice"}
                     </Button>
                     <Button asChild size="sm" variant="ghost">
                       <Link to="/admin/pricing">Manage in Pricing</Link>
                     </Button>
                   </div>
+                  {openId === inv.id ? (
+                    <div className="w-full rounded-md bg-muted/40 p-3 text-sm">
+                      <p className="mb-2 text-xs text-muted-foreground">
+                        What {inv.clientName} sees on this invoice.
+                      </p>
+                      {(inv.lines ?? []).length === 0 ? (
+                        <p className="text-muted-foreground">No line items recorded.</p>
+                      ) : (
+                        <ul className="divide-y">
+                          {(inv.lines as any[]).map((l) => (
+                            <li key={l.id} className="flex justify-between gap-3 py-1.5">
+                              <span>
+                                {l.label}
+                                {l.quantity > 1 ? ` × ${l.quantity}` : ""}
+                                {l.description ? (
+                                  <span className="block text-xs text-muted-foreground">{l.description}</span>
+                                ) : null}
+                              </span>
+                              <span className="tabular-nums">{money(Number(l.amount_cents))}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <p className="mt-2 flex justify-between border-t pt-2 font-medium">
+                        <span>Total</span>
+                        <span className="tabular-nums">{money(inv.total_cents)}</span>
+                      </p>
+                    </div>
+                  ) : null}
                   <div className="w-full">
                     <InvoiceEmailStatus invoiceId={inv.id} />
                   </div>

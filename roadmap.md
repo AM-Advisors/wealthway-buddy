@@ -1061,3 +1061,11 @@
 - [x] Consolidate tax and unsigned-document send controls into the existing Send to investor card, visible above review tabs; keep protected fund countersignature actions separate.
 - [x] 32 checklist regressions passed; shared card stayed visible on Documents at desktop/440px, single tax/subscription and send-all calls reached a fictional-only handler. Preview build OK.
 - [ ] Live email delivery and authenticated document-review navigation remain unverified; no real records or emails used, not published.
+
+## Connected fund views (2026-11-08)
+- [x] Ops fund Payments button opens the fund's Accounting tab; old payments links forward there.
+- [x] Distribution approvals and payment recording show inside the open distribution (staff and manager).
+- [x] Manager fund Banking is a section of the fund; old banking links forward there.
+- [x] Manager Capital tab holds this fund's Wire approvals and Closing desk.
+- [x] Unpaid invoices show the invoice in place instead of opening the client portal in a new tab.
+- [ ] Next batch (investor side, 6–15 from the audit) waits on the user's go-ahead.

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
+import { DistributionsWorkspace } from "@/components/distributions-workspace";
+import { ManagerDistributions } from "@/components/manager-distributions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -216,9 +217,6 @@ function DistributionDetail({ batchId, fundId, mode, isStaff, onClose }: { batch
           {isStaff && !b.feeApproved && <Button size="sm" variant="outline" onClick={async () => { try { await approveFee({ data: { batchId } }); toast.success("Fee approved."); refresh(); } catch (e) { err(e); } }}>Approve fee quote</Button>}
           {isStaff && approved && hasCash && <Button size="sm" onClick={downloadBank}>Download bank file</Button>}
           {isStaff && approved && hasShares && <Button size="sm" onClick={transferLetter}>Share transfer letter</Button>}
-          <Button size="sm" variant="link" asChild>
-            {mode === "harmonious" ? <Link to="/ops/distributions">Approvals & payment recording</Link> : <Link to="/manager/distributions">Review & approve</Link>}
-          </Button>
         </div>
         <Table>
           <TableHeader><TableRow>
@@ -243,7 +241,11 @@ function DistributionDetail({ batchId, fundId, mode, isStaff, onClose }: { batch
             </TableRow>))}
           </TableBody>
         </Table>
-        <p className="text-xs text-muted-foreground">Wire instructions are verified by each investor through their own secure step. Cash payments are marked paid only after the bank reference is recorded and reconciled on the approvals page.</p>
+        <p className="text-xs text-muted-foreground">Wire instructions are verified by each investor through their own secure step. Cash payments are marked paid only after the bank reference is recorded and reconciled below.</p>
+        <section aria-labelledby={`dist-approvals-${batchId}`} className="space-y-3 border-t pt-4">
+          <h3 id={`dist-approvals-${batchId}`} className="text-sm font-semibold">{mode === "harmonious" ? "Approvals and payment recording" : "Review and approve"}</h3>
+          {mode === "harmonious" ? <DistributionsWorkspace batchId={batchId} /> : <ManagerDistributions offeringId={fundId} batchId={batchId} />}
+        </section>
       </CardContent>
     </Card>
   );

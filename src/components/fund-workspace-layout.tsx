@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CheckSquare,
   Inbox,
+  Landmark,
   FileText,
   Settings,
   Link2,
@@ -41,6 +42,7 @@ const groups = [
   { label: "Fund records", items: [
     { slug: "assets", label: "Investments", icon: Activity },
     { slug: "transactions", label: "Capital", icon: WalletCards },
+    { slug: "banking", label: "Banking", icon: Landmark },
     { slug: "documents", label: "Documents", icon: FileText },
     { slug: "side-letters", label: "Side Letters", icon: FileText },
     { slug: "compliance", label: "Compliance", icon: ShieldCheck },

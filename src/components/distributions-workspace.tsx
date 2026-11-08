@@ -43,7 +43,8 @@ const money = (cents: number | null | undefined) =>
     : "-";
 
 /** Everything Harmonious needs to move a distribution safely from proposal to posted. */
-export function DistributionsWorkspace() {
+/** All distributions, or (batchId) just one, shown inside that fund's distribution. */
+export function DistributionsWorkspace({ batchId }: { batchId?: string } = {}) {
   const queryClient = useQueryClient();
   const load = useServerFn(distributionsWorkspaceFn);
   const review = useServerFn(reviewDistributionFn);
@@ -71,13 +72,23 @@ export function DistributionsWorkspace() {
   const [search, setSearch] = useState("");
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
 
-  const { data, isLoading, error } = useQuery({
+  const { data: rawData, isLoading, error } = useQuery({
     queryKey: ["distributions-workspace"],
     queryFn: () => load({ data: {} }),
     retry: false,
   });
+  const data = useMemo(() => {
+    if (!rawData || !batchId) return rawData;
+    const r = rawData as any;
+    return {
+      ...r,
+      batches: ((r.batches ?? []) as any[]).filter((b) => String(b.id) === batchId),
+      lines: ((r.lines ?? []) as any[]).filter((l) => String(l.batchId) === batchId),
+      exceptions: ((r.exceptions ?? []) as any[]).filter((e) => String(e.batchId ?? "") === batchId),
+    } as typeof rawData;
+  }, [rawData, batchId]);
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["distributions-workspace"] });
+  const refresh = () => { void queryClient.invalidateQueries({ queryKey: ["distributions-workspace"] }); void queryClient.invalidateQueries({ queryKey: ["distribution-sheet"] }); };
 
   const act = (fn: (input: any) => Promise<any>, success: string) =>
     useMutationLike(fn, success, refresh);
@@ -119,7 +130,7 @@ export function DistributionsWorkspace() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      {!batchId && <Card>
         <CardHeader>
           <CardTitle>Prepare a distribution proposal</CardTitle>
           <CardDescription>Proposal only. The server checks fund access and allocation rules; this never sends money.</CardDescription>
@@ -131,7 +142,7 @@ export function DistributionsWorkspace() {
           <div><Label htmlFor="distribution-amount">Declared amount (USD)</Label><Input id="distribution-amount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           <Button disabled={!/^[0-9a-f-]{36}$/i.test(fundId) || !distributionType || !title.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || proposeM.pending} onClick={() => proposeM.run({ offeringId: fundId, title: title.trim(), distributionType, declaredAmountCents: Math.round(Number(amount) * 100) })}>Prepare proposal</Button>
         </CardContent>
-      </Card>
+      </Card>}
       <Card>
         <CardHeader>
           <CardTitle>Distributions and payments</CardTitle>
