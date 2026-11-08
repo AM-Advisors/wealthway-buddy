@@ -120,7 +120,7 @@ export function FundPayments({ fundId, backTo, embedded = false }: { fundId: str
     .reduce((s, e) => s + Number(e.cents ?? 0), 0);
 
   return (
-    <main id="fund-payments" className={embedded ? "space-y-6" : "mx-auto max-w-5xl space-y-6 px-4 py-10"}>
+    <section id="fund-payments" className={embedded ? "space-y-6" : "mx-auto max-w-5xl space-y-6 px-4 py-10"}>
       <div>
         {!embedded && <><Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
           <Link
@@ -133,7 +133,7 @@ export function FundPayments({ fundId, backTo, embedded = false }: { fundId: str
         <h1 className="text-3xl">Fund payments</h1></>}
         <p className="mt-2 text-sm text-muted-foreground">
           {data.fund.name}
-          {data.clientName ? ` · ${data.clientName}` : ""} - wire fees and closing costs earned on
+          {data.clientName ? ` · ${data.clientName}` : ""}: wire fees and closing costs earned on
           this fund, what has been invoiced, and what has been paid. Harmonious facilitates and
           records these payments; it does not hold client money.
         </p>
@@ -400,6 +400,6 @@ export function FundPayments({ fundId, backTo, embedded = false }: { fundId: str
         Every fee here is billed once: once a fee is on an invoice it cannot be added again, and
         each step is written to the audit trail with who, when and the amounts.
       </p>
-    </main>
+    </section>
   );
 }
