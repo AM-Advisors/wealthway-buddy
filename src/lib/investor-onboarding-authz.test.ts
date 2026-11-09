@@ -108,6 +108,7 @@ const tables: Record<string, any[]> = {
   bank_transactions: [
     { id: TXN, offering_id: FUND_A, amount_cents: 250_000, description: "wire", posted_on: "2026-03-05" },
     { id: TXN_USED, offering_id: FUND_A, amount_cents: 250_000, description: "wire", posted_on: "2026-03-05" },
+    { id: "txn-outgoing", offering_id: FUND_A, amount_cents: -250_000, description: "wire out", posted_on: "2026-03-06" },
   ],
   fund_invitations: [
     {
@@ -355,6 +356,24 @@ describe("funding truth", () => {
     await expect(
       server.applyBankActivity(STAFF, { bankTransactionId: TXN_USED, onboardingId: OB1B }),
     ).rejects.toThrow(/already been applied/);
+  });
+
+  it("never counts an outgoing payment toward an investor's funding", async () => {
+    await expect(
+      server.applyBankActivity(STAFF, { bankTransactionId: "txn-outgoing", onboardingId: OB1B }),
+    ).rejects.toThrow(/Only incoming deposits/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+
+  it("counts a staff-matched $2,500 wire on a $2,500 commitment as funded", async () => {
+    const result = await server.applyBankActivity(STAFF, { bankTransactionId: TXN, onboardingId: OB1B });
+    expect(result.matched).toBe(true);
+    expect((result as any).fundedAmountCents).toBe(250_000);
+    expect((result as any).fundingStatus).toBe("funded");
+  });
+
+  it("only Harmonious staff can list the wires tagged to an investment", async () => {
+    await expect(server.taggedDepositsFor(MANAGER_A, OB1B)).rejects.toThrow(/Forbidden/);
   });
 
   it("raises an exception rather than guessing between equal amounts", async () => {

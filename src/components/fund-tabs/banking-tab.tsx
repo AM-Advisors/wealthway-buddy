@@ -86,7 +86,7 @@ export function Transactions({ fundId, d }: { fundId: string; d: any }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Bank transactions</CardTitle>
-        <CardDescription>Assign incoming wires to the investor they came from and outgoing payments to the asset they were for. Assigning is a label only; Harmonious still reconciles funding.</CardDescription>
+        <CardDescription>Assign incoming wires to the investor they came from and outgoing payments to the asset they were for. Harmonious then counts each investor wire toward funding with Match wire on the investor's page.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {d.transactions.length > 0 && (
