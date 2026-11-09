@@ -270,6 +270,18 @@ export const confirmClosing = createServerFn({ method: "POST" })
           supabase.from("offerings").select("name").eq("id", app.offering_id).maybeSingle(),
         ]);
         if (profile?.email) {
+          // The team note is plain text only, without outside links, and the
+          // number of closing emails per investment and per sender is capped.
+          const { plainEmailText } = await import("@/lib/outbound-email-guard");
+          const emailNote = plainEmailText(note, 1000);
+          const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
+          await reserveOutboundEmail({
+            actorId: userId,
+            action: "closing_confirmation",
+            scopeKey: app.id,
+            recipient: profile.email,
+            limits: { perScope: 3 },
+          });
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           const amount = new Intl.NumberFormat("en-US", {
             style: "currency",
@@ -282,7 +294,7 @@ export const confirmClosing = createServerFn({ method: "POST" })
               subject: `Your investment has closed · ${offering?.name ?? "your fund"}`,
               offeringName: offering?.name ?? "your fund",
               body: `We have received your funds in full and your investment closed on ${data.closing_date}.\n\nAmount received: ${amount}\n\nYour closing date and final documents are now in your portal at https://app.harmonious.co/home.${
-                note ? `\n\nNote from the team: ${note}` : ""
+                emailNote ? `\n\nNote from the team: ${emailNote}` : ""
               }`,
             },
             idempotencyKey: `closing-${saved.id}-${data.closing_date}`,

@@ -36804,6 +36804,33 @@ export type Database = {
         }
         Relationships: []
       }
+      outbound_email_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          recipient_hash: string
+          scope_key: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          recipient_hash: string
+          scope_key: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          recipient_hash?: string
+          scope_key?: string
+        }
+        Relationships: []
+      }
       outside_subscription_marks: {
         Row: {
           action: string

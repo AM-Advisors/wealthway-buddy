@@ -2668,6 +2668,13 @@
       "when": 1794008443030,
       "tag": "0380_statement_line_vendor_investment",
       "breakpoints": true
+    },
+    {
+      "idx": 381,
+      "version": "7",
+      "when": 1794246884345,
+      "tag": "0381_outbound_email_guard",
+      "breakpoints": true
     }
   ]
 }

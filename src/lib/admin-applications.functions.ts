@@ -73,6 +73,19 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
       );
     }
 
+    // Bound how many invitations an administrator can send, per fund and
+    // address and overall, before any account is created or reused.
+    if (data.send_invitation) {
+      const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
+      await reserveOutboundEmail({
+        actorId: userId,
+        action: "investor_invitation",
+        scopeKey: `${offering.id}:${email}`,
+        recipient: email,
+        limits: { perScope: 2, perActor: 100 },
+      });
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Find an existing account for this email, otherwise create one.
@@ -195,7 +208,7 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
         const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
         const result = await sendTemplateEmail("investor-invitation", email, {
           templateData: {
-            investorName: data.legal_name,
+            investorName: (await import("@/lib/outbound-email-guard")).plainEmailLine(data.legal_name, 120),
             offeringName: offering.name,
             portalUrl,
             contactEmail: "operations@harmonious.co",

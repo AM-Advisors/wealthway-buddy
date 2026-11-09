@@ -195,11 +195,20 @@ export const inviteCapInvestor = createServerFn({ method: "POST" })
 
     const { data: holder } = await context.supabase
       .from("ct_stakeholders")
-      .select("id, name, company_id")
+      .select("id, name, company_id, email, user_id")
       .eq("id", data.stakeholderId)
       .eq("company_id", data.companyId)
       .maybeSingle();
     if (!holder) throw new Error("That investor is no longer on this cap table.");
+
+    // A linked investor's login can never be redirected to a new address by
+    // sending an invitation; the recorded address stays authoritative.
+    const recorded = String((holder as any).email ?? "").trim().toLowerCase();
+    if ((holder as any).user_id && recorded && recorded !== email) {
+      throw new Error(
+        "This investor is already linked to a login at another email address. Their invitation can only go to that address.",
+      );
+    }
 
     const { data: company } = await context.supabase
       .from("ct_companies")
@@ -207,6 +216,17 @@ export const inviteCapInvestor = createServerFn({ method: "POST" })
       .eq("id", data.companyId)
       .maybeSingle();
     if (company?.is_demo) throw new Error("The demo company is read-only.");
+
+    // Bound how often invitations go out, per investor, per address and per
+    // manager, before the record or any account is changed.
+    const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
+    await reserveOutboundEmail({
+      actorId: context.userId,
+      action: "cap_investor_invitation",
+      scopeKey: data.stakeholderId,
+      recipient: email,
+      limits: { perScope: 3, perActor: 100 },
+    });
 
     const { error: updateError } = await context.supabase
       .from("ct_stakeholders")

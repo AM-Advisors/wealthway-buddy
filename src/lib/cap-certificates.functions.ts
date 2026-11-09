@@ -320,6 +320,32 @@ export const inviteShareholder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!holder) throw new Error("That shareholder no longer exists.");
 
+    // An invitation can never silently redirect an existing login to a new
+    // address: access must be removed first, then the new address invited.
+    const { data: activeLogins } = await supabaseAdmin
+      .from("cap_holder_access")
+      .select("email")
+      .eq("client_id", data.clientId)
+      .eq("stakeholder_id", data.stakeholderId)
+      .eq("kind", "login")
+      .is("revoked_at", null);
+    if ((activeLogins ?? []).some((r: any) => r.email && String(r.email).toLowerCase() !== email)) {
+      throw new Error(
+        "This shareholder already has portal access at another email address. Remove that access first, then invite the new address.",
+      );
+    }
+
+    // Bound how often a manager can send invitations, per shareholder,
+    // per address and overall, before any account or link is created.
+    const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
+    await reserveOutboundEmail({
+      actorId: context.userId,
+      action: "shareholder_invitation",
+      scopeKey: data.stakeholderId,
+      recipient: email,
+      limits: { perScope: 3, perActor: 100 },
+    });
+
     const { ensureAccount, setPasswordLink, PORTAL_ORIGIN } = await import(
       "@/lib/account-invite.server"
     );

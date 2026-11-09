@@ -317,14 +317,31 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
     const to = profile?.email;
     if (!to) throw new Error("This investor has no email address on file.");
 
+    // Reviewer-written text goes out as plain text, without outside links,
+    // and the number of messages per investment and per reviewer is capped.
+    const { plainEmailText, plainEmailLine } = await import("@/lib/outbound-email-guard");
+    const subject = plainEmailLine(data.subject, 200);
+    const body = plainEmailText(data.body, 5000);
+    if (subject.length < 2 || body.length < 2) {
+      throw new Error("Add a subject and a message before sending.");
+    }
+    const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
+    await reserveOutboundEmail({
+      actorId: userId,
+      action: "investor_message",
+      scopeKey: data.applicationId,
+      recipient: to,
+      limits: { perScope: 10, perActor: 200 },
+    });
+
     const { data: row, error: insertError } = await db
       .from("investor_emails")
       .insert({
         application_id: data.applicationId,
         sent_by: userId,
         to_email: to,
-        subject: data.subject,
-        body: data.body,
+        subject,
+        body,
         status: "queued",
       })
       .select("id")
@@ -350,8 +367,8 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
       const result = await sendTemplateEmail("investor-message", to, {
         templateData: {
           investorName: profile?.legal_name ?? "Investor",
-          subject: data.subject,
-          body: data.body,
+          subject,
+          body,
           offeringName,
           pixelUrl,
         },

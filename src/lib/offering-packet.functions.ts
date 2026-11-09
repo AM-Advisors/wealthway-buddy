@@ -205,13 +205,43 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
       .eq("id", data.fundId)
       .maybeSingle();
     const offeringName = (offering as any)?.name ?? "Harmonious";
+    const recipientEmail = data.email.trim().toLowerCase();
+
+    // People already connected to this fund may be sent the packet a few
+    // times; any other address gets a tighter cap. Either way the caller's
+    // total sends are bounded and checked before a link is created.
+    const { data: recipientProfile } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .ilike("email", recipientEmail.replace(/[\\%_]/g, "\\$&"))
+      .maybeSingle();
+    let connected = false;
+    if ((recipientProfile as any)?.user_id) {
+      const rid = (recipientProfile as any).user_id as string;
+      const [{ data: appRow }, { data: accessRow }] = await Promise.all([
+        supabase.from("investor_applications").select("id").eq("offering_id", data.fundId).eq("user_id", rid).limit(1),
+        supabase.from("investor_fund_access").select("user_id").eq("offering_id", data.fundId).eq("user_id", rid).limit(1),
+      ]);
+      connected = (appRow ?? []).length > 0 || (accessRow ?? []).length > 0;
+    }
+    const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
+    await reserveOutboundEmail({
+      actorId: userId,
+      action: connected ? "offering_packet" : "offering_packet_unlisted",
+      scopeKey: `${data.fundId}:${recipientEmail}`,
+      recipient: recipientEmail,
+      limits: connected ? { perScope: 3, perActor: 100 } : { perScope: 1, perActor: 100 },
+    });
+    const { plainEmailText, plainEmailLine } = await import("@/lib/outbound-email-guard");
+    const note = plainEmailText(data.note, 2000);
+    const recipientName = plainEmailLine(data.name, 200);
 
     const { data: link, error } = await supabase
       .from("offering_packet_links")
       .insert({
         offering_id: data.fundId,
         token: newToken(),
-        label: `Emailed to ${data.email}`,
+        label: `Emailed to ${recipientEmail}`,
         include_wire: data.include_wire,
         expires_at: new Date(Date.now() + data.expires_in_days * 86400000).toISOString(),
         created_by: userId,
@@ -230,17 +260,17 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
     const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
     const trackedUrl = await buildTrackedUrl({
       url: packetUrl,
-      recipient: data.email,
+      recipient: recipientEmail,
       template: "investor-message",
       label: "Offering packet",
     });
     const pixelUrl = await buildOpenPixelUrl({
-      recipient: data.email,
+      recipient: recipientEmail,
       template: "investor-message",
     });
 
     const bodyParts = [
-      data.note?.trim() || `Here is the offering packet for ${offeringName}.`,
+      note || `Here is the offering packet for ${offeringName}.`,
       data.include_wire
         ? "The packet includes the fund documents and the wire instructions for your subscription."
         : "The packet includes the fund documents.",
@@ -252,9 +282,9 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
     let result: { sent: boolean };
     try {
-      result = await sendTemplateEmail("investor-message", data.email, {
+      result = await sendTemplateEmail("investor-message", recipientEmail, {
         templateData: {
-          investorName: data.name || "Investor",
+          investorName: recipientName || "Investor",
           subject: `${offeringName} · offering packet`,
           body: bodyParts.join("\n\n"),
           offeringName,
@@ -283,7 +313,7 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
       };
     }
 
-    return { ok: true, message: `Packet sent to ${data.email}.`, link };
+    return { ok: true, message: `Packet sent to ${recipientEmail}.`, link };
   });
 
 /**
