@@ -125,10 +125,10 @@ export async function notifySubmission(n: SubmissionNotice): Promise<void> {
       }
     }
     const mention: string | null = tags.length ? tags.join(" ") : null;
-    const { data: sub } = n.submittedBy ? await db.from("profiles").select("legal_name, email").eq("user_id", n.submittedBy).maybeSingle() : { data: null };
+    const sub = await (await import("@/lib/user-contact.server")).loadUserContact(db, n.submittedBy);
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const url = operationsNoticeUrl(n.path, n.offeringId);
-    const msg = buildMessage({ title: n.title, place, submitter: sub?.legal_name || sub?.email || null, mention, url, when, completed: n.completed ?? false });
+    const msg = buildMessage({ title: n.title, place, submitter: sub.name || sub.email || null, mention, url, when, completed: n.completed ?? false });
     const r = await slack("chat.postMessage", { channel: OPS_SLACK_CHANNEL, unfurl_links: false, ...msg });
     await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null, tagged_user_id: owner?.userId ?? null, client_id: clientId }).eq("dedupe_key", key);
   } catch (e) {
