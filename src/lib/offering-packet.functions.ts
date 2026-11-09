@@ -260,12 +260,12 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
     const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
     const trackedUrl = await buildTrackedUrl({
       url: packetUrl,
-      recipient: data.email,
+      recipient: recipientEmail,
       template: "investor-message",
       label: "Offering packet",
     });
     const pixelUrl = await buildOpenPixelUrl({
-      recipient: data.email,
+      recipient: recipientEmail,
       template: "investor-message",
     });
 
@@ -313,7 +313,7 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
       };
     }
 
-    return { ok: true, message: `Packet sent to ${data.email}.`, link };
+    return { ok: true, message: `Packet sent to ${recipientEmail}.`, link };
   });
 
 /**
