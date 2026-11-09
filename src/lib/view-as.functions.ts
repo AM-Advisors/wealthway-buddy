@@ -34,6 +34,10 @@ export const viewAsInvestmentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await va()).viewAsInvestment(context.userId, sid(context.claims)));
 
+export const viewAsInvestorHomeFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await va()).viewAsInvestorHome(context.userId, sid(context.claims)));
+
 export const viewAsFundFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await va()).viewAsFund(context.userId, sid(context.claims)));

@@ -140,6 +140,14 @@ export async function viewAsInvestment(staffUserId: string, authSessionId: strin
   return investmentReadiness(p!.subjectUserId, p!.onboardingId!);
 }
 
+/** Investor Home exactly as the investor sees it: their own dashboard, read through their own scope. */
+export async function viewAsInvestorHome(staffUserId: string, authSessionId: string | null) {
+  const p = await resolvePerspective(staffUserId, authSessionId);
+  if (!p || p.perspective !== "investor") deny("no active investor view.");
+  const { investorDashboard } = await import("@/lib/dashboards.server");
+  return investorDashboard(p!.subjectUserId);
+}
+
 export async function viewAsFund(staffUserId: string, authSessionId: string | null) {
   const p = await resolvePerspective(staffUserId, authSessionId);
   if (!p || p.perspective !== "fund_manager") deny("no active fund manager view.");
