@@ -213,7 +213,7 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
     const { data: recipientProfile } = await supabase
       .from("profiles")
       .select("user_id")
-      .ilike("email", recipientEmail)
+      .ilike("email", recipientEmail.replace(/[\\%_]/g, "\\$&"))
       .maybeSingle();
     let connected = false;
     if ((recipientProfile as any)?.user_id) {
