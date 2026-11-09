@@ -230,13 +230,24 @@ async function notifyDecision(opts: {
       email = ((data as any)?.email as string | null) ?? null;
     }
     if (!email) return;
+    // Reviewer notes go out as plain text without outside links, and the
+    // number of decision emails per item and per reviewer is capped.
+    const { plainEmailText } = await import("@/lib/outbound-email-guard");
+    const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
+    await reserveOutboundEmail({
+      actorId: opts.actorId,
+      action: "ops_review_decision",
+      scopeKey: opts.scopeKey,
+      recipient: email,
+      limits: { perScope: 5 },
+    });
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
     await sendTemplateEmail("ops-review-decision", email, {
       templateData: {
         itemLabel: opts.itemLabel,
         fundName: opts.fundName,
         decision: opts.decision,
-        note: opts.note,
+        note: plainEmailText(opts.note, 1000),
         reviewer: opts.reviewer,
         portalUrl: `${SITE}${opts.linkPath}`,
       },
