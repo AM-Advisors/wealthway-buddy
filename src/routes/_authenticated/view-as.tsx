@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InvestorDashboard } from "@/components/investor-dashboard";
 import { FundReadiness } from "@/components/investment-readiness";
 import { NoActiveViewAs, ViewAsBanner, useActiveViewAs } from "@/components/view-as";
 import { clientNavigation } from "@/lib/client-navigation";
@@ -51,7 +52,7 @@ function ViewAsPage() {
           <h1 className="text-2xl font-semibold">{current.title}</h1>
           {isHome ? (
             ctx.perspective === "investor"
-              ? <p className="text-sm text-muted-foreground">Investors see their four steps (About You, Verification, Sign, Fund). Readiness is shown only to Harmonious and fund managers.</p>
+              ? <InvestorDashboard viewAs />
               : <FundReadiness fundId={ctx.offeringId} viewAs />
           ) : (
             <ViewAsPageList page={current.url} title={current.title} subject={ctx.subjectName} />

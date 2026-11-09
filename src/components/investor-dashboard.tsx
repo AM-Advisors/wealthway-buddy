@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { investorDashboardFn } from "@/lib/dashboards.functions";
+import { viewAsInvestorHomeFn } from "@/lib/view-as.functions";
 import { CLIENT_STEPS, FUNDING_STATE_LABELS, type FundingState } from "@/lib/dashboard-metrics";
 import { money } from "@/lib/status";
 import { LoadError } from "@/components/load-error";
@@ -34,20 +35,22 @@ function Steps({ step }: { step: number }) {
 }
 
 /** Investor home: next action first. Renders nothing when the person has no investments. */
-export function InvestorDashboard() {
-  const load = useServerFn(investorDashboardFn);
-  const q = useQuery({ queryKey: ["investor-dashboard"], queryFn: () => load(), retry: false });
+export function InvestorDashboard({ viewAs = false }: { viewAs?: boolean } = {}) {
+  const loadOwn = useServerFn(investorDashboardFn);
+  const loadAs = useServerFn(viewAsInvestorHomeFn);
+  // Client View: the server renders the investor's own dashboard; links are inert (read-only).
+  const q = useQuery({ queryKey: viewAs ? ["view-as", "investor-home"] : ["investor-dashboard"], queryFn: () => (viewAs ? loadAs() : loadOwn()), retry: false });
   if (q.isPending) return <Skeleton className="h-40 rounded-xl" />;
   const d = q.data;
   if (q.isError || !d) return <LoadError audience="account" error={q.error} what="Your investments" onRetry={() => void q.refetch()} />;
-  if (!d.investments.length) return <><InvitedFunds /><StartFundCard /></>;
+  const empty = viewAs ? <StartFundCard /> : <><InvitedFunds /><StartFundCard /></>;
+  if (!d.investments.length) return empty;
   const p = d.primary ?? d.investments[0];
-  if (!p) return <><InvitedFunds /><StartFundCard /></>;
+  if (!p) return empty;
 
   return (
-    <section className="space-y-4" aria-label="Your investments">
-      <InvitedFunds />
-      <InvestorUpdatesCard />
+    <section className={viewAs ? "pointer-events-none space-y-4" : "space-y-4"} aria-label="Your investments" aria-readonly={viewAs || undefined}>
+      {viewAs ? null : <><InvitedFunds /><InvestorUpdatesCard /></>}
       <Card className="border-primary/50">
         <CardHeader className="pb-2"><CardDescription>Next action · {p.fundName}</CardDescription>
           <CardTitle className="text-xl">{p.nextAction ?? (p.complete ? "You're all set" : "You're caught up")}</CardTitle>
