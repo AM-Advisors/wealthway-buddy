@@ -70,11 +70,11 @@ export const remindInvestorItemFn = createServerFn({ method: "POST" }).middlewar
         const { data: doc } = await d.from("investor_documents").select("id").eq("onboarding_id", id).eq("doc_kind", "tax_form").neq("review_status", "rejected").limit(1);
         if ((doc ?? []).length) { out.push({ id, outcome: "skipped", reason: "tax form already uploaded" }); continue; }
       }
-      const { data: p } = await d.from("profiles").select("email, legal_name").eq("user_id", ob.investor_user_id).maybeSingle();
-      if (!p?.email) { out.push({ id, outcome: "skipped", reason: "no email on file" }); continue; }
+      const p = await (await import("@/lib/user-contact.server")).loadUserContact(d, ob.investor_user_id);
+      if (!p.email) { out.push({ id, outcome: "skipped", reason: "no email on file" }); continue; }
       try {
         await sendSigningReminder(context.userId, {
-          offeringId: data.fundId, reminderKey: `${data.kind}:${id}`, documentTitle: k.title, recipientEmail: p.email, recipientName: p.legal_name || "there",
+          offeringId: data.fundId, reminderKey: `${data.kind}:${id}`, documentTitle: k.title, recipientEmail: p.email, recipientName: p.name || "there",
           recipientUserId: ob.investor_user_id, path: `/onboard/i/${id}`, steps: [...k.steps], override: data.overrideReason ? { reason: data.overrideReason } : null,
         });
         out.push({ id, outcome: "sent" });
