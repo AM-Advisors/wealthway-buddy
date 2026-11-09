@@ -1910,6 +1910,7 @@ export async function applyBankActivity(
     .eq("id", input.bankTransactionId)
     .maybeSingle();
   if (!txn) fail("That bank transaction was not found.");
+  if (!(Number(txn.amount_cents) > 0)) fail("Only incoming deposits can be matched to an investment.");
 
   const { data: candidatesRaw } = await db()
     .from("investor_onboardings")
@@ -2045,6 +2046,39 @@ export async function recordManualReceipt(
   }
   await syncInvitation(row);
   return { fundingStatus: status, fundedAmountCents: funded, expectedAmountCents: expected };
+}
+
+/**
+ * Staff-only: deposits the fund's books tagged to this investment (bank statement
+ * uploads or manual entries), and whether each one is already counted toward
+ * the investment's funding. Read-only; matching still goes through applyBankActivity.
+ */
+export async function taggedDepositsFor(userId: string, onboardingId: string) {
+  await assertStaff(userId);
+  const { data: tags } = await db()
+    .from("fund_transaction_tags")
+    .select("bank_transaction_id")
+    .eq("onboarding_id", onboardingId);
+  const ids = ((tags ?? []) as any[]).map((t) => String(t.bank_transaction_id));
+  if (!ids.length) return { deposits: [] as any[] };
+  const [{ data: txns }, { data: matched }] = await Promise.all([
+    db().from("bank_transactions").select("id, posted_on, amount_cents, name, description").in("id", ids),
+    db().from("investor_onboarding_events").select("subject_id, onboarding_id").eq("event", "bank_transaction_matched").in("subject_id", ids),
+  ]);
+  const matchedTo = new Map(((matched ?? []) as any[]).map((m) => [String(m.subject_id), String(m.onboarding_id)]));
+  const deposits = ((txns ?? []) as any[])
+    .filter((t) => Number(t.amount_cents) > 0)
+    .map((t) => ({
+      bankTransactionId: String(t.id),
+      postedOn: String(t.posted_on),
+      amountCents: Number(t.amount_cents),
+      description: String(t.name ?? "Deposit"),
+      source: String(t.description ?? ""),
+      matched: matchedTo.has(String(t.id)),
+      matchedHere: matchedTo.get(String(t.id)) === onboardingId,
+    }))
+    .sort((a, b) => a.postedOn.localeCompare(b.postedOn));
+  return { deposits };
 }
 
 // ------------------------------------------------------ acceptance & close

@@ -260,6 +260,11 @@ export const recordManualReceiptFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => reconciled(data.onboardingId, context.userId, "recordManualReceipt", (await engine()).recordManualReceipt(context.userId, data)));
 
+export const taggedDepositsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(onboardingInput.parse)
+  .handler(async ({ data, context }) => (await engine()).taggedDepositsFor(context.userId, data.onboardingId));
+
 export const acceptSubscriptionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(
