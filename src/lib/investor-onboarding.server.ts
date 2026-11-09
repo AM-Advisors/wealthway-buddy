@@ -522,7 +522,11 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
           entityAmlStatus: entity?.entity_aml_status ?? null,
           entityVerificationExpiresAt: entity?.expires_at ?? null,
           relatedPeople: gatingPeople,
-          accreditationStatus: accreditation?.status ?? null,
+          // An uploaded proof not yet reviewed waits on staff, not the investor.
+          accreditationStatus: accreditation?.status
+            ?? (selectProfileDocumentEvidence(I.profileDocuments, row).some((u: any) =>
+              u.doc_kind === "accreditation_proof" && ["new", "pending", "submitted", "in_review", null, undefined].includes(u.review_status))
+              ? "pending_review" : null),
           accreditationExpiresAt: accreditation?.expires_at ?? null,
           accreditationMethod: accreditation?.method ?? null,
           taxFormStatus: tax?.documentation_status ?? null,
