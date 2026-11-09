@@ -209,6 +209,8 @@ export const getOpsFundOptions = createServerFn({ method: "GET" })
 
 async function notifyDecision(opts: {
   supabase: any;
+  actorId: string;
+  scopeKey: string;
   toUserId: string | null;
   toEmail?: string | null;
   itemLabel: string;
@@ -329,6 +331,8 @@ export const reviewBankRequest = createServerFn({ method: "POST" })
     if (data.reviewStatus !== "pending") {
       await notifyDecision({
         supabase: context.supabase,
+        actorId: who.userId,
+        scopeKey: `bank:${data.id}`,
         toUserId: (row as any).requested_by ?? null,
         toEmail: (row as any).requested_by_email ?? null,
         itemLabel: "Bank account request",
@@ -378,6 +382,8 @@ export const reviewEntityDetails = createServerFn({ method: "POST" })
     for (const m of (managers ?? []) as any[]) {
       await notifyDecision({
         supabase: context.supabase,
+        actorId: who.userId,
+        scopeKey: `entity:${data.offeringId}`,
         toUserId: m.user_id as string,
         itemLabel: "EIN and Form SS-4",
         fundName: ((offering as any)?.name as string) ?? "your fund",
