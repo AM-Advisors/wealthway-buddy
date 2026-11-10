@@ -45,3 +45,11 @@ export function limitedAccessWhileInReview(check: { status?: string | null; deci
   const rd = check.review_details;
   return rd?.idDocument?.status === "pass" && rd?.liveness?.status === "pass" && rd?.faceMatch?.status === "pass";
 }
+
+
+/** An outside verification report needs a second person to approve; a Super Admin may approve their own with a reason. */
+export function outsideReportApprovalError(input: { addedBy: string | null | undefined; deciderId: string; isSuperAdmin: boolean; note: string | null | undefined }): string | null {
+  if (!input.addedBy || input.addedBy !== input.deciderId) return null;
+  if (input.isSuperAdmin && input.note?.trim()) return null;
+  return input.isSuperAdmin ? "Add a reason to approve a report you added yourself." : "Someone other than the person who added this report must approve it.";
+}

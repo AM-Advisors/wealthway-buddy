@@ -207,12 +207,31 @@ export async function decideAccountCheck(uid: string, checkId: string, action: "
     if (left.length) throw new Error(`Clear all possible watchlist matches first (${left.length} left).`);
   }
   if (action === "approve" && c.status !== "review") throw new Error("Only checks marked Needs review can be approved by hand.");
+  const outside = c.review_details?.outsideReport ?? null;
+  if (action === "approve" && outside) {
+    const { outsideReportApprovalError } = await import("@/lib/account-kyc-model");
+    const err = outsideReportApprovalError({ addedBy: outside.addedBy, deciderId: uid, isSuperAdmin: isSuper, note });
+    if (err) throw new Error(err);
+  }
   if (c.status === "approved" && action !== "send_back") throw new Error("Already approved.");
   const to = action === "approve" ? "approved" : action === "decline" ? "declined" : "sent_back";
   await db().from("account_identity_checks").update({ status: to, decided_by: uid, decided_at: now(), decision_note: note?.trim() || null, updated_at: now() }).eq("id", checkId);
   await logEvent(c, `staff_${action}`, c.status, to, uid, note?.trim() || null);
   await emailReviewOutcome(c, to, action === "approve" ? null : note?.trim() || null);
   if (c.session_id && action !== "send_back") await pushProviderStatus(String(c.session_id), action === "approve" ? "Approved" : "Declined", note);
+  if (action === "approve" && outside && c.person_id) {
+    // Outside verification report: identity only. Screening stays as recorded until it's actually done.
+    const { data: person } = await db().from("persons").select("kyc_status, onboarding_state").eq("id", c.person_id).maybeSingle();
+    if (person && person.kyc_status !== "approved") {
+      const at = now();
+      await db().from("persons").update({ kyc_status: "approved", kyc_verified_at: at, identity_verified_at: at, updated_at: at }).eq("id", c.person_id);
+      await db().from("person_onboarding_events").insert({
+        person_id: c.person_id, from_state: person.onboarding_state ?? null, to_state: person.onboarding_state ?? "kyc_pending",
+        actor_kind: "staff", actor_user_id: uid, reason: "Identity approved from an outside verification report",
+        detail: { check_id: c.id, report_date: outside.reportDate ?? null, file_name: outside.fileName ?? null },
+      });
+    }
+  }
   if (action === "approve") {
     try {
       const { autoApplyDiditSession, applyApprovedAccountCheck } = await import("@/lib/didit-auto-apply.server");
@@ -318,4 +337,50 @@ export async function clearAmlMatches(uid: string, checkId: string, keys: string
     await logEvent(c, "aml_matches_cleared", c.status, c.status, uid, `${rows.length} match(es): ${r}`);
   }
   return { cleared: rows.length };
+}
+
+
+const OUTSIDE_BUCKET = "government-ids";
+
+/** Staff: file a completed identity verification report from another provider as a check that needs review. */
+export async function addOutsideIdentityReport(uid: string, input: { email: string; fileName: string; contentType: string; contentBase64: string; reportDate: string; note: string }) {
+  await assertDecider(uid);
+  const email = input.email.trim().toLowerCase();
+  const { data: prof } = await db().from("profiles").select("user_id").ilike("email", email).limit(2);
+  const matches = ((prof ?? []) as any[]).filter((p) => p.user_id);
+  if (matches.length !== 1) throw new Error(matches.length ? "More than one account uses that email." : "No account uses that email yet. Ask them to create their login first.");
+  const target = String(matches[0].user_id);
+  if (target === uid) throw new Error("You can't add a verification report for your own account.");
+  const prior = await latest(target);
+  if (prior?.status === "approved") throw new Error("This account's identity is already approved.");
+  if (prior?.status === "review") throw new Error("This account already has a check waiting for review. Decide that one first.");
+  const bytes = Uint8Array.from(atob(input.contentBase64), (ch) => ch.charCodeAt(0));
+  if (bytes.byteLength > 15 * 1024 * 1024) throw new Error("The report must be 15 MB or smaller.");
+  const safe = input.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 120) || "report.pdf";
+  const path = `outside-reports/${target}/${crypto.randomUUID()}-${safe}`;
+  const up = await db().storage.from(OUTSIDE_BUCKET).upload(path, bytes, { contentType: input.contentType || "application/pdf", upsert: false });
+  if (up.error) throw new Error("Couldn't save the report. Please try again.");
+  const { personForUser } = await import("@/lib/kyc-verification.server");
+  const person = await personForUser(target);
+  const at = now();
+  const outsideReport = { path, fileName: input.fileName, reportDate: input.reportDate, addedBy: uid, addedAt: at, note: input.note.trim() };
+  const ins = await db().from("account_identity_checks").insert({
+    user_id: target, person_id: person?.["id"] ?? null, provider: "outside_report", vendor_data: `outside:${crypto.randomUUID()}`,
+    status: "review", review_details: { outsideReport }, decision_summary: {}, warnings: [],
+  }).select("*").single();
+  if (ins.error) throw new Error("Couldn't record the report.");
+  await logEvent(ins.data, "outside_report_added", null, "review", uid, input.note.trim());
+  return { checkId: String(ins.data.id) };
+}
+
+/** Staff: short-lived link to an outside verification report. Each view is logged. */
+export async function outsideReportLink(uid: string, checkId: string) {
+  await assertDecider(uid);
+  const { data: c } = await db().from("account_identity_checks").select("*").eq("id", checkId).maybeSingle();
+  const path = c?.review_details?.outsideReport?.path;
+  if (!path) throw new Error("No outside report on this check.");
+  const { data, error } = await db().storage.from(OUTSIDE_BUCKET).createSignedUrl(path, 600);
+  if (error || !data?.signedUrl) throw new Error("Couldn't open the report.");
+  await logEvent(c, "outside_report_viewed", c.status, c.status, uid);
+  return { url: String(data.signedUrl) };
 }

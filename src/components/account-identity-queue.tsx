@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { accountCheckQueueFn, decideAccountCheckFn, useIdNameForCheckFn } from "@/lib/account-kyc.functions";
+import { accountCheckQueueFn, decideAccountCheckFn, useIdNameForCheckFn, addOutsideIdentityReportFn, outsideReportLinkFn } from "@/lib/account-kyc.functions";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AmlMatchReview } from "@/components/aml-match-review";
 import { KycReviewPanel } from "@/components/kyc-review-panel";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -50,6 +52,25 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
       )}
     </>
   );
+  const reportLink = useServerFn(outsideReportLinkFn);
+  const openReport = async (checkId: string) => {
+    const w = window.open("", "_blank");
+    try { const { url } = await reportLink({ data: { checkId } }); if (w) w.location.href = url; else window.location.href = url; }
+    catch (e) { w?.close(); toast.error((e as Error).message); }
+  };
+  const outsideBlock = (r: any) => {
+    const o = r.review_details?.outsideReport;
+    if (!o) return null;
+    return (
+      <div className="space-y-1 rounded-md bg-muted p-2 text-xs">
+        <p><strong>Outside verification report</strong> · {o.fileName} · report dated {o.reportDate}</p>
+        {o.note ? <p className="break-words">What it shows: {o.note}</p> : null}
+        <p className="text-muted-foreground">Approving confirms identity only. Screening stays as recorded. Someone other than the person who added the report should approve it.</p>
+        <Button size="sm" variant="outline" onClick={() => void openReport(r.id)}>Open report</Button>
+      </div>
+    );
+  };
+  const [addOpen, setAddOpen] = useState(false);
   const rows = (q.data ?? []).filter((r: any) => (!userId || r.user_id === userId) && (userId ? true : filter === "all" || r.status === "review"));
   const selected = (q.data ?? []).find((r: any) => r.id === selectedId);
   const decisionControls = (r: any) => ["review", "approved", "declined", "expired"].includes(r.status) ? (
@@ -66,7 +87,10 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
     <Card>
       <CardHeader className="flex-row flex-wrap items-start justify-between gap-3 space-y-0">
         <div><CardTitle className="text-base">{userId ? "Identity & compliance screening" : "Account identity checks"}</CardTitle><CardDescription>{userId ? "Review the results, then approve to confirm it's good. You can't decide your own." : "Everyone except Harmonious staff must pass before using the portal. Approve or decline checks marked Needs review. You can't decide your own."}</CardDescription></div>
-        {!userId && <div className="flex gap-1"><Button size="sm" variant={filter === "review" ? "default" : "outline"} onClick={() => setFilter("review")}>Needs review</Button><Button size="sm" variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>All</Button></div>}
+        <div className="flex flex-wrap gap-1">
+          {!userId && <><Button size="sm" variant={filter === "review" ? "default" : "outline"} onClick={() => setFilter("review")}>Needs review</Button><Button size="sm" variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>All</Button></>}
+          <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>Add outside report</Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : !rows.length ? <p className="py-6 text-center text-sm text-muted-foreground">{userId ? "No identity checks recorded for this investor yet. Checks appear here once the investor starts verification." : "Nothing waiting."}</p> : rows.map((r: any) => {
@@ -81,6 +105,7 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
               {r.decision_note && <p className="text-xs">Note: {r.decision_note}</p>}
               {(d.aml?.hits ?? 0) > 0 && <Button size="sm" variant="outline" onClick={() => setOpenMatches(openMatches === r.id ? null : r.id)}>{openMatches === r.id ? "Hide possible matches" : `Review ${d.aml.hits} possible match${d.aml.hits > 1 ? "es" : ""}`}</Button>}
               {openMatches === r.id && <AmlMatchReview checkId={r.id} />}
+              {outsideBlock(r)}
               {extras(r)}
               {decisionControls(r)}
             </div>
@@ -95,7 +120,7 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
           </DialogHeader>
           {selected && <div className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-center gap-2"><Badge variant={selected.status === "review" ? "destructive" : "outline"}>{LABEL[selected.status] ?? selected.status}</Badge><span className="text-xs text-muted-foreground">Updated {new Date(selected.updated_at).toLocaleString()}</span></div>
-            {selected.review_details ? <details className="rounded-md border p-3"><summary className="cursor-pointer text-sm font-medium">Original verification evidence</summary><p className="my-3 text-sm text-muted-foreground">Names and email addresses below were captured when this check began. They are historical evidence, not current investor details. The current Harmonious decision is shown above.</p><KycReviewPanel key={selected.id} rd={selected.review_details} checkId={selected.id} /></details> : <p className="text-sm text-muted-foreground">Detailed evidence has not been recorded for this check.</p>}
+            {selected.review_details?.outsideReport ? outsideBlock(selected) : selected.review_details ? <details className="rounded-md border p-3"><summary className="cursor-pointer text-sm font-medium">Original verification evidence</summary><p className="my-3 text-sm text-muted-foreground">Names and email addresses below were captured when this check began. They are historical evidence, not current investor details. The current Harmonious decision is shown above.</p><KycReviewPanel key={selected.id} rd={selected.review_details} checkId={selected.id} /></details> : <p className="text-sm text-muted-foreground">Detailed evidence has not been recorded for this check.</p>}
             {!!selected.warnings?.length && <section><h3 className="mb-2 text-sm font-semibold">Recorded warnings</h3><ul className="list-disc space-y-1 pl-5 text-sm text-destructive">{selected.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}</ul></section>}
             {(selected.review_details?.aml?.totalHits ?? selected.decision_summary?.aml?.hits ?? 0) > 0 && <AmlMatchReview key={selected.id} checkId={selected.id} />}
             {selected.decision_note && <p className="break-words text-sm">Decision note: {selected.decision_note}</p>}
@@ -103,6 +128,49 @@ export function AccountIdentityQueue({ userId, investorName, investorEmail }: { 
           </div>}
         </DialogContent>
       </Dialog>
+      {addOpen && <OutsideReportDialog defaultEmail={investorEmail ?? ""} onClose={() => setAddOpen(false)} onAdded={() => { setAddOpen(false); setFilter("review"); qc.invalidateQueries({ queryKey: ["account-identity-queue"] }); }} />}
     </Card>
+  );
+}
+
+/** Staff: file a completed identity report from another provider; it lands in Needs review for a second person to approve. */
+function OutsideReportDialog({ defaultEmail, onClose, onAdded }: { defaultEmail: string; onClose: () => void; onAdded: () => void }) {
+  const add = useServerFn(addOutsideIdentityReportFn);
+  const [email, setEmail] = useState(defaultEmail);
+  const [reportDate, setReportDate] = useState("");
+  const [note, setNote] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const m = useMutation({
+    mutationFn: async () => {
+      if (!file) throw new Error("Choose the report file.");
+      if (file.size > 15 * 1024 * 1024) throw new Error("The report must be 15 MB or smaller.");
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+      const contentType = (["application/pdf", "image/png", "image/jpeg"].includes(file.type) ? file.type : "application/pdf") as "application/pdf" | "image/png" | "image/jpeg";
+      return add({ data: { email: email.trim(), fileName: file.name, contentType, contentBase64: btoa(bin), reportDate, note: note.trim() } });
+    },
+    onSuccess: () => { toast.success("Report added. It's waiting in Needs review."); onAdded(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add outside verification report</DialogTitle>
+          <DialogDescription>Use this when someone already passed an identity check elsewhere. The report goes to Needs review; approving it confirms identity only.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1"><Label htmlFor="or-email">Their login email</Label><Input id="or-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" /></div>
+          <div className="space-y-1"><Label htmlFor="or-date">Date on the report</Label><Input id="or-date" type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} /></div>
+          <div className="space-y-1"><Label htmlFor="or-file">Report (PDF or image, up to 15 MB)</Label><Input id="or-file" type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
+          <div className="space-y-1"><Label htmlFor="or-note">What the report shows</Label><Textarea id="or-note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Government ID and selfie match, verified on this date, result: passed" /></div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button disabled={m.isPending || !email.trim() || !reportDate || !file || note.trim().length < 5} onClick={() => m.mutate()}>{m.isPending ? "Adding…" : "Add for review"}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

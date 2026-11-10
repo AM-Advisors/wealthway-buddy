@@ -40,3 +40,18 @@ export const clearAmlMatchesFn = createServerFn({ method: "POST" }).middleware([
 export const useIdNameForCheckFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .inputValidator((d: { checkId: string }) => z.object({ checkId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).useIdNameForCheck(context.userId, data.checkId));
+
+export const addOutsideIdentityReportFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator((d: unknown) => z.object({
+    email: z.string().email().max(320),
+    fileName: z.string().min(1).max(255),
+    contentType: z.enum(["application/pdf", "image/png", "image/jpeg"]),
+    contentBase64: z.string().min(1).max(21_000_000),
+    reportDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    note: z.string().trim().min(5, "Say where and how the person was verified.").max(2000),
+  }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).addOutsideIdentityReport(context.userId, data));
+
+export const outsideReportLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator((d: unknown) => z.object({ checkId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).outsideReportLink(context.userId, data.checkId));
