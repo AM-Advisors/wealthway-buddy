@@ -100,7 +100,9 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
   const { listSetupDocuments } = await import("@/lib/offering-document-setup.server");
   const docSetup = await listSetupDocuments(userId, offeringId);
   const seriesMaster = await loadSeriesMaster(o);
+  const check = await requestSetupCheck(offeringId, o, setup, current, classes, hasEin, bankRows.length > 0, seriesMaster?.jurisdiction ?? null);
   const statuses = sectionStatuses({
+    questionsNext: check.questions.next,
     documentsStatus: docSetup.status,
     fundType: o.fund_type,
     legalName: o.legal_entity_name,
@@ -167,6 +169,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       ? { id: setup.id, fiscalYearEnd: setup.fiscal_year_end, fundTermMonths: setup.fund_term_months, investmentPeriodMonths: setup.investment_period_months }
       : null,
     termApplies: termApplies(o.fund_type),
+    requestCheck: check,
     economics: {
       canApprove: true,
       canEdit: true,
@@ -400,4 +403,36 @@ async function adminServicesRecorded(setupId: string | null | undefined) {
   const { data } = await db().from("fund_setup_tasks").select("task_key, status").eq("setup_id", setupId).in("task_key", ["tax_setup", "accounting_book", "reporting_configuration"]);
   const rows = (data ?? []) as any[];
   return rows.length > 0 && rows.every((r) => r.status === "complete");
+}
+
+/** Fund request answers and additional investor questions beside Setup (read-only). */
+async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: any, classes: FundClass[], hasEin: boolean, bankingStarted: boolean, inheritedJurisdiction: string | null) {
+  const { checkRequestAgainstSetup, questionsStatus, checkSummary } = await import("@/lib/setup-request-check");
+  const [intake, signers, team, docs, sections] = await Promise.all([
+    db().from("client_fund_intakes").select("id, details, submitted_at").eq("offering_id", offeringId).neq("status", "request_draft").order("submitted_at", { ascending: false, nullsFirst: false }).limit(1),
+    db().from("fund_signatories").select("person_id, title").eq("offering_id", offeringId).eq("status", "active"),
+    db().from("fund_team_members").select("full_name").eq("offering_id", offeringId).is("removed_at", null),
+    db().from("offering_documents").select("id", { count: "exact", head: true }).eq("offering_id", offeringId).is("removed_at", null),
+    db().from("fund_questionnaire_sections").select("status, version, questions").eq("offering_id", offeringId),
+  ]);
+  const signerRows = (signers.data ?? []) as any[];
+  const personIds = [...new Set([...signerRows.map((r) => r.person_id), o.fund_signatory_person_id].filter(Boolean))];
+  const { data: people } = personIds.length ? await db().from("persons").select("id, legal_first_name, legal_last_name").in("id", personIds) : { data: [] };
+  const signatoryNames = ((people ?? []) as any[]).map((p) => [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ")).filter(Boolean);
+  const terms = (econ?.terms ?? {}) as EconomicTerms;
+  const providers = (setup?.service_providers && typeof setup.service_providers === "object" ? setup.service_providers : {}) as Record<string, string | null>;
+  const row = ((intake.data ?? []) as any[])[0] ?? null;
+  const rows = row ? checkRequestAgainstSetup(row.details, {
+    legalName: o.legal_entity_name, displayName: o.name, fundType: o.fund_type, entityType: o.entity_type,
+    jurisdiction: inheritedJurisdiction ?? o.state_formed, formationDate: o.date_formed, regType: o.reg_type,
+    targetRaiseCents: o.target_raise_cents, minInvestmentCents: o.min_investment_cents, offeringCloseDate: o.offering_close_date,
+    gpName: o.gp_entity_name, signatoryNames, signatoryTitles: [o.signatory_title, ...signerRows.map((r) => r.title)].filter(Boolean),
+    teamNames: ((team.data ?? []) as any[]).map((t) => t.full_name).filter(Boolean),
+    managementFeePct: terms?.managementFee?.ratePercent ?? null, carryPct: terms?.carry?.ratePercent ?? null, preferredReturnPct: (terms as any)?.preferredReturnPercent ?? null,
+    fundTermMonths: setup?.fund_term_months ?? null, investmentPeriodMonths: setup?.investment_period_months ?? null,
+    classNames: classes.map((c) => c.name), hasEin, bankingStarted: bankingStarted || !!o.banking_path,
+    documentCount: docs.count ?? 0, serviceProviders: providers, investmentStrategy: setup?.investment_strategy ?? null,
+  }) : [];
+  const questions = questionsStatus((sections.data ?? []) as any[]);
+  return { hasRequest: !!row, submittedAt: (row?.submitted_at ?? null) as string | null, rows, questions, summary: checkSummary(rows, questions) };
 }

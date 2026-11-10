@@ -301,6 +301,8 @@ export type SetupFacts = {
   documentsStatus?: { status: "not_started" | "in_progress" | "complete"; next: string | null };
   bankingState: "none" | "requested" | "in_progress" | "active";
   adminConfigured: boolean;
+  /** Pending additional investor questions (from questionsStatus); a draft keeps Offering Documents open. */
+  questionsNext?: string | null;
 };
 
 type Result = { status: SectionStatus; next: string | null };
@@ -350,7 +352,8 @@ export function sectionStatuses(f: SetupFacts): Record<CanonicalSection, Result>
       : f.classCount >= 1
         ? { status: "in_progress", next: "Approve the class economics" }
         : { status: "not_started", next: "Add at least one class" };
-  const documents: Result = f.documentsStatus ? f.documentsStatus : f.documentCount > 0 ? { status: "in_progress", next: "Review offering documents" } : { status: "not_started", next: "Upload the offering documents" };
+  const docsBase: Result = f.documentsStatus ? f.documentsStatus : f.documentCount > 0 ? { status: "in_progress", next: "Review offering documents" } : { status: "not_started", next: "Upload the offering documents" };
+  const documents: Result = f.questionsNext && docsBase.status === "complete" ? { status: "in_progress", next: f.questionsNext } : docsBase;
   const banking: Result =
     f.bankingState === "active" ? { status: "complete", next: null }
       : f.bankingState === "none" ? { status: "not_started", next: "Choose how the fund's bank account is set up" }

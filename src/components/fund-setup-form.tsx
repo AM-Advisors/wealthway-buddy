@@ -24,6 +24,7 @@ import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { Link } from "@tanstack/react-router";
 import { FundClassSummary } from "@/components/fund-class-summary";
 import { FundQuestionSectionCard } from "@/components/fund-question-section-card";
+import { SetupRequestCheck, questionsLabel, requestCheckLabel, useSetupRequestCheck } from "@/components/setup-request-check";
 import { EconomicsCard } from "@/components/fund-setup-canonical";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
 import { SeriesMasterFirstEntryHint, SeriesMasterJurisdiction, useSeriesMaster } from "@/components/series-master-jurisdiction";
@@ -49,6 +50,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const isStaff = mode === "staff" && !!d?.isStaff;
   const seriesMaster = useSeriesMaster(offeringId);
+  const { check } = useSetupRequestCheck(offeringId);
 
   if (q.isPending) return <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">Loading setup…</div>;
   if (q.isError) return <div role="alert" className="rounded-xl border bg-card p-6 text-sm">{(q.error as Error).message}</div>;
@@ -158,6 +160,11 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       </div>
 
       <FundOriginControl offeringId={offeringId} origin={d.fundOrigin} editable={isStaff} />
+      {check?.hasRequest && (
+        <SetupSection open={open} setOpen={setOpen} id="request" title="Fund request answers" status={<Chip tone={check.summary.missing ? "miss" : "done"}>{requestCheckLabel(check)}</Chip>}>
+          <SetupRequestCheck check={check} />
+        </SetupSection>
+      )}
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
@@ -180,7 +187,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       <BankBox offeringId={offeringId} isStaff={isStaff} onChanged={refresh} />
       {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />}
 
-      <SetupSection open={open} setOpen={setOpen} id="questions" title="Investor questions" status={null}>
+      <SetupSection open={open} setOpen={setOpen} id="questions" title="Investor questions" status={check ? <Chip tone={check.questions.next ? "miss" : "done"}>{questionsLabel(check.questions)}</Chip> : null}>
         <p className="text-sm text-muted-foreground">Extra questions investors answer during onboarding, beyond the standard questionnaire.</p>
         <FundQuestionSectionCard offeringId={offeringId} />
       </SetupSection>
@@ -193,7 +200,10 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       {!allDone && <SetupSection open={open} setOpen={setOpen} id="launch" title="Review & Launch" status={<Chip tone={d.launchPercent >= 100 ? "done" : "miss"}>{d.launchPercent}%</Chip>}>
         <ul className="space-y-1 text-sm">
           {(d.steps as any[]).filter((s) => s.step !== "launch").map((s) => <li key={s.step} className="flex justify-between gap-3 border-b py-2 last:border-0"><span className="capitalize">{s.step === "fees_team" ? "Fees & terms" : String(s.step).replace(/_/g, " ")}</span><span className="text-muted-foreground">{s.statusLabel}</span></li>)}
+          {check && <li className="flex justify-between gap-3 border-b py-2 last:border-0"><span>Investor questions</span><span className="text-muted-foreground">{questionsLabel(check.questions)}</span></li>}
+          {check?.hasRequest && <li className="flex justify-between gap-3 border-b py-2 last:border-0"><span>Fund request answers</span><span className="text-muted-foreground">{requestCheckLabel(check)}</span></li>}
         </ul>
+        {!!check?.summary.toDo.length && <div className="rounded-xl border bg-background p-3"><p className="text-sm font-medium">Still to do so nothing is missed</p><ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-muted-foreground">{check.summary.toDo.slice(0, 12).map((t) => <li key={t}>{t}</li>)}</ul></div>}
         <p className="text-sm text-muted-foreground">Launch becomes available once the required fund details, reviews and signing setup are complete.</p>
       </SetupSection>}
 

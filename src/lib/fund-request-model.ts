@@ -241,7 +241,16 @@ export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { n
     ein_path: einPathFor(r),
     offering_close_date: /^\d{4}-\d{2}-\d{2}$/.test(r.expected_close ?? "") ? r.expected_close : null,
     signatory_title: r.signatory?.title?.trim() || null,
+    // Enter once: the named fund manager and the number of distinct classes carry into Setup.
+    gp_entity_name: (r.managers ?? []).map((m) => m.name?.trim()).find(Boolean) || null,
+    ...requestClassFields(r),
   };
+}
+
+/** Two or more named classes with terms mean the fund has multiple classes; one class is the fund default. */
+export function requestClassFields(r: Pick<FundRequest, "classes">): { has_multiple_classes?: boolean; planned_class_count?: number } {
+  const named = (r.classes ?? []).filter((c) => c.name?.trim() && (c.fee || c.carry || c.hurdle || c.minimum));
+  return named.length >= 2 ? { has_multiple_classes: true, planned_class_count: named.length } : {};
 }
 
 export function einPathFor(r: FundRequest): "existing" | "harmonious" | "client" | null {
