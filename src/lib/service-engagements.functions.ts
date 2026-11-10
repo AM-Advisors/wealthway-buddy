@@ -214,6 +214,10 @@ export const getFundServices = createServerFn({ method: "GET" })
         relationship_lead: names.get(r.relationship_lead_user_id) ?? null,
         included: ((defs ?? []) as any[]).filter((x) => !removed.has(x.feature_key)).map((x) => x.service_features?.name ?? x.feature_key),
         additional: ((ov ?? []) as any[]).filter((o) => o.mode === "ADD").map((o) => o.service_features?.name ?? o.feature_key),
+        featureKeys: [
+          ...((defs ?? []) as any[]).filter((x) => !removed.has(x.feature_key)).map((x) => x.feature_key as string),
+          ...((ov ?? []) as any[]).filter((o) => o.mode === "ADD").map((o) => o.feature_key as string),
+        ],
       });
     }
     return out;

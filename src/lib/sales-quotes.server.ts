@@ -135,10 +135,22 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     if (error || !version) throw new Error("Choose a recorded proposed bookkeeping configuration.");
     const config = bookkeepingConfigSchema.parse(version.configuration);
     const price = calculateBookkeeping(config, l.bookkeeping);
-    if (price.invoiceCents === null || price.blockers.some(b => !b.startsWith("Confirm the custom"))) throw new Error(price.blockers[0] ?? "A custom bookkeeping price is required.");
+    if (price.invoiceCents === null || price.blockers.length) throw new Error(price.blockers[0] ?? "A custom bookkeeping price is required.");
     if (l.bookkeeping.effectiveOn < version.effective_on) throw new Error("The service date cannot precede the pricing version's effective date.");
+    if (price.input.entityId) {
+      // Duplicate coverage for the same entity and period is never quoted twice.
+      const { data: entity } = await db.from("client_entities").select("id, client_id, offering_id").eq("id", price.input.entityId).maybeSingle();
+      if (!entity || !d.clientId || entity.client_id !== d.clientId) throw new Error("That entity doesn't belong to the chosen client.");
+      const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
+      const { coverageConflicts } = await import("@/lib/bookkeeping-options");
+      const coverage = await loadEntityCoverage(db, entity);
+      const conflict = coverageConflicts({ option: price.input.option, effectiveOn: price.input.effectiveOn, termMonths: price.input.termMonths, excluded: price.input.excludedScope }, coverage.rows.filter((r) => r.source !== "request"));
+      if (conflict.blocked) throw new Error(conflict.reason ?? "This entity is already covered for this period.");
+      if (conflict.unresolved.length) throw new Error(`Already covered for this entity and period: ${conflict.unresolved.join(", ")}. Mark them excluded before quoting.`);
+    }
     snapshots.set(i, { ...price.input, configuration: config, configurationEffectiveOn: version.effective_on, pricing: price, scope: bookkeepingTerms(config, price.input), publicationStatus: "proposed" });
-    return { ...l, quantity: 1, label: `${config.name} · ${price.tier.name} (${price.input.reconciliation} reconciliation)`, unitCents: price.invoiceCents, baselineUnitCents: price.invoiceCents, billingFrequency: price.input.billing, firstBillOn: price.input.effectiveOn };
+    const freq = price.input.frequency ? ` (${price.input.frequency} ${price.input.option === "managed" ? "close" : "review"})` : "";
+    return { ...l, quantity: 1, label: `${config.name} · ${price.option.name}${freq}`, unitCents: price.invoiceCents, baselineUnitCents: price.invoiceCents, billingFrequency: price.input.billing, firstBillOn: price.input.effectiveOn };
   }));
   const priced = priceQuote(verifiedLines);
   if (d.offeringId) {
