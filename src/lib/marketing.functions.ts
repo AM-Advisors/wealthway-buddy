@@ -117,11 +117,11 @@ export const marketingSuggestPostLayout = createServerFn({ method: "POST" }).mid
 
 /** Returns a data URL (not stored) so the browser can render it under the layout. */
 export const marketingBackgroundArt = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator((d) => z.object({ theme: z.string().trim().min(3).max(2000) }).parse(d))
+  .validator((d) => z.object({ theme: z.string().trim().min(3).max(2000), kind: z.enum(["background", "picture"]).default("background") }).parse(d))
   .handler(async ({ data, context }) => {
     await (await srv()).requireMarketing(context.userId);
-    const { generateBackground } = await import("@/lib/marketing-ai.server");
-    const img = await generateBackground(data.theme);
+    const { generateBackground, generatePicture } = await import("@/lib/marketing-ai.server");
+    const img = await (data.kind === "picture" ? generatePicture(data.theme) : generateBackground(data.theme));
     return { dataUrl: `data:${img.contentType};base64,${img.base64}` };
   });
 

@@ -14,10 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { carouselContentCount, POST_PALETTES, resizeCarouselDrafts } from "./post-design-options";
 import { BRAND, brandProblems } from "@/lib/marketing-brand";
 import { overflowProblems } from "@/components/marketing/collateral-canvas";
+import { MarketingPicturePicker } from "./picture-picker";
 import { marketingBackgroundArt, marketingSuggestPostLayout, uploadMarketingAsset } from "@/lib/marketing.functions";
 
 type Size = "square" | "portrait" | "landscape" | "story";
-type Style = "cards" | "statement" | "stat" | "quote" | "checklist" | "photo" | "event" | "carousel";
+type Style = "cards" | "statement" | "stat" | "quote" | "checklist" | "photo" | "frame" | "picture" | "event" | "carousel";
 type Bg = "navy" | "glow" | "light" | "art";
 type Slide = { title: string; text: string };
 
@@ -31,7 +32,9 @@ const STYLES: { id: Style; label: string; hint: string }[] = [
   { id: "stat", label: "Stat spotlight", hint: "One big number" },
   { id: "quote", label: "Quote", hint: "Quote with name" },
   { id: "checklist", label: "Checklist", hint: "Up to 5 tips" },
-  { id: "photo", label: "Photo split", hint: "Image + text" },
+  { id: "photo", label: "Picture beside text", hint: "Picture + text" },
+  { id: "frame", label: "Branded frame", hint: "Picture in a brand frame" },
+  { id: "picture", label: "Picture only", hint: "Full picture + logo" },
   { id: "event", label: "Event", hint: "Title, date, register" },
   { id: "carousel", label: "Carousel", hint: "3-10 swipe slides" },
 ];
@@ -65,6 +68,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const [size, setSize] = useState<Size>("square");
   const [bgMode, setBgMode] = useState<Bg>("glow");
   const [footer, setFooter] = useState(true);
+  const [shade, setShade] = useState(55);
   const [bg, setBg] = useState<string | null>(null);
   const [busy, setBusy] = useState<"" | "suggest" | "art" | "save">("");
   const [problems, setProblems] = useState<string[]>([]);
@@ -79,7 +83,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     setPoints([0, 1, 2, 3, 4].map((i) => r.points[i] ?? ""));
     if (carousel && r.slides.length) setSlides(resizeCarouselDrafts(r.slides.slice(0, carouselContentCount(slideCount)), slideCount));
   });
-  const paint = () => run("art", async () => { setBg((await art({ data: { theme: `${title}. ${body.slice(0, 300)}` } })).dataUrl); if (bgMode !== "art" && style !== "photo") setBgMode("art"); });
+  const paint = () => run("art", async () => { setBg((await art({ data: { theme: `${title}. ${body.slice(0, 300)}` } })).dataUrl); if (!["photo", "frame", "picture"].includes(style)) setBgMode("art"); });
 
   const { w, h } = DIM[size];
   const land = size === "landscape";
@@ -97,7 +101,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     const p = [...brandProblems(text), ...nodes.flatMap((n) => overflowProblems(n))];
     if (!headline.trim()) p.unshift("Add a headline.");
     if (carousel && slides.some((s) => !s.title.trim() && !s.text.trim())) p.push("Fill or remove empty slides.");
-    if (style === "photo" && !bg) p.push("Add a photo (background art) for the photo split style.");
+    if (["photo", "frame", "picture"].includes(style) && !bg) p.push("Add a picture for this style.");
     setProblems([...new Set(p)]);
     if (p.length || !nodes.length) return;
     // Explicitly load the actual brand faces before capture: fallback fonts must never be exported.
@@ -156,7 +160,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const background = (allowArt: boolean) => {
     if (light) return `linear-gradient(135deg, color-mix(in srgb, ${palette.accent} 12%, var(--brand-white)), var(--brand-white) 60%)`;
     const glow = bgMode === "navy" ? "" : `linear-gradient(135deg, color-mix(in srgb, ${palette.accent} 18%, transparent), transparent 60%), `;
-    const artLayer = allowArt && bgMode === "art" && bg ? `var(--post-art-overlay), url(${bg}) center/cover, ` : "";
+    const artLayer = allowArt && bgMode === "art" && bg ? `linear-gradient(180deg, color-mix(in srgb, var(--post-midnight) ${shade}%, transparent), color-mix(in srgb, var(--post-midnight) ${Math.min(95, shade + 25)}%, transparent)), url(${bg}) center/cover, ` : "";
     return `${artLayer}${glow}linear-gradient(180deg, ${palette.surface} 0%, var(--post-midnight) 100%)`;
   };
   const logo = light ? logoNavy.url : logoWhite.url;
@@ -205,6 +209,9 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       case "photo": return <Page i={0} artOk={false} padOverride={{ paddingLeft: w * 0.5 + pad / 2 }}>
         <div style={{ position: "absolute", inset: 0, right: "50%", background: bg ? `url(${bg}) center/cover` : "var(--post-border)" }} />
         <div style={{ margin: "auto 0" }}>{head(64)}{sub}<Cta /></div></Page>;
+      case "frame": return <Page i={0} artOk={false}><div style={{ marginTop: land ? 0 : 20 }}>{head(56)}</div>
+        <div style={{ flex: 1, minHeight: 0, margin: `${land ? 16 : 32}px 0`, borderRadius: 24, border: `6px solid ${accent}`, background: bg ? `url(${bg}) center/cover` : "var(--post-border)" }} />{sub}</Page>;
+      case "picture": return <Page i={0} artOk={false} padOverride={{ background: bg ? `linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--post-midnight) 85%, transparent)), url(${bg}) center/cover` : "var(--post-border)" }}><div style={{ marginTop: "auto" }}>{headline.trim() && head(56)}</div></Page>;
       case "event": return <Page i={0}><div style={{ marginTop: topGap }}>
         <div style={{ color: accent, fontSize: land ? 20 : 26, letterSpacing: 2, textTransform: "uppercase" }}>Live event</div>
         <div style={{ marginTop: 16 }}>{head(80)}</div>{sub}<Cta /></div></Page>;
@@ -240,8 +247,13 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" onClick={fill} disabled={!!busy || body.trim().length < 10}><Sparkles className="mr-1 h-4 w-4" />{busy === "suggest" ? "Writing…" : "Fill from post text"}</Button>
-        <Button variant="outline" size="sm" onClick={paint} disabled={!!busy || body.trim().length < 10}>{busy === "art" ? "Painting…" : bg ? (style === "photo" ? "New photo" : "New background art") : (style === "photo" ? "Generate photo" : "Add background art")}</Button>
-        {bg && <Button variant="ghost" size="sm" onClick={() => setBg(null)}>Remove art</Button>}
+        <Button variant="outline" size="sm" onClick={paint} disabled={!!busy || body.trim().length < 10}>{busy === "art" ? "Painting…" : "AI pattern background"}</Button>
+        {bg && <Button variant="ghost" size="sm" onClick={() => setBg(null)}>Remove picture</Button>}
+      </div>
+      <div className="space-y-1 rounded-md bg-muted/40 p-2">
+        <Label>Picture</Label>
+        <MarketingPicturePicker theme={`${title}. ${body.slice(0, 400)}`} onPick={(p) => { setBg(p.url); if (!["photo", "frame", "picture"].includes(style)) setBgMode("art"); }} />
+        <p className="text-xs text-muted-foreground">Show it behind the text (Background: Picture), beside the text, in a branded frame, or as the whole image. Pick under Style.</p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         <div><Label>{style === "quote" ? "Quote" : carousel ? "Cover title" : "Headline"}</Label><Input value={headline} maxLength={style === "quote" ? 200 : 80} onChange={(e) => setHeadline(e.target.value)} /></div>
@@ -269,9 +281,10 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       </div>}
       <div className="grid gap-2 sm:grid-cols-2">
         <div><Label>Size</Label><div className="mt-2 flex flex-wrap gap-2">{(Object.keys(DIM) as Size[]).map((s) => <Button key={s} size="sm" variant={size === s ? "default" : "outline"} onClick={() => setSize(s)}>{DIM[s].label}</Button>)}</div></div>
-        <div><Label>Background</Label><div className="mt-2 flex flex-wrap gap-2">{([["navy", "Dark"], ["glow", "Color wash"], ["light", "Light"], ["art", "AI art"]] as [Bg, string][]).map(([k, l]) => <Button key={k} size="sm" variant={bgMode === k ? "default" : "outline"} disabled={k === "art" && !bg} onClick={() => setBgMode(k)}>{l}</Button>)}</div></div>
+        <div><Label>Background</Label><div className="mt-2 flex flex-wrap gap-2">{([["navy", "Dark"], ["glow", "Color wash"], ["light", "Light"], ["art", "Picture"]] as [Bg, string][]).map(([k, l]) => <Button key={k} size="sm" variant={bgMode === k ? "default" : "outline"} disabled={k === "art" && !bg} onClick={() => setBgMode(k)}>{l}</Button>)}</div></div>
       </div>
       <div><Label>Colors · {palette.label}</Label><div className="mt-2 flex flex-wrap gap-2">{POST_PALETTES.map((p) => <Button key={p.id} size="icon" variant="outline" title={p.label} aria-label={p.label} aria-pressed={paletteId === p.id} onClick={() => setPaletteId(p.id)} className={`h-9 w-9 ${paletteId === p.id ? "border-primary ring-2 ring-ring ring-offset-2 ring-offset-background" : ""}`}><span className={`h-5 w-5 rounded-full ${p.swatch}`} /></Button>)}</div></div>
+      {bgMode === "art" && bg && <label className="flex items-center gap-3 text-sm">Picture shade<input type="range" min={10} max={85} value={shade} onChange={(e) => setShade(Number(e.target.value))} aria-label="Picture shade" className="w-40 accent-primary" /><span className="text-xs text-muted-foreground">Darker keeps text readable</span></label>}
       <label className="flex items-center gap-2 text-sm"><Checkbox checked={footer} onCheckedChange={(v) => setFooter(!!v)} />Proof-point footer (logo moves to the top corner when off)</label>
 
       {carousel ? deck() : single()}

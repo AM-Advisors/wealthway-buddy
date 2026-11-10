@@ -14,6 +14,7 @@ import { Panel } from "@/components/sales/sales-ui";
 import { MkPage, StatusBadge, fileToBase64, fmt, fromLocalInput, mkHead, toLocalInput } from "@/components/marketing-ui";
 import { emailProblems, renderEmailHtml, type EmailBlock } from "@/lib/marketing-model";
 import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
+import { MarketingPicturePicker } from "@/components/marketing/picture-picker";
 import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
 import {
   decideMarketingEmail, getMarketingAudiences, getMarketingEmail, marketingDraftCopy, saveMarketingEmail, sendMarketingTestEmail, uploadMarketingAsset,
@@ -139,7 +140,7 @@ function EmailEditor() {
                 </div>
                 {b.type === "heading" && <Input value={b.text} onChange={(e) => setBlock(i, { ...b, text: e.target.value })} disabled={locked} />}
                 {b.type === "text" && <Textarea rows={4} value={b.text} onChange={(e) => setBlock(i, { ...b, text: e.target.value })} disabled={locked} />}
-                {b.type === "image" && (b.url ? <img src={b.url} alt="" className="max-h-40 rounded" /> : !locked && <div className="flex flex-wrap items-center gap-2"><input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onChange={(e) => onImage(i, e.target.files?.[0])} className="text-sm" /><MarketingDrivePicker kind="image" onPick={async (a) => { try { const r = await fromDrive({ data: { assetId: a.id } }); setBlock(i, { type: "image", url: r.url, alt: a.name }); } catch (e) { toast.error((e as Error).message); } }} /></div>)}
+                {b.type === "image" && (b.url ? <img src={b.url} alt="" className="max-h-40 rounded" /> : !locked && <MarketingPicturePicker theme={blocks.map((x) => ("text" in x ? x.text : "")).join(" ").slice(0, 600) || "Fund administration made simple"} onPick={(p) => setBlock(i, { type: "image", url: p.url, alt: p.alt })} />)}
                 {b.type === "button" && <div className="grid grid-cols-2 gap-2"><Input value={b.text} onChange={(e) => setBlock(i, { ...b, text: e.target.value })} disabled={locked} /><Input value={b.href} onChange={(e) => setBlock(i, { ...b, href: e.target.value })} disabled={locked} placeholder="https://" /></div>}
               </div>))}</div>
             {!locked && <div className="mt-3 flex flex-wrap gap-1">{(Object.keys(NEW_BLOCK) as EmailBlock["type"][]).map((t) => <Button key={t} size="sm" variant="outline" onClick={() => setBlocks((x) => [...x, { ...NEW_BLOCK[t] }])} className="capitalize">+ {t}</Button>)}</div>}

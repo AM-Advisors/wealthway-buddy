@@ -111,3 +111,8 @@ export async function suggestPostLayout(title: string, body: string, style: Layo
 export function generateBackground(theme: string) {
   return generateImage(`Abstract institutional fintech background only. Absolutely no text, no letters, no numbers, no logos, no people's faces. Keep the center and lower half calm and dark so white text can sit on top. Theme: ${theme.slice(0, 400)}`);
 }
+
+/** Brand-colored marketing picture (navy and teal tones), no text, logos, pricing or outside-platform names. */
+export function generatePicture(theme: string) {
+  return generateImage(`Professional marketing photograph or illustration for a fund administration firm, in deep navy and teal tones. Absolutely no text, letters, numbers, logos, prices or brand names. Subject: ${theme.slice(0, 600)}`);
+}

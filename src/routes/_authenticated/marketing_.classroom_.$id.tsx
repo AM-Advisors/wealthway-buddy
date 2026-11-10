@@ -1,3 +1,4 @@
+import { MarketingPicturePicker } from "@/components/marketing/picture-picker";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -103,6 +104,7 @@ function Editor() {
           <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
             {f.heroImageUrl ? <img src={f.heroImageUrl} alt={f.heroImageAlt ?? ""} className="aspect-video w-full rounded-md object-cover" /> : <div className="aspect-video rounded-md bg-muted" />}
             <div className="space-y-2">
+              <MarketingPicturePicker theme={`${f.title}. ${f.metaDescription ?? ""}`} onPick={(p) => setF({ ...f, heroImageUrl: p.url, heroImageAlt: p.alt || f.heroImageAlt })} />
               <Input placeholder="Main image address (https://…)" value={f.heroImageUrl ?? ""} onChange={(e) => setF({ ...f, heroImageUrl: e.target.value || null })} />
               <Input placeholder="Image description for screen readers" value={f.heroImageAlt ?? ""} onChange={(e) => setF({ ...f, heroImageAlt: e.target.value || null })} />
             </div>
