@@ -32,3 +32,27 @@ export async function loadUserContact(db: any, userId: string | null | undefined
   }
   return pickUserContact(profile, person, authEmail);
 }
+
+/** Batched form of loadUserContact for lists (e.g. support recordings). One query per table, login email only for ids still missing one. */
+export async function loadUserContacts(db: any, userIds: (string | null | undefined)[]): Promise<Map<string, UserContact>> {
+  const ids = [...new Set(userIds.filter((x): x is string => typeof x === "string" && !!x))];
+  const out = new Map<string, UserContact>();
+  if (!ids.length) return out;
+  const [{ data: profiles }, { data: persons }] = await Promise.all([
+    db.from("profiles").select("user_id, legal_name, email").in("user_id", ids).then((r: any) => r, () => ({ data: [] })),
+    db.from("persons").select("user_id, legal_first_name, legal_middle_name, legal_last_name, preferred_name, email").in("user_id", ids).is("merged_into_person_id", null).then((r: any) => r, () => ({ data: [] })),
+  ]);
+  const pm = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id, p]));
+  const sm = new Map<string, any>();
+  for (const p of (persons ?? []) as any[]) if (!sm.has(p.user_id)) sm.set(p.user_id, p);
+  await Promise.all(ids.map(async (id) => {
+    const profile = pm.get(id), person = sm.get(id);
+    let authEmail: string | null = null;
+    if (!clean(profile?.email) && !clean(person?.email)) {
+      const r = await db.auth.admin.getUserById(id).catch(() => null);
+      authEmail = r?.data?.user?.email ?? null;
+    }
+    out.set(id, pickUserContact(profile, person, authEmail));
+  }));
+  return out;
+}

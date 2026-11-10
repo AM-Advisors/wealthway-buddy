@@ -54,9 +54,10 @@ export async function listRecordings(userId: string, d: { kind?: "replay" | "scr
   const { data, error } = await q;
   if (error) throw new Error("Recordings couldn't load.");
   const ids = [...new Set(((data ?? []) as any[]).map((r) => r.user_id))];
-  const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
-  const pm = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p]));
-  let rows = ((data ?? []) as any[]).map((r) => ({ ...r, name: pm.get(r.user_id)?.legal_name || pm.get(r.user_id)?.email || "Unknown person", email: pm.get(r.user_id)?.email ?? null }));
+  // Investors keep their verified name in persons, not profiles; share the standard contact lookup.
+  const { loadUserContacts } = await import("@/lib/user-contact.server");
+  const contacts = await loadUserContacts(db, ids);
+  let rows = ((data ?? []) as any[]).map((r) => { const c = contacts.get(r.user_id); return { ...r, name: c?.name || c?.email || "Unknown person", email: c?.email ?? null }; });
   const s = d.search?.trim().toLowerCase();
   if (s) rows = rows.filter((r) => `${r.name} ${r.email ?? ""} ${r.first_path ?? ""} ${r.last_path ?? ""} ${r.note ?? ""}`.toLowerCase().includes(s));
   return { recordings: rows };
