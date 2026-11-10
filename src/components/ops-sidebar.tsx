@@ -1,4 +1,5 @@
 import { useApprovalsInbox } from "@/components/approvals-inbox-banner";
+import { mkSectionFor } from "@/components/marketing-ui";
 import { useMyActionAlerts } from "@/components/my-action-alerts";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -292,24 +293,15 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const publishing = canSee("marketingPublishing", staffRoles);
   const mkItems: NavItem[] = showMk ? publishing ? [
     { id: "mk-dashboard", title: "Overview", url: "/marketing", icon: "report" },
+    { id: "mk-content", title: "Content", url: "/marketing/studio", icon: "document" },
     { id: "mk-posts", title: "Social posts", url: "/marketing/posts", icon: "document" },
-    { id: "mk-content", title: "Content & design", url: "/marketing/studio", icon: "document", sub: [
-      { title: "Editorial studio", url: "/marketing/studio" }, { title: "AI content studio", url: "/marketing/content-studio" },
-      { title: "Design Studio", url: "/marketing/design-studio" }, { title: "Research feed", url: "/marketing/studio/research" },
-      { title: "Content library", url: "/marketing/drive" }, { title: "Collateral Studio", url: "/marketing/collateral" },
-      { title: "Imports", url: "/marketing/imports" }, { title: "Classroom", url: "/marketing/classroom" },
-      { title: "Sales requests", url: "/marketing/assists" },
-    ] },
-    { id: "mk-emails", title: "Email & audiences", url: "/marketing/emails", icon: "people", sub: [
-      { title: "Emails", url: "/marketing/emails" }, { title: "Follow-up flows", url: "/marketing/flows" }, { title: "Audiences", url: "/marketing/audiences" },
-    ] },
-    { id: "mk-calendar", title: "Planning", url: "/marketing/calendar", icon: "tasks", sub: [
-      { title: "Publishing calendar", url: "/marketing/calendar" }, { title: "Editorial calendar", url: "/marketing/studio/calendar" }, { title: "Campaigns", url: "/marketing/campaigns" },
-    ] },
-    { id: "mk-performance", title: "Publishing & performance", url: "/marketing/performance", icon: "report" },
-    { id: "mk-channels", title: "Accounts & channels", url: "/marketing/channels", icon: "settings", sub: [
-      { title: "Channels", url: "/marketing/channels" }, { title: "LinkedIn accounts", url: "/marketing/linkedin" },
-    ] },
+    { id: "mk-emails", title: "Email", url: "/marketing/emails", icon: "people" },
+    { id: "mk-calendar", title: "Calendar", url: "/marketing/calendar", icon: "tasks" },
+    { id: "mk-library", title: "Library", url: "/marketing/drive", icon: "document" },
+    { id: "mk-performance", title: "Performance", url: "/marketing/performance", icon: "report" },
+    { id: "mk-channels", title: "Accounts", url: "/marketing/channels", icon: "settings" },
+    { id: "mk-classroom", title: "Classroom", url: "/marketing/classroom", icon: "document" },
+    { id: "mk-assists", title: "Sales requests", url: "/marketing/assists", icon: "briefcase" },
   ] : [{ id: "mk-editorial", title: "Editorial studio", url: "/marketing/studio", icon: "document" }, { id: "mk-editorial-calendar", title: "Editorial calendar", url: "/marketing/studio/calendar", icon: "tasks" }] : [];
 
   if (!salesOnly && (leader || has("finance", "account_manager", "client_success", "operations"))) financeItems.push({ id: "payment-reminders", title: "Payment reminders", url: "/ops/payment-reminders", icon: "money" });
@@ -462,7 +454,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <NavSection id="commercial" label="Connected workflow" items={G("commercial")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="sales" label="Sales" items={G("sales")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={G("account-management")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
-            <NavSection id="marketing" label="Marketing" items={G("marketing")} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.url === "/marketing" ? pathname === i.url : i.sub ? i.sub.some((s) => s.url === "/marketing/studio" ? pathname === s.url || pathname.startsWith("/marketing/studio/content/") : pathname === s.url || pathname.startsWith(`${s.url}/`)) : pathname === i.url || pathname.startsWith(`${i.url}/`)} />
+            <NavSection id="marketing" label="Marketing" items={G("marketing")} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.url === "/marketing" ? pathname === i.url : (() => { const hit = mkSectionFor(pathname); return hit ? hit.section.tabs.some(([to]) => to === i.url) : pathname === i.url || pathname.startsWith(`${i.url}/`); })()} />
             <NavSection id="team" label="Team" items={G("team")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : pathname === i.url} />
             <NavSection id="extra-access" label="Extra access" items={groups.extra} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="leadership" label="Leadership" items={G("leadership")} pathname={pathname} collapsed={collapsed} onNavigate={close}

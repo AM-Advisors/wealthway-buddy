@@ -1,3 +1,4 @@
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { CHANNEL_LABEL, STATUS_LABEL, type Channel } from "@/lib/marketing-model";
 
@@ -18,6 +19,7 @@ export function mkHead(title: string, description: string) {
 export function MkPage({ title, intro, actions, children }: { title: string; intro: string; actions?: React.ReactNode; children: React.ReactNode }) {
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
+      <MkSectionTabs />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="text-3xl">{title}</h1><p className="mt-2 text-sm text-muted-foreground">{intro}</p></div>
         {actions}
@@ -56,16 +58,35 @@ export async function fileToBase64(f: File): Promise<string> {
   return btoa(s);
 }
 
-/** Tabs joining Drive & sheets, Collateral Studio and Imports into one Content library. */
-export function MkLibraryTabs() {
-  const tabs = [["/marketing/drive", "Drive & sheets"], ["/marketing/collateral", "Collateral Studio"], ["/marketing/imports", "Imports"]] as const;
-  const path = typeof window === "undefined" ? "" : window.location.pathname;
+/** One tab row per marketing area so related pages live under a single menu item. */
+export const MK_SECTIONS: { label: string; tabs: [string, string][] }[] = [
+  { label: "Content", tabs: [["/marketing/studio", "Studio"], ["/marketing/studio/research", "Research"], ["/marketing/content-studio", "AI drafts"], ["/marketing/design-studio", "Design"]] },
+  { label: "Email", tabs: [["/marketing/emails", "Emails"], ["/marketing/flows", "Follow-up flows"], ["/marketing/audiences", "Audiences"]] },
+  { label: "Calendar", tabs: [["/marketing/calendar", "Publishing"], ["/marketing/studio/calendar", "Editorial"], ["/marketing/campaigns", "Campaigns"]] },
+  { label: "Library", tabs: [["/marketing/drive", "Drive & sheets"], ["/marketing/collateral", "Collateral"], ["/marketing/imports", "Imports"]] },
+  { label: "Accounts", tabs: [["/marketing/channels", "Company pages"], ["/marketing/linkedin", "LinkedIn profiles"]] },
+];
+
+/** Longest matching tab wins, so /marketing/studio/calendar belongs to Calendar, not Content. */
+export function mkSectionFor(path: string) {
+  let best: { section: (typeof MK_SECTIONS)[number]; tab: string } | null = null;
+  for (const section of MK_SECTIONS) for (const [to] of section.tabs) {
+    if ((path === to || path.startsWith(to + "/")) && (!best || to.length > best.tab.length)) best = { section, tab: to };
+  }
+  return best;
+}
+
+export function MkSectionTabs() {
+  const path = useRouterState({ select: (r) => r.location.pathname });
+  const hit = mkSectionFor(path);
+  if (!hit || path !== hit.tab) return null;
   return (
-    <nav aria-label="Content library" className="flex flex-wrap gap-1 border-b pb-2">
-      <span className="mr-2 self-center font-heading text-xs uppercase tracking-[0.16em] text-muted-foreground">Content library</span>
-      {tabs.map(([to, label]) => (
-        <a key={to} href={to} className={`rounded-md px-3 py-1.5 text-sm ${path.startsWith(to) ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"}`}>{label}</a>
+    <nav aria-label={hit.section.label} className="flex flex-wrap gap-1 border-b pb-2">
+      <span className="mr-2 self-center font-heading text-xs uppercase tracking-[0.16em] text-muted-foreground">{hit.section.label}</span>
+      {hit.section.tabs.map(([to, label]) => (
+        <Link key={to} to={to as never} className={`rounded-md px-3 py-1.5 text-sm ${hit.tab === to ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"}`}>{label}</Link>
       ))}
     </nav>
   );
 }
+

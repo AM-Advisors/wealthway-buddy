@@ -51,7 +51,7 @@ function MarketingDashboard() {
           </Panel>
         </div>
         <Panel title="Posts published by channel (30 days)"><Bars data={d.byChannel} /></Panel>
-        <Panel title="ClickUp content flow" action={<Link to="/marketing/calendar" className="text-sm text-primary underline">Open calendar</Link>}>
+        <Panel title="ClickUp content flow" >
           <p className="mb-3 text-sm text-muted-foreground">Each ClickUp task moves through Write → Approve → Send → Live. Opens and clicks are tracked on sent emails.</p>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <Stat label="1. Write" value={d.clickupFlow.counts.write ?? 0} />

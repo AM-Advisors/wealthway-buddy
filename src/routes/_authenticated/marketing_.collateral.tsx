@@ -1,4 +1,4 @@
-import { MkLibraryTabs } from "@/components/marketing-ui";
+import { MkSectionTabs as MkLibraryTabs } from "@/components/marketing-ui";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
