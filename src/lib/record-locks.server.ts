@@ -86,7 +86,28 @@ export async function listLockedEdits(userId: string) {
   const ids = [...new Set(((data ?? []) as any[]).map((r) => r.requested_by))];
   const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
   const names = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Unknown"]));
-  return ((data ?? []) as any[]).map((r) => ({ ...r, label: LOCKED_ACTIONS[r.action]?.label ?? r.action, requester: names.get(r.requested_by) ?? "Unknown", mine: r.requested_by === userId, payload: undefined, details: r.summary }));
+  const rows = (data ?? []) as any[];
+  const onbIds = [...new Set(rows.map((r) => r.payload?.onboardingId).filter((x): x is string => typeof x === "string"))];
+  const { data: onbs } = onbIds.length ? await db.from("investor_onboardings").select("id, offering_id, investment_profiles(display_label, legal_name)").in("id", onbIds) : { data: [] };
+  const onbMap = new Map(((onbs ?? []) as any[]).map((o) => [o.id, o]));
+  const offIds = [...new Set([...rows.map((r) => r.payload?.offeringId), ...((onbs ?? []) as any[]).map((o) => o.offering_id)].filter((x): x is string => typeof x === "string"))];
+  const { data: offs } = offIds.length ? await db.from("offerings").select("id, name").in("id", offIds) : { data: [] };
+  const offMap = new Map(((offs ?? []) as any[]).map((o) => [o.id, o.name]));
+  const cliIds = [...new Set(rows.map((r) => r.payload?.clientId).filter((x): x is string => typeof x === "string"))];
+  const { data: clis } = cliIds.length ? await db.from("clients").select("id, name, legal_name").in("id", cliIds) : { data: [] };
+  const cliMap = new Map(((clis ?? []) as any[]).map((c) => [c.id, c.name || c.legal_name]));
+  const { describeChanges } = await import("@/lib/locked-edit-format");
+  return rows.map((r) => {
+    const o = onbMap.get(r.payload?.onboardingId);
+    const prof = Array.isArray(o?.investment_profiles) ? o.investment_profiles[0] : o?.investment_profiles;
+    return {
+      ...r, label: LOCKED_ACTIONS[r.action]?.label ?? r.action, requester: names.get(r.requested_by) ?? "Unknown", mine: r.requested_by === userId, payload: undefined,
+      investorName: prof?.display_label || prof?.legal_name || null,
+      fundName: offMap.get(r.payload?.offeringId ?? o?.offering_id) ?? null,
+      clientName: cliMap.get(r.payload?.clientId) ?? null,
+      changes: describeChanges(r.payload),
+    };
+  });
 }
 
 export async function decideLockedEdit(ctx: Ctx, input: { requestId: string; decision: "approve" | "reject"; note?: string | null | undefined }) {

@@ -65,7 +65,23 @@ function LockedEditsPage() {
             <CardDescription>Requested by {r.requester} · {new Date(r.created_at).toLocaleString()}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-muted p-3 text-xs">{r.details}</pre>
+            {(r.investorName || r.fundName || r.clientName) && (
+              <p className="text-sm">
+                {[r.investorName, r.fundName, r.clientName].filter(Boolean).join(" · ")}
+              </p>
+            )}
+            {r.changes?.length ? (
+              <dl className="grid grid-cols-1 gap-x-6 gap-y-2 rounded bg-muted p-3 text-sm sm:grid-cols-[max-content_1fr]">
+                {r.changes.map((c: { label: string; value: string }, i: number) => (
+                  <div key={i} className="contents">
+                    <dt className="text-muted-foreground">{c.label}</dt>
+                    <dd className="font-medium break-words">{c.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-muted-foreground">No change details recorded.</p>
+            )}
             {r.note && <p className="text-xs text-muted-foreground">Note: {r.note}</p>}
             {r.status === "pending" && (r.mine && !isSuper ? (
               <p className="text-xs text-muted-foreground">You requested this change, so another person must approve it.</p>
