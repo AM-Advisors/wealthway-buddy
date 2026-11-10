@@ -135,12 +135,16 @@ export const ss4RequestContextFn = createServerFn({ method: "POST" })
     const form = await prefill(context, data.offeringId, signer ? { name: signer.name, phone: signer.phone } : undefined);
     const { data: reqs } = await db.from("ss4_signature_requests").select("id, signer_user_id, status, created_at, signed_at, signer_name, signer_title, signed_pdf_path").eq("offering_id", data.offeringId).order("created_at", { ascending: false });
     const names = new Map(managers.map((m) => [m.userId, m.name]));
+    const { setupActor } = await import("@/lib/fund-setup.server");
     return {
       hasEin,
+      isStaff: (await setupActor(context.userId)).isStaff,
+      canSelfComplete: managers.some((m) => m.userId === context.userId),
+      meId: managers.some((m) => m.userId === context.userId) ? context.userId : null,
       managers: managers.map((m) => ({ userId: m.userId, name: m.name, email: m.email })),
       signerUserId: signer?.userId ?? null,
       form,
-      requests: ((reqs ?? []) as any[]).map((r) => ({ id: r.id as string, signer: (names.get(r.signer_user_id) ?? "Former manager") as string, status: r.status as string, createdAt: r.created_at as string, signedAt: (r.signed_at ?? null) as string | null, signedBy: r.signer_name ? `${r.signer_name}${r.signer_title ? `, ${r.signer_title}` : ""}` : null, hasPdf: Boolean(r.signed_pdf_path) })),
+      requests: ((reqs ?? []) as any[]).map((r) => ({ id: r.id as string, signerUserId: r.signer_user_id as string, signer: (names.get(r.signer_user_id) ?? "Former manager") as string, status: r.status as string, createdAt: r.created_at as string, signedAt: (r.signed_at ?? null) as string | null, signedBy: r.signer_name ? `${r.signer_name}${r.signer_title ? `, ${r.signer_title}` : ""}` : null, hasPdf: Boolean(r.signed_pdf_path) })),
     };
   });
 
@@ -161,6 +165,8 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
     const { data: row, error } = await db.from("ss4_signature_requests").insert({ offering_id: data.offeringId, requested_by: context.userId, signer_user_id: signer.userId, form_data: form, note: data.note || null }).select("id").single();
     if (error) throw new Error(error.message);
     let emailed = false;
+    // A manager completing it themselves goes straight to the form; nobody is emailed.
+    if (signer.userId === context.userId) return { id: row.id as string, emailed: false, signerEmail: signer.email, self: true };
     if (signer.email) {
       try {
         const { data: o } = await db.from("offerings").select("name").eq("id", data.offeringId).maybeSingle();
@@ -169,8 +175,8 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
           idempotencyKey: `ss4-request:${row.id}`,
           templateData: {
             managerName: signer.name,
-            headline: "Please review and sign your Form SS-4",
-            intro: "Harmonious has filled in the IRS Form SS-4 to get your fund's EIN. Please check each line, add the Responsible Party SSN or ITIN, and sign.",
+            headline: "Please complete and sign your Form SS-4",
+            intro: "Your fund needs an EIN. We filled in what we already know on IRS Form SS-4. Please complete any missing lines, add the Responsible Party SSN or ITIN, and sign. Harmonious files the signed form with the IRS.",
             offeringName: o?.name ?? "your fund",
             details: [{ label: "Form", value: "IRS Form SS-4 (EIN application)" }, ...(data.note ? [{ label: "Note from Harmonious", value: data.note }] : [])],
             portalUrl: `${SITE}/manager/ss4/${row.id}`,
@@ -181,7 +187,7 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
         console.error("SS-4 request email failed", e);
       }
     }
-    return { id: row.id as string, emailed, signerEmail: signer.email };
+    return { id: row.id as string, emailed, signerEmail: signer.email, self: false };
   });
 
 export const cancelSs4RequestFn = createServerFn({ method: "POST" })
@@ -266,6 +272,7 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
       consent: z.literal(true),
       signature: adoptedSignatureSchema.optional(),
       userAgent: z.string().max(400).optional(),
+      form: formSchema.optional(),
     }).parse(d),
   )
   .handler(async ({ context, data }) => {
@@ -278,8 +285,14 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
     }
     if (!(await rp.rpIdentifierMeta(r.offering_id)).onFile) throw new Error("Add the Responsible Party SSN or ITIN (line 7b) to sign.");
 
+    const { mergeSignerForm, ss4MissingLines } = await import("@/lib/ss4-completion");
+    const sent = strip(r.form_data ?? {});
+    const completed = mergeSignerForm(sent, data.form ? strip(data.form) : null);
+    const missing = ss4MissingLines(completed);
+    if (missing.length) throw new Error(`Complete these lines before signing: ${missing.join("; ")}.`);
+    const changedLines = Object.keys(completed).filter((k) => completed[k] !== sent[k]);
     const signedAt = new Date();
-    const form = { ...strip(r.form_data ?? {}), designee_name: "Harmonious LLC", designee_phone: "801-433-8005", applicant_name_title: `${data.signerName}, ${data.signerTitle}`, ...(data.phone ? { applicant_phone: data.phone } : {}) };
+    const form = { ...completed, designee_name: "Harmonious LLC", designee_phone: "801-433-8005", applicant_name_title: `${data.signerName}, ${data.signerTitle}`, ...(data.phone ? { applicant_phone: data.phone } : {}) };
     const { fillSs4Pdf } = await import("@/lib/ss4-pdf.server");
     const tin = (await rp.readRpIdentifierForAuthorizedOperation(r.offering_id)) ?? "";
     const bytes = await fillSs4Pdf({ ...form, responsible_party_tin: tin } as any, { signature: data.signerName, signatureImage: data.signature?.image, signedDate: signedAt.toLocaleDateString("en-US") });
@@ -301,7 +314,7 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
     }
     try {
       const { logFundAudit } = await import("@/lib/fund-audit.server");
-      await logFundAudit(context.userId, { offeringId: r.offering_id, eventType: "ss4_signed", summary: `Form SS-4 signed by ${data.signerName}`, values: { signer: `${data.signerName}, ${data.signerTitle}`, signedAt: signedAt.toISOString() } });
+      await logFundAudit(context.userId, { offeringId: r.offering_id, eventType: "ss4_signed", summary: `Form SS-4 signed by ${data.signerName}`, values: { signer: `${data.signerName}, ${data.signerTitle}`, signedAt: signedAt.toISOString(), linesCompletedBySigner: changedLines.join(", ") || "none" } });
     } catch { /* best-effort */ }
 
     await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "ss4_signed", title: `Form SS-4 signed by ${data.signerName} | ready for staff to file by hand`, offeringId: r.offering_id, submittedBy: context.userId, ref: r.id, path: `/ops/fund/${r.offering_id}?tab=setup`, completed: true }))().catch(() => null);

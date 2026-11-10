@@ -23,6 +23,8 @@ import {
   ss4RequestContextFn,
   ss4SignedPdfUrlFn,
 } from "@/lib/ss4-request.functions";
+import { ss4MissingLines } from "@/lib/ss4-completion";
+import { useNavigate } from "@tanstack/react-router";
 
 type Form = Record<string, string | boolean>;
 type Opt = { value: string; label: string };
@@ -123,6 +125,7 @@ const when = (d: string | null) => (d ? new Date(d).toLocaleString("en-US", { da
 /** Staff: prefill the SS-4 from the fund and send it to a fund manager to sign. */
 export function Ss4RequestPanel({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const loadFn = useServerFn(ss4RequestContextFn);
   const sendFn = useServerFn(sendSs4RequestFn);
   const cancelFn = useServerFn(cancelSs4RequestFn);
@@ -140,7 +143,7 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
       if (!signer || !form) throw new Error("Choose a fund manager and complete the form first.");
       return sendFn({ data: { offeringId: fundId, signerUserId: signer, form, note: note || undefined } });
     },
-    onSuccess: (r) => { toast.success(r.emailed ? `Sent to ${r.signerEmail} to sign.` : "Request created. The manager has no login email, so share the link with them."); setOpen(false); setNote(""); qc.invalidateQueries({ queryKey: ["ss4-request", fundId] }); },
+    onSuccess: (r) => { if (r.self) { void navigate({ to: "/manager/ss4/$requestId", params: { requestId: r.id } }); return; } toast.success(r.emailed ? `Sent to ${r.signerEmail} to sign.` : "Request created. The manager has no login email, so share the link with them."); setOpen(false); setNote(""); qc.invalidateQueries({ queryKey: ["ss4-request", fundId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const cancel = useMutation({ mutationFn: (id: string) => cancelFn({ data: { requestId: id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["ss4-request", fundId] }), onError: (e: Error) => toast.error(e.message) });
@@ -167,10 +170,10 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
     <div className="space-y-4 rounded-lg border bg-background p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold">{d.hasEin ? "EIN already recorded" : "Request Form SS-4 signature from the fund manager"}</h3>
-          <p className="text-xs text-muted-foreground">{d.hasEin ? "No SS-4 application is required." : "The manager reviews and signs the EIN application. Harmonious files the signed form with the IRS by hand."}</p>
+          <h3 className="text-sm font-semibold">{d.hasEin ? "EIN already recorded" : "Send Form SS-4 to a fund manager to complete"}</h3>
+          <p className="text-xs text-muted-foreground">{d.hasEin ? "No SS-4 application is required." : "Fill in what you know; the manager completes any missing lines, adds the SSN or ITIN and signs. Harmonious files the signed form with the IRS by hand."}</p>
         </div>
-        {!d.hasEin && !open && <Button size="sm" onClick={() => setOpen(true)} disabled={!d.managers.length}>Prepare SS-4 to sign</Button>}
+        {!d.hasEin && !open && <Button size="sm" onClick={() => setOpen(true)} disabled={!d.managers.length}>Send SS-4 to a manager</Button>}
       </div>
       {!d.hasEin && !d.managers.length && <p className="text-sm text-muted-foreground">This fund has no fund manager with a login yet, so there's no one to send it to.</p>}
 
@@ -190,9 +193,10 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
             </div>
           </div>
           <LineEditor form={form} onChange={setForm} />
+          {ss4MissingLines(form).length > 0 && <p className="text-xs text-muted-foreground">The manager will be asked to complete: {ss4MissingLines(form).join("; ")}.</p>}
           <p className="text-xs text-muted-foreground">Line 7b (SSN/ITIN) is entered only by the manager when signing and is stored encrypted.</p>
           <div className="flex gap-2">
-            <Button onClick={() => send.mutate()} disabled={!signer || send.isPending}>{send.isPending ? "Sending…" : "Send to sign"}</Button>
+            <Button onClick={() => send.mutate()} disabled={!signer || send.isPending}>{send.isPending ? "Sending…" : "Send to complete and sign"}</Button>
             <Button variant="outline" onClick={() => { setOpen(false); setForm(d.form as Form); }}>Cancel</Button>
           </div>
         </div>
@@ -232,14 +236,17 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
   const [phone, setPhone] = useState("");
   const [tin, setTin] = useState("");
   const [consent, setConsent] = useState(false);
+  const [lines, setLines] = useState<Form | null>(null);
   const sig = useSignHere(name);
   useEffect(() => {
     if (!q.data) return;
     const [n, ...t] = String(q.data.form["applicant_name_title"] ?? "").split(",");
     setName((n ?? "").trim()); setTitle(t.join(",").trim()); setPhone(String(q.data.form["applicant_phone"] ?? ""));
+    const sentForm = q.data.form as Form;
+    setLines((cur) => cur ?? sentForm);
   }, [q.data]);
   const sign = useMutation({
-    mutationFn: () => signFn({ data: { requestId, signerName: name, signerTitle: title, phone, responsiblePartyTin: tin, consent: true, signature: sig.signature ? { method: sig.signature.method, image: sig.signature.image } : undefined, userAgent: navigator.userAgent } }),
+    mutationFn: () => signFn({ data: { requestId, signerName: name, signerTitle: title, phone, responsiblePartyTin: tin, consent: true, signature: sig.signature ? { method: sig.signature.method, image: sig.signature.image } : undefined, userAgent: navigator.userAgent, form: lines ?? undefined } }),
     onSuccess: () => { toast.success("Signed. Harmonious will file your SS-4 with the IRS."); setTin(""); qc.invalidateQueries({ queryKey: ["ss4-sign", requestId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -253,11 +260,22 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
       <div>
         <Link to="/manager/fund/$fundId" params={{ fundId: d.offeringId }} className="text-xs text-muted-foreground hover:underline">← {d.fundName}</Link>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Form SS-4: EIN application</h1>
-        <p className="text-sm text-muted-foreground">Harmonious filled this in from your fund's details. Check every line, then sign at the bottom.</p>
+        <p className="text-sm text-muted-foreground">We filled in what we already know from your fund's details. Complete any missing lines, then sign at the bottom. Harmonious files the signed form with the IRS.</p>
         <div className="mt-2 space-y-1"><ThirdPartyBadge provider="the IRS" /><ThirdPartyNote provider="The IRS" /></div>
       </div>
       {d.note && <div className="rounded-lg border bg-muted/40 p-4 text-sm"><span className="font-medium">Note from Harmonious: </span>{d.note}</div>}
 
+      {d.status === "requested" && lines ? (
+        <section className="space-y-4 rounded-lg border p-5">
+          <div>
+            <h2 className="text-sm font-semibold">Complete the form</h2>
+            <p className="text-xs text-muted-foreground">Check every line and fill in anything missing. Your changes are saved when you sign.</p>
+          </div>
+          {ss4MissingLines(lines).length > 0 && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">Still needed: {ss4MissingLines(lines).join("; ")}.</div>}
+          <LineEditor form={lines} onChange={setLines} />
+          <p className="text-xs text-muted-foreground">Line 7b (SSN/ITIN): {d.tinOnFile ? `on file, ending ${d.tinLast4 ?? "••••"}` : "add it in the Sign section below"}. It is stored encrypted.</p>
+        </section>
+      ) : (
       <section className="rounded-lg border">
         <div className="border-b px-5 py-3 text-sm font-semibold">Form details</div>
         <dl className="divide-y">
@@ -270,11 +288,11 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
           ))}
           <div className="grid grid-cols-[4rem_1fr] gap-2 px-5 py-2 text-sm md:grid-cols-[4rem_1fr_1fr]">
             <dt className="text-xs text-muted-foreground">7b</dt><dt className="text-muted-foreground">Responsible party SSN / ITIN</dt>
-            <dd className="col-span-2 font-medium md:col-span-1">{d.tinOnFile ? `On file, ending ${d.tinLast4 ?? "••••"}` : "Add below"}</dd>
+            <dd className="col-span-2 font-medium md:col-span-1">{d.tinOnFile ? `On file, ending ${d.tinLast4 ?? "••••"}` : "Not on file"}</dd>
           </div>
         </dl>
-        <p className="border-t px-5 py-3 text-xs text-muted-foreground">Something wrong? Reply to Harmonious before signing and they'll send a corrected form.</p>
       </section>
+      )}
 
       {d.status === "signed" ? (
         <section className="space-y-3 rounded-lg border p-5">
@@ -301,9 +319,41 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
             <span>Under penalties of perjury, I declare that I have examined this application, and to the best of my knowledge and belief, it is true, correct and complete. I agree that the signature I adopt is my electronic signature.</span>
           </label>
           <div className="space-y-1"><Label className="text-xs">Signature</Label><SignHereTag signature={sig.signature} signed={sig.signed} onClick={sig.click} />{sig.dialog}</div>
-          <Button onClick={() => sign.mutate()} disabled={!consent || !sig.signed || name.trim().length < 2 || title.trim().length < 2 || (!d.tinOnFile && !tin.trim()) || sign.isPending}>{sign.isPending ? "Signing…" : "Sign Form SS-4"}</Button>
+          <Button onClick={() => sign.mutate()} disabled={!consent || !sig.signed || (lines ? ss4MissingLines(lines).length > 0 : false) || name.trim().length < 2 || title.trim().length < 2 || (!d.tinOnFile && !tin.trim()) || sign.isPending}>{sign.isPending ? "Signing…" : "Sign Form SS-4"}</Button>
         </section>
       )}
+    </div>
+  );
+}
+
+/** Fund manager: open the prefilled SS-4 for yourself, complete it and sign. Nobody is emailed. */
+export function Ss4SelfComplete({ fundId }: { fundId: string }) {
+  const navigate = useNavigate();
+  const loadFn = useServerFn(ss4RequestContextFn);
+  const sendFn = useServerFn(sendSs4RequestFn);
+  const q = useQuery({ queryKey: ["ss4-request", fundId, null], queryFn: () => loadFn({ data: { offeringId: fundId } }) });
+  const start = useMutation({
+    mutationFn: async () => {
+      const meId = q.data?.meId;
+      if (!meId) throw new Error("Only a manager or the signatory of this fund can complete the SS-4.");
+      const mine = await loadFn({ data: { offeringId: fundId, signerUserId: meId } });
+      return sendFn({ data: { offeringId: fundId, signerUserId: meId, form: mine.form as Form } });
+    },
+    onSuccess: (r) => { void navigate({ to: "/manager/ss4/$requestId", params: { requestId: r.id } }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  if (q.isLoading || !q.data || q.data.hasEin || !q.data.canSelfComplete) return null;
+  const open = q.data.requests.find((r) => r.status === "requested");
+  const mineOpen = open && open.signerUserId === q.data.meId ? open : null;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-background p-4">
+      <div>
+        <p className="text-sm font-medium">Complete the SS-4 yourself</p>
+        <p className="text-xs text-muted-foreground">Fill in the missing lines, add the SSN or ITIN and sign here. Harmonious files it with the IRS.</p>
+      </div>
+      {mineOpen
+        ? <Button size="sm" onClick={() => void navigate({ to: "/manager/ss4/$requestId", params: { requestId: mineOpen.id } })}>Continue my SS-4</Button>
+        : <Button size="sm" disabled={start.isPending} onClick={() => { if (open && !window.confirm(`An SS-4 is waiting for ${open.signer}. Starting your own cancels that request. Continue?`)) return; start.mutate(); }}>{start.isPending ? "Opening…" : "Complete and sign SS-4"}</Button>}
     </div>
   );
 }

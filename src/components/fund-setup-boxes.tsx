@@ -102,7 +102,7 @@ export function EinBox({ offeringId, onChanged }: { offeringId: string; onChange
       <div className="flex items-center gap-2"><h3 className="flex-1 font-heading text-base font-semibold text-primary">EIN</h3>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status === "in_review" ? "bg-muted text-muted-foreground" : "bg-destructive/10 text-destructive"}`}>{status === "in_review" ? "Waiting on review" : "Needed"}</span></div>
       {form}
-      {status !== "recorded" && <button type="button" className="text-sm text-primary underline" onClick={() => setShowChoice((x) => !x)}>{showChoice ? "Hide EIN options" : "Don't have an EIN yet?"}</button>}
+      {status !== "recorded" && <Button type="button" size="sm" variant={showChoice ? "ghost" : "outline"} onClick={() => setShowChoice((x) => !x)}>{showChoice ? "Hide EIN options" : "No EIN yet? Complete or send the SS-4"}</Button>}
       {showChoice && <EinChoice offeringId={offeringId} onChanged={refresh} />}
     </section>
   );

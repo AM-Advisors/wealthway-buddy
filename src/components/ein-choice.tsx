@@ -7,12 +7,12 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { EinField } from "@/components/fund-workspace";
-import { Ss4RequestPanel } from "@/components/ss4-request";
+import { Ss4RequestPanel, Ss4SelfComplete } from "@/components/ss4-request";
 import { generateSs4, getEinChoiceFn, saveFundEinFn, setEinChoiceFn } from "@/lib/fund-entity.functions";
 
 const IRS_URL = "https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number";
 
-/** EIN: the fund gets it from the IRS itself, or Harmonious prepares the SS-4. */
+/** EIN: the fund applies online itself, or a manager completes and signs Form SS-4 (directly or when Operations sends it). */
 export function EinChoice({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {
   const qc = useQueryClient();
   const load = useServerFn(getEinChoiceFn);
@@ -50,10 +50,10 @@ export function EinChoice({ offeringId, onChanged }: { offeringId: string; onCha
       <p className="flex flex-wrap items-center gap-2 text-sm font-medium">Who is getting the EIN? <ThirdPartyBadge provider="the IRS" /></p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <button type="button" className={opt(by === "fund")} disabled={choose.isPending} onClick={() => choose.mutate("fund")}>
-          The fund manager<span className="block text-xs font-normal text-muted-foreground">Apply online with the IRS, then enter the EIN here.</span>
+          Apply online<span className="block text-xs font-normal text-muted-foreground">The fund manager applies with the IRS, then enters the EIN here.</span>
         </button>
         <button type="button" className={opt(by === "harmonious")} disabled={choose.isPending} onClick={() => choose.mutate("harmonious")}>
-          Harmonious<span className="block text-xs font-normal text-muted-foreground">We prepare Form SS-4 for signature and file it.</span>
+          Form SS-4<span className="block text-xs font-normal text-muted-foreground">A fund manager completes and signs it here; Harmonious files it with the IRS.</span>
         </button>
       </div>
 
@@ -70,8 +70,9 @@ export function EinChoice({ offeringId, onChanged }: { offeringId: string; onCha
 
       {by === "harmonious" && (
         <div className="space-y-3">
+          <Ss4SelfComplete fundId={offeringId} />
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-background p-4">
-            <p className="text-sm">Download the filled Form SS-4 to sign yourself, or send it to the signatory below.</p>
+            <p className="text-sm">Need a paper copy? Download the filled Form SS-4.</p>
             <Button size="sm" variant="outline" disabled={ss4.isPending} onClick={() => ss4.mutate()}>{ss4.isPending ? "Preparing…" : "Get Form SS-4"}</Button>
           </div>
           <Ss4RequestPanel fundId={offeringId} />
