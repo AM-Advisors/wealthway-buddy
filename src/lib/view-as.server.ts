@@ -148,6 +148,21 @@ export async function viewAsInvestorHome(staffUserId: string, authSessionId: str
   return investorDashboard(p!.subjectUserId);
 }
 
+/**
+ * Investor home "Complete your setup" and to-do list, read exactly as the
+ * investor's own home builds them (same readers, same filters on the subject's
+ * account). Investor workspace only; read-only.
+ */
+export async function viewAsInvestorAttention(staffUserId: string, authSessionId: string | null) {
+  const p = await resolvePerspective(staffUserId, authSessionId);
+  if (!p || p.perspective !== "investor") deny("no active investor view.");
+  const ctx = { supabase: db(), userId: p!.subjectUserId, claims: null };
+  const { gatherFacts } = await import("@/lib/session-facts.server");
+  const { attentionFor } = await import("@/lib/attention.server");
+  const [facts, attention] = await Promise.all([gatherFacts(ctx), attentionFor(ctx, "investor")]);
+  return { outstandingRequirements: [...facts.outstandingRequirements] as string[], attention };
+}
+
 export async function viewAsFund(staffUserId: string, authSessionId: string | null) {
   const p = await resolvePerspective(staffUserId, authSessionId);
   if (!p || p.perspective !== "fund_manager") deny("no active fund manager view.");

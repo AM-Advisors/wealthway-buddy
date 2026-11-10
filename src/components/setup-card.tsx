@@ -31,10 +31,10 @@ const label = (key: string) => LABELS[key] ?? key;
  * come from the outstanding requirements the server resolved - the page never
  * works them out for itself.
  */
-export function SetupCard() {
+export function SetupCard({ outstandingOverride, readOnly = false }: { outstandingOverride?: string[]; readOnly?: boolean } = {}) {
   const navigate = useNavigate();
   const { session } = useClientWorkspace();
-  const outstanding = session?.outstandingRequirements ?? [];
+  const outstanding = outstandingOverride ?? session?.outstandingRequirements ?? [];
   if (outstanding.length === 0) return null;
 
   const completedCount = Math.max(0, Object.keys(LABELS).length - outstanding.length);
@@ -64,7 +64,9 @@ export function SetupCard() {
         {next && (
           <Button
             className="h-auto max-w-full whitespace-normal text-left leading-snug"
+            disabled={readOnly}
             onClick={() => {
+              if (readOnly) return;
               const path = nextRequirementPath([next]);
               if (path) navigate({ to: path as never });
             }}

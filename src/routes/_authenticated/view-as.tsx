@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Badge } from "@/components/ui/badge";
-import { viewAsPageFn } from "@/lib/view-as.functions";
+import { viewAsInvestorAttentionFn, viewAsPageFn } from "@/lib/view-as.functions";
+import { SetupCard } from "@/components/setup-card";
+import { AttentionCenter } from "@/components/attention-center";
 
 export const Route = createFileRoute("/_authenticated/view-as")({
   validateSearch: (s: Record<string, unknown>): { page?: string } => (typeof s["page"] === "string" ? { page: s["page"] } : {}),
@@ -52,13 +54,27 @@ function ViewAsPage() {
           <h1 className="text-2xl font-semibold">{current.title}</h1>
           {isHome ? (
             ctx.perspective === "investor"
-              ? <InvestorDashboard viewAs />
+              ? <><InvestorDashboard viewAs /><ViewAsInvestorAttention /></>
               : <FundReadiness fundId={ctx.offeringId} viewAs />
           ) : (
             <ViewAsPageList page={current.url} title={current.title} subject={ctx.subjectName} />
           )}
         </main>
       </div>
+    </div>
+  );
+}
+
+/** The rest of the investor's Home: setup card and to-do list, built from the investor's own records. */
+function ViewAsInvestorAttention() {
+  const load = useServerFn(viewAsInvestorAttentionFn);
+  const q = useQuery({ queryKey: ["view-as", "investor-attention"], queryFn: () => load(), retry: false });
+  if (q.isPending) return <Skeleton className="h-32" />;
+  if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
+  return (
+    <div className="pointer-events-none space-y-4" aria-readonly="true">
+      <SetupCard outstandingOverride={q.data.outstandingRequirements} readOnly />
+      <AttentionCenter preloaded={q.data.attention} />
     </div>
   );
 }

@@ -62,3 +62,7 @@ export const viewAsPageFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ page: z.string().max(80) }).parse)
   .handler(async ({ data, context }) => (await va()).viewAsPage(context.userId, sid(context.claims), data.page));
+
+export const viewAsInvestorAttentionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await va()).viewAsInvestorAttention(context.userId, sid(context.claims)));

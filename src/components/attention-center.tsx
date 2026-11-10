@@ -64,13 +64,18 @@ function ItemRow({ item }: { item: AttentionItem }) {
  * what is waiting on someone else, and what finished recently. Every row opens
  * the record where the work actually happens; nothing is decided here.
  */
-export function AttentionCenter({ workspace }: { workspace?: WorkspaceKind }) {
+export function AttentionCenter({ workspace, preloaded }: { workspace?: WorkspaceKind; preloaded?: any }) {
   const load = useServerFn(getAttention);
-  const { data, isLoading, isError, refetch } = useQuery({
+  const q = useQuery({
     queryKey: ["attention", workspace ?? "auto"],
     queryFn: () => load({ data: workspace ? { workspace } : {} }) as Promise<any>,
     refetchInterval: 120_000,
+    enabled: preloaded === undefined,
   });
+  const data = preloaded ?? q.data;
+  const isLoading = preloaded === undefined && q.isLoading;
+  const isError = preloaded === undefined && q.isError;
+  const refetch = q.refetch;
 
   if (isLoading) {
     return (
