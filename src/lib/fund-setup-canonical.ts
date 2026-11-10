@@ -106,7 +106,25 @@ export type EconomicTerms = {
   distributionFrequency?: string | null;
   /** Terms explicitly marked Not applicable (counts as answered, never as a value). */
   notApplicable?: EconomicTermKey[] | undefined;
+  /** Which fund documents these terms are written in (recorded by the team, never inferred). */
+  documentedIn?: TermDocumentKey[] | null;
 };
+/** Documents a set of fund or class terms can be written in. */
+export const TERM_DOCUMENTS = [
+  ["operating_agreement", "Operating Agreement"],
+  ["ppm", "PPM"],
+  ["subscription_agreement", "Subscription Agreement"],
+  ["offering_circular", "Offering circular"],
+  ["side_letter", "Investor side letter"],
+] as const;
+export type TermDocumentKey = (typeof TERM_DOCUMENTS)[number][0];
+export const TERM_DOCUMENT_KEYS = TERM_DOCUMENTS.map(([k]) => k) as unknown as [TermDocumentKey, ...TermDocumentKey[]];
+/** Labels in a fixed order, so the same documents always read the same; null when none are marked. */
+export function termDocumentsLabel(keys: readonly string[] | null | undefined): string | null {
+  const set = new Set(keys ?? []);
+  const labels = TERM_DOCUMENTS.filter(([k]) => set.has(k)).map(([, l]) => l);
+  return labels.length ? labels.join(", ") : null;
+}
 export const ECONOMIC_TERM_KEYS = ["managementFee", "carry", "preferredReturn", "orgExpense", "distributionFrequency", "minInvestment"] as const;
 export type EconomicTermKey = (typeof ECONOMIC_TERM_KEYS)[number];
 export type FundClass = {
@@ -127,6 +145,8 @@ export type FundClass = {
   assetScope?: string | null;
   otherDifferences?: string | null;
   notApplicable?: EconomicTermKey[] | undefined;
+  /** Documents this class's terms are written in; empty means the same documents as the fund default. */
+  documentedIn?: TermDocumentKey[] | null;
 };
 
 /** Multiple classes only when Yes and more than one class is planned; 1 class is a single-class fund. */
@@ -167,6 +187,7 @@ export function classDifferences(defaults: EconomicTerms & { minInvestmentCents?
   const fee = defaults.managementFee;
   const feeTxt = (f: ManagementFee | null | undefined) => (f?.ratePercent == null ? "-" : `${f.ratePercent}%${f.basis ? ` of ${f.basis.replace(/_/g, " ")}` : ""}${f.frequency ? `, ${f.frequency.replace(/_/g, " ")}` : ""}${f.paymentTerms ? `. ${f.paymentTerms}` : ""}`);
   return [
+    row("Written in", termDocumentsLabel(defaults.documentedIn) ?? "-", (c) => termDocumentsLabel(c.documentedIn)),
     row("Management fee", feeTxt(fee), (c) => (na(c, "managementFee") ? "Not applicable" : c.managementFee?.ratePercent != null ? feeTxt({ ...(fee ?? {}), ...c.managementFee } as ManagementFee) : null)),
     row("Minimum investment", money(defaults.minInvestmentCents), (c) => (na(c, "minInvestment") ? "Not applicable" : c.minInvestmentCents != null ? money(c.minInvestmentCents) : null)),
     row("Carried interest", pctTxt(defaults.carry?.ratePercent), (c) => (na(c, "carry") ? "Not applicable" : c.carry?.ratePercent != null ? pctTxt(c.carry.ratePercent) : null)),

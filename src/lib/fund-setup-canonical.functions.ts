@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { TERM_DOCUMENT_KEYS } from "@/lib/fund-setup-canonical";
 
 const engine = () => import("@/lib/fund-setup-canonical.server");
 const uuid = z.string().uuid();
@@ -23,6 +24,7 @@ const terms = z.object({
   orgExpenseTreatment: z.string().max(500).nullish(),
   distributionFrequency: z.string().max(100).nullish(),
   notApplicable: z.array(z.enum(["managementFee", "carry", "preferredReturn", "orgExpense", "distributionFrequency", "minInvestment"])).max(6).optional(),
+  documentedIn: z.array(z.enum(TERM_DOCUMENT_KEYS)).max(5).nullish(),
 });
 const fundClass = z.object({
   key: z.string().max(60).default(""),
@@ -39,6 +41,7 @@ const fundClass = z.object({
   assetScope: z.string().max(500).nullish(),
   otherDifferences: z.string().max(1000).nullish(),
   notApplicable: z.array(z.enum(["managementFee", "carry", "preferredReturn", "orgExpense", "distributionFrequency", "minInvestment"])).max(6).optional(),
+  documentedIn: z.array(z.enum(TERM_DOCUMENT_KEYS)).max(5).nullish(),
 });
 
 const __auto = async <T,>(r: T, ref: { offeringId?: string; feeId?: string; documentId?: string }) => { await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave(ref); return r; };

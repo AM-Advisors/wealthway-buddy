@@ -43,6 +43,16 @@ describe("multiple classes", () => {
     expect(rows.find((r) => r.term === "Carried interest")!.perClass[0]).toMatchObject({ value: "10%", differs: true });
     expect(rows.find((r) => r.term === "Management fee")!.perClass[0]).toMatchObject({ value: "Same as fund default", differs: false });
   });
+  it("shows which document holds each class's terms", () => {
+    const rows = classDifferences({ carry: { ratePercent: 20 }, documentedIn: ["operating_agreement"] } as any, [
+      { key: "a", name: "Class A" },
+      { key: "b", name: "Class B", documentedIn: ["side_letter"] },
+    ] as any);
+    const written = rows.find((r) => r.term === "Written in")!;
+    expect(written.fundDefault).toBe("Operating Agreement");
+    expect(written.perClass[0]).toMatchObject({ value: "Same as fund default", differs: false });
+    expect(written.perClass[1]).toMatchObject({ value: "Investor side letter", differs: true });
+  });
   it("wording that restates the default is not flagged as a class difference", () => {
     const rows = classDifferences({ carry: { ratePercent: 20 } } as any, [
       { key: "a", name: "Class A", assetScope: "all", otherDifferences: "Fund default terms" },

@@ -27,6 +27,8 @@ import {
   classCountError,
   classDifferences,
   multipleClassesFromAnswer,
+  TERM_DOCUMENTS,
+  type TermDocumentKey,
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { ClassAssignmentCard, FundSetupPhase3 } from "@/components/fund-setup-phase3";
@@ -406,6 +408,24 @@ function toggle(c: FundClass, k: EconomicTermKey, on: boolean): EconomicTermKey[
 
 const selCls = "h-9 w-full rounded-md border bg-background px-2 text-sm";
 
+/** Toggle chips for the documents a set of terms is written in. */
+function TermDocumentChips({ value, onChange, disabled }: { value: TermDocumentKey[]; onChange: (v: TermDocumentKey[]) => void; disabled?: boolean }) {
+  const set = new Set(value);
+  return (
+    <div className="flex flex-wrap gap-2" role="group">
+      {TERM_DOCUMENTS.map(([k, label]) => {
+        const on = set.has(k);
+        return (
+          <Button key={k} type="button" size="sm" variant={on ? "default" : "outline"} aria-pressed={on} disabled={disabled}
+            onClick={() => onChange(TERM_DOCUMENTS.map(([x]) => x).filter((x) => (x === k ? !on : set.has(x))))}>
+            {on && <CheckCircle2 className="size-4" />}{label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Numeric dropdown: common values, Other (custom), Not applicable, and optionally "Same as fund default". */
 function PresetSelect({ options, value, na, onChange, disabled, suffix = "", prefix = "", allowDefault }: {
   options: number[]; value: number | null; na: boolean; onChange: (v: number | null, na: boolean) => void; disabled?: boolean; suffix?: string; prefix?: string; allowDefault?: boolean;
@@ -571,6 +591,11 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
             <TextPresetSelect disabled={!d.economics.canEdit} options={DISTRIBUTION_PRESETS} na={isNa("distributionFrequency")} value={terms.distributionFrequency ?? null}
               onChange={(v, na) => setNa("distributionFrequency", na, { distributionFrequency: na ? null : v })} />
           </Field>
+          <div className="sm:col-span-2 lg:col-span-3">
+            <Field label="Written in (which documents hold these terms)">
+              <TermDocumentChips disabled={!d.economics.canEdit} value={terms.documentedIn ?? []} onChange={(v) => setTerms({ ...terms, documentedIn: v.length ? v : null })} />
+            </Field>
+          </div>
         </section>
         </TabsContent>
         {multi && (
@@ -632,6 +657,7 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
                   <Field label="Organizational expenses"><Input disabled={!d.economics.canEdit} value={c.orgExpenseTreatment ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ orgExpenseTreatment: e.target.value || null })} /></Field>
                   <Field label="Distribution frequency"><Input disabled={!d.economics.canEdit} value={c.distributionFrequency ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ distributionFrequency: e.target.value || null })} /></Field>
                   <Field label="Assets / allocation"><Input disabled={!d.economics.canEdit} value={c.assetScope ?? ""} placeholder="All fund assets" onChange={(e) => upd({ assetScope: e.target.value || null })} /></Field>
+                  <div className="sm:col-span-2"><Field label="Written in (leave blank if same documents as the fund default)"><TermDocumentChips disabled={!d.economics.canEdit} value={c.documentedIn ?? []} onChange={(v) => upd({ documentedIn: v.length ? v : null })} /></Field></div>
                   <div className="sm:col-span-2"><Field label="Other differences"><Textarea rows={2} disabled={!d.economics.canEdit} value={c.otherDifferences ?? ""} placeholder="Anything else that's different for this class" onChange={(e) => upd({ otherDifferences: e.target.value || null })} /></Field></div>
                                   </div>
                 <div className="flex justify-between gap-3 border-t pt-4">
