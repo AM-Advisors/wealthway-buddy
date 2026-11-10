@@ -310,6 +310,7 @@ import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authenticated/ops.tax-review'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as AuthenticatedOpsValuationsRouteImport } from './routes/_authenticated/ops.valuations'
+import { Route as AuthenticatedOpsVerificationsRouteImport } from './routes/_authenticated/ops.verifications'
 import { Route as AuthenticatedOpsWebhookLogRouteImport } from './routes/_authenticated/ops.webhook-log'
 import { Route as AuthenticatedPlanSetupRouteImport } from './routes/_authenticated/plan.setup'
 import { Route as AuthenticatedPlanStartRouteImport } from './routes/_authenticated/plan.start'
@@ -2194,6 +2195,12 @@ const AuthenticatedOpsValuationsRoute =
     path: '/ops/valuations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsVerificationsRoute =
+  AuthenticatedOpsVerificationsRouteImport.update({
+    id: '/ops/verifications',
+    path: '/ops/verifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsWebhookLogRoute =
   AuthenticatedOpsWebhookLogRouteImport.update({
     id: '/ops/webhook-log',
@@ -3581,6 +3588,7 @@ export interface FileRoutesByFullPath {
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
+  '/ops/verifications': typeof AuthenticatedOpsVerificationsRoute
   '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
   '/plan/setup': typeof AuthenticatedPlanSetupRoute
   '/plan/start': typeof AuthenticatedPlanStartRoute
@@ -4063,6 +4071,7 @@ export interface FileRoutesByTo {
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
+  '/ops/verifications': typeof AuthenticatedOpsVerificationsRoute
   '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
   '/plan/setup': typeof AuthenticatedPlanSetupRoute
   '/plan/start': typeof AuthenticatedPlanStartRoute
@@ -4553,6 +4562,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/_authenticated/ops/valuations': typeof AuthenticatedOpsValuationsRoute
+  '/_authenticated/ops/verifications': typeof AuthenticatedOpsVerificationsRoute
   '/_authenticated/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
   '/_authenticated/plan/setup': typeof AuthenticatedPlanSetupRoute
   '/_authenticated/plan/start': typeof AuthenticatedPlanStartRoute
@@ -5044,6 +5054,7 @@ export interface FileRouteTypes {
     | '/ops/tax-review'
     | '/ops/team'
     | '/ops/valuations'
+    | '/ops/verifications'
     | '/ops/webhook-log'
     | '/plan/setup'
     | '/plan/start'
@@ -5526,6 +5537,7 @@ export interface FileRouteTypes {
     | '/ops/tax-review'
     | '/ops/team'
     | '/ops/valuations'
+    | '/ops/verifications'
     | '/ops/webhook-log'
     | '/plan/setup'
     | '/plan/start'
@@ -6015,6 +6027,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/tax-review'
     | '/_authenticated/ops/team'
     | '/_authenticated/ops/valuations'
+    | '/_authenticated/ops/verifications'
     | '/_authenticated/ops/webhook-log'
     | '/_authenticated/plan/setup'
     | '/_authenticated/plan/start'
@@ -8408,6 +8421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsValuationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/verifications': {
+      id: '/_authenticated/ops/verifications'
+      path: '/ops/verifications'
+      fullPath: '/ops/verifications'
+      preLoaderRoute: typeof AuthenticatedOpsVerificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/webhook-log': {
       id: '/_authenticated/ops/webhook-log'
       path: '/ops/webhook-log'
@@ -10227,6 +10247,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsTaxReviewRoute: typeof AuthenticatedOpsTaxReviewRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
+  AuthenticatedOpsVerificationsRoute: typeof AuthenticatedOpsVerificationsRoute
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
   AuthenticatedPlanSetupRoute: typeof AuthenticatedPlanSetupRoute
   AuthenticatedPlanStartRoute: typeof AuthenticatedPlanStartRoute
@@ -10586,6 +10607,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsTaxReviewRoute: AuthenticatedOpsTaxReviewRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
+  AuthenticatedOpsVerificationsRoute: AuthenticatedOpsVerificationsRoute,
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
   AuthenticatedPlanSetupRoute: AuthenticatedPlanSetupRoute,
   AuthenticatedPlanStartRoute: AuthenticatedPlanStartRoute,

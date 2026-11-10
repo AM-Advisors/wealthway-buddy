@@ -46980,6 +46980,118 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_verification_entries: {
+        Row: {
+          aml: Json | null
+          applied: Json
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          entered_at: string
+          entered_by: string
+          evidence_name: string | null
+          evidence_path: string | null
+          id: string
+          kyc: Json | null
+          note: string | null
+          person_id: string
+          source_reference: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aml?: Json | null
+          applied?: Json
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          entered_at?: string
+          entered_by: string
+          evidence_name?: string | null
+          evidence_path?: string | null
+          id?: string
+          kyc?: Json | null
+          note?: string | null
+          person_id: string
+          source_reference: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aml?: Json | null
+          applied?: Json
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          entered_at?: string
+          entered_by?: string
+          evidence_name?: string | null
+          evidence_path?: string | null
+          id?: string
+          kyc?: Json | null
+          note?: string | null
+          person_id?: string
+          source_reference?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_verification_entries_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_verification_entry_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          entry_id: string
+          event: string
+          from_status: string | null
+          id: string
+          note: string | null
+          person_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          entry_id: string
+          event: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          person_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          entry_id?: string
+          event?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          person_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_verification_entry_events_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "staff_verification_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       standard_agreement_components: {
         Row: {
           component_key: string

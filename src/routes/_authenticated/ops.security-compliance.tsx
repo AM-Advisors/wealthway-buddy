@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { AccountIdentityQueue } from "@/components/account-identity-queue";
@@ -27,7 +27,7 @@ function Page() {
   const navigate = useNavigate({ from: Route.fullPath });
   return (
     <div>
-      {(section ?? "overview") === "overview" ? <div className="px-4 pt-6 sm:px-6"><AccountIdentityQueue /></div> : null}
+      {(section ?? "overview") === "overview" ? <div className="space-y-3 px-4 pt-6 sm:px-6"><p className="rounded-md border bg-muted p-3 text-sm">To enter KYC/AML details for an investor or client contact, open <Link to="/ops/verifications" className="font-medium underline">KYC & AML verification</Link>.</p><AccountIdentityQueue /></div> : null}
       <SecurityComplianceCenter section={section ?? "overview"} onSection={(s) => navigate({ search: { section: s } })} />
     </div>
   );

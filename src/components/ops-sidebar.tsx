@@ -1,4 +1,5 @@
 import { useApprovalsInbox } from "@/components/approvals-inbox-banner";
+import { ACCOUNT_KYC_DECIDERS } from "@/lib/account-kyc-model";
 import { mkSectionFor } from "@/components/marketing-ui";
 import { useMyActionAlerts } from "@/components/my-action-alerts";
 import { useEffect, useMemo, useState } from "react";
@@ -207,10 +208,11 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "stalled", title: "Stalled items", url: "/ops/stalled", icon: "tasks" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "investor-progress", title: "Investor progress", url: "/ops/investor-progress", icon: "tasks" }] : []),
+    ...(has(...ACCOUNT_KYC_DECIDERS) ? [{ id: "verifications", title: "KYC & AML verification", url: "/ops/verifications", icon: "shield" }] : []),
     ...(has("super_admin") ? [{ id: "sealed", title: "Sealed archive", url: "/ops/sealed-archive", icon: "document" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
   ];
-  const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Security & Compliance", url: "/ops/security-compliance" }].filter((x) => allowedUrls.has(x.url));
+  const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Security & Compliance", url: "/ops/security-compliance" }].filter((x) => allowedUrls.has(x.url) || (leader && x.url === "/ops/security-compliance"));
   if (leader || has("compliance", "legal")) regulatorySub.unshift({ title: "Compliance dashboard", url: "/ops/dashboards/compliance" });
   if ((leader || has("compliance", "legal")) && allowedUrls.has("/ops/compliance-schedules")) regulatorySub.splice(1, 0, { title: "Compliance schedules", url: "/ops/compliance-schedules" });
   if (!salesOnly) opsItems.push({ id: "ops-agreements", title: "My agreements", url: "/ops/agreements", icon: "document" });
