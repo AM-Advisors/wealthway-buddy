@@ -73,3 +73,14 @@ d2("client-facing sales rep", () => {
   i2("hidden unless chosen", () => e2(clientFacingContacts(team).map((c) => c.role)).toEqual(["Account Manager"]));
   i2("shown when chosen", () => e2(clientFacingContacts(team, true).map((c) => c.role)).toEqual(["Sales Representative", "Account Manager"]));
 });
+
+describe("CEO on the Sales team", () => {
+  it("a CEO can be a client's Sales contact, the same as a CRO", async () => {
+    const { eligibleFor } = await import("@/lib/harmonious-team");
+    expect(eligibleFor("sales", ["executive"])).toBe(true);
+    expect(eligibleFor("sales", ["cro"])).toBe(true);
+    expect(eligibleFor("sales", ["finance"])).toBe(false);
+    expect(staffProfile(["executive"]).commercialOnly).toBe(false);
+    expect(staffProfile(["cro"]).commercialOnly).toBe(true);
+  });
+});

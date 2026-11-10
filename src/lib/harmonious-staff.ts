@@ -16,7 +16,8 @@ const TEAM_BY_ROLE: Record<string, HarmoniousTeam[]> = {
   finance: ["finance"],
   legal: ["compliance"],
   compliance: ["compliance"],
-  executive: ["management"],
+  // CEO counts the same as CRO: Sales leadership as well as management.
+  executive: ["sales", "management"],
   super_admin: ["management"],
   sales: ["sales"],
   account_executive: ["sales"],
@@ -45,6 +46,7 @@ export function staffProfile(roles: readonly string[]): StaffProfile {
     teams,
     operationsAccess,
     superUser: roles.includes("super_admin"),
-    commercialOnly: !operationsAccess && teams.includes("sales"),
+    // The CEO joins Sales without losing the access executives already had.
+    commercialOnly: !operationsAccess && teams.includes("sales") && !roles.includes("executive"),
   };
 }
