@@ -43,6 +43,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ApprovalButton } from "@/components/approval-button";
+import type { TermsApprovalEntry } from "@/lib/terms-approval-history";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -711,6 +712,33 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
             )}
           </div>
         )}
+        <TermsApprovalHistory entries={((d.economics as any).approvalHistory ?? []) as TermsApprovalEntry[]} />
+    </section>
+  );
+}
+
+/** Read-only record of every approval of these fees and terms: who, when, and what was approved. */
+function TermsApprovalHistory({ entries }: { entries: TermsApprovalEntry[] }) {
+  const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Chicago" });
+  return (
+    <section className="space-y-2 border-t pt-4" aria-label="Approval history">
+      <h3 className="text-sm font-medium">Approval history</h3>
+      {entries.length === 0 ? (
+        <p className="text-sm text-muted-foreground">These terms haven't been approved yet.</p>
+      ) : (
+        <ul className="divide-y rounded-md border">
+          {entries.map((e, i) => (
+            <li key={`${e.versionId}-${i}`} className="space-y-1 px-3 py-2 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">Version {e.version ?? "?"}</span>
+                {e.current ? <Badge>In use</Badge> : <Badge variant="secondary">Replaced</Badge>}
+                <span className="text-muted-foreground">Approved by <span className="text-foreground">{e.approverName}</span>{e.approverRole ? ` (${e.approverRole})` : ""} · {when(e.approvedAt)} Central</span>
+              </div>
+              <p className="text-muted-foreground">{e.summary}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

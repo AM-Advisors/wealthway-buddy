@@ -754,6 +754,9 @@ export async function approveEconomics(userId: string, versionId: string) {
     .eq("id", versionId)
     .select("*")
     .single();
+  // Snapshot who approved and what, so the history reads the same even if names or later versions change.
+  const { data: approver } = await db().from("profiles").select("legal_name, email").eq("user_id", userId).limit(1).maybeSingle();
+  const { termsSummary } = await import("./terms-approval-history");
   await recordEvent({
     setupId: version.setup_id,
     subjectTable: "fund_economics_versions",
@@ -761,6 +764,13 @@ export async function approveEconomics(userId: string, versionId: string) {
     event: "economics_approved",
     fromStatus: "draft",
     toStatus: "approved",
+    detail: {
+      version: version.version,
+      approver_name: (approver as any)?.legal_name ?? null,
+      approver_email: (approver as any)?.email ?? null,
+      summary: termsSummary(version.terms as any, version.classes as any),
+      superseded_versions: ((rows ?? []) as any[]).filter((v) => v.status === "approved" && v.id !== versionId).map((v) => v.version),
+    },
     actorUserId: userId,
     actorRole: actor.isStaff ? "harmonious" : "client",
   });

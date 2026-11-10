@@ -52,7 +52,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
   const { data: o } = await db().from("offerings").select("*").eq("id", offeringId).maybeSingle();
   if (!o) throw new Error("Fund not found.");
   const { data: setup } = await db().from("fund_setups").select("*").eq("offering_id", offeringId).maybeSingle();
-  const [econ, docs, banking, managers, history] = await Promise.all([
+  const [econ, docs, banking, managers, history, approvalEvents] = await Promise.all([
     setup ? db().from("fund_economics_versions").select("*").eq("setup_id", setup.id).order("version", { ascending: false }) : { data: [] },
     setup ? db().from("fund_setup_documents").select("id").eq("setup_id", setup.id).eq("is_current", true) : { data: [] },
     db().from("offering_bank_setup_requests").select("status").eq("offering_id", offeringId),
@@ -60,8 +60,20 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
     actor.isStaff
       ? db().from("offering_legal_name_history").select("*").eq("offering_id", offeringId).order("changed_at", { ascending: false })
       : { data: [] },
+    setup
+      ? db().from("fund_setup_events").select("subject_id, event, actor_user_id, actor_role, created_at, detail").eq("setup_id", setup.id).eq("subject_table", "fund_economics_versions").eq("event", "economics_approved").order("created_at", { ascending: false }).limit(100)
+      : { data: [] },
   ]);
   const versions = (econ.data ?? []) as any[];
+  const approvalRows = (approvalEvents.data ?? []) as any[];
+  const approverIds = [...new Set([...approvalRows.map((e) => e.actor_user_id), ...versions.map((v) => v.approved_by)].filter(Boolean))] as string[];
+  const { data: approverProfiles } = approverIds.length ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", approverIds) : { data: [] };
+  const { termsApprovalHistory } = await import("@/lib/terms-approval-history");
+  const approvalHistory = termsApprovalHistory(
+    versions,
+    approvalRows,
+    new Map(((approverProfiles ?? []) as any[]).map((p) => [p.user_id, { name: p.legal_name, email: p.email }])),
+  );
   const current = versions.find((v) => v.status === "draft") ?? versions.find((v) => v.status === "approved") ?? null;
   const approved = versions.find((v) => v.status === "approved") ?? null;
   const terms = ((current?.terms ?? {}) as EconomicTerms) || ({} as EconomicTerms);
@@ -163,6 +175,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       preparedByMe: current?.prepared_by === userId,
       terms,
       classes,
+      approvalHistory,
     },
     signatoryOptions,
     statuses,
