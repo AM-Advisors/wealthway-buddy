@@ -283,7 +283,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Display name"><Input {...bind("displayName")} /></Field>
           <Field label="Fund Type">{sel("fundType", FUND_TYPES.map((t) => [t, t]))}</Field>
-          <Field label="Fund Manager / GP"><Input {...bind("gpName")} /></Field>
+          <Field label="Fund Manager / GP"><Input placeholder="A person or a company" {...bind("gpName")} /></Field>
           <Field label="Signing entity"><Input {...bind("signatoryEntityName")} /></Field>
           <Field label="Fiscal year end (MM-DD)"><Input placeholder="12-31" {...bind("fiscalYearEnd")} /></Field>
           {d.termApplies && <Field label="Fund term (months)"><Input inputMode="numeric" {...bind("fundTermMonths")} /></Field>}

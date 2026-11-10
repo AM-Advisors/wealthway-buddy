@@ -19,7 +19,7 @@ import { SETUP_STEP_LABEL, type SetupStep, type StepStatus } from "@/lib/fund-se
 const FIELD_LABEL: Record<string, string> = {
   legalName: "Legal fund name", displayName: "Display name", entityType: "Entity type", jurisdiction: "Formation state", formationDate: "Formation date",
   principalAddress: "Principal address", addressLine1: "Address line 1", addressLine2: "Address line 2", addressCity: "City", addressState: "State (address)", addressZip: "ZIP code",
-  targetRaise: "Target raise ($)", minInvestment: "Minimum investment ($)", gpName: "GP / manager entity",
+  targetRaise: "Target raise ($)", minInvestment: "Minimum investment ($)", gpName: "GP / manager (person or entity)",
   regType: "Offering exemption", managementFeePercent: "Management fee (%)", carryPercent: "Carried interest (%)", preferredReturnPercent: "Preferred return (%)",
   firstSaleDate: "Date of first sale", relatedPersons: "Related persons", solicitationStates: "States of solicitation", administrator: "Fund administrator",
 };

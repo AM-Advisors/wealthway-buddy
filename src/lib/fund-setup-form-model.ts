@@ -19,7 +19,7 @@ export const FORM_D_TYPES = [["506b", "Rule 506(b)"], ["506c", "Rule 506(c)"], [
 export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] = [
   { id: "basic", title: "Basic Details", fields: [
     { key: "legalName", label: "Fund Legal Name", section: fd, required: true },
-    { key: "gpName", label: "Fund Manager (entity)", section: fd, required: true },
+    { key: "gpName", label: "Fund Manager (person or entity)", section: fd, required: true },
     { key: "fundType", label: "Fund Type", section: fd, required: true, options: [] },
     { key: "entityType", label: "Entity Type", section: fd, required: true, options: ENTITY_TYPES },
     { key: "regType", label: "Form D Type", section: fd, options: FORM_D_TYPES },
