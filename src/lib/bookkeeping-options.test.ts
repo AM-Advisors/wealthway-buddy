@@ -30,7 +30,8 @@ describe("responsibilities and capabilities", () => {
     for (const a of ["categorize", "reconcile", "close"]) expect(rows.find((r) => r.activity === a)?.owner).toBe("harmonious");
   });
   it("missing capabilities are never shown, fund-only tools only for funds", () => {
-    expect(visibleCapabilities("review", { entityType: "fund", offeringId: "x" }).map((c) => c.key)).not.toContain("outstanding_items_report");
+    expect(visibleCapabilities("review", { entityType: "fund", offeringId: "x" }).map((c) => c.key)).toContain("outstanding_items_report");
+    expect(visibleCapabilities("review", { entityType: "management_company" }).map((c) => c.key)).not.toContain("outstanding_items_report");
     expect(visibleCapabilities("self_service", { entityType: "management_company" })).toEqual([]);
     expect(optionAvailableFor("self_service", { entityType: "management_company" }).available).toBe(false);
     expect(optionAvailableFor("managed", { entityType: "management_company" }).available).toBe(true);

@@ -1072,4 +1072,5 @@
 
 ## Bookkeeping options update (uploaded brief)
 - [x] Three options (Self-Service, Review, Managed) separate from Fund Accounting; responsibilities, real capabilities only, independent frequency/support/billing, quote-only add-ons, scope limits, duplicate-coverage checks; client chooser and request, staff quote configurator, pricing editor, fund Fund Accounting card. 19 rule tests pass.
-- [ ] Missing capabilities (reported, not shown as available): client-facing outstanding-items report; bank statement upload/reconciliation for non-fund entities; scheduled bookkeeping review/close work queue; client self-service tools for company/GP books.
+- [x] Client-facing outstanding-items report on each fund's Services page: what clients need to provide and what Harmonious is working on, from statements, unexplained transactions, information requests, exceptions, close steps and staff review requests (client-visible tasks; client marks provided, staff complete). 26 rule tests pass.
+- [ ] Missing capabilities (reported, not shown as available): bank statement upload/reconciliation for non-fund entities; scheduled bookkeeping review/close work queue; client self-service tools for company/GP books.

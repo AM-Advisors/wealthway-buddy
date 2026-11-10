@@ -7,6 +7,7 @@ import { RESPONSIBILITY_CLIENT_EXPLANATION, asResponsibility, daysOverdue, waiti
 import { serviceLevelLabel, titleCase, usd, fmtDate } from "@/lib/service-engagement-labels";
 import { Link } from "@tanstack/react-router";
 import { fundAccountingCoverage } from "@/lib/bookkeeping-options";
+import { BookkeepingOutstandingReport } from "@/components/bookkeeping-outstanding-report";
 
 export function FundServicesTab({ fundId }: { fundId: string }) {
   const fetch = useServerFn(getFundServices);
@@ -14,10 +15,11 @@ export function FundServicesTab({ fundId }: { fundId: string }) {
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading services…</p>;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
   const rows = q.data ?? [];
-  if (!rows.length) return <p className="text-sm text-muted-foreground">No administration service is on file for this fund yet. Your Harmonious team will set it up.</p>;
   return (
     <div className="space-y-5">
+      <BookkeepingOutstandingReport fundId={fundId} />
       <FundOpenItems fundId={fundId} />
+      {!rows.length && <p className="text-sm text-muted-foreground">No administration service is on file for this fund yet. Your Harmonious team will set it up.</p>}
       {rows.map((r) => {
         const lvl = serviceLevelLabel(r.service_level, r.service_product);
         return (
@@ -74,7 +76,8 @@ function Item({ k, v }: { k: string; v: string }) {
 export function FundOpenItems({ fundId }: { fundId: string }) {
   const fetch = useServerFn(getClientFundTasks);
   const q = useQuery({ queryKey: ["client-fund-tasks", fundId], queryFn: () => fetch({ data: { fundId } }) });
-  const rows = (q.data ?? []) as any[];
+  // Bookkeeping Review requests show in the outstanding-items report instead.
+  const rows = ((q.data ?? []) as any[]).filter((t) => t.related_workflow_type !== "bookkeeping_review");
   if (q.isLoading || q.error || !rows.length) return null;
   return (
     <section className="rounded-xl border bg-card p-5">

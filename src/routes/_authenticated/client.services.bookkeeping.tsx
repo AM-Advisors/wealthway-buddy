@@ -94,6 +94,9 @@ function BookkeepingChooser() {
             <p className="mt-2 text-muted-foreground">Anything already covered won't be charged again.</p>
           </div>
         )}
+        {entity?.offeringId && (
+          <p className="text-sm"><Link to="/client/funds/$fundId" params={{ fundId: entity.offeringId }} search={{ tab: "services" }} className="text-primary underline">See outstanding bookkeeping items for {entity.legalName}</Link></p>
+        )}
         {entity?.fundAccounting && (
           <div className="max-w-3xl rounded-lg border p-4 text-sm">
             <p className="font-medium">Fund Accounting for this fund</p>

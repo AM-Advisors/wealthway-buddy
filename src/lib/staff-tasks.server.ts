@@ -88,6 +88,43 @@ export async function createTask(viewer: string, d: { title: string; description
   return { id: data.id as string };
 }
 
+/** Bookkeeping Review: staff record what the client must provide, as a client-visible task on the fund. */
+export async function createBookkeepingReviewRequest(viewer: string, d: { fundId: string; title: string; detail: string; dueOn: string | null }) {
+  const { db, canWrite } = await ctx(viewer);
+  if (!canWrite) throw new Error("Only Harmonious staff can request items for a bookkeeping review.");
+  const { data: fund } = await db.from("offerings").select("id, client_id").eq("id", d.fundId).maybeSingle();
+  if (!fund) throw new Error("Fund not found.");
+  const { data, error } = await db.from("staff_tasks").insert({
+    title: d.title, description: d.detail, priority: "normal", team: "finance", offering_id: d.fundId, client_id: fund.client_id ?? null,
+    due_date: d.dueOn, created_by: viewer, source: "workflow", related_workflow_type: "bookkeeping_review",
+    client_visibility: true, responsibility_status: "CLIENT_INFORMATION_REQUIRED", responsible_party_type: "CLIENT_INFORMATION",
+    information_request_type: "bookkeeping_review", requested_information: d.detail,
+  }).select("id").single();
+  if (error) throw new Error(error.message);
+  await log(db, data.id, viewer, "created", { bookkeeping_review: true });
+  return { id: data.id as string };
+}
+
+/** The client says they've provided a requested item. Hands it back to Harmonious; never completes it. */
+export async function markBookkeepingRequestProvided(viewer: string, d: { fundId: string; requestId: string; note: string }) {
+  const { assertFund } = await import("@/lib/fund-tabs.server");
+  await assertFund(viewer, d.fundId);
+  const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+  const { data: t } = await db.from("staff_tasks").select("id, status, responsibility_status")
+    .eq("id", d.requestId).eq("offering_id", d.fundId).eq("related_workflow_type", "bookkeeping_review").eq("client_visibility", true).maybeSingle();
+  if (!t) throw new Error("That request isn't on this fund.");
+  if (t.status === "done" || t.status === "cancelled") throw new Error("This request is already closed.");
+  if (t.responsibility_status !== "CLIENT_INFORMATION_REQUIRED") throw new Error("Harmonious already has this one.");
+  const note = d.note.trim();
+  const { error } = await db.from("staff_tasks").update({
+    responsibility_status: "HARMONIOUS_HANDLING", responsible_party_type: "HARMONIOUS",
+    responsibility_note_client: note ? `You said: ${note.slice(0, 1900)}` : "You marked this as provided.", updated_at: new Date().toISOString(),
+  }).eq("id", d.requestId).eq("responsibility_status", "CLIENT_INFORMATION_REQUIRED");
+  if (error) throw new Error(error.message);
+  await log(db, d.requestId, viewer, "client_provided", { text: note.slice(0, 2000) });
+  return { ok: true };
+}
+
 export async function updateTask(viewer: string, d: { id: string; status?: string | undefined; priority?: string | undefined; assignee?: string | null | undefined; team?: string | null | undefined; dueDate?: string | null | undefined; note?: string | null | undefined }) {
   const scope = await ctx(viewer);
   const { db, staff, canWrite, leader } = scope;
@@ -172,7 +209,7 @@ export async function listClientFundTasks(viewer: string, fundId: string) {
   await assertFund(viewer, fundId);
   const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
   const { data } = await db.from("staff_tasks")
-    .select("id, title, status, priority, due_date, sla_due_date, responsibility_status, waiting_on_type, responsibility_note_client, related_investor_id, approval_type, approval_amount, approval_due_date, information_request_type, requested_information, updated_at")
+    .select("id, title, status, priority, due_date, sla_due_date, responsibility_status, waiting_on_type, responsibility_note_client, related_investor_id, approval_type, approval_amount, approval_due_date, information_request_type, requested_information, related_workflow_type, updated_at")
     .eq("offering_id", fundId).eq("client_visibility", true).order("due_date", { ascending: true, nullsFirst: false }).limit(500);
   const rows = (data ?? []) as any[];
   const invIds = [...new Set(rows.map((r) => r.related_investor_id).filter(Boolean))];

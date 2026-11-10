@@ -112,7 +112,7 @@ export const BOOKKEEPING_OPTIONS: Record<BookkeepingOption, OptionDefinition> = 
       { key: "scheduled_review", label: "Review on your agreed schedule", availability: "all", note: "Your Harmonious team books each review; it is not scheduled automatically." },
       { key: "reconciliation_checks", label: "Reconciliation checks", availability: "funds", note: "Checked against recorded bank reconciliations." },
       { key: "agreed_corrections", label: "Agreed corrections", availability: "all", note: "Recorded as reviewed journal entries; nothing already posted is rewritten." },
-      { key: "outstanding_items_report", label: "Outstanding-items report", availability: "missing", note: "A client-facing outstanding-items report is not built yet." },
+      { key: "outstanding_items_report", label: "Outstanding-items report", availability: "funds", note: "Shows what we need from you and what we're working on, on your fund's Services page." },
     ],
     frequencies: ["monthly", "quarterly", "annual"],
     defaultFrequency: "quarterly",
@@ -169,9 +169,7 @@ export function optionAvailableFor(option: BookkeepingOption, entity: { entityTy
 /** Responsibility rows a client may see: an activity only appears when the option actually covers it or it is the client's job. */
 export function responsibilityRows(option: BookkeepingOption): { activity: Activity; label: string; owner: Owner }[] {
   const def = BOOKKEEPING_OPTIONS[option];
-  const hidden = new Set<Activity>(option === "review" ? ["outstanding_items"] : []);
   return (Object.keys(ACTIVITY_LABELS) as Activity[])
-    .filter((a) => !hidden.has(a))
     .map((a) => ({ activity: a, label: ACTIVITY_LABELS[a], owner: def.responsibilities[a] }));
 }
 
