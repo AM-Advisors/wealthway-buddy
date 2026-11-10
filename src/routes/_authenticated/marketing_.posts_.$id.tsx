@@ -13,6 +13,7 @@ import { Panel } from "@/components/sales/sales-ui";
 import { MkPage, StatusBadge, fileToBase64, fmt, fromLocalInput, mkHead, toLocalInput } from "@/components/marketing-ui";
 import { CHANNELS, CHANNEL_LABEL, CHANNEL_LIMIT, UNAVAILABLE_CHANNELS, postProblems, type Channel } from "@/lib/marketing-model";
 import { PostBrandLayout } from "@/components/marketing/post-brand-layout";
+import { PostImageDownload } from "@/components/marketing/post-image-download";
 import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
 import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
 import { decideMarketingPost, getMarketingPost, marketingDraftCopy, marketingGenerateImage, retryMarketingPost, saveMarketingPost, uploadMarketingAsset } from "@/lib/marketing.functions";
@@ -55,7 +56,7 @@ function PostEditor() {
     if (!p || loadedFor.current === id) return;
     loadedFor.current = id;
     setTitle(p.title); setBody(p.body); setChannels(p.channels); setWhen(toLocalInput(p.scheduled_at));
-    setImages((p.image_paths ?? []).map((path: string, i: number) => ({ path, url: q.data!.imageUrls[i] ?? "" })));
+    setImages((p.image_paths ?? []).map((path: string, i: number) => ({ path, url: q.data?.imageUrls[i] ?? "" })));
     if (p.channels[0]) setPreview(p.channels[0]);
   }, [q.data, id]);
 
@@ -153,6 +154,7 @@ function PostEditor() {
             <div className="grid grid-cols-3 gap-2">{images.map((im, i) => (
               <div key={im.path} className="relative">
                 <img src={im.url} alt="" className="aspect-square w-full rounded bg-muted object-contain" />
+                <PostImageDownload url={im.url} index={i} />
                 {!locked && <Button size="icon" variant="destructive" className="absolute right-1 top-1 h-7 w-7" onClick={() => setImagesAndSave((x) => x.filter((_, j) => j !== i))} aria-label="Remove image"><Trash2 className="h-3.5 w-3.5" /></Button>}
               </div>))}</div>
             {!locked && (<div className="mt-3 space-y-2">
