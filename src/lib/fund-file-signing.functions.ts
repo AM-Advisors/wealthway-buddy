@@ -91,7 +91,8 @@ export const fundSigningContextFn = createServerFn({ method: "POST" }).middlewar
     const { data: people } = pids.length ? await d.from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email").in("id", pids) : { data: [] };
     const pm = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
     const investors = ((obs ?? []) as any[]).map((o) => { const p = pm.get(o.person_id); return { onboardingId: o.id as string, name: pname(p) || "Unnamed investor", email: (p?.email ?? null) as string | null }; });
-    const uids = ((mgrs ?? []) as any[]).map((m) => m.user_id).filter(Boolean);
+    const signerUids = await (await import("@/lib/fund-signatories.server")).fundSignerUserIds(data.fundId);
+    const uids = [...new Set([...((mgrs ?? []) as any[]).map((m) => m.user_id).filter(Boolean), ...signerUids])];
     const { data: profs } = uids.length ? await d.from("profiles").select("user_id, legal_name, email").in("user_id", uids) : { data: [] };
     const managers = ((profs ?? []) as any[]).map((p) => ({ userId: p.user_id as string, name: (p.legal_name || p.email || "Fund manager") as string, email: (p.email ?? null) as string | null }));
     return { investors, managers, signatures: ((sigs ?? []) as any[]).map((x) => ({ ...x, lastRemindedAt: reminded[`file-sign:${x.id}`] ?? null })) };
@@ -160,7 +161,7 @@ export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middlew
     let mp: any = null;
     if (needsMgr) {
       if (!data.managerUserId) throw new Error("Choose a fund manager.");
-      const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
+      const mgr = await (await import("@/lib/fund-signatories.server")).isFundSignerUser(data.fundId, data.managerUserId);
       if (!mgr) throw new Error("That person isn't a manager of this fund.");
       const { data: prof } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
       if (!prof?.email) throw new Error("This fund manager has no email address.");
@@ -216,7 +217,7 @@ export const sendFileToSignatoryFn = createServerFn({ method: "POST" }).middlewa
     const { data: f } = await d.from("fund_files").select("id, status, title, storage_path, content_type, body").eq("id", data.fileId).eq("offering_id", data.fundId).is("deleted_at", null).maybeSingle();
     if (!f) throw new Error("Document not found.");
     if (f.status === "signed") throw new Error("This document is already signed.");
-    const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
+    const mgr = await (await import("@/lib/fund-signatories.server")).isFundSignerUser(data.fundId, data.managerUserId);
     if (!mgr) throw new Error("That person isn't a manager of this fund.");
     const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
     if (!mp?.email) throw new Error("This fund manager has no email address.");
@@ -354,7 +355,7 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
     const { data: v } = await d.from("offering_document_versions").select("file_path, file_name, self_serve_review_state, approval_status, signing_config_status").eq("offering_document_id", doc.id).eq("version", doc.active_version).maybeSingle();
     if (!v?.file_path) throw new Error("This document has no file.");
     if (v.self_serve_review_state && (v.self_serve_review_state !== "approved" || v.approval_status !== "approved" || v.signing_config_status !== "confirmed")) throw new Error("Approve this exact version and confirm its signing setup before sending.");
-    const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
+    const mgr = await (await import("@/lib/fund-signatories.server")).isFundSignerUser(data.fundId, data.managerUserId);
     if (!mgr) throw new Error("That person isn't a manager of this fund.");
     const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
     if (!mp?.email) throw new Error("This fund manager has no email address.");

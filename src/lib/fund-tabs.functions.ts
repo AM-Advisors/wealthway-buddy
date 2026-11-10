@@ -65,17 +65,23 @@ export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([r
       const confirm = (cur as any)?.user_id === context.userId ? { roles_confirmed_at: new Date().toISOString() } : {};
       const { error } = await d.from("fund_team_members").update({ ...row, ...confirm }).eq("id", data.id).eq("offering_id", data.fundId).is("removed_at", null);
       if (error) throw new Error("Couldn't save.");
-    } else {
-      const { error } = await d.from("fund_team_members").insert({ ...row, offering_id: data.fundId, created_by: context.userId });
-      if (error) throw new Error("Couldn't save.");
     }
-    return { ok: true };
+    let memberId = data.id;
+    if (!data.id) {
+      const { data: ins, error } = await d.from("fund_team_members").insert({ ...row, offering_id: data.fundId, created_by: context.userId }).select("id").single();
+      if (error) throw new Error("Couldn't save.");
+      memberId = (ins as any).id;
+    }
+    const { syncTeamMemberSignatory } = await import("@/lib/fund-signatories.server");
+    const sync = await syncTeamMemberSignatory(context.userId, data.fundId, memberId!);
+    return { ok: true, signerNote: sync.note };
   });
 
 export const removeTeamMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: uuid }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId);
     await (await s.db()).from("fund_team_members").update({ removed_at: new Date().toISOString(), removed_by: context.userId }).eq("id", data.id).eq("offering_id", data.fundId);
+    await (await import("@/lib/fund-signatories.server")).syncTeamMemberSignatory(context.userId, data.fundId, data.id);
     return { ok: true };
   });
 

@@ -151,13 +151,16 @@ export async function inviteFundPerson(userId: string, input: { offeringId: stri
 export async function listFundSignatories(userId: string, offeringId: string) {
   const actor = await staffFor(userId, offeringId);
   const { data: o } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
-  const [{ data: rows }, { data: contacts }, { data: managers }] = await Promise.all([
+  const [{ data: rows }, { data: contacts }, { data: managers }, { data: teamRows }] = await Promise.all([
     db().from("fund_signatories").select("*").eq("offering_id", offeringId).eq("status", "active").order("added_at"),
     o?.client_id
       ? db().from("client_contacts").select("id, full_name, email, title, person_id, user_id").eq("client_id", o.client_id).eq("status", "active").is("deactivated_at", null).order("full_name")
       : { data: [] },
     db().from("fund_managers").select("user_id").eq("offering_id", offeringId),
+    db().from("fund_team_members").select("id, full_name, email, user_id, team_role, permissions").eq("offering_id", offeringId).is("removed_at", null),
   ]);
+  const team = ((teamRows ?? []) as any[]);
+  const teamPeople = await teamPersons(team);
   const personIds = [...new Set(((rows ?? []) as any[]).map((r) => r.person_id))];
   const managerIds = ((managers ?? []) as any[]).map((m) => m.user_id);
   const [{ data: people }, { data: managerPeople }] = await Promise.all([
@@ -166,7 +169,7 @@ export async function listFundSignatories(userId: string, offeringId: string) {
   ]);
   const pMap = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
   const contactPersons = ((contacts ?? []) as any[]).map((c) => c.person_id).filter(Boolean);
-  const kyc = await kycFor([...new Set([...personIds, ...contactPersons, ...((managerPeople ?? []) as any[]).map((p) => p.id)])]);
+  const kyc = await kycFor([...new Set([...personIds, ...contactPersons, ...((managerPeople ?? []) as any[]).map((p) => p.id), ...[...teamPeople.values()].filter(Boolean) as string[]])]);
   const taken = new Set(personIds);
   const candidates = [
     ...((contacts ?? []) as any[]).filter((c) => !c.person_id || !taken.has(c.person_id))
@@ -174,6 +177,16 @@ export async function listFundSignatories(userId: string, offeringId: string) {
     ...((managerPeople ?? []) as any[]).filter((p) => !taken.has(p.id))
       .map((p) => ({ key: `person:${p.id}`, name: nameOf(p), detail: p.email ?? "Fund manager", source: "Fund manager", email: (p.email ?? null) as string | null, kyc: (kyc.get(p.id) ?? "none") as KycState, hasAccount: true })),
   ];
+  // Fund team members, unless the same person or email is already listed or signing.
+  const seenPersons = new Set<string>([...taken, ...contactPersons, ...((managerPeople ?? []) as any[]).map((p) => p.id)]);
+  const seenEmails = new Set(candidates.map((c) => c.email?.toLowerCase()).filter(Boolean) as string[]);
+  for (const m of team) {
+    const pid = teamPeople.get(m.id) ?? null;
+    const em = m.email ? String(m.email).toLowerCase() : null;
+    if ((pid && seenPersons.has(pid)) || (em && seenEmails.has(em))) continue;
+    if (pid) seenPersons.add(pid); if (em) seenEmails.add(em);
+    candidates.push({ key: `team:${m.id}`, name: m.full_name as string, detail: m.email ?? "Fund team", source: "Fund team", email: em, kyc: ((pid && kyc.get(pid)) || "none") as KycState, hasAccount: Boolean(m.user_id) });
+  }
   return {
     canEdit: managesExactFund(actor, offeringId),
     canEditPerson: actor.isStaff,
@@ -258,6 +271,11 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
     const { data: mgrs } = await db().from("fund_managers").select("user_id").eq("offering_id", input.offeringId);
     const { data: p } = await db().from("persons").select("id, user_id").eq("id", personId).maybeSingle();
     if (!p || !((mgrs ?? []) as any[]).some((m) => m.user_id === p.user_id)) throw new Error("That person is not listed on this Fund.");
+  } else if (input.candidateKey?.startsWith("team:")) {
+    const { data: m } = await db().from("fund_team_members").select("*").eq("id", input.candidateKey.slice(5)).eq("offering_id", input.offeringId).is("removed_at", null).maybeSingle();
+    if (!m) throw new Error("That person is not on this Fund's team.");
+    const r = await personForTeamMember(userId, m, o.client_id ?? null, actor.isStaff, Boolean(input.confirmSeparate));
+    personId = r.personId; contactId = r.contactId;
   } else {
     throw new Error("Choose a person or add a new one.");
   }
@@ -283,6 +301,7 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
   if (error) throw new Error(error.code === "23505" ? "That person is already a signatory for this Fund." : error.message);
   if (primary) await syncPrimary(input.offeringId);
   await audit(input.offeringId, userId, "fund_signatory_added", "Fund signatory added", { personId, contactId, primary });
+  await ensureTeamSignatoryPermission(userId, input.offeringId, personId!);
   let invited = false;
   if (input.sendInvite && contactId) {
     await sendContactInvite(userId, contactId);
@@ -305,6 +324,7 @@ export async function updateFundSignatory(userId: string, input: { offeringId: s
       await syncPrimary(input.offeringId);
     }
     await audit(input.offeringId, userId, "fund_signatory_removed", "Fund signatory removed", { personId: row.person_id });
+    await dropTeamSignatoryPermission(userId, input.offeringId, row.person_id);
     return { ok: true };
   }
   if (input.preferredName !== undefined || input.email !== undefined) {
@@ -333,4 +353,115 @@ export async function updateFundSignatory(userId: string, input: { offeringId: s
   if (row.is_primary || input.makePrimary) await syncPrimary(input.offeringId);
   await audit(input.offeringId, userId, "fund_signatory_updated", "Fund signatory updated", { personId: row.person_id, makePrimary: !!input.makePrimary });
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Fund team <-> signatories sync. "Authorized signatory" on the team and an
+// active fund_signatories row describe the same fact; each side keeps the other
+// in step. Idempotent, never merges Persons, logged via audit().
+
+async function personsByEmailOrUser(m: { user_id?: string | null; email?: string | null }) {
+  if (m.user_id) {
+    const { data } = await db().from("persons").select("id").eq("user_id", m.user_id).is("merged_into_person_id", null).limit(2);
+    if ((data ?? []).length === 1) return String(data[0].id);
+  }
+  return null;
+}
+
+/** Person id for each active team member: own login's Person, else the same-email contact on the Client. */
+async function teamPersons(team: any[]): Promise<Map<string, string | null>> {
+  const out = new Map<string, string | null>();
+  for (const m of team) out.set(m.id, await personsByEmailOrUser(m));
+  return out;
+}
+
+async function personForTeamMember(userId: string, m: any, clientId: string | null, isStaff: boolean, confirmSeparate: boolean): Promise<{ personId: string; contactId: string | null }> {
+  const email = m.email ? String(m.email).trim().toLowerCase() : null;
+  let contact: any = null;
+  if (clientId && email) {
+    const { data } = await db().from("client_contacts").select("*").eq("client_id", clientId).eq("status", "active").is("deactivated_at", null).ilike("email", email).limit(2);
+    if ((data ?? []).length === 1) contact = data[0];
+  }
+  const own = await personsByEmailOrUser(m);
+  if (contact) {
+    if (contact.person_id) return { personId: contact.person_id, contactId: contact.id };
+    if (own) { await db().from("client_contacts").update({ person_id: own }).eq("id", contact.id); return { personId: own, contactId: contact.id }; }
+    if (!isStaff) forbid("this person must finish connecting their identity before being selected as a signer.");
+    return { personId: await personForContact(userId, contact, confirmSeparate), contactId: contact.id };
+  }
+  if (own) return { personId: own, contactId: null };
+  forbid("this team member needs a sign-in or a matching contact on the Client before they can be a signer.");
+  throw new Error("unreachable");
+}
+
+async function teamRowsForPerson(offeringId: string, personId: string) {
+  const { data: p } = await db().from("persons").select("user_id, email").eq("id", personId).maybeSingle();
+  const { data: rows } = await db().from("fund_team_members").select("id, user_id, email, permissions").eq("offering_id", offeringId).is("removed_at", null);
+  const em = p?.email ? String(p.email).toLowerCase() : null;
+  return ((rows ?? []) as any[]).filter((r) => (p?.user_id && r.user_id === p.user_id) || (em && String(r.email ?? "").toLowerCase() === em));
+}
+
+async function ensureTeamSignatoryPermission(userId: string, offeringId: string, personId: string) {
+  try {
+    for (const r of await teamRowsForPerson(offeringId, personId)) {
+      const perms: string[] = r.permissions ?? [];
+      if (!perms.includes("authorized_signatory")) {
+        await db().from("fund_team_members").update({ permissions: [...perms, "authorized_signatory"] }).eq("id", r.id);
+        await audit(offeringId, userId, "fund_team_signatory_synced", "Team member marked Authorized signatory to match signer list", { teamMemberId: r.id, personId });
+      }
+    }
+  } catch (e) { console.error("[fund-signatories] team sync", (e as Error).message); }
+}
+
+async function dropTeamSignatoryPermission(userId: string, offeringId: string, personId: string) {
+  try {
+    for (const r of await teamRowsForPerson(offeringId, personId)) {
+      const perms: string[] = r.permissions ?? [];
+      if (perms.includes("authorized_signatory")) {
+        await db().from("fund_team_members").update({ permissions: perms.filter((x) => x !== "authorized_signatory") }).eq("id", r.id);
+        await audit(offeringId, userId, "fund_team_signatory_synced", "Authorized signatory removed from team member to match signer list", { teamMemberId: r.id, personId });
+      }
+    }
+  } catch (e) { console.error("[fund-signatories] team sync", (e as Error).message); }
+}
+
+/** Called after a team member is saved or removed: keeps the signer list matching "Authorized signatory". */
+export async function syncTeamMemberSignatory(userId: string, offeringId: string, teamMemberId: string): Promise<{ note: string | null }> {
+  const { data: m } = await db().from("fund_team_members").select("*").eq("id", teamMemberId).eq("offering_id", offeringId).maybeSingle();
+  if (!m) return { note: null };
+  const wants = !m.removed_at && (m.permissions ?? []).includes("authorized_signatory");
+  const { data: o } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
+  let personId: string | null = await personsByEmailOrUser(m);
+  if (!personId && o?.client_id && m.email) {
+    const { data: c } = await db().from("client_contacts").select("person_id").eq("client_id", o.client_id).eq("status", "active").is("deactivated_at", null).ilike("email", String(m.email).trim()).limit(2);
+    if ((c ?? []).length === 1 && c[0].person_id) personId = c[0].person_id;
+  }
+  const { data: active } = personId ? await db().from("fund_signatories").select("*").eq("offering_id", offeringId).eq("person_id", personId).eq("status", "active").maybeSingle() : { data: null };
+  if (wants && !active) {
+    try {
+      await addFundSignatory(userId, { offeringId, candidateKey: `team:${m.id}` });
+      return { note: null };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/already a signatory/.test(msg)) return { note: null };
+      return { note: `Saved to the team, but not added as a signer yet: ${msg.replace(/^Forbidden:\s*/i, "")}` };
+    }
+  }
+  if (!wants && active) {
+    await updateFundSignatory(userId, { offeringId, id: active.id, remove: true });
+  }
+  return { note: null };
+}
+
+/** Logins allowed to sign fund documents as the fund: assigned managers plus active signatories with a login. */
+export async function fundSignerUserIds(offeringId: string): Promise<string[]> {
+  const { data } = await db().from("fund_signatories").select("persons(user_id)").eq("offering_id", offeringId).eq("status", "active");
+  return [...new Set(((data ?? []) as any[]).map((r) => r.persons?.user_id).filter(Boolean))] as string[];
+}
+
+export async function isFundSignerUser(offeringId: string, userId: string | null | undefined): Promise<boolean> {
+  if (!userId) return false;
+  const { data: mgr } = await db().from("fund_managers").select("user_id").eq("offering_id", offeringId).eq("user_id", userId).maybeSingle();
+  if (mgr) return true;
+  return (await fundSignerUserIds(offeringId)).includes(userId);
 }

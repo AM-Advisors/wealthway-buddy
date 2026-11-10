@@ -156,7 +156,9 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
   const done = () => { invalidateFund(qc, fundId); onClose(); };
   const m = useMutation({
     mutationFn: () => save({ data: { fundId, id: member.id ?? null, fullName: f.fullName, email: f.email, phone: f.phone, company: f.company, teamRole: f.teamRole, permissions: [...f.permissions] as any } }),
-    onSuccess: async () => {
+    onSuccess: async (res: any) => {
+      if (res?.signerNote) toast.warning(res.signerNote);
+      qc.invalidateQueries({ queryKey: ["fund-signatories", fundId] });
       if (sendInvite) {
         try { await invite({ data: { offeringId: fundId, contactKey: pick.startsWith("contact:") ? pick : null, fullName: f.fullName, email: f.email } }); toast.success("Saved and invitation sent"); }
         catch (e: any) { toast.error(`Saved, but the invitation wasn't sent: ${e.message}`); }
