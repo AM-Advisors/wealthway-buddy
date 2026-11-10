@@ -44306,6 +44306,83 @@ export type Database = {
         }
         Relationships: []
       }
+      series_master_entities: {
+        Row: {
+          change_reason: string | null
+          created_at: string
+          id: string
+          jurisdiction: string | null
+          name: string
+          name_key: string
+          source: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          change_reason?: string | null
+          created_at?: string
+          id?: string
+          jurisdiction?: string | null
+          name: string
+          name_key: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          change_reason?: string | null
+          created_at?: string
+          id?: string
+          jurisdiction?: string | null
+          name?: string
+          name_key?: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      series_master_entity_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event: string
+          from_jurisdiction: string | null
+          id: string
+          master_id: string
+          reason: string | null
+          to_jurisdiction: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event: string
+          from_jurisdiction?: string | null
+          id?: string
+          master_id: string
+          reason?: string | null
+          to_jurisdiction?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event?: string
+          from_jurisdiction?: string | null
+          id?: string
+          master_id?: string
+          reason?: string | null
+          to_jurisdiction?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_master_entity_events_master_id_fkey"
+            columns: ["master_id"]
+            isOneToOne: false
+            referencedRelation: "series_master_entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_catalog: {
         Row: {
           active: boolean
@@ -51077,6 +51154,8 @@ export type Database = {
         Args: { p_details: Json; p_offering_id: string }
         Returns: undefined
       }
+      series_master_key: { Args: { _name: string }; Returns: string }
+      series_master_label: { Args: { _name: string }; Returns: string }
       set_staff_role: {
         Args: {
           _grant: boolean

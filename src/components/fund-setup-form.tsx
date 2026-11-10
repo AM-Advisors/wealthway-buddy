@@ -26,6 +26,7 @@ import { FundClassSummary } from "@/components/fund-class-summary";
 import { FundQuestionSectionCard } from "@/components/fund-question-section-card";
 import { EconomicsCard } from "@/components/fund-setup-canonical";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
+import { SeriesMasterFirstEntryHint, SeriesMasterJurisdiction, useSeriesMaster } from "@/components/series-master-jurisdiction";
 
 type Mode = "staff" | "manager";
 
@@ -47,6 +48,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
   const [busy, setBusy] = useState(false);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const isStaff = mode === "staff" && !!d?.isStaff;
+  const seriesMaster = useSeriesMaster(offeringId);
 
   if (q.isPending) return <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">Loading setup…</div>;
   if (q.isError) return <div role="alert" className="rounded-xl border bg-card p-6 text-sm">{(q.error as Error).message}</div>;
@@ -88,6 +90,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
   };
 
   const renderField = (f: FieldDef) => {
+    if (f.key === "jurisdiction" && seriesMaster?.jurisdiction) return <SeriesMasterJurisdiction offeringId={offeringId} master={seriesMaster} canChange={isStaff} />;
     const locked = !!f.section && waiting(f.section);
     const cls = "peer h-14 w-full rounded-xl border border-input bg-background px-4 pt-5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30 disabled:opacity-60";
     const label = <span className="pointer-events-none absolute left-4 top-2 text-[11px] font-medium text-muted-foreground">{f.label}{f.required && " *"}</span>;
@@ -119,7 +122,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
         <Button size="sm" disabled={!changed || busy} onClick={async () => { await save(keys, s.title); after?.(); }}>{isStaff || d.directSetupEdits ? "Save" : "Submit"}</Button>
       </div>
     );
-    const fields = <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>;
+    const fields = <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}{f.key === "jurisdiction" && seriesMaster && !seriesMaster.jurisdiction && <SeriesMasterFirstEntryHint master={seriesMaster} />}</div>)}</div>;
     if (!ret && !waiting(s.fields[0]?.section ?? "") && fieldSectionComplete(required, prior, changed && editingSection !== id)) {
       return (
         <div key={id} className="[&:has(>[data-class-summary])>[data-fees-defaults]]:hidden">

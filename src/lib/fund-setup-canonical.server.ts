@@ -20,6 +20,7 @@ import {
   type FundClass,
 } from "@/lib/fund-setup-canonical";
 import { setupActor, forbid, createFundSetup, saveEconomics } from "@/lib/fund-setup.server";
+import { seriesMasterKey, seriesMasterLabel, type SeriesMaster } from "@/lib/series-master";
 
 const db = () => supabaseAdmin as any;
 
@@ -98,6 +99,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
 
   const { listSetupDocuments } = await import("@/lib/offering-document-setup.server");
   const docSetup = await listSetupDocuments(userId, offeringId);
+  const seriesMaster = await loadSeriesMaster(o);
   const statuses = sectionStatuses({
     documentsStatus: docSetup.status,
     fundType: o.fund_type,
@@ -110,7 +112,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
     fundTermMonths: setup?.fund_term_months ?? null,
     investmentPeriodMonths: setup?.investment_period_months ?? null,
     entityType: o.entity_type,
-    jurisdiction: o.state_formed,
+    jurisdiction: seriesMaster?.jurisdiction ?? o.state_formed,
     formationDate: o.date_formed,
     hasEin,
     regType: o.reg_type,
@@ -179,6 +181,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
     },
     signatoryOptions,
     statuses,
+    seriesMaster,
     legalNameHistory: ((history.data ?? []) as any[]).map((h) => ({
       previous: h.previous_value,
       next: h.new_value,
@@ -265,6 +268,49 @@ export async function saveFundSetupFields(
     if (error) throw new Error("Fund setup details could not be saved.");
   }
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteTasks(input.offeringId);
+  return { ok: true };
+}
+
+/** The master LLC a series fund sits under, with the jurisdiction every series under it shares. */
+async function loadSeriesMaster(o: { legal_entity_name?: string | null; name?: string | null }): Promise<SeriesMaster | null> {
+  const src = o.legal_entity_name?.trim() || o.name || null;
+  const key = seriesMasterKey(src);
+  if (!key) return null;
+  const [{ data: m }, { data: series }] = await Promise.all([
+    db().from("series_master_entities").select("name, jurisdiction").eq("name_key", key).maybeSingle(),
+    db().from("offerings").select("legal_entity_name, name").or("legal_entity_name.ilike.%series of%,name.ilike.%series of%").limit(2000),
+  ]);
+  const seriesCount = ((series ?? []) as any[]).filter((r) => seriesMasterKey(r.legal_entity_name?.trim() || r.name) === key).length;
+  return { name: m?.name ?? seriesMasterLabel(src) ?? "", jurisdiction: m?.jurisdiction ?? null, seriesCount };
+}
+
+export async function seriesMasterForFund(userId: string, offeringId: string) {
+  await assertRead(userId, offeringId);
+  const { data: o } = await db().from("offerings").select("legal_entity_name, name").eq("id", offeringId).maybeSingle();
+  if (!o) throw new Error("Fund not found.");
+  return loadSeriesMaster(o);
+}
+
+/** Staff only: change the master's jurisdiction once; the database applies it to every series under that master and logs the change. */
+export async function changeSeriesMasterJurisdiction(userId: string, input: { offeringId: string; jurisdiction: string; reason: string }) {
+  const actor = await assertRead(userId, input.offeringId);
+  if (!actor.isStaff) forbid("only Harmonious can change a master's jurisdiction.");
+  const jurisdiction = input.jurisdiction.trim();
+  const reason = input.reason.trim();
+  if (!jurisdiction) throw new Error("Enter the master's jurisdiction of formation.");
+  if (!reason) throw new Error("Add a short reason for the change.");
+  const { data: o } = await db().from("offerings").select("legal_entity_name, name").eq("id", input.offeringId).maybeSingle();
+  const src = o?.legal_entity_name?.trim() || o?.name || null;
+  const key = seriesMasterKey(src);
+  if (!key) throw new Error("This fund isn't a series of a master LLC.");
+  const now = new Date().toISOString();
+  const { data: existing } = await db().from("series_master_entities").select("id, jurisdiction").eq("name_key", key).maybeSingle();
+  const res = existing
+    ? await db().from("series_master_entities").update({ jurisdiction, change_reason: reason, updated_by: userId, updated_at: now }).eq("id", existing.id)
+    : await db().from("series_master_entities").insert({ name_key: key, name: seriesMasterLabel(src) ?? key, jurisdiction, source: "recorded", change_reason: reason, updated_by: userId });
+  if (res.error) throw new Error("The master's jurisdiction could not be saved.");
+  if (!existing) await db().from("offerings").update({ state_formed: jurisdiction }).eq("id", input.offeringId);
+  await (await import("@/lib/fund-setup.server")).syncFundFacts(input.offeringId);
   return { ok: true };
 }
 

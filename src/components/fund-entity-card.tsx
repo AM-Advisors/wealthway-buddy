@@ -25,6 +25,7 @@ import {
   saveFundEntity,
   updateBankSetupStatus,
 } from "@/lib/fund-entity.functions";
+import { SeriesMasterFirstEntryHint, SeriesMasterJurisdiction, useSeriesMaster } from "@/components/series-master-jurisdiction";
 
 const FUND_TYPES = ["SPV", "Private Equity", "Venture Capital", "Family Office", "Hedge Fund", "Other"] as const;
 const ENTITY_TYPES = ["LLC", "LP", "GP", "Series LLC", "Master LLC"] as const;
@@ -128,6 +129,7 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
     queryFn: () => load({ data: { offering_id: fundId } }),
     retry: false,
   });
+  const seriesMaster = useSeriesMaster(fundId);
 
   const [entity, setEntity] = useState({
     legal_entity_name: "",
@@ -337,13 +339,20 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="state-formed">State formed</Label>
-              <Input
-                id="state-formed"
-                value={entity.state_formed}
-                placeholder="Delaware"
-                onChange={(e) => setEntity({ ...entity, state_formed: e.target.value })}
-              />
+              <Label htmlFor="state-formed">{seriesMaster && !seriesMaster.jurisdiction ? "Master's state formed" : "State formed"}</Label>
+              {seriesMaster?.jurisdiction ? (
+                <SeriesMasterJurisdiction offeringId={fundId} master={seriesMaster} canChange={!!query.data?.isAdmin} />
+              ) : (
+                <>
+                  <Input
+                    id="state-formed"
+                    value={entity.state_formed}
+                    placeholder="Delaware"
+                    onChange={(e) => setEntity({ ...entity, state_formed: e.target.value })}
+                  />
+                  {seriesMaster && <SeriesMasterFirstEntryHint master={seriesMaster} />}
+                </>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="date-formed">Date formed</Label>

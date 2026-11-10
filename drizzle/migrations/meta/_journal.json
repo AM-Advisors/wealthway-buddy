@@ -2682,6 +2682,13 @@
       "when": 1794332121941,
       "tag": "0382_one_open_bookkeeping_request_per_entity",
       "breakpoints": true
+    },
+    {
+      "idx": 383,
+      "version": "7",
+      "when": 1794348878065,
+      "tag": "0383_series_master_jurisdiction",
+      "breakpoints": true
     }
   ]
 }

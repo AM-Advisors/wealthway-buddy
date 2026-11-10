@@ -37,6 +37,7 @@ import { FormationRecordCard } from "@/components/formation-record-card";
 import { RequiredHere, LaunchRequirements } from "@/components/fund-setup-checklist";
 import { staffSetupApplies } from "@/lib/staff-setup-applicability";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
+import { SeriesMasterFirstEntryHint, SeriesMasterJurisdiction } from "@/components/series-master-jurisdiction";
 import { Pencil, Plus, Save, CheckCircle2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -250,7 +251,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           fields: {
             displayName: f.displayName, fundType: f.fundType || null, gpName: f.gpName || null,
             signatoryEntityName: f.signatoryEntityName || null,
-            entityType: f.entityType || null, jurisdiction: f.jurisdiction || null, formationDate: f.formationDate || null,
+            entityType: f.entityType || null, ...(d.seriesMaster?.jurisdiction ? {} : { jurisdiction: f.jurisdiction || null }), formationDate: f.formationDate || null,
             registeredAgent: f.registeredAgent || null, principalAddress: f.principalAddress || null,
             taxClassification: f.taxClassification || null, regType: f.regType as any,
             targetRaiseCents: toCents(f.targetRaise ?? ""), maxOfferingCents: toCents(f.maxOffering ?? ""),
@@ -293,7 +294,11 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
         <EditableSection id="entity" title="Entity" keys={["entityType","jurisdiction","formationDate","registeredAgent","principalAddress","taxClassification"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Entity type">{sel("entityType", ["LLC", "LP", "Series LLC", "Master LLC", "Corporation", "Trust", "Other"].map((t) => [t, t]))}</Field>
-          <Field label="Jurisdiction of formation"><Input {...bind("jurisdiction")} /></Field>
+          <Field label={d.seriesMaster && !d.seriesMaster.jurisdiction ? "Master's jurisdiction of formation" : "Jurisdiction of formation"}>
+            {d.seriesMaster?.jurisdiction
+              ? <SeriesMasterJurisdiction offeringId={offeringId} master={d.seriesMaster} canChange={d.isStaff} />
+              : <><Input {...bind("jurisdiction")} />{d.seriesMaster && <SeriesMasterFirstEntryHint master={d.seriesMaster} />}</>}
+          </Field>
           <Field label="Formation date"><Input type="date" {...bind("formationDate")} /></Field>
           <Field label="Registered agent"><Input {...bind("registeredAgent")} /></Field>
           <Field label="Principal business address"><Input {...bind("principalAddress")} /></Field>
