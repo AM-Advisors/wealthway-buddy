@@ -139,10 +139,12 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     if (l.bookkeeping.effectiveOn < version.effective_on) throw new Error("The service date cannot precede the pricing version's effective date.");
     if (price.input.entityId) {
       // Duplicate coverage for the same entity and period is never quoted twice.
-      const { data: entity } = await db.from("client_entities").select("id, client_id, offering_id").eq("id", price.input.entityId).maybeSingle();
+      const { data: entity } = await db.from("client_entities").select("id, client_id, offering_id, entity_type").eq("id", price.input.entityId).maybeSingle();
       if (!entity || !d.clientId || entity.client_id !== d.clientId) throw new Error("That entity doesn't belong to the chosen client.");
       const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
-      const { coverageConflicts } = await import("@/lib/bookkeeping-options");
+      const { coverageConflicts, optionAvailableFor } = await import("@/lib/bookkeeping-options");
+      const availability = optionAvailableFor(price.input.option, { entityType: entity.entity_type, offeringId: entity.offering_id });
+      if (!availability.available) throw new Error(availability.reason ?? "That option isn't available for this entity.");
       const coverage = await loadEntityCoverage(db, entity);
       const conflict = coverageConflicts({ option: price.input.option, effectiveOn: price.input.effectiveOn, termMonths: price.input.termMonths, excluded: price.input.excludedScope }, coverage.rows.filter((r) => r.source !== "request"));
       if (conflict.blocked) throw new Error(conflict.reason ?? "This entity is already covered for this period.");

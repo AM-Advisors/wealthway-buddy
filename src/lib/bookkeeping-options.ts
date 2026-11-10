@@ -123,7 +123,7 @@ export const BOOKKEEPING_OPTIONS: Record<BookkeepingOption, OptionDefinition> = 
     key: "managed",
     name: "Managed Bookkeeping",
     shortName: "Managed",
-    description: "Let Harmonious handle your bookkeeping, from transaction categorization through your monthly close.",
+    description: "Let Harmonious keep your books and close each period, within the scope in your quote.",
     responsibilities: {
       provide_records: "client", bank_statements: "client", categorize: "harmonious", reconcile: "harmonious",
       journal_entries: "harmonious", close: "harmonious", reports: "harmonious", review: "harmonious",
@@ -166,11 +166,23 @@ export function optionAvailableFor(option: BookkeepingOption, entity: { entityTy
   return { available: false, reason: "The tools this option relies on are available for funds and SPVs today, not yet for this type of entity." };
 }
 
-/** Responsibility rows a client may see: an activity only appears when the option actually covers it or it is the client's job. */
-export function responsibilityRows(option: BookkeepingOption): { activity: Activity; label: string; owner: Owner }[] {
+/** Harmonious activities that depend on tools that exist only for funds, SPVs and series today. */
+const FUND_ONLY_ACTIVITIES: Activity[] = ["categorize", "reconcile", "outstanding_items"];
+
+export type RowOwner = Owner | "not_available";
+
+/**
+ * Responsibility rows a client may see. When an entity is given and it is not a fund, any
+ * Harmonious activity that relies on fund-only tools shows as not available instead of promised.
+ */
+export function responsibilityRows(option: BookkeepingOption, entity?: { entityType?: string | null; offeringId?: string | null }): { activity: Activity; label: string; owner: RowOwner }[] {
   const def = BOOKKEEPING_OPTIONS[option];
+  const fund = !entity || isFundEntity(entity);
   return (Object.keys(ACTIVITY_LABELS) as Activity[])
-    .map((a) => ({ activity: a, label: ACTIVITY_LABELS[a], owner: def.responsibilities[a] }));
+    .map((a) => {
+      const owner = def.responsibilities[a];
+      return { activity: a, label: ACTIVITY_LABELS[a], owner: owner === "harmonious" && !fund && FUND_ONLY_ACTIVITIES.includes(a) ? "not_available" as const : owner };
+    });
 }
 
 /* ------------------------------------------------------------ frequency */
@@ -353,6 +365,8 @@ export function coverageConflicts(
     period,
     duplicates,
     covered: [...covered],
+    /** Scope this option would still add; the only part a quote may price. */
+    uncovered: charged.filter((s) => !covered.has(s)),
     unresolved,
     existingBookkeeping,
     blocked: Boolean(existingBookkeeping) || fullyCovered,
@@ -379,6 +393,11 @@ export const FUND_ACCOUNTING_SCOPE: { key: FundAccountingScope; label: string; f
 export function fundAccountingCoverage(featureKeys: readonly string[]) {
   const have = new Set(featureKeys);
   return FUND_ACCOUNTING_SCOPE.map((s) => ({ key: s.key, label: s.label, included: s.features.some((f) => have.has(f)) }));
+}
+
+/** Only the Fund Accounting items the agreement actually includes; what clients see. */
+export function includedFundAccounting(featureKeys: readonly string[]) {
+  return fundAccountingCoverage(featureKeys).filter((s) => s.included);
 }
 
 /** Bookkeeping scope an administration agreement already covers. */

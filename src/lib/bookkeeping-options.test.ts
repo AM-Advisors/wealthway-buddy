@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookkeepingObligations, coverageConflicts, fundAccountingCoverage, optionAvailableFor, responsibilityRows, visibleCapabilities, type CoverageRow } from "@/lib/bookkeeping-options";
+import { bookkeepingObligations, coverageConflicts, fundAccountingCoverage, includedFundAccounting, optionAvailableFor, resolveFrequency, responsibilityRows, supportDescription, visibleCapabilities, type CoverageRow } from "@/lib/bookkeeping-options";
 
 const days = { review: null, close: { monthly: 20, quarterly: 20, annual: null } };
 const window = { from: "2026-01-01", to: "2026-12-31" };
@@ -65,5 +65,45 @@ describe("fund accounting", () => {
     const s = fundAccountingCoverage(["QUARTERLY_NAV", "MANAGEMENT_FEE_CALC"]);
     expect(s.find((x) => x.key === "nav")?.included).toBe(true);
     expect(s.find((x) => x.key === "performance_allocations")?.included).toBe(false);
+  });
+});
+
+describe("verification rules (November 2026)", () => {
+  const company = { entityType: "management_company", offeringId: null };
+  const gp = { entityType: "gp", offeringId: null };
+  it("GP and management companies cannot choose Self-Service or Review", () => {
+    for (const e of [company, gp]) {
+      expect(optionAvailableFor("self_service", e).available).toBe(false);
+      expect(optionAvailableFor("review", e).available).toBe(false);
+    }
+  });
+  it("Managed for a company never promises fund-only categorization, reconciliation or outstanding items", () => {
+    const rows = responsibilityRows("managed", company);
+    expect(rows.find((r) => r.activity === "categorize")?.owner).toBe("not_available");
+    expect(rows.find((r) => r.activity === "reconcile")?.owner).toBe("not_available");
+    expect(rows.find((r) => r.activity === "close")?.owner).toBe("harmonious");
+    expect(responsibilityRows("managed", { entityType: "fund", offeringId: "f" }).find((r) => r.activity === "reconcile")?.owner).toBe("harmonious");
+  });
+  it("partial coverage quotes only the uncovered scope", () => {
+    const partial: CoverageRow = { source: "administration", label: "Fund admin", scope: ["tools", "reconcile", "close"], start: "2025-01-01", end: null };
+    const r = coverageConflicts({ option: "managed", effectiveOn: "2026-01-01", termMonths: 12 }, [partial]);
+    expect(r.blocked).toBe(false);
+    expect(r.uncovered).toEqual(["categorize", "journal_entries", "reports", "review", "corrections"]);
+  });
+  it("an open bookkeeping request blocks a second request for the same entity", () => {
+    const open: CoverageRow = { source: "request", label: "Your request", scope: ["review"], start: null, end: null };
+    expect(coverageConflicts({ option: "review", effectiveOn: "2026-01-01", termMonths: 12 }, [open]).blocked).toBe(true);
+  });
+  it("Fund Accounting lists only items in the administration agreement", () => {
+    expect(includedFundAccounting(["QUARTERLY_NAV"]).map((s) => s.key)).toEqual(["nav"]);
+    expect(includedFundAccounting([])).toEqual([]);
+  });
+  it("support level, service frequency and billing are independent", () => {
+    expect(resolveFrequency("review", "annual")).toBe("annual");
+    expect(() => resolveFrequency("self_service", "monthly")).toThrow();
+    expect(() => resolveFrequency("managed", "annual")).toThrow();
+    const a = bookkeepingObligations({ option: "review", frequency: "quarterly" }, window, days);
+    expect(a).toHaveLength(4);
+    expect(supportDescription("review", "white_glove").detail).toContain("schedule stays as agreed");
   });
 });

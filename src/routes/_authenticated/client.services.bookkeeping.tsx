@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/client/services/bookkeepin
   component: BookkeepingChooser,
 });
 
-const OWNER_LABEL = { client: "Your team", harmonious: "Harmonious", not_included: "Not included" } as const;
+const OWNER_LABEL = { client: "Your team", harmonious: "Harmonious", not_included: "Not included", not_available: "Not available yet for this entity" } as const;
 const today = () => new Date().toISOString().slice(0, 10);
 
 function BookkeepingChooser() {
@@ -99,19 +99,22 @@ function BookkeepingChooser() {
         )}
         {entity?.fundAccounting && (
           <div className="max-w-3xl rounded-lg border p-4 text-sm">
-            <p className="font-medium">Fund Accounting for this fund</p>
-            <ul className="mt-1 grid gap-1 sm:grid-cols-2">{entity.fundAccounting.map((s) => <li key={s.key}>{s.included ? "✓" : "·"} {s.label}<span className="text-muted-foreground">{s.included ? " · included" : " · not included"}</span></li>)}</ul>
+            <p className="font-medium">Fund Accounting in this fund's administration agreement</p>
+            {entity.fundAccounting.some((s) => s.included)
+              ? <ul className="mt-1 grid gap-1 sm:grid-cols-2">{entity.fundAccounting.filter((s) => s.included).map((s) => <li key={s.key}>✓ {s.label}</li>)}</ul>
+              : <p className="mt-1 text-muted-foreground">Your current agreement doesn't include Fund Accounting services.</p>}
           </div>
         )}
       </section>
 
       <section className="space-y-3" aria-labelledby="bk-options">
         <h2 id="bk-options" className="text-lg font-semibold">2. Choose an option</h2>
+        {!entity ? <p className="text-sm text-muted-foreground">Choose an entity first to see what each option includes for it.</p> : (
         <div className="grid gap-4 lg:grid-cols-3">
           {OPTION_KEYS.map((k) => {
             const def = BOOKKEEPING_OPTIONS[k];
-            const avail = entity ? optionAvailableFor(k, entity) : { available: true, reason: null };
-            const caps = visibleCapabilities(k, entity ?? { entityType: "fund", offeringId: null });
+            const avail = optionAvailableFor(k, entity);
+            const caps = visibleCapabilities(k, entity);
             const selected = option === k;
             return (
               <article key={k} className={`flex flex-col rounded-xl border bg-card p-5 ${selected ? "border-primary ring-2 ring-primary/30" : ""}`}>
@@ -122,7 +125,7 @@ function BookkeepingChooser() {
                 {caps.length ? <ul className="mt-1 space-y-1 text-sm">{caps.map((c) => <li key={c.key}>✓ {c.label}<span className="block text-xs text-muted-foreground">{c.note}</span></li>)}</ul>
                   : <p className="mt-1 text-sm text-muted-foreground">Nothing is available for this entity type yet.</p>}
                 <h4 className="mt-4 text-sm font-semibold">Who does what</h4>
-                <table className="mt-1 w-full text-sm"><tbody>{responsibilityRows(k).map((r) => (
+                <table className="mt-1 w-full text-sm"><tbody>{responsibilityRows(k, entity).map((r) => (
                   <tr key={r.activity} className="border-b last:border-0"><td className="py-1 pr-2">{r.label}</td><td className={`py-1 text-right ${r.owner === "harmonious" ? "font-medium" : "text-muted-foreground"}`}>{OWNER_LABEL[r.owner]}</td></tr>
                 ))}</tbody></table>
                 <p className="mt-3 text-xs text-muted-foreground">{k === "self_service" ? "No review or close schedule from Harmonious." : k === "review" ? "Reviews monthly, quarterly or annually, as you choose." : "Monthly close by default; quarterly also available."}</p>
@@ -135,6 +138,7 @@ function BookkeepingChooser() {
             );
           })}
         </div>
+        )}
       </section>
 
       {option && entity && (
@@ -164,7 +168,12 @@ function BookkeepingChooser() {
               </label>
             ))}</div></div>
           <div className="space-y-1"><Label htmlFor="bk-notes">Anything else we should know?</Label><Textarea id="bk-notes" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
-          {conflict && conflict.duplicates.length > 0 && !conflict.blocked && <p className="text-sm">Already covered and excluded from your quote: {conflict.covered.map((s) => CHARGED_LABELS[s]).join(", ")}.</p>}
+          {conflict && conflict.duplicates.length > 0 && !conflict.blocked && (
+            <div className="rounded-lg border p-3 text-sm">
+              <p><span className="font-medium">We'll quote only:</span> {conflict.uncovered.map((s) => CHARGED_LABELS[s]).join(", ")}.</p>
+              <p className="mt-1 text-muted-foreground">Already covered, so not quoted again: {conflict.covered.map((s) => CHARGED_LABELS[s]).join(", ")}.</p>
+            </div>
+          )}
           {conflict?.blocked && <p role="alert" className="text-sm text-destructive">{conflict.reason}</p>}
           {sent ? <p className="text-sm">Request sent. <Link to="/client/services/requests/$requestId" params={{ requestId: sent }} className="text-primary underline">View request</Link></p>
             : <Button size="lg" disabled={m.isPending || !!conflict?.blocked || !startOn} onClick={() => m.mutate()}>Request {BOOKKEEPING_OPTIONS[option].shortName} for {entity.legalName}</Button>}

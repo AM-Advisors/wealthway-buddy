@@ -1074,3 +1074,8 @@
 - [x] Three options (Self-Service, Review, Managed) separate from Fund Accounting; responsibilities, real capabilities only, independent frequency/support/billing, quote-only add-ons, scope limits, duplicate-coverage checks; client chooser and request, staff quote configurator, pricing editor, fund Fund Accounting card. 19 rule tests pass.
 - [x] Client-facing outstanding-items report on each fund's Services page: what clients need to provide and what Harmonious is working on, from statements, unexplained transactions, information requests, exceptions, close steps and staff review requests (client-visible tasks; client marks provided, staff complete). 26 rule tests pass.
 - [ ] Missing capabilities (reported, not shown as available): bank statement upload/reconciliation for non-fund entities; scheduled bookkeeping review/close work queue; client self-service tools for company/GP books.
+
+## Bookkeeping signed-in verification (2026-11-10)
+- [x] Automated: 54 bookkeeping/quote tests pass; read-only database checks (entity types, feature keys, approval guards, zero bookkeeping requests/engagements/quotes).
+- [x] Fixed: partial overlaps show only the scope to be quoted; company/GP Managed rows no longer promise fund-only categorization/reconciliation; Fund Accounting shows only included items; staff quotes reject unavailable entity options.
+- [ ] Signed-in browser checks: blocked on an isolated fictional QA environment, a named test account and its two-step code holder.

@@ -18,8 +18,9 @@ export const getBookkeepingChooser = createServerFn({ method: "GET" })
     const clientIds = await myClientIds(context);
     if (!clientIds.length) return { clientId: null, entities: [] };
     const clientId = clientIds[0] as string;
+    // RLS returns only entities of organizations the caller is a direct member of.
     const { data: entities } = await context.supabase.from("client_entities")
-      .select("id, legal_name, entity_type, offering_id, status").eq("client_id", clientId).order("legal_name");
+      .select("id, legal_name, entity_type, offering_id, status").in("client_id", clientIds).order("legal_name");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
     const out = [];
@@ -76,6 +77,7 @@ export const requestBookkeeping = createServerFn({ method: "POST" })
       requested_start: data.startOn,
       add_ons_quote_requested: data.addons.map((k) => opts.ADDONS.find((a) => a.key === k)?.name ?? k).join("; ") || "None",
       already_covered_exclude_from_quote: conflict.covered.map((s) => opts.CHARGED_LABELS[s]).join("; ") || "None",
+      quote_only_this_scope: conflict.uncovered.map((s) => opts.CHARGED_LABELS[s]).join("; "),
       notes: data.notes || "None",
     };
     const { data: created, error } = await context.supabase.from("client_intake_requests").insert({
@@ -88,5 +90,5 @@ export const requestBookkeeping = createServerFn({ method: "POST" })
       actor_id: context.userId, client_id: (entity as any).client_id, area: "engagements", source: "portal",
       action: "intake_request_submitted", target: (created as any).id, new_value: { intent: "add_service", bookkeeping_option: data.option } as any,
     });
-    return { id: (created as any).id as string, excluded: conflict.covered };
+    return { id: (created as any).id as string, excluded: conflict.covered, uncovered: conflict.uncovered };
   });

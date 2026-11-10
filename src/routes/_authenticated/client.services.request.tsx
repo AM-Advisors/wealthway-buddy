@@ -121,7 +121,7 @@ function RequestRouter() {
               {g.key === "services" && (
                 <Link to="/client/services/bookkeeping" className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <p className="font-medium">Bookkeeping</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Compare Self-Service, Review and Managed Bookkeeping for a company, GP or fund.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Compare bookkeeping options for a fund, GP or management company. What's available depends on the entity.</p>
                 </Link>
               )}
             </div>

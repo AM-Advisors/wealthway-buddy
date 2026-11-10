@@ -6,7 +6,7 @@ import { ResponsibilityBadge } from "@/components/responsibility-badge";
 import { RESPONSIBILITY_CLIENT_EXPLANATION, asResponsibility, daysOverdue, waitingOnDetail } from "@/lib/responsibility";
 import { serviceLevelLabel, titleCase, usd, fmtDate } from "@/lib/service-engagement-labels";
 import { Link } from "@tanstack/react-router";
-import { fundAccountingCoverage } from "@/lib/bookkeeping-options";
+import { includedFundAccounting } from "@/lib/bookkeeping-options";
 import { BookkeepingOutstandingReport } from "@/components/bookkeeping-outstanding-report";
 
 export function FundServicesTab({ fundId }: { fundId: string }) {
@@ -54,15 +54,15 @@ export function FundServicesTab({ fundId }: { fundId: string }) {
 
 /** Fund Accounting is a fund service, separate from Bookkeeping; shows what the administration agreement covers. */
 function FundAccountingCard({ featureKeys }: { featureKeys: string[] }) {
-  const scope = fundAccountingCoverage(featureKeys);
+  const scope = includedFundAccounting(featureKeys);
   return (
     <section className="rounded-xl border bg-card p-5">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">Fund service</p>
       <h3 className="mt-1 text-lg">Fund Accounting</h3>
       <p className="text-sm text-muted-foreground">Fund-level accounting under your administration agreement. This is separate from Bookkeeping for a GP, management company or operating company.</p>
-      <ul className="mt-3 grid gap-1 text-sm sm:grid-cols-2">
-        {scope.map((s) => <li key={s.key}>{s.included ? "✓" : "·"} {s.label}<span className="text-muted-foreground">{s.included ? " · included" : " · not in your current agreement"}</span></li>)}
-      </ul>
+      {scope.length
+        ? <ul className="mt-3 grid gap-1 text-sm sm:grid-cols-2">{scope.map((s) => <li key={s.key}>✓ {s.label}</li>)}</ul>
+        : <p className="mt-3 text-sm text-muted-foreground">Your current agreement doesn't include Fund Accounting services.</p>}
       <p className="mt-4 text-sm">Need books kept for the GP or management company? <Link to="/client/services/bookkeeping" className="text-primary underline">Compare bookkeeping options</Link></p>
     </section>
   );

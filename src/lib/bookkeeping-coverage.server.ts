@@ -5,7 +5,7 @@
  * Callers must authorize the entity first.
  */
 import { BOOKKEEPING_KEY } from "@/lib/bookkeeping-model";
-import { adminBookkeepingScope, BOOKKEEPING_OPTIONS, fundAccountingCoverage, type CoverageRow } from "@/lib/bookkeeping-options";
+import { adminBookkeepingScope, BOOKKEEPING_OPTIONS, includedFundAccounting, type CoverageRow } from "@/lib/bookkeeping-options";
 
 type Db = any;
 const OPEN_REQUEST = ["submitted", "in_review", "scoped"];
@@ -46,5 +46,5 @@ export async function loadEntityCoverage(db: Db, entity: { id: string; offering_
   const { data: requests } = await db.from("client_intake_requests")
     .select("id, created_at, status").eq("entity_id", entity.id).in("status", OPEN_REQUEST).contains("requested_service_keys", [BOOKKEEPING_KEY]);
   for (const r of (requests ?? []) as any[]) rows.push({ source: "request", label: `Your bookkeeping request from ${String(r.created_at).slice(0, 10)}`, scope: [...BOOKKEEPING_OPTIONS.managed.charged, "tools"], start: null, end: null });
-  return { rows, fundAccounting: entity.offering_id ? fundAccountingCoverage(fundFeatureKeys) : null };
+  return { rows, fundAccounting: entity.offering_id ? includedFundAccounting(fundFeatureKeys) : null };
 }
