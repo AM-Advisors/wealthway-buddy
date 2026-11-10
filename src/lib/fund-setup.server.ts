@@ -1728,3 +1728,49 @@ export async function launchStatusForOffering(userId: string, offeringId: string
     openTasks: taskRows.filter((t) => (t.blocking ?? true) && t.status !== "complete").map((t) => ({ key: t.task_key as string, label: t.label as string, section: t.section as string })),
   };
 }
+
+/**
+ * Keeps canonical Fees & terms in step with fee answers entered elsewhere (fund request,
+ * older fee editor). Updates the open draft, or opens a new draft from the approved terms.
+ * Never approves; an unchanged value creates nothing.
+ */
+export async function syncFeesToEconomics(input: {
+  offeringId: string;
+  actorId: string;
+  fees: import("@/lib/request-economics").FeeAnswers;
+  classes?: unknown[];
+  reason: string;
+  /** Request seeding: only when the fund has no Fees & terms yet. */
+  onlyIfEmpty?: boolean;
+  /** Complete starting terms (request seeding), used instead of overlaying fees. */
+  seedTerms?: Record<string, unknown>;
+}) {
+  const { termsWithFees } = await import("@/lib/request-economics");
+  let { data: setup } = await db().from("fund_setups").select("id").eq("offering_id", input.offeringId).maybeSingle();
+  if (!setup) setup = await bootstrapFundSetup(input.actorId, { offeringId: input.offeringId, structure: "other", displayName: null, legalFundName: null } as any).catch(() => null);
+  if (!setup?.id) return { synced: false as const, reason: "no_setup" };
+  const { data: rows } = await db().from("fund_economics_versions").select("*").eq("setup_id", setup.id);
+  const list = (rows ?? []) as any[];
+  if (input.onlyIfEmpty && list.length) return { synced: false as const, reason: "already_has_terms" };
+  const draft = list.find((v) => v.status === "draft");
+  const approved = list.filter((v) => v.status === "approved").sort((a, b) => b.version - a.version)[0];
+  const base = (draft ?? approved)?.terms ?? null;
+  const terms = input.seedTerms && !list.length ? input.seedTerms : termsWithFees(base, input.fees);
+  const classes = input.classes?.length ? input.classes : (draft ?? approved)?.classes ?? [];
+  if (JSON.stringify(terms) === JSON.stringify(base) && JSON.stringify(classes) === JSON.stringify((draft ?? approved)?.classes ?? [])) return { synced: false as const, reason: "unchanged" };
+  if (draft) {
+    const err = economicsEditError(draft);
+    if (err) return { synced: false as const, reason: err };
+    await db().from("fund_economics_versions").update({ terms, classes, change_reason: draft.change_reason ?? input.reason, updated_at: nowIso() }).eq("id", draft.id);
+    await recordEvent({ setupId: setup.id, subjectTable: "fund_economics_versions", subjectId: draft.id, event: "economics_synced", detail: { source: input.reason }, actorUserId: input.actorId });
+    return { synced: true as const, versionId: draft.id as string };
+  }
+  const { data, error } = await db().from("fund_economics_versions").insert({
+    setup_id: setup.id, version: nextVersion(list.map((v) => ({ version: v.version }))), status: "draft", terms, classes,
+    investor_specific: approved?.investor_specific ?? [], change_reason: input.reason, supersedes_id: approved?.id ?? null, prepared_by: input.actorId,
+  }).select("id").single();
+  if (error || !data) return { synced: false as const, reason: error?.message ?? "insert_failed" };
+  await recordEvent({ setupId: setup.id, subjectTable: "fund_economics_versions", subjectId: data.id, event: "economics_version_created", toStatus: "draft", detail: { source: input.reason }, actorUserId: input.actorId });
+  await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id).catch(() => null);
+  return { synced: true as const, versionId: data.id as string };
+}

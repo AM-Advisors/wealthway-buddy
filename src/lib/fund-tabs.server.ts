@@ -197,7 +197,18 @@ export async function team(fundId: string) {
   };
 }
 
-export async function setFees(uid: string, fundId: string, f: { managementFeePct: number | null; managementFeeBasis: string; carryPct: number | null; hurdlePct: number | null; notes: string }) {
+/** Applied fee terms also land in Setup's Fees & terms draft, so both places agree. */
+async function syncFeeRowToSetup(uid: string, fundId: string, f: { management_fee_pct: unknown; carry_pct: unknown; hurdle_pct: unknown; management_fee_basis?: unknown }) {
+  const num = (v: unknown) => (v == null || v === "" ? null : Number(v));
+  try {
+    await (await import("@/lib/fund-setup.server")).syncFeesToEconomics({
+      offeringId: fundId, actorId: uid, reason: "Fee terms saved on the fund's Team tab",
+      fees: { managementFeePct: num(f.management_fee_pct), carryPct: num(f.carry_pct), hurdlePct: num(f.hurdle_pct), basis: (f.management_fee_basis as string | null) ?? null },
+    });
+  } catch (e) { console.warn("Fee terms not copied into Setup:", (e as Error)?.message); }
+}
+
+export async function setFees(uid: string, fundId: string, f: { managementFeePct: number | null; managementFeeBasis: string; carryPct: number | null; hurdlePct: number | null; notes: string }, opts?: { skipSetupSync?: boolean }) {
   const d = await db();
   const signed = await anyInvestorSigned(fundId);
   const row = {
@@ -209,6 +220,7 @@ export async function setFees(uid: string, fundId: string, f: { managementFeePct
   if (!signed) {
     await d.from("fund_fee_terms").update({ status: "superseded" }).eq("offering_id", fundId).eq("status", "active");
     await d.from("fund_fee_terms").insert({ ...row, status: "active", decided_by: uid, decided_at: new Date().toISOString() });
+    if (!opts?.skipSetupSync) await syncFeeRowToSetup(uid, fundId, row);
     await (await import("@/lib/client-work-notify.server")).notifyFundManagers(fundId, "material_update", "Fund fee terms", `/client/funds/${fundId}?tab=details`);
     return { applied: true };
   }
@@ -229,6 +241,7 @@ export async function decideFees(uid: string, feeId: string, approve: boolean) {
   if (approve) await d.from("fund_fee_terms").update({ status: "superseded" }).eq("offering_id", f.offering_id).eq("status", "active");
   const { error } = await d.from("fund_fee_terms").update({ status: approve ? "active" : "rejected", decided_by: uid, decided_at: now }).eq("id", feeId);
   if (error) throw new Error("The fee decision could not be recorded.");
+  if (approve) await syncFeeRowToSetup(uid, f.offering_id, f);
   await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: f.offering_id, ref: feeId, title: "Fund fee terms", status: approve ? "approved" : "rejected", actorId: uid });
   return { ok: true };
 }

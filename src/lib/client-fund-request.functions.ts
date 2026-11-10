@@ -142,18 +142,28 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       const { structure: _s, ...rest } = prefill;
       await db.from("fund_setups").update(rest).eq("id", (setup as any).id);
 
-      // Enter once: fee terms the client typed go to the Fund's fee terms (same rules as the Team tab).
-      const pct = (v: string) => { const m = String(v ?? "").match(/-?\d+(?:\.\d+)?/); return m ? Number(m[0]) : null; };
-      const cls = (r.classes ?? []).filter((c) => c.name || c.fee || c.carry || c.hurdle);
-      const feePct = pct(r.management_fee) ?? (cls[0] ? pct(cls[0].fee) : null);
-      const carryPct = pct(r.carried_interest) ?? (cls[0] ? pct(cls[0].carry) : null);
-      const hurdlePct = pct(r.preferred_return) ?? (cls[0] ? pct(cls[0].hurdle) : null);
-      if (feePct != null || carryPct != null || hurdlePct != null) {
+      // Enter once: fee terms and classes the client typed go to Setup's Fees & terms (as a draft
+      // for the usual approval) and to the fund's fee terms on the Team tab.
+      const { economicsFromRequest } = await import("@/lib/request-economics");
+      const econ = economicsFromRequest(r);
+      if (econ.hasAny) {
+        const cls = (r.classes ?? []).filter((c) => c.name || c.fee || c.carry || c.hurdle);
+        const notes = ["From the client's fund request.", ...cls.map((c) => `${c.name || "Class"}: fee ${c.fee || "-"}, carry ${c.carry || "-"}, hurdle ${c.hurdle || "-"}`)].join(" ");
         try {
           const { setFees } = await import("@/lib/fund-tabs.server");
-          const notes = ["From the client's fund request.", ...cls.map((c) => `${c.name || "Class"}: fee ${c.fee || "-"}, carry ${c.carry || "-"}, hurdle ${c.hurdle || "-"}`)].join(" ");
-          await setFees(context.userId, offeringId, { managementFeePct: feePct, managementFeeBasis: "", carryPct, hurdlePct, notes });
+          await setFees(context.userId, offeringId, { managementFeePct: econ.fees.managementFeePct, managementFeeBasis: "", carryPct: econ.fees.carryPct, hurdlePct: econ.fees.hurdlePct, notes }, { skipSetupSync: true });
         } catch (e: any) { console.warn("Fee terms kept on request only:", e?.message); }
+        try {
+          const { syncFeesToEconomics } = await import("@/lib/fund-setup.server");
+          const res = await syncFeesToEconomics({ offeringId, actorId: context.userId, fees: econ.fees, classes: econ.classes, seedTerms: econ.terms as any, onlyIfEmpty: true, reason: "From the client's fund request" });
+          if (!res.synced && res.reason !== "already_has_terms") throw new Error(res.reason);
+        } catch (e: any) {
+          console.warn("Setup fees & terms kept on request only:", e?.message);
+          await db.from("staff_tasks").insert({
+            title: `Fees & terms not copied into Setup for ${r.fund_name}`, description: "The client's fee, carry and class answers are on the fund request. Enter them in Setup → Fees & terms.",
+            priority: "high", status: "open", created_by: context.userId, team: "operations", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "client_fund_request", offering_id: offeringId, client_id: data.clientId,
+          } as any).then(() => undefined, () => undefined);
+        }
       }
 
       // Enter once: managers and signatory go onto the Fund's Team tab as unclaimed contacts.
