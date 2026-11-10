@@ -134,10 +134,10 @@ export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch =
   );
 }
 
+/** Opens the step where this section's work lives. The page never moves on its own. */
 const jump = (id: string) => (e: React.MouseEvent) => {
   e.preventDefault();
   window.dispatchEvent(new CustomEvent("fund-setup-jump", { detail: id }));
-  setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 };
 
 const SECTION_ANCHOR: Record<string, string> = {
@@ -752,7 +752,7 @@ function GuidedSetup({ steps }: { steps: { label: string; body: ReactNode }[] })
     window.addEventListener("fund-setup-jump", onJump);
     return () => window.removeEventListener("fund-setup-jump", onJump);
   }, []);
-  const go = (n: number) => { setI(n); requestAnimationFrame(() => document.getElementById("guided-setup")?.scrollIntoView({ behavior: "smooth", block: "start" })); };
+  const go = (n: number) => { setI(n); };
   return (
     <div id="guided-setup" className="scroll-mt-20 space-y-4">
       <ol aria-label="Fund setup steps" className="sticky top-16 z-20 flex gap-1 overflow-x-auto rounded-md border bg-background/95 p-1 backdrop-blur">
