@@ -150,14 +150,20 @@ const pctTxt = (v: number | null | undefined) => (v == null ? "-" : `${v}%`);
 /** Side-by-side view of how each class differs from the fund default. "Same as fund default" when not set. */
 export function classDifferences(defaults: EconomicTerms & { minInvestmentCents?: number | null }, classes: FundClass[]): ClassDifferenceRow[] {
   const na = (c: FundClass, k: EconomicTermKey) => !!c.notApplicable?.includes(k);
-  const row = (term: string, def: string, val: (c: FundClass) => string | null): ClassDifferenceRow => ({
-    term,
-    fundDefault: def,
-    perClass: classes.map((c) => {
-      const v = val(c);
-      return { name: c.name, value: v ?? "Same as fund default", differs: v != null && v !== def };
-    }),
-  });
+  const norm = (s: string) => s.trim().toLowerCase().replace(/[.\s]+/g, " ").trim();
+  const row = (term: string, def: string, val: (c: FundClass) => string | null, sameAsDefault: string[] = []): ClassDifferenceRow => {
+    const same = new Set([def, ...sameAsDefault, "same as fund default", "fund default"].map(norm));
+    return {
+      term,
+      fundDefault: def,
+      perClass: classes.map((c) => {
+        const v = val(c);
+        // Wording that only restates the default (e.g. "all", "Fund default terms") is not a difference.
+        if (v == null || same.has(norm(v))) return { name: c.name, value: v === def ? v : "Same as fund default", differs: false };
+        return { name: c.name, value: v, differs: true };
+      }),
+    };
+  };
   const fee = defaults.managementFee;
   const feeTxt = (f: ManagementFee | null | undefined) => (f?.ratePercent == null ? "-" : `${f.ratePercent}%${f.basis ? ` of ${f.basis.replace(/_/g, " ")}` : ""}${f.frequency ? `, ${f.frequency.replace(/_/g, " ")}` : ""}${f.paymentTerms ? `. ${f.paymentTerms}` : ""}`);
   return [
@@ -167,9 +173,9 @@ export function classDifferences(defaults: EconomicTerms & { minInvestmentCents?
     row("Preferred return / hurdle", pctTxt(defaults.preferredReturnPercent), (c) => (na(c, "preferredReturn") ? "Not applicable" : c.preferredReturnPercent != null ? pctTxt(c.preferredReturnPercent) : null)),
     row("Organizational expenses", defaults.orgExpenseTreatment ?? "-", (c) => (na(c, "orgExpense") ? "Not applicable" : c.orgExpenseTreatment || null)),
     row("Distribution frequency", defaults.distributionFrequency ?? "-", (c) => (na(c, "distributionFrequency") ? "Not applicable" : c.distributionFrequency || null)),
-    row("Assets / allocation", "All fund assets", (c) => (c.assetScope?.trim() ? c.assetScope.trim() : null)),
-    row("Applies to", "All investors", (c) => (c.appliesTo?.trim() ? c.appliesTo.trim() : null)),
-    row("Other differences", "None", (c) => (c.otherDifferences?.trim() ? c.otherDifferences.trim() : null)),
+    row("Assets / allocation", "All fund assets", (c) => (c.assetScope?.trim() ? c.assetScope.trim() : null), ["all", "all assets"]),
+    row("Applies to", "All investors", (c) => (c.appliesTo?.trim() ? c.appliesTo.trim() : null), ["all"]),
+    row("Other differences", "None", (c) => (c.otherDifferences?.trim() ? c.otherDifferences.trim() : null), ["fund default terms", "same as fund default terms", "n/a", "none"]),
   ];
 }
 

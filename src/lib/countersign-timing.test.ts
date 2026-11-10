@@ -43,4 +43,16 @@ describe("multiple classes", () => {
     expect(rows.find((r) => r.term === "Carried interest")!.perClass[0]).toMatchObject({ value: "10%", differs: true });
     expect(rows.find((r) => r.term === "Management fee")!.perClass[0]).toMatchObject({ value: "Same as fund default", differs: false });
   });
+  it("wording that restates the default is not flagged as a class difference", () => {
+    const rows = classDifferences({ carry: { ratePercent: 20 } }, [
+      { key: "a", name: "Class A", assetScope: "all", otherDifferences: "Fund default terms" },
+      { key: "b", name: "Class B", assetScope: "all", otherDifferences: "0% management fee and 0% carried interest; documented by side letter" },
+    ] as any);
+    const assets = rows.find((r) => r.term === "Assets / allocation")!.perClass;
+    expect(assets[0]).toMatchObject({ value: "Same as fund default", differs: false });
+    expect(assets[1]).toMatchObject({ value: "Same as fund default", differs: false });
+    const other = rows.find((r) => r.term === "Other differences")!.perClass;
+    expect(other[0]).toMatchObject({ value: "Same as fund default", differs: false });
+    expect(other[1].differs).toBe(true);
+  });
 });
