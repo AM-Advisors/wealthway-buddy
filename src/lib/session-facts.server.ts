@@ -11,6 +11,7 @@
  */
 import { emptyFacts, type RelationshipFacts } from "@/lib/session-resolution";
 import { grantCapabilities } from "@/lib/ops-nav-registry";
+import { isOpenOnboarding, liveLegacyApplications } from "@/lib/legacy-application-supersede";
 import { capabilitiesFor, hasOperationsEntry, OPS_STAFF_ROLES, type OpsCapability } from "@/lib/ops-capabilities";
 
 export type ProfessionalMembershipFact = {
@@ -150,10 +151,9 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
         .eq("user_id", userId),
       supabase
         .from("investor_onboardings")
-        .select("id, stage, closed_at")
+        .select("id, offering_id, stage, closed_at")
         .eq("investor_user_id", userId)
-        .is("closed_at", null)
-        .limit(1),
+        .limit(200),
     ]);
 
   const roleList = rows(roles).map((r) => String(r.role));
@@ -199,8 +199,10 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
     "";
 
   // Dependent reads: invitations need the email; the application fallback is
-  // only consulted when no open onboarding record exists.
-  const needApplication = rows(onboarding).length === 0;
+  // only consulted when no open onboarding record exists, and never for a fund
+  // whose current investment record already owns the status.
+  const onboardingRows = rows(onboarding);
+  const needApplication = !onboardingRows.some(isOpenOnboarding);
   const [invites, application] = await Promise.all([
     email
       ? supabase
@@ -212,16 +214,23 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
     needApplication
       ? supabase
           .from("investor_applications")
-          .select("id, kyc_status, accreditation_status")
+          .select("id, user_id, offering_id, kyc_status, aml_status, accreditation_status")
           .eq("user_id", userId)
-          .limit(1)
+          .limit(50)
       : Promise.resolve({ data: [] }),
   ]);
   facts.pendingInvitationCount = rows(invites).filter(
     (i) => i.status !== "revoked" && i.status !== "expired",
   ).length;
-  const first = rows(application)[0];
+  const live = liveLegacyApplications(rows(application), onboardingRows);
+  let first = live[0];
   if (first) {
+    try {
+      const { canonicalizeApplications } = await import("@/lib/verification-status");
+      first = (await canonicalizeApplications(supabase, [first], userId))[0] ?? first;
+    } catch {
+      /* keep the stored copy */
+    }
     if (first.kyc_status !== "approved") facts.outstandingRequirements.push("KYC");
     if (first.accreditation_status !== "approved") facts.outstandingRequirements.push("ACCREDITATION");
   }

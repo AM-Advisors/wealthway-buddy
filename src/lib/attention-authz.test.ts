@@ -258,3 +258,46 @@ describe("operations", () => {
     expect(result.gaps[0]?.message).toMatch(/Operations work queue/);
   });
 });
+
+describe("current investment record owns the fund's status", () => {
+  it("shows no accreditation or funding prompt from an older application once the investment is funded", async () => {
+    tables["investor_onboardings"] = [
+      { id: "onb-1", investor_user_id: "user-a", offering_id: "fund-1", stage: "closed", funding_status: "funded" },
+    ];
+    tables["investor_applications"] = [
+      { id: "app-a", user_id: "user-a", offering_id: "fund-1", kyc_status: "approved", aml_status: "approved", accreditation_status: "not_started", funding_status: "not_started" },
+    ];
+    const attentionFor = await load();
+    const result = await attentionFor(ctx("user-a"), "investor");
+    const ids = allItems(result).map((i) => i.id);
+    expect(ids).not.toContain("investor-accreditation:app-a");
+    expect(ids).not.toContain("investor-funding:app-a");
+  });
+
+  it("shows the pending signing step from the investment record, not the older accreditation prompt", async () => {
+    tables["investor_onboardings"] = [
+      { id: "onb-2", investor_user_id: "user-a", offering_id: "fund-1", stage: "signature", funding_status: "not_started" },
+    ];
+    tables["investor_applications"] = [
+      { id: "app-a", user_id: "user-a", offering_id: "fund-1", kyc_status: "approved", aml_status: "approved", accreditation_status: "not_started" },
+    ];
+    const attentionFor = await load();
+    const result = await attentionFor(ctx("user-a"), "investor");
+    const items = allItems(result);
+    expect(items.map((i) => i.id)).not.toContain("investor-accreditation:app-a");
+    expect(items.find((i) => i.id === "investor-investment:onb-2")?.href).toBe("/investment/onb-2?step=sign");
+  });
+
+  it("keeps the accreditation prompt for an older application in a fund with no investment record", async () => {
+    tables["offerings"] = [...(tables["offerings"] ?? []), { id: "fund-2", name: "Other Fund" }];
+    tables["investor_onboardings"] = [
+      { id: "onb-1", investor_user_id: "user-a", offering_id: "fund-1", stage: "closed", funding_status: "funded" },
+    ];
+    tables["investor_applications"] = [
+      { id: "app-b", user_id: "user-a", offering_id: "fund-2", kyc_status: "approved", aml_status: "approved", accreditation_status: "not_started" },
+    ];
+    const attentionFor = await load();
+    const result = await attentionFor(ctx("user-a"), "investor");
+    expect(allItems(result).map((i) => i.id)).toContain("investor-accreditation:app-b");
+  });
+});

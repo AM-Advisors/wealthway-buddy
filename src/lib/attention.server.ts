@@ -1,4 +1,5 @@
 import { canonicalizeApplications } from "@/lib/verification-status";
+import { canonicalFundIds, liveLegacyApplications } from "@/lib/legacy-application-supersede";
 /**
  * Server side of the Action Center (server-only module).
  *
@@ -122,7 +123,22 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     ),
   );
 
-  for (const a of (await canonicalizeApplications(s, applications as any[], ctx.userId)) as any[]) {
+  // A fund with a current investment record (any stage) is owned by that
+  // record - the item above, or nothing once closed. The older application row
+  // for the same fund must not add its own accreditation/funding prompts.
+  const ownedFunds = await safely(async () =>
+    rows(
+      await s
+        .from("investor_onboardings")
+        .select("offering_id")
+        .eq("investor_user_id", ctx.userId)
+        .limit(500),
+    ),
+  );
+  const ownedFundIds = canonicalFundIds(ownedFunds as any[]);
+  const liveApplications = liveLegacyApplications(applications as any[], ownedFunds as any[]);
+
+  for (const a of (await canonicalizeApplications(s, liveApplications, ctx.userId)) as any[]) {
     const fundName = n.funds.get(a.offering_id) ?? null;
     const base = {
       workspace: "investor" as WorkspaceKind,
@@ -202,6 +218,9 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   }
 
   const applicationIds = (applications as any[]).map((a) => a.id);
+  const supersededIds = new Set(
+    (applications as any[]).filter((a) => a.offering_id && ownedFundIds.has(String(a.offering_id))).map((a) => a.id),
+  );
 
   if (applicationIds.length) {
     const verifications = await safely(async () =>
@@ -217,6 +236,8 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     );
     for (const v of verifications as any[]) {
       if (!v.document_expired && v.harmonious_decision !== "review_required") continue;
+      // A review flag on a superseded record is stale; an expired ID is still a real fact.
+      if (!v.document_expired && supersededIds.has(v.application_id)) continue;
       out.push(
         buildAttentionItem({
           id: `investor-id-document:${v.id}`,
@@ -1011,12 +1032,22 @@ async function professionalItems(ctx: Ctx): Promise<AttentionItem[]> {
       rows(
         await (supabaseAdmin as any)
           .from("investor_applications")
-          .select("id, kyc_status, accreditation_status, updated_at")
+          .select("id, offering_id, kyc_status, accreditation_status, updated_at")
           .eq("user_id", d.principal_user_id)
           .limit(20),
       ),
     );
-    for (const a of (await canonicalizeApplications(supabaseAdmin, applications as any[], d.principal_user_id)) as any[]) {
+    const principalFunds = await safely(async () =>
+      rows(
+        await (supabaseAdmin as any)
+          .from("investor_onboardings")
+          .select("offering_id")
+          .eq("investor_user_id", d.principal_user_id)
+          .limit(500),
+      ),
+    );
+    const principalLive = liveLegacyApplications(applications as any[], principalFunds as any[]);
+    for (const a of (await canonicalizeApplications(supabaseAdmin, principalLive, d.principal_user_id)) as any[]) {
       if (done(a.kyc_status) && done(a.accreditation_status)) continue;
       out.push(
         buildAttentionItem({

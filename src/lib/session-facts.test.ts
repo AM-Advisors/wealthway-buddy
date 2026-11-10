@@ -370,3 +370,29 @@ describe("adversarial", () => {
     expect(queryCount).toBe(12);
   });
 });
+
+describe("setup card follows the current investment record", () => {
+  it("drops the older application's accreditation prompt once the fund's investment is closed", async () => {
+    tables = {
+      profiles: [{ user_id: ME, email: "me@example.com", legal_name: "Me" }],
+      investor_onboardings: [{ id: "onb-1", investor_user_id: ME, offering_id: "fund-roas", stage: "closed", closed_at: past }],
+      investor_applications: [
+        { id: "app-1", user_id: ME, offering_id: "fund-roas", kyc_status: "approved", aml_status: "approved", accreditation_status: "not_started" },
+      ],
+    };
+    const f = await gatherFacts(ctx());
+    expect(f.outstandingRequirements).toEqual([]);
+  });
+
+  it("still lists accreditation for an older application in a fund with no investment record", async () => {
+    tables = {
+      profiles: [{ user_id: ME, email: "me@example.com", legal_name: "Me" }],
+      investor_onboardings: [{ id: "onb-1", investor_user_id: ME, offering_id: "fund-roas", stage: "closed", closed_at: past }],
+      investor_applications: [
+        { id: "app-2", user_id: ME, offering_id: "fund-other", kyc_status: "approved", aml_status: "approved", accreditation_status: "not_started" },
+      ],
+    };
+    const f = await gatherFacts(ctx());
+    expect(f.outstandingRequirements).toEqual(["ACCREDITATION"]);
+  });
+});

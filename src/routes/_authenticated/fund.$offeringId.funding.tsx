@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
+
+import { currentInvestmentForFund } from "@/lib/legacy-step-redirect.functions";
 
 import { FundingStep } from "@/components/steps/funding-step";
 
@@ -20,6 +22,16 @@ export const Route = createFileRoute("/_authenticated/fund/$offeringId/funding")
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  // A current investment record for this fund owns its status: open it instead.
+  loader: async ({ params }) => {
+    try {
+      const { onboardingId } = await currentInvestmentForFund({ data: { offeringId: params.offeringId } });
+      if (onboardingId) throw redirect({ to: "/investment/$onboardingId", params: { onboardingId }, search: { step: "fund" } });
+    } catch (e) {
+      if (isRedirect(e)) throw e;
+    }
+    return null;
+  },
   component: FundFundingPage,
 });
 
