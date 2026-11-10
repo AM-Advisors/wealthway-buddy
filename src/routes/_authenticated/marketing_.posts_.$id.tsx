@@ -1,3 +1,4 @@
+import { MarketingDuplicateWarning } from "@/components/marketing-duplicate-warning";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -135,6 +136,7 @@ function PostEditor() {
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           <div><Label htmlFor="t">Title (internal)</Label><Input id="t" value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} placeholder="e.g. Q4 fund admin tips" /></div>
+          {!locked && <MarketingDuplicateWarning kind="post" title={title} at={fromLocalInput(when)} selfId={isNew ? null : id} />}
           <div>
             <Label>Channels</Label>
             <div className="mt-2 flex gap-4">{CHANNELS.map((c) => (

@@ -1,3 +1,4 @@
+import { MarketingDuplicateWarning } from "@/components/marketing-duplicate-warning";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -101,6 +102,7 @@ function EmailEditor() {
       actions={<div className="flex items-center gap-2">{!isNew && <StatusBadge status={status} />}<Button variant="outline" asChild><Link to="/marketing/emails">All emails</Link></Button></div>}>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
+          {!locked && <MarketingDuplicateWarning kind="email" title={name} at={fromLocalInput(when)} selfId={isNew ? null : id} />}
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label>Name (internal)</Label><Input value={name} onChange={(e) => setName(e.target.value)} disabled={locked} /></div>
             <div><Label>Audience</Label>

@@ -31,6 +31,9 @@ function MarketingDashboard() {
           <Stat label="Failed" value={d.stats.failed} />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
+          <Panel title="Waiting for approval" action={<Link to="/marketing/approvals" className="text-sm text-primary underline">Open approvals</Link>}>
+            <p className="text-sm text-muted-foreground">Posts, emails, articles and collateral waiting for a decision are all in one list.</p>
+          </Panel>
           <Panel title="Coming up this week" action={<Link to="/marketing/calendar" className="text-sm text-primary underline">Calendar</Link>}>
             {d.upcoming.length === 0 ? <p className="text-sm text-muted-foreground">Nothing scheduled in the next 7 days.</p> : (
               <ul className="divide-y">{d.upcoming.map((u) => (

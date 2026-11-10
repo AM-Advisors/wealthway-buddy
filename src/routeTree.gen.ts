@@ -223,6 +223,7 @@ import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_auth
 import { Route as AuthenticatedManagerUpdatesRouteImport } from './routes/_authenticated/manager.updates'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
+import { Route as AuthenticatedMarketingApprovalsRouteImport } from './routes/_authenticated/marketing_.approvals'
 import { Route as AuthenticatedMarketingAssistsRouteImport } from './routes/_authenticated/marketing_.assists'
 import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_authenticated/marketing_.audiences'
 import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
@@ -1681,6 +1682,12 @@ const AuthenticatedManagerWiresRoute =
   AuthenticatedManagerWiresRouteImport.update({
     id: '/manager/wires',
     path: '/manager/wires',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingApprovalsRoute =
+  AuthenticatedMarketingApprovalsRouteImport.update({
+    id: '/marketing_/approvals',
+    path: '/marketing/approvals',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingAssistsRoute =
@@ -3489,6 +3496,7 @@ export interface FileRoutesByFullPath {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/approvals': typeof AuthenticatedMarketingApprovalsRoute
   '/marketing/assists': typeof AuthenticatedMarketingAssistsRoute
   '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
@@ -3970,6 +3978,7 @@ export interface FileRoutesByTo {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/approvals': typeof AuthenticatedMarketingApprovalsRoute
   '/marketing/assists': typeof AuthenticatedMarketingAssistsRoute
   '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
@@ -4459,6 +4468,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/_authenticated/marketing_/approvals': typeof AuthenticatedMarketingApprovalsRoute
   '/_authenticated/marketing_/assists': typeof AuthenticatedMarketingAssistsRoute
   '/_authenticated/marketing_/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
@@ -4949,6 +4959,7 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/approvals'
     | '/marketing/assists'
     | '/marketing/audiences'
     | '/marketing/calendar'
@@ -5430,6 +5441,7 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/approvals'
     | '/marketing/assists'
     | '/marketing/audiences'
     | '/marketing/calendar'
@@ -5918,6 +5930,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/updates'
     | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
+    | '/_authenticated/marketing_/approvals'
     | '/_authenticated/marketing_/assists'
     | '/_authenticated/marketing_/audiences'
     | '/_authenticated/marketing_/calendar'
@@ -7784,6 +7797,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/wires'
       fullPath: '/manager/wires'
       preLoaderRoute: typeof AuthenticatedManagerWiresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/approvals': {
+      id: '/_authenticated/marketing_/approvals'
+      path: '/marketing/approvals'
+      fullPath: '/marketing/approvals'
+      preLoaderRoute: typeof AuthenticatedMarketingApprovalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing_/assists': {
@@ -10122,6 +10142,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerUpdatesRoute: typeof AuthenticatedManagerUpdatesRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
+  AuthenticatedMarketingApprovalsRoute: typeof AuthenticatedMarketingApprovalsRoute
   AuthenticatedMarketingAssistsRoute: typeof AuthenticatedMarketingAssistsRoute
   AuthenticatedMarketingAudiencesRoute: typeof AuthenticatedMarketingAudiencesRoute
   AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
@@ -10466,6 +10487,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerUpdatesRoute: AuthenticatedManagerUpdatesRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
+  AuthenticatedMarketingApprovalsRoute: AuthenticatedMarketingApprovalsRoute,
   AuthenticatedMarketingAssistsRoute: AuthenticatedMarketingAssistsRoute,
   AuthenticatedMarketingAudiencesRoute: AuthenticatedMarketingAudiencesRoute,
   AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,

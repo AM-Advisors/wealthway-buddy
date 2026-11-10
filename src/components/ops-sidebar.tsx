@@ -293,6 +293,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const publishing = canSee("marketingPublishing", staffRoles);
   const mkItems: NavItem[] = showMk ? publishing ? [
     { id: "mk-dashboard", title: "Overview", url: "/marketing", icon: "report" },
+    { id: "mk-approvals", title: "Approvals", url: "/marketing/approvals", icon: "tasks" },
     { id: "mk-content", title: "Content", url: "/marketing/studio", icon: "document" },
     { id: "mk-posts", title: "Social posts", url: "/marketing/posts", icon: "document" },
     { id: "mk-emails", title: "Email", url: "/marketing/emails", icon: "people" },
