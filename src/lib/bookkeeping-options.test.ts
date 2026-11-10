@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookkeepingObligations, coverageConflicts, fundAccountingCoverage, includedFundAccounting, optionAvailableFor, resolveFrequency, responsibilityRows, supportDescription, visibleCapabilities, type CoverageRow } from "@/lib/bookkeeping-options";
+import { bookkeepingAnswerEditProblem, bookkeepingObligations, coverageConflicts, fundAccountingCoverage, includedFundAccounting, optionAvailableFor, quoteCoverageRows, resolveFrequency, responsibilityRows, supportDescription, visibleCapabilities, type CoverageRow } from "@/lib/bookkeeping-options";
 
 const days = { review: null, close: { monthly: 20, quarterly: 20, annual: null } };
 const window = { from: "2026-01-01", to: "2026-12-31" };
@@ -34,7 +34,7 @@ describe("responsibilities and capabilities", () => {
     expect(visibleCapabilities("review", { entityType: "management_company" }).map((c) => c.key)).not.toContain("outstanding_items_report");
     expect(visibleCapabilities("self_service", { entityType: "management_company" })).toEqual([]);
     expect(optionAvailableFor("self_service", { entityType: "management_company" }).available).toBe(false);
-    expect(optionAvailableFor("managed", { entityType: "management_company" }).available).toBe(true);
+    expect(optionAvailableFor("managed", { entityType: "management_company" }).available).toBe(false);
   });
 });
 
@@ -105,5 +105,31 @@ describe("verification rules (November 2026)", () => {
     const a = bookkeepingObligations({ option: "review", frequency: "quarterly" }, window, days);
     expect(a).toHaveLength(4);
     expect(supportDescription("review", "white_glove").detail).toContain("schedule stays as agreed");
+  });
+});
+
+describe("remaining issues (November 10, 2026)", () => {
+  it("Managed Bookkeeping is not yet available for a GP, management company or operating company", () => {
+    for (const entityType of ["gp", "management_company", "operating_company"]) {
+      expect(optionAvailableFor("managed", { entityType, offeringId: null }).available).toBe(false);
+    }
+    expect(optionAvailableFor("managed", { entityType: "fund", offeringId: "f" }).available).toBe(true);
+    expect(optionAvailableFor("managed", { entityType: "spv", offeringId: null }).available).toBe(true);
+  });
+  const request = (id: string): CoverageRow => ({ source: "request", label: "Your request", scope: ["review"], start: null, end: null, requestId: id, createdOn: "2026-11-10" });
+  it("a quote answering a client's open request is not blocked by that request", () => {
+    const rows = quoteCoverageRows([request("r1")], "r1");
+    expect(coverageConflicts({ option: "review", effectiveOn: "2026-01-01", termMonths: 12 }, rows).blocked).toBe(false);
+  });
+  it("any other open request for the entity still blocks the quote", () => {
+    const rows = quoteCoverageRows([request("r1"), request("r2")], "r1");
+    expect(coverageConflicts({ option: "review", effectiveOn: "2026-01-01", termMonths: 12 }, rows).blocked).toBe(true);
+    expect(coverageConflicts({ option: "review", effectiveOn: "2026-01-01", termMonths: 12 }, quoteCoverageRows([request("r1")], null)).blocked).toBe(true);
+  });
+  it("clients can change only the note on a submitted bookkeeping request", () => {
+    const before = { bookkeeping_option: "Bookkeeping Review", notes: "" };
+    expect(bookkeepingAnswerEditProblem(before, { ...before, notes: "Two accounts" }, ["BOOKKEEPING_ACCOUNTING"], ["BOOKKEEPING_ACCOUNTING"])).toBeNull();
+    expect(bookkeepingAnswerEditProblem(before, { ...before, bookkeeping_option: "Managed Bookkeeping" }, ["BOOKKEEPING_ACCOUNTING"], ["BOOKKEEPING_ACCOUNTING"])).not.toBeNull();
+    expect(bookkeepingAnswerEditProblem(before, before, ["BOOKKEEPING_ACCOUNTING"], [])).not.toBeNull();
   });
 });

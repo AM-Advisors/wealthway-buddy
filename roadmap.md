@@ -1,5 +1,12 @@
 # Roadmap
 
+## Bookkeeping remaining issues (2026-11-10)
+- [x] Organization and entity names on client confirmation, staff queue, request detail and quote selection; canonical IDs, server authorization, only the note editable on bookkeeping requests.
+- [x] Quotes for entities not on file stay drafts marked "Coverage check pending"; link entity on the quote page reruns coverage and open-request checks; submit, SOW draft and send rerun them again.
+- [x] Managed Bookkeeping (all options) "Not yet available" for GP, management and operating companies.
+- [x] One open bookkeeping request per entity enforced by the database (duplicate submissions).
+- [ ] Signed-in QA checks: blocked. Harmonious QA project is 53 database changes behind, lacks the new bookkeeping pages, and its current isolation must be verified from its own chat; then fictional records and a human authenticator enrollment.
+
 ## Document-open analytics (2026-11-04)
 - [x] Instrument existing investor fund document render, successful tax preview and issued signing-session handlers; category/evidence only, no recipient, record IDs or URLs.
 - [x] One event catalog registered and validated; 40 document/signing/prefill regressions passed, preview build OK. Existing legal readership already records named source access separately.

@@ -64,6 +64,9 @@ function RequestDetail() {
   const declined = r.status === "declined";
   const idx = ORDER.indexOf(r.status);
   const editable = r.status === "submitted";
+  // Bookkeeping requests keep their checked choices; only the note can change.
+  const isBookkeeping = ((r.requested_service_keys ?? []) as string[]).includes("BOOKKEEPING_ACCOUNTING");
+  const canEditKey = (k: string) => editable && k !== "investor_eligibility" && (!isBookkeeping || k === "notes");
   const label = REQUEST_INTENTS.find((i) => i.value === r.intent)?.label ?? r.intent;
   const schema =
     r.intent === "launch_spv" || r.intent === "launch_fund"
@@ -82,6 +85,9 @@ function RequestDetail() {
           <Link to="/client/services" className="text-xs text-muted-foreground hover:underline">← Your services</Link>
           <h1 className="text-2xl font-semibold tracking-tight">{label}</h1>
           {r.summary && <p className="mt-1 text-sm text-muted-foreground">{r.summary}</p>}
+          {(q.data.organizationName || q.data.entityName) && (
+            <p className="mt-1 text-sm">Organization: <span className="font-medium">{q.data.organizationName ?? "Not recorded"}</span> · Entity: <span className="font-medium">{q.data.entityName ?? "No specific entity"}</span></p>
+          )}
         </div>
         <Badge variant={declined ? "destructive" : "secondary"}>{String(r.status).replace("_", " ")}</Badge>
       </div>
@@ -112,7 +118,9 @@ function RequestDetail() {
           <CardTitle className="text-base">Your details</CardTitle>
           <CardDescription>
             {editable
-              ? "You can update these until Harmonious starts scoping. Every change is kept on record."
+              ? isBookkeeping
+                ? "You can update your note until Harmonious starts scoping. To change the entity, option or details, send Harmonious a message."
+                : "You can update these until Harmonious starts scoping. Every change is kept on record."
               : "Harmonious has started: send a message to change anything."}
           </CardDescription>
         </CardHeader>
@@ -120,7 +128,7 @@ function RequestDetail() {
           {keys.map((k) => (
             <div key={k}>
               <Label className="text-xs capitalize">{labelOf(k)}</Label>
-              {editable && k !== "investor_eligibility" ? (
+              {canEditKey(k) ? (
                 <Input value={answers[k] ?? ""} onChange={(e) => setAnswers({ ...answers, [k]: e.target.value })} />
               ) : (
                 <p className="text-sm">{answers[k] || "-"}</p>

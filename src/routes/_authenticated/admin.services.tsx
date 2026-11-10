@@ -827,10 +827,10 @@ function RequestsTab({ requests, onSaved }: { requests: any[]; onSaved: () => vo
           <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
             <div>
               <CardTitle className="text-base">
-                {intentLabel(r.intent)} · {r.clientName}
+                {intentLabel(r.intent)} · {r.entityName ?? r.clientName}
               </CardTitle>
               <CardDescription>
-                {r.entityName ?? "No specific entity"} ·{" "}
+                Organization: {r.clientName} · Entity: {r.entityName ?? "No specific entity"} ·{" "}
                 {new Date(r.createdAt).toLocaleDateString("en-US")}
               </CardDescription>
             </div>

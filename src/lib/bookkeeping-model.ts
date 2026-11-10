@@ -58,6 +58,8 @@ export const bookkeepingInputSchema = z.object({
   /** Scope already covered elsewhere for this entity that staff confirm is excluded from this quote. */
   excludedScope: z.array(chargedScope).max(8).default([]),
   customMonthlyCents: z.number().int().nonnegative().max(1000000000).nullable(), customReason: z.string().trim().max(1000),
+  /** The open client bookkeeping request this quote answers, if any; checked against the entity on the server. */
+  sourceRequestId: z.string().uuid().nullable().default(null),
 });
 export type BookkeepingInput = z.input<typeof bookkeepingInputSchema>;
 
@@ -140,6 +142,53 @@ export function bookkeepingTerms(config: BookkeepingConfig, raw: BookkeepingInpu
 
 export function bookkeepingDraftBlocker(lines: readonly { bookkeeping_snapshot?: unknown; service_key?: string }[]) {
   return lines.some((l) => l.bookkeeping_snapshot || l.service_key === BOOKKEEPING_KEY) ? "Bookkeeping prices are proposed: approval, signing, enrollment and billing remain disabled pending a separately approved release." : null;
+}
+
+export const COVERAGE_PENDING = "Coverage check pending";
+
+/** Server-computed result of the coverage and open-request checks, saved on each bookkeeping quote line. */
+export interface CoverageCheck {
+  status: "pending" | "passed";
+  entityId: string | null;
+  entityName: string | null;
+  organizationId: string | null;
+  organizationName: string | null;
+  /** Entities named on the line that are not linked to a canonical entity on file. */
+  unlinkedReferences: string[];
+  checkedAt: string | null;
+}
+
+/**
+ * A line passes only when it names exactly the one entity it is linked to and the server has
+ * run the coverage checks for it. Anything not yet on file stays "Coverage check pending".
+ */
+export function coverageCheckFor(
+  input: { entityId: string | null; entityReferences: readonly string[] },
+  linked: { entityName: string; organizationId: string; organizationName: string | null } | null,
+  now: string,
+): CoverageCheck {
+  const unlinked = linked ? input.entityReferences.filter((r) => r !== linked.entityName) : [...input.entityReferences];
+  const passed = Boolean(linked && input.entityId) && unlinked.length === 0;
+  return {
+    status: passed ? "passed" : "pending",
+    entityId: linked ? input.entityId : null,
+    entityName: linked?.entityName ?? null,
+    organizationId: linked?.organizationId ?? null,
+    organizationName: linked?.organizationName ?? null,
+    unlinkedReferences: unlinked,
+    checkedAt: linked ? now : null,
+  };
+}
+
+/** Blocks submission, agreements and sending while any bookkeeping line's coverage check is pending. */
+export function bookkeepingCoverageBlocker(lines: readonly { bookkeeping_snapshot?: unknown; service_key?: string }[]) {
+  const pending = lines
+    .filter((l) => l.bookkeeping_snapshot || l.service_key === BOOKKEEPING_KEY)
+    .map((l) => (l.bookkeeping_snapshot ?? {}) as { coverageCheck?: CoverageCheck; entityReferences?: string[] })
+    .filter((s) => s.coverageCheck?.status !== "passed");
+  if (!pending.length) return null;
+  const names = [...new Set(pending.flatMap((s) => s.coverageCheck?.unlinkedReferences ?? s.entityReferences ?? []))];
+  return `${COVERAGE_PENDING}: ${names.length ? names.join(", ") : "an entity"} ${names.length === 1 ? "isn't" : "aren't"} linked to an entity on file. Link each entity and rerun the coverage and open-request checks before this quote can move forward.`;
 }
 
 export function bookkeepingDueOn(periodEnd: string, documentationOn: string, businessDays: number | null): string | null {

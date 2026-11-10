@@ -2675,6 +2675,13 @@
       "when": 1794246884345,
       "tag": "0381_outbound_email_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 382,
+      "version": "7",
+      "when": 1794332121941,
+      "tag": "0382_one_open_bookkeeping_request_per_entity",
+      "breakpoints": true
     }
   ]
 }

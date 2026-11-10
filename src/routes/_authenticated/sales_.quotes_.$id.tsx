@@ -21,7 +21,8 @@ import { AddSalesContact } from "@/components/sales/add-sales-contact";
 import { canAddSalesContact } from "@/lib/sales-contact-model";
 import { addSalesQuoteContact, changeSalesQuoteSigner, sendSalesQuoteEmail, sendSalesQuotePackage, updateSalesQuoteDetails } from "@/lib/sales-hub.functions";
 import { Textarea } from "@/components/ui/textarea";
-import { bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
+import { bookkeepingCoverageBlocker, bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
+import { BookkeepingCoveragePanel } from "@/components/sales/bookkeeping-coverage-panel";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes_/$id")({
   head: () => ({
@@ -87,7 +88,8 @@ function QuotePage() {
   const d = q.data as any;
   if (!d) return <main className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Loading…</main>;
   const s = d.quote.status as string;
-  const bookkeepingBlocker = bookkeepingDraftBlocker(d.lines);
+  const releaseBlocker = bookkeepingDraftBlocker(d.lines);
+  const bookkeepingBlocker = bookkeepingCoverageBlocker(d.lines) ?? releaseBlocker;
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <Link to="/sales/quotes" className="text-sm text-muted-foreground hover:underline">← Quotes</Link>
@@ -144,7 +146,8 @@ function QuotePage() {
           </div>
         </Panel>
       )}
-      {bookkeepingBlocker && <p className="text-sm text-muted-foreground">{bookkeepingBlocker}</p>}
+      {releaseBlocker && <p className="text-sm text-muted-foreground">{releaseBlocker}</p>}
+      <BookkeepingCoveragePanel quoteId={id} clientId={d.quote.client_id ?? null} canEdit={!!d.canEdit} lines={d.lines} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">

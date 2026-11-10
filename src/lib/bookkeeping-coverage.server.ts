@@ -45,6 +45,6 @@ export async function loadEntityCoverage(db: Db, entity: { id: string; offering_
   }
   const { data: requests } = await db.from("client_intake_requests")
     .select("id, created_at, status").eq("entity_id", entity.id).in("status", OPEN_REQUEST).contains("requested_service_keys", [BOOKKEEPING_KEY]);
-  for (const r of (requests ?? []) as any[]) rows.push({ source: "request", label: `Your bookkeeping request from ${String(r.created_at).slice(0, 10)}`, scope: [...BOOKKEEPING_OPTIONS.managed.charged, "tools"], start: null, end: null });
+  for (const r of (requests ?? []) as any[]) rows.push({ source: "request", label: `Your bookkeeping request from ${String(r.created_at).slice(0, 10)}`, scope: [...BOOKKEEPING_OPTIONS.managed.charged, "tools"], start: null, end: null, requestId: String(r.id), createdOn: String(r.created_at).slice(0, 10) });
   return { rows, fundAccounting: entity.offering_id ? includedFundAccounting(fundFeatureKeys) : null };
 }

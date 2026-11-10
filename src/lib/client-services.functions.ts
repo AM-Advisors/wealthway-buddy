@@ -409,19 +409,24 @@ export const getMyIntakeRequest = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     const { data: row, error } = await context.supabase
       .from("client_intake_requests")
-      .select("id, client_id, intent, summary, answers, requested_service_keys, status, created_at, updated_at")
+      .select("id, client_id, entity_id, intent, summary, answers, requested_service_keys, status, created_at, updated_at, clients(name, legal_name), client_entities(legal_name)")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Request not found.");
+    const mine = await myClientIds(context);
+    if (!mine.includes(String((row as any).client_id))) throw new Error("Request not found.");
     const { data: history } = await context.supabase
       .from("contract_audit_events")
       .select("action, created_at, new_value")
       .eq("target", data.id)
       .order("created_at", { ascending: false })
       .limit(50);
+    const { clients: org, client_entities: ent, ...request } = row as any;
     return {
-      request: row as any,
+      request: request as any,
+      organizationName: (org?.legal_name ?? org?.name ?? null) as string | null,
+      entityName: (ent?.legal_name ?? null) as string | null,
       history: ((history ?? []) as any[]).map((h) => ({ action: String(h.action), at: String(h.created_at) })),
     };
   });
@@ -443,6 +448,12 @@ export const updateIntakeAnswers = createServerFn({ method: "POST" })
     const mine = await myClientIds(context);
     if (!mine.includes(String((row as any).client_id))) throw new Error("Forbidden.");
     if ((row as any).status !== "submitted") throw new Error("Harmonious has started on this request, send a message to change it.");
+    const { BOOKKEEPING_KEY } = await import("@/lib/bookkeeping-model");
+    const { bookkeepingAnswerEditProblem } = await import("@/lib/bookkeeping-options");
+    if (((row as any).requested_service_keys ?? []).includes(BOOKKEEPING_KEY)) {
+      const problem = bookkeepingAnswerEditProblem((row as any).answers ?? {}, data.answers, (row as any).requested_service_keys ?? [], data.requestedServiceKeys);
+      if (problem) throw new Error(problem);
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("client_intake_requests")

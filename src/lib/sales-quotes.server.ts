@@ -2,7 +2,7 @@
 import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, quoteAutoApproves, quoteDeleteProblem, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
-import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
+import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingCoverageBlocker, bookkeepingDraftBlocker, bookkeepingInputSchema, bookkeepingTerms, calculateBookkeeping, coverageCheckFor, type CoverageCheck } from "@/lib/bookkeeping-model";
 import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "@/lib/quote-sow-sync";
 import { sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import { normalizeQuoteBilling } from "@/lib/quote-billing";
@@ -28,6 +28,40 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
 }
 
 /** Administration levels as quote lines, keyed by product + level, from current pricing versions. */
+/**
+ * Coverage and open-request checks for one bookkeeping line. Entities not yet on file return a
+ * pending check (the quote stays a draft); a linked entity must belong to the quote's client,
+ * be eligible for the option and have no overlapping coverage or other open request.
+ */
+async function bookkeepingCoverageCheck(db: any, clientId: string | null, raw: unknown): Promise<CoverageCheck> {
+  const input = bookkeepingInputSchema.parse(raw);
+  const now = new Date().toISOString();
+  if (!input.entityId) return coverageCheckFor(input, null, now);
+  const { data: entity } = await db.from("client_entities").select("id, client_id, legal_name, offering_id, entity_type, status").eq("id", input.entityId).maybeSingle();
+  if (!entity || !clientId || entity.client_id !== clientId) throw new Error("That entity doesn't belong to the chosen client.");
+  if (entity.status === "archived") throw new Error("That entity is archived. Choose an active entity.");
+  const { data: org } = await db.from("clients").select("id, legal_name, name").eq("id", clientId).maybeSingle();
+  const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
+  const { CHARGED_LABELS, coverageConflicts, optionAvailableFor, quoteCoverageRows } = await import("@/lib/bookkeeping-options");
+  const availability = optionAvailableFor(input.option, { entityType: entity.entity_type, offeringId: entity.offering_id });
+  if (!availability.available) throw new Error(availability.reason ?? "That option isn't available for this entity.");
+  const coverage = await loadEntityCoverage(db, entity);
+  if (input.sourceRequestId && !coverage.rows.some((r) => r.source === "request" && r.requestId === input.sourceRequestId)) throw new Error("That request isn't an open bookkeeping request for this entity.");
+  const conflict = coverageConflicts({ option: input.option, effectiveOn: input.effectiveOn, termMonths: input.termMonths, excluded: input.excludedScope }, quoteCoverageRows(coverage.rows, input.sourceRequestId));
+  if (conflict.blocked) throw new Error(conflict.existingBookkeeping?.source === "request"
+    ? `${conflict.reason} Choose it as the request this quote answers, or close it first.`
+    : conflict.reason ?? "This entity is already covered for this period.");
+  if (conflict.unresolved.length) throw new Error(`Already covered for this entity and period: ${conflict.unresolved.map((x) => CHARGED_LABELS[x]).join(", ")}. Mark them excluded before quoting.`);
+  return coverageCheckFor(input, { entityName: entity.legal_name, organizationId: clientId, organizationName: org?.legal_name ?? org?.name ?? null }, now);
+}
+
+/** Reruns every bookkeeping line's checks before a quote moves past draft. */
+async function assertBookkeepingCoverage(db: any, clientId: string | null, lines: readonly any[]) {
+  const pending = bookkeepingCoverageBlocker(lines);
+  if (pending) throw new Error(pending);
+  for (const l of lines) if (l.bookkeeping_snapshot) await bookkeepingCoverageCheck(db, clientId, l.bookkeeping_snapshot);
+}
+
 async function adminCatalog() {
   const { SERVICE_LADDERS, adminQuoteKey, isLadderProduct } = await import("@/lib/service-ladders");
   const db = await admin();
@@ -137,20 +171,9 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     const price = calculateBookkeeping(config, l.bookkeeping);
     if (price.invoiceCents === null || price.blockers.length) throw new Error(price.blockers[0] ?? "A custom bookkeeping price is required.");
     if (l.bookkeeping.effectiveOn < version.effective_on) throw new Error("The service date cannot precede the pricing version's effective date.");
-    if (price.input.entityId) {
-      // Duplicate coverage for the same entity and period is never quoted twice.
-      const { data: entity } = await db.from("client_entities").select("id, client_id, offering_id, entity_type").eq("id", price.input.entityId).maybeSingle();
-      if (!entity || !d.clientId || entity.client_id !== d.clientId) throw new Error("That entity doesn't belong to the chosen client.");
-      const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
-      const { coverageConflicts, optionAvailableFor } = await import("@/lib/bookkeeping-options");
-      const availability = optionAvailableFor(price.input.option, { entityType: entity.entity_type, offeringId: entity.offering_id });
-      if (!availability.available) throw new Error(availability.reason ?? "That option isn't available for this entity.");
-      const coverage = await loadEntityCoverage(db, entity);
-      const conflict = coverageConflicts({ option: price.input.option, effectiveOn: price.input.effectiveOn, termMonths: price.input.termMonths, excluded: price.input.excludedScope }, coverage.rows.filter((r) => r.source !== "request"));
-      if (conflict.blocked) throw new Error(conflict.reason ?? "This entity is already covered for this period.");
-      if (conflict.unresolved.length) throw new Error(`Already covered for this entity and period: ${conflict.unresolved.join(", ")}. Mark them excluded before quoting.`);
-    }
-    snapshots.set(i, { ...price.input, configuration: config, configurationEffectiveOn: version.effective_on, pricing: price, scope: bookkeepingTerms(config, price.input), publicationStatus: "proposed" });
+    // Duplicate coverage for the same entity and period is never quoted twice; entities not on file stay pending.
+    const coverageCheck = await bookkeepingCoverageCheck(db, d.clientId ?? null, price.input);
+    snapshots.set(i, { ...price.input, configuration: config, configurationEffectiveOn: version.effective_on, pricing: price, scope: bookkeepingTerms(config, price.input), publicationStatus: "proposed", coverageCheck });
     const freq = price.input.frequency ? ` (${price.input.frequency} ${price.input.option === "managed" ? "close" : "review"})` : "";
     return { ...l, quantity: 1, label: `${config.name} · ${price.option.name}${freq}`, unitCents: price.invoiceCents, baselineUnitCents: price.invoiceCents, billingFrequency: price.input.billing, firstBillOn: price.input.effectiveOn };
   }));
@@ -194,6 +217,39 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   return { id };
 }
 
+/**
+ * Links a pending bookkeeping line to the canonical entity now on file (optionally the open client
+ * request it answers) and reruns every check through the canonical draft save. Nothing is saved
+ * when a check fails.
+ */
+export async function linkQuoteBookkeepingEntity(userId: string, d: { id: string; sortOrder: number; entityId: string; sourceRequestId: string | null }) {
+  const a = await salesActor(userId);
+  if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("*").eq("id", d.id).maybeSingle();
+  if (!q || !canSee(a, q.owner_user_id) || !["draft", "rejected"].includes(q.status)) throw new Error("Only draft quotes can be linked. Create a new version instead.");
+  if (!q.client_id) throw new Error("Choose the client on this quote first.");
+  const { data: rows, error } = await db.from("sales_quote_lines").select("*").eq("quote_id", d.id).order("sort_order");
+  if (error) throw new Error("Couldn't read the quote's services.");
+  const lines = (rows ?? []) as any[];
+  const target = lines.findIndex((l) => l.sort_order === d.sortOrder && l.bookkeeping_snapshot);
+  if (target < 0) throw new Error("That bookkeeping line isn't on this quote.");
+  const { data: entity } = await db.from("client_entities").select("id, client_id, legal_name").eq("id", d.entityId).maybeSingle();
+  if (!entity || entity.client_id !== q.client_id) throw new Error("That entity doesn't belong to this quote's client.");
+  const inputs = quoteInputsFromRows(lines).map((l, i) => {
+    if (i !== target) return l;
+    const bk = l.bookkeeping as any;
+    const refs: string[] = [entity.legal_name, ...((bk.entityReferences ?? []) as string[]).slice(1).filter((r) => r !== entity.legal_name)];
+    return { ...l, bookkeeping: { ...bk, entityId: entity.id, sourceRequestId: d.sourceRequestId, entityReferences: refs } };
+  });
+  await saveQuote(userId, { id: d.id, title: q.title, clientId: q.client_id, contactId: q.contact_id, dealId: q.deal_id, offeringId: q.offering_id,
+    validUntil: q.valid_until, notes: q.notes, expectedUpdatedAt: q.updated_at, lines: inputs });
+  const { data: saved } = await db.from("sales_quote_lines").select("service_key,bookkeeping_snapshot").eq("quote_id", d.id);
+  const pending = bookkeepingCoverageBlocker(saved ?? []);
+  await event(d.id, "bookkeeping_entity_linked", userId, `${entity.legal_name}: coverage and open-request checks passed${pending ? "; other entities still pending" : ""}`);
+  return { pending };
+}
+
 export async function addQuoteContact(userId: string, id: string, input: SalesContactInput) {
   const a = await salesActor(userId);
   const db = await admin();
@@ -215,6 +271,7 @@ export async function submitQuote(userId: string, id: string) {
   if (!q.client_id) throw new Error("Choose the client before submitting for approval.");
   const { data: quoteLines, error: linesError } = await db.from("sales_quote_lines").select("service_key,bookkeeping_snapshot").eq("quote_id", id);
   if (linesError) throw new Error("Couldn't check the quote's service terms.");
+  await assertBookkeepingCoverage(db, q.client_id, quoteLines ?? []);
   const stagedBlocker = bookkeepingDraftBlocker(quoteLines ?? []);
   if (stagedBlocker) throw new Error(stagedBlocker);
   const now = new Date().toISOString();
@@ -261,6 +318,7 @@ export async function draftAgreements(userId: string, q: any) {
   const db = await admin();
   if (q.sow_id) return { sowId: q.sow_id as string };
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", q.id).order("sort_order");
+  await assertBookkeepingCoverage(db, q.client_id, lines ?? []);
   const stagedBlocker = bookkeepingDraftBlocker(lines ?? []);
   if (stagedBlocker) throw new Error(stagedBlocker);
   // No MSA draft per quote: the client accepts the MSA once, at their first signing, with the other terms.
@@ -310,6 +368,9 @@ export async function markSent(userId: string, id: string) {
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
   if (!q || !canSee(a, q.owner_user_id) || q.status !== "approved") throw new Error("Only approved quotes can be sent.");
+  const { data: sendLines, error: sendLinesError } = await db.from("sales_quote_lines").select("service_key,bookkeeping_snapshot").eq("quote_id", id);
+  if (sendLinesError) throw new Error("Couldn't check the quote's service terms.");
+  await assertBookkeepingCoverage(db, q.client_id, sendLines ?? []);
   // No SOW yet: draft one from this quote so the agreement always matches what was quoted.
   if (!q.sow_id) await draftAgreements(userId, q);
   const now = new Date().toISOString();

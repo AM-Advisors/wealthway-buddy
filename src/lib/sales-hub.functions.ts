@@ -96,6 +96,9 @@ const idOnly = z.object({ id: z.string().uuid() });
 export const addSalesQuoteContact = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ id: z.string().uuid(), fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(255), organization: z.string().trim().max(200).nullish(), title: z.string().trim().max(200).nullish(), phone: z.string().trim().max(40).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).addQuoteContact(context.userId, data.id, data));
+export const linkSalesQuoteBookkeepingEntity = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), sortOrder: z.number().int().min(0).max(100), entityId: z.string().uuid(), sourceRequestId: z.string().uuid().nullable() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).linkQuoteBookkeepingEntity(context.userId, data));
 export const submitSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).submitQuote(context.userId, data.id));
 export const decideSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

@@ -9,14 +9,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { calculateBookkeeping, type BookkeepingConfig, type BookkeepingInput } from "@/lib/bookkeeping-model";
-import { ADDONS, BOOKKEEPING_OPTIONS, CHARGED_LABELS, FREQUENCY_LABELS, OPTION_KEYS, SUPPORT_LEVELS, coverageConflicts, type BookkeepingOption, type ChargedScope } from "@/lib/bookkeeping-options";
+import { ADDONS, BOOKKEEPING_OPTIONS, CHARGED_LABELS, FREQUENCY_LABELS, NOT_YET_AVAILABLE, OPTION_KEYS, SUPPORT_LEVELS, coverageConflicts, optionAvailableFor, quoteCoverageRows, type BookkeepingOption, type ChargedScope } from "@/lib/bookkeeping-options";
+import { COVERAGE_PENDING } from "@/lib/bookkeeping-model";
 import { getBookkeepingEntityCoverage } from "@/lib/bookkeeping.functions";
 
 const money = (n: number | null) => n === null ? "Custom price required" : `$${(n / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 const NONE = "__none";
 
 export function BookkeepingConfigurator({ configuration, versionId, clientId, onAdd }: { configuration: BookkeepingConfig; versionId: string | null; clientId: string | null; onAdd: (input: BookkeepingInput, invoiceCents: number) => void }) {
-  const [input, setInput] = useState<BookkeepingInput>({ configVersionId: versionId ?? "00000000-0000-0000-0000-000000000000", option: "managed", frequency: "monthly", supportLevel: "self_serve", billing: "quarterly", entityId: null, entityReferences: ["Proposed legal entity"], expectedTransactions: 50, financialAccounts: 2, accountingMethod: "cash", reporting: "standard", reportingRequirements: "", effectiveOn: "", termMonths: 12, addons: [], excludedScope: [], customMonthlyCents: null, customReason: "" });
+  const [input, setInput] = useState<BookkeepingInput>({ configVersionId: versionId ?? "00000000-0000-0000-0000-000000000000", option: "managed", frequency: "monthly", supportLevel: "self_serve", billing: "quarterly", entityId: null, entityReferences: ["Proposed legal entity"], expectedTransactions: 50, financialAccounts: 2, accountingMethod: "cash", reporting: "standard", reportingRequirements: "", effectiveOn: "", termMonths: 12, addons: [], excludedScope: [], customMonthlyCents: null, customReason: "", sourceRequestId: null });
   const [entities, setEntities] = useState("");
   const loadCoverage = useServerFn(getBookkeepingEntityCoverage);
   const coverage = useQuery({ queryKey: ["bookkeeping-entity-coverage", clientId], queryFn: () => loadCoverage({ data: { clientId: clientId! } }), enabled: !!clientId });
@@ -25,14 +26,16 @@ export function BookkeepingConfigurator({ configuration, versionId, clientId, on
   const typed = entities.split("\n").map(v => v.trim()).filter(Boolean);
   const readyInput: BookkeepingInput = { ...input, configVersionId: versionId ?? input.configVersionId, entityReferences: chosenEntity ? [chosenEntity.legalName, ...typed.filter(t => t !== chosenEntity.legalName)] : typed, effectiveOn: input.effectiveOn || "2026-01-01" };
   const def = BOOKKEEPING_OPTIONS[input.option];
-  const conflict = chosenEntity ? coverageConflicts({ option: input.option, effectiveOn: readyInput.effectiveOn, termMonths: input.termMonths, excluded: input.excludedScope as ChargedScope[] }, chosenEntity.coverage.filter(r => r.source !== "request")) : null;
+  const openRequests = (chosenEntity?.coverage ?? []).filter(r => r.source === "request" && r.requestId);
+  const availability = chosenEntity ? optionAvailableFor(input.option, chosenEntity) : null;
+  const conflict = chosenEntity ? coverageConflicts({ option: input.option, effectiveOn: readyInput.effectiveOn, termMonths: input.termMonths, excluded: input.excludedScope as ChargedScope[] }, quoteCoverageRows(chosenEntity.coverage, input.sourceRequestId ?? null)) : null;
   let result: ReturnType<typeof calculateBookkeeping> | null = null;
   let error = "";
   try { result = calculateBookkeeping(configuration, readyInput); } catch (e) { error = (e as Error).message; }
   const setOption = (option: BookkeepingOption) => patch({ option, frequency: BOOKKEEPING_OPTIONS[option].defaultFrequency, excludedScope: [] });
   const addonState = (key: string) => input.addons?.find(a => a.key === key);
   const setAddon = (key: (typeof ADDONS)[number]["key"], quantity: number, quotedCents: number | null) => patch({ addons: [...(input.addons ?? []).filter(a => a.key !== key), ...(quantity > 0 || quotedCents !== null ? [{ key, quantity, quotedCents }] : [])] });
-  const blocked = !versionId || !result || result.invoiceCents === null || !input.effectiveOn || result.blockers.length > 0 || !!conflict?.blocked || (conflict?.unresolved.length ?? 0) > 0;
+  const blocked = !versionId || !result || result.invoiceCents === null || !input.effectiveOn || result.blockers.length > 0 || !!conflict?.blocked || (conflict?.unresolved.length ?? 0) > 0 || availability?.available === false;
   return <section className="mt-5 space-y-4 border-t pt-5" aria-label="Bookkeeping quote configuration">
     <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold">Bookkeeping</h2><Badge variant="secondary">Proposed · internal draft only</Badge></div>
     {!versionId && <p className="text-sm text-muted-foreground">An authorized executive must record the proposed pricing version in Services administration before it can be added to a draft.</p>}
@@ -44,7 +47,7 @@ export function BookkeepingConfigurator({ configuration, versionId, clientId, on
           : <Select value={input.frequency ?? def.defaultFrequency ?? "monthly"} onValueChange={v => patch({ frequency: v as BookkeepingInput["frequency"] })}><SelectTrigger aria-label="Service frequency"><SelectValue /></SelectTrigger><SelectContent>{def.frequencies.map(f => <SelectItem key={f} value={f}>{FREQUENCY_LABELS[f]}</SelectItem>)}</SelectContent></Select>}</div>
       <div className="space-y-1"><Label>Support level</Label><Select value={input.supportLevel} onValueChange={v => patch({ supportLevel: v as BookkeepingInput["supportLevel"] })}><SelectTrigger aria-label="Support level"><SelectValue /></SelectTrigger><SelectContent>{SUPPORT_LEVELS.map(l => <SelectItem key={l.key} value={l.key}>{l.name} · {l.response}</SelectItem>)}</SelectContent></Select></div>
       <div className="space-y-1"><Label>Billing frequency</Label><Select value={input.billing} onValueChange={v => patch({ billing: v as BookkeepingInput["billing"] })}><SelectTrigger aria-label="Bookkeeping billing frequency"><SelectValue /></SelectTrigger><SelectContent>{(["monthly", "quarterly", "annual"] as const).map(v => <SelectItem key={v} value={v}>{FREQUENCY_LABELS[v]}</SelectItem>)}</SelectContent></Select></div>
-      <div className="space-y-1"><Label>Entity</Label><Select value={input.entityId ?? NONE} onValueChange={v => patch({ entityId: v === NONE ? null : v, excludedScope: [] })} disabled={!clientId}><SelectTrigger aria-label="Covered entity"><SelectValue placeholder="Choose entity" /></SelectTrigger><SelectContent><SelectItem value={NONE}>{clientId ? "Not on file yet (type below)" : "Choose a client first"}</SelectItem>{(coverage.data ?? []).map(e => <SelectItem key={e.id} value={e.id}>{e.legalName}</SelectItem>)}</SelectContent></Select></div>
+      <div className="space-y-1"><Label>Entity</Label><Select value={input.entityId ?? NONE} onValueChange={v => patch({ entityId: v === NONE ? null : v, excludedScope: [], sourceRequestId: null })} disabled={!clientId}><SelectTrigger aria-label="Covered entity"><SelectValue placeholder="Choose entity" /></SelectTrigger><SelectContent><SelectItem value={NONE}>{clientId ? "Not on file yet (type below)" : "Choose a client first"}</SelectItem>{(coverage.data ?? []).map(e => <SelectItem key={e.id} value={e.id}>{e.legalName} · {e.organizationName}</SelectItem>)}</SelectContent></Select></div>
       <div className="space-y-1"><Label htmlFor="bk-transactions">Monthly transactions</Label><Input id="bk-transactions" type="number" min="0" value={input.expectedTransactions} onChange={e => patch({ expectedTransactions: Number(e.target.value) })} /></div>
       <div className="space-y-1"><Label htmlFor="bk-accounts">Bank and credit accounts</Label><Input id="bk-accounts" type="number" min="0" value={input.financialAccounts} onChange={e => patch({ financialAccounts: Number(e.target.value) })} /></div>
       <div className="space-y-1"><Label>Accounting basis</Label><Select value={input.accountingMethod} onValueChange={v => patch({ accountingMethod: v as "cash" | "accrual" })}><SelectTrigger aria-label="Accounting method"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Cash</SelectItem><SelectItem value="accrual">Accrual</SelectItem></SelectContent></Select></div>
@@ -55,6 +58,16 @@ export function BookkeepingConfigurator({ configuration, versionId, clientId, on
     </div>
     <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-1"><Label htmlFor="bk-entities">{chosenEntity ? "Other legal entities (one per line)" : "Legal entities (one per line)"}</Label><Textarea id="bk-entities" placeholder="Legal entity name" value={entities} onChange={e => setEntities(e.target.value)} /></div><div className="space-y-1"><Label htmlFor="bk-reporting">Reporting requirements</Label><Textarea id="bk-reporting" value={input.reportingRequirements} onChange={e => patch({ reportingRequirements: e.target.value })} /></div></div>
     {input.customMonthlyCents != null && <div className="space-y-1"><Label htmlFor="bk-reason">Custom price reason</Label><Input id="bk-reason" value={input.customReason} onChange={e => patch({ customReason: e.target.value })} /></div>}
+    {!chosenEntity && <div className="space-y-1 rounded-md border p-3 text-sm" role="status">
+      <Badge variant="outline">{COVERAGE_PENDING}</Badge>
+      <p className="text-muted-foreground">This entity isn't on file yet, so coverage and open requests can't be checked. The quote stays a draft until the entity is added to the client and linked on the quote page.</p>
+    </div>}
+    {chosenEntity && <p className="text-sm text-muted-foreground">Organization: <span className="font-medium text-foreground">{chosenEntity.organizationName}</span> · Entity: <span className="font-medium text-foreground">{chosenEntity.legalName}</span></p>}
+    {availability && !availability.available && <p role="alert" className="text-sm text-destructive">{BOOKKEEPING_OPTIONS[input.option].name}: {NOT_YET_AVAILABLE} for {chosenEntity?.legalName}. {availability.reason}</p>}
+    {openRequests.length > 0 && <div className="space-y-1"><Label>Client request this quote answers</Label>
+      <Select value={input.sourceRequestId ?? NONE} onValueChange={v => patch({ sourceRequestId: v === NONE ? null : v })}><SelectTrigger aria-label="Client request this quote answers" className="max-w-md"><SelectValue /></SelectTrigger>
+        <SelectContent><SelectItem value={NONE}>None</SelectItem>{openRequests.map(r => <SelectItem key={r.requestId} value={r.requestId!}>Request from {r.createdOn} · {chosenEntity?.legalName} · {chosenEntity?.organizationName}</SelectItem>)}</SelectContent></Select>
+      <p className="text-xs text-muted-foreground">Any other open request for this entity blocks the quote.</p></div>}
     {conflict && conflict.duplicates.length > 0 && <div className="space-y-2 rounded-md border p-3 text-sm" role="status">
       <p className="font-medium">Already covered for {chosenEntity?.legalName} in this period</p>
       {conflict.duplicates.map(d => <p key={d.label} className="text-muted-foreground">{d.label}: {d.scope.map(s => CHARGED_LABELS[s]).join(", ")}</p>)}

@@ -26,11 +26,15 @@ export const getBookkeepingEntityCoverage = createServerFn({ method: "GET" }).mi
     if (!who.isStaff && salesScope(who.roles) === "none") throw new Error("Harmonious staff access is required.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
-    const { data: entities } = await supabaseAdmin.from("client_entities").select("id, legal_name, entity_type, offering_id, status").eq("client_id", data.clientId).order("legal_name");
+    const [{ data: entities }, { data: org }] = await Promise.all([
+      supabaseAdmin.from("client_entities").select("id, legal_name, entity_type, offering_id, status").eq("client_id", data.clientId).order("legal_name"),
+      supabaseAdmin.from("clients").select("legal_name, name").eq("id", data.clientId).maybeSingle(),
+    ]);
+    const organizationName = ((org as any)?.legal_name ?? (org as any)?.name ?? "Organization") as string;
     const out = [];
     for (const e of ((entities ?? []) as any[]).filter((x) => x.status !== "archived")) {
       const coverage = await loadEntityCoverage(supabaseAdmin, e);
-      out.push({ id: e.id as string, legalName: e.legal_name as string, entityType: e.entity_type as string, offeringId: (e.offering_id as string | null) ?? null, coverage: coverage.rows });
+      out.push({ id: e.id as string, legalName: e.legal_name as string, organizationId: data.clientId, organizationName, entityType: e.entity_type as string, offeringId: (e.offering_id as string | null) ?? null, coverage: coverage.rows });
     }
     return out;
   });

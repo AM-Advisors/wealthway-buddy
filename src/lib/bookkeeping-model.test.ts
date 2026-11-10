@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import proposed from "@/lib/config/bookkeeping-proposed.json";
-import { bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping, type BookkeepingInput } from "@/lib/bookkeeping-model";
+import { bookkeepingCoverageBlocker as coverageBlocker, coverageCheckFor as checkFor, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping, type BookkeepingInput } from "@/lib/bookkeeping-model";
 
 const config = bookkeepingConfigSchema.parse(proposed);
 const priced = bookkeepingConfigSchema.parse({ ...proposed, options: proposed.options.map((o) => o.key === "managed" ? { ...o, monthlyCents: { ...o.monthlyCents, monthly: 100000, quarterly: 80000 } } : o) });
@@ -66,5 +66,30 @@ describe("bookkeeping pricing", () => {
   it("quotes containing bookkeeping stay draft-only", () => {
     expect(bookkeepingDraftBlocker([{ service_key: "BOOKKEEPING_ACCOUNTING" }])).toMatch(/proposed/);
     expect(bookkeepingDraftBlocker([{ service_key: "OTHER" }])).toBeNull();
+  });
+});
+
+
+describe("coverage check pending for entities not on file", () => {
+  const now = "2026-11-10T00:00:00Z";
+  const org = { entityName: "Acme Fund I LP", organizationId: "c1", organizationName: "Acme Capital" };
+  it("an entity not on file stays pending and blocks the quote", () => {
+    const check = checkFor({ entityId: null, entityReferences: ["Acme GP LLC"] }, null, now);
+    expect(check.status).toBe("pending");
+    expect(coverageBlocker([{ service_key: "BOOKKEEPING_ACCOUNTING", bookkeeping_snapshot: { coverageCheck: check } }])).toContain("Coverage check pending: Acme GP LLC");
+  });
+  it("a linked entity that passed the checks no longer blocks", () => {
+    const check = checkFor({ entityId: "e1", entityReferences: ["Acme Fund I LP"] }, org, now);
+    expect(check).toMatchObject({ status: "passed", organizationName: "Acme Capital", entityName: "Acme Fund I LP" });
+    expect(coverageBlocker([{ service_key: "BOOKKEEPING_ACCOUNTING", bookkeeping_snapshot: { coverageCheck: check } }])).toBeNull();
+  });
+  it("other entities named on the same line keep it pending", () => {
+    const check = checkFor({ entityId: "e1", entityReferences: ["Acme Fund I LP", "Acme GP LLC"] }, org, now);
+    expect(check.status).toBe("pending");
+    expect(check.unlinkedReferences).toEqual(["Acme GP LLC"]);
+  });
+  it("a bookkeeping line saved without a check is treated as pending", () => {
+    expect(coverageBlocker([{ service_key: "BOOKKEEPING_ACCOUNTING", bookkeeping_snapshot: { entityReferences: ["X LLC"] } }])).not.toBeNull();
+    expect(coverageBlocker([{ service_key: "OTHER" }])).toBeNull();
   });
 });

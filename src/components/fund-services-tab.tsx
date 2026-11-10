@@ -63,7 +63,7 @@ function FundAccountingCard({ featureKeys }: { featureKeys: string[] }) {
       {scope.length
         ? <ul className="mt-3 grid gap-1 text-sm sm:grid-cols-2">{scope.map((s) => <li key={s.key}>✓ {s.label}</li>)}</ul>
         : <p className="mt-3 text-sm text-muted-foreground">Your current agreement doesn't include Fund Accounting services.</p>}
-      <p className="mt-4 text-sm">Need books kept for the GP or management company? <Link to="/client/services/bookkeeping" className="text-primary underline">Compare bookkeeping options</Link></p>
+      <p className="mt-4 text-sm">Bookkeeping for this fund is separate. <Link to="/client/services/bookkeeping" className="text-primary underline">Compare bookkeeping options</Link> (not yet available for GPs or management companies).</p>
     </section>
   );
 }

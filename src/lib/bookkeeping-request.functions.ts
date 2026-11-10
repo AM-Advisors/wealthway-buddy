@@ -19,14 +19,18 @@ export const getBookkeepingChooser = createServerFn({ method: "GET" })
     if (!clientIds.length) return { clientId: null, entities: [] };
     const clientId = clientIds[0] as string;
     // RLS returns only entities of organizations the caller is a direct member of.
-    const { data: entities } = await context.supabase.from("client_entities")
-      .select("id, legal_name, entity_type, offering_id, status").in("client_id", clientIds).order("legal_name");
+    const [{ data: entities }, { data: orgs }] = await Promise.all([
+      context.supabase.from("client_entities")
+        .select("id, client_id, legal_name, entity_type, offering_id, status").in("client_id", clientIds).order("legal_name"),
+      context.supabase.from("clients").select("id, legal_name, name").in("id", clientIds),
+    ]);
+    const orgName = new Map(((orgs ?? []) as any[]).map((o) => [String(o.id), String(o.legal_name ?? o.name ?? "Your organization")]));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
     const out = [];
-    for (const e of ((entities ?? []) as any[]).filter((x) => x.status !== "archived")) {
+    for (const e of ((entities ?? []) as any[]).filter((x) => x.status !== "archived" && clientIds.includes(x.client_id))) {
       const coverage = await loadEntityCoverage(supabaseAdmin, e);
-      out.push({ id: e.id as string, legalName: e.legal_name as string, entityType: e.entity_type as string, offeringId: (e.offering_id as string | null) ?? null, coverage: coverage.rows, fundAccounting: coverage.fundAccounting });
+      out.push({ id: e.id as string, legalName: e.legal_name as string, organizationId: e.client_id as string, organizationName: orgName.get(String(e.client_id)) ?? "Your organization", entityType: e.entity_type as string, offeringId: (e.offering_id as string | null) ?? null, coverage: coverage.rows, fundAccounting: coverage.fundAccounting });
     }
     return { clientId, entities: out };
   });
@@ -52,8 +56,11 @@ export const requestBookkeeping = createServerFn({ method: "POST" })
     const clientIds = await myClientIds(context);
     if (!clientIds.length) throw new Error("You aren't linked to an organization yet.");
     const { data: entity } = await context.supabase.from("client_entities")
-      .select("id, client_id, legal_name, entity_type, offering_id").eq("id", data.entityId).maybeSingle();
-    if (!entity || !clientIds.includes((entity as any).client_id)) throw new Error("Choose one of your organization's entities.");
+      .select("id, client_id, legal_name, entity_type, offering_id, status").eq("id", data.entityId).maybeSingle();
+    if (!entity || !clientIds.includes((entity as any).client_id) || (entity as any).status === "archived") throw new Error("Choose one of your organization's entities.");
+    const { data: org } = await context.supabase.from("clients").select("legal_name, name").eq("id", (entity as any).client_id).maybeSingle();
+    const organizationName = String((org as any)?.legal_name ?? (org as any)?.name ?? "Your organization");
+    const entityName = String((entity as any).legal_name);
     const opts = await import("@/lib/bookkeeping-options");
     const def = opts.BOOKKEEPING_OPTIONS[data.option];
     const availability = opts.optionAvailableFor(data.option, { entityType: (entity as any).entity_type, offeringId: (entity as any).offering_id });
@@ -64,7 +71,9 @@ export const requestBookkeeping = createServerFn({ method: "POST" })
     const { BOOKKEEPING_KEY } = await import("@/lib/bookkeeping-model");
     const coverage = await loadEntityCoverage(supabaseAdmin, entity as any);
     const conflict = opts.coverageConflicts({ option: data.option, effectiveOn: data.startOn, termMonths: 12 }, coverage.rows);
-    if (conflict.blocked) throw new Error(conflict.reason ?? "This entity is already covered for this period.");
+    if (conflict.blocked) throw new Error(conflict.existingBookkeeping?.source === "request"
+      ? `${conflict.reason} Harmonious will follow up on it; send a message to change it.`
+      : conflict.reason ?? "This entity is already covered for this period.");
     const support = opts.SUPPORT_LEVELS.find((l) => l.key === data.supportLevel)!;
     const answers: Record<string, string> = {
       bookkeeping_option: def.name,
@@ -82,13 +91,14 @@ export const requestBookkeeping = createServerFn({ method: "POST" })
     };
     const { data: created, error } = await context.supabase.from("client_intake_requests").insert({
       client_id: (entity as any).client_id, entity_id: (entity as any).id, intent: "add_service",
-      summary: `${def.name} for ${(entity as any).legal_name}`, answers, requested_service_keys: [BOOKKEEPING_KEY],
+      summary: `${def.name} for ${entityName} · ${organizationName}`, answers, requested_service_keys: [BOOKKEEPING_KEY],
       status: "submitted", requested_by: context.userId,
     }).select("id").single();
-    if (error) throw new Error(error.message);
+    // One open bookkeeping request per entity, enforced by the database for simultaneous submissions.
+    if (error) throw new Error((error as any).code === "23505" ? `A bookkeeping request for ${entityName} is already open. Harmonious will follow up on it.` : "Your request couldn't be saved. Please try again.");
     await context.supabase.from("contract_audit_events").insert({
       actor_id: context.userId, client_id: (entity as any).client_id, area: "engagements", source: "portal",
       action: "intake_request_submitted", target: (created as any).id, new_value: { intent: "add_service", bookkeeping_option: data.option } as any,
     });
-    return { id: (created as any).id as string, excluded: conflict.covered, uncovered: conflict.uncovered };
+    return { id: (created as any).id as string, entityName, organizationName, excluded: conflict.covered, uncovered: conflict.uncovered };
   });

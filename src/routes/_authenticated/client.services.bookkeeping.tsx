@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getBookkeepingChooser, requestBookkeeping } from "@/lib/bookkeeping-request.functions";
 import {
   ADDONS, BOOKKEEPING_OPTIONS, CHARGED_LABELS, FREQUENCY_LABELS, OPTION_KEYS, SUPPORT_LEVELS,
-  coverageConflicts, optionAvailableFor, responsibilityRows, supportDescription, visibleCapabilities,
+  NOT_YET_AVAILABLE, coverageConflicts, optionAvailableFor, responsibilityRows, supportDescription, visibleCapabilities,
   type AddonKey, type BookkeepingOption, type ServiceFrequency,
 } from "@/lib/bookkeeping-options";
 import type { ServiceLevel } from "@/lib/service-level";
@@ -53,14 +53,14 @@ function BookkeepingChooser() {
   const [transactions, setTransactions] = useState(50);
   const [startOn, setStartOn] = useState(today());
   const [notes, setNotes] = useState("");
-  const [sent, setSent] = useState<string | null>(null);
+  const [sent, setSent] = useState<{ id: string; entityName: string; organizationName: string } | null>(null);
 
   const entities = q.data?.entities ?? [];
   const entity = entities.find((e) => e.id === entityId) ?? null;
   const conflict = useMemo(() => entity && option ? coverageConflicts({ option, effectiveOn: startOn || today(), termMonths: 12 }, entity.coverage) : null, [entity, option, startOn]);
   const m = useMutation({
     mutationFn: () => submit({ data: { entityId, option: option!, frequency, supportLevel: support, billing, addons, accountingMethod: method, financialAccounts: accounts, monthlyTransactions: transactions, startOn, notes } }),
-    onSuccess: (r) => { setSent(r.id); void qc.invalidateQueries({ queryKey: ["bookkeeping-chooser"] }); void qc.invalidateQueries({ queryKey: ["my-services"] }); toast.success("Request sent. Harmonious will confirm scope and pricing before anything starts."); },
+    onSuccess: (r) => { setSent({ id: r.id, entityName: r.entityName, organizationName: r.organizationName }); void qc.invalidateQueries({ queryKey: ["bookkeeping-chooser"] }); void qc.invalidateQueries({ queryKey: ["my-services"] }); toast.success("Request sent. Harmonious will confirm scope and pricing before anything starts."); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -82,11 +82,12 @@ function BookkeepingChooser() {
         {entities.length === 0 ? (
           <p className="text-sm text-muted-foreground">No entities are on file yet. <Link to="/client/services/request" className="text-primary underline">Add a company, GP or management company</Link> first.</p>
         ) : (
-          <Select value={entityId} onValueChange={(v) => { setEntityId(v); setSent(null); }}>
+          <Select value={entityId} onValueChange={(v) => { setEntityId(v); setSent(null); setOption(null); }}>
             <SelectTrigger className="max-w-md" aria-label="Entity"><SelectValue placeholder="Choose an entity" /></SelectTrigger>
-            <SelectContent>{entities.map((e) => <SelectItem key={e.id} value={e.id}>{e.legalName}</SelectItem>)}</SelectContent>
+            <SelectContent>{entities.map((e) => <SelectItem key={e.id} value={e.id}>{e.legalName} · {e.organizationName}</SelectItem>)}</SelectContent>
           </Select>
         )}
+        {entity && <p className="text-sm text-muted-foreground">Organization: <span className="font-medium text-foreground">{entity.organizationName}</span> · Entity: <span className="font-medium text-foreground">{entity.legalName}</span></p>}
         {entity && entity.coverage.length > 0 && (
           <div className="max-w-3xl rounded-lg border p-4 text-sm">
             <p className="font-medium">Already in place for {entity.legalName}</p>
@@ -118,8 +119,9 @@ function BookkeepingChooser() {
             const selected = option === k;
             return (
               <article key={k} className={`flex flex-col rounded-xl border bg-card p-5 ${selected ? "border-primary ring-2 ring-primary/30" : ""}`}>
-                <h3 className="text-lg font-semibold">{def.name}</h3>
+                <div className="flex flex-wrap items-center gap-2"><h3 className="text-lg font-semibold">{def.name}</h3>{!avail.available && <Badge variant="outline">{NOT_YET_AVAILABLE}</Badge>}</div>
                 <p className="mt-1 text-sm text-muted-foreground">{def.description}</p>
+                {!avail.available ? <p className="mt-3 text-sm">{NOT_YET_AVAILABLE} for {entity.legalName}. {avail.reason}</p> : <>
                 <p className="mt-3 text-sm font-medium">Price: <span className="font-normal">Request a quote</span></p>
                 <h4 className="mt-4 text-sm font-semibold">Included</h4>
                 {caps.length ? <ul className="mt-1 space-y-1 text-sm">{caps.map((c) => <li key={c.key}>✓ {c.label}<span className="block text-xs text-muted-foreground">{c.note}</span></li>)}</ul>
@@ -131,9 +133,8 @@ function BookkeepingChooser() {
                 <p className="mt-3 text-xs text-muted-foreground">{k === "self_service" ? "No review or close schedule from Harmonious." : k === "review" ? "Reviews monthly, quarterly or annually, as you choose." : "Monthly close by default; quarterly also available."}</p>
                 {def.disclaimer && <p className="mt-3 rounded-md bg-muted p-2 text-xs">{def.disclaimer}</p>}
                 <div className="mt-auto pt-4">
-                  {avail.available ? <Button className="w-full" variant={selected ? "default" : "outline"} onClick={() => pick(k)}>{selected ? "Selected" : `Choose ${def.shortName}`}</Button>
-                    : <p className="text-xs text-muted-foreground">{avail.reason}</p>}
-                </div>
+                  <Button className="w-full" variant={selected ? "default" : "outline"} onClick={() => pick(k)}>{selected ? "Selected" : `Choose ${def.shortName}`}</Button>
+                </div></>}
               </article>
             );
           })}
@@ -175,8 +176,8 @@ function BookkeepingChooser() {
             </div>
           )}
           {conflict?.blocked && <p role="alert" className="text-sm text-destructive">{conflict.reason}</p>}
-          {sent ? <p className="text-sm">Request sent. <Link to="/client/services/requests/$requestId" params={{ requestId: sent }} className="text-primary underline">View request</Link></p>
-            : <Button size="lg" disabled={m.isPending || !!conflict?.blocked || !startOn} onClick={() => m.mutate()}>Request {BOOKKEEPING_OPTIONS[option].shortName} for {entity.legalName}</Button>}
+          {sent ? <p role="status" className="text-sm">Request sent for <span className="font-medium">{sent.entityName}</span> ({sent.organizationName}). <Link to="/client/services/requests/$requestId" params={{ requestId: sent.id }} className="text-primary underline">View request</Link></p>
+            : <Button size="lg" disabled={m.isPending || !!conflict?.blocked || !startOn || !optionAvailableFor(option, entity).available} onClick={() => m.mutate()}>Request {BOOKKEEPING_OPTIONS[option].shortName} for {entity.legalName}</Button>}
           <p className="text-xs text-muted-foreground">Nothing is charged or started now. Harmonious confirms scope and pricing in a quote you approve.</p>
         </section>
       )}

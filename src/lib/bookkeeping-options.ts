@@ -160,10 +160,17 @@ export function unavailableCapabilities(option: BookkeepingOption, entity: { ent
   return BOOKKEEPING_OPTIONS[option].capabilities.filter((c) => !shown.has(c.key));
 }
 
-/** Whether the option can be offered for this entity today. Self-Service and Review depend on fund-only tools. */
-export function optionAvailableFor(option: BookkeepingOption, entity: { entityType?: string | null; offeringId?: string | null }): { available: boolean; reason: string | null } {
-  if (option === "managed" || isFundEntity(entity)) return { available: true, reason: null };
-  return { available: false, reason: "The tools this option relies on are available for funds and SPVs today, not yet for this type of entity." };
+export const NOT_YET_AVAILABLE = "Not yet available";
+
+/**
+ * Whether the option can be offered for this entity today. Every option depends on statement
+ * upload, transaction categorization and reconciliation, which exist only for funds, SPVs and
+ * series. There is no documented process for delivering them for a GP, management company or
+ * operating company, so no option is offered for those entities yet.
+ */
+export function optionAvailableFor(_option: BookkeepingOption, entity: { entityType?: string | null; offeringId?: string | null }): { available: boolean; reason: string | null } {
+  if (isFundEntity(entity)) return { available: true, reason: null };
+  return { available: false, reason: "Categorizing and reconciling transactions is available for funds and SPVs today, not yet for GPs, management companies or operating companies." };
 }
 
 /** Harmonious activities that depend on tools that exist only for funds, SPVs and series today. */
@@ -326,6 +333,19 @@ export interface CoverageRow {
   scope: ChargedScope[];
   start: string | null;
   end: string | null;
+  /** Open client request id (request rows only), so a quote can name the request it answers. */
+  requestId?: string;
+  createdOn?: string;
+}
+
+/**
+ * Coverage rows for a staff quote: the client request the quote answers is not a conflict;
+ * every other open request still blocks, labeled for staff.
+ */
+export function quoteCoverageRows(rows: readonly CoverageRow[], sourceRequestId: string | null): CoverageRow[] {
+  return rows
+    .filter((r) => !(r.source === "request" && sourceRequestId && r.requestId === sourceRequestId))
+    .map((r) => r.source === "request" ? { ...r, label: `An open client bookkeeping request from ${r.createdOn ?? "an earlier date"}` } : r);
 }
 
 export function addMonths(isoDate: string, months: number) {
@@ -371,7 +391,9 @@ export function coverageConflicts(
     existingBookkeeping,
     blocked: Boolean(existingBookkeeping) || fullyCovered,
     reason: existingBookkeeping
-      ? `${existingBookkeeping.label} already covers bookkeeping for this entity in this period. Change it through that engagement instead.`
+      ? existingBookkeeping.source === "request"
+        ? `${existingBookkeeping.label} is still open for this entity.`
+        : `${existingBookkeeping.label} already covers bookkeeping for this entity in this period. Change it through that engagement instead.`
       : fullyCovered ? "Everything this option includes is already covered for this entity in this period." : null,
   };
 }
@@ -403,4 +425,19 @@ export function includedFundAccounting(featureKeys: readonly string[]) {
 /** Bookkeeping scope an administration agreement already covers. */
 export function adminBookkeepingScope(featureKeys: readonly string[]): ChargedScope[] {
   return [...new Set(featureKeys.flatMap((k) => ADMIN_FEATURE_SCOPE[k] ?? []))];
+}
+
+/* ------------------------------------------------------ request edits */
+
+/** Only the note on a bookkeeping request is client-editable; checked choices and coverage stay as submitted. */
+export const BOOKKEEPING_EDITABLE_ANSWERS = ["notes"] as const;
+
+export function bookkeepingAnswerEditProblem(
+  before: Record<string, string>, after: Record<string, string>,
+  beforeKeys: readonly string[], afterKeys: readonly string[],
+): string | null {
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  const changed = [...keys].filter((k) => (before[k] ?? "") !== (after[k] ?? "") && !(BOOKKEEPING_EDITABLE_ANSWERS as readonly string[]).includes(k));
+  const servicesChanged = beforeKeys.length !== afterKeys.length || beforeKeys.some((k) => !afterKeys.includes(k));
+  return changed.length || servicesChanged ? "Only the note can be changed on a bookkeeping request. Send Harmonious a message to change the entity, option or details." : null;
 }
