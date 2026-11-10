@@ -161,7 +161,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   let id = d.id ?? null;
   const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null, offering_id: d.offeringId || null,
     valid_until: d.validUntil || null, notes: d.notes || null, ...(d.billingContactId !== undefined ? { billing_contact_id: d.billingContactId || null } : {}), total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
-    needs_exec_approval: priced.needsExecApproval, pricing_version_id: base.versionId, updated_at: now,
+    needs_exec_approval: priced.needsExecApproval || [...snapshots.values()].some((s) => s.pricing?.needsExecutiveApproval), pricing_version_id: base.versionId, updated_at: now,
     ...(d.sections !== undefined ? { sections: sanitizeQuoteSections(d.sections) } : {}) };
   const savedLines = priced.lines.map((l, i) => ({ service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents,
     baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,

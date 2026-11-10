@@ -1,81 +1,70 @@
 import { describe, expect, it } from "vitest";
-import proposed from "./config/bookkeeping-proposed.json";
-import { bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingDueOn, bookkeepingTerms, calculateBookkeeping, type BookkeepingInput } from "./bookkeeping-model";
+import proposed from "@/lib/config/bookkeeping-proposed.json";
+import { bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping, type BookkeepingInput } from "@/lib/bookkeeping-model";
 
 const config = bookkeepingConfigSchema.parse(proposed);
-const input: BookkeepingInput = { configVersionId: "11111111-1111-4111-8111-111111111111", tier: "essential", reconciliation: "monthly", billing: "monthly", entityReferences: ["Fictional Sample Company"], expectedTransactions: 0, financialAccounts: 0, accountingMethod: "cash", reportingRequirements: "", effectiveOn: "2026-11-01", termMonths: 12, addons: [], customMonthlyCents: null, customReason: "" };
-describe("proposed bookkeeping rules", () => {
-  const rates = { self_service: [7900, 8900, 9900], essential: [15000, 20000, 25000], growth: [30000, 40000, 50000], professional: [65000, 82500, 100000], enterprise: [null, 200000, 250000] };
-  for (const [tier, prices] of Object.entries(rates)) for (const [i, reconciliation] of (["annual", "quarterly", "monthly"] as const).entries()) {
-    it(`${tier} ${reconciliation} uses the supplied proposed rate`, () => {
-      const result = calculateBookkeeping(config, { ...input, tier: tier as BookkeepingInput["tier"], reconciliation });
-      expect(result.listMonthly).toBe(prices[i]);
-      if (tier === "enterprise") expect(result.customRequired).toBe(true);
-      if (tier === "enterprise" && reconciliation === "annual") expect(result.invoiceCents).toBeNull();
-    });
-  }
-  for (const [billing, expected] of [["monthly", 25000], ["quarterly", 75000], ["annual", 300000]] as const) it(`${billing} billing has no prepayment discount`, () => {
-    const result = calculateBookkeeping(config, { ...input, billing });
-    expect(result.invoiceCents).toBe(expected);
-    expect(result.annualCents).toBe(300000);
+const priced = bookkeepingConfigSchema.parse({ ...proposed, options: proposed.options.map((o) => o.key === "managed" ? { ...o, monthlyCents: { ...o.monthlyCents, monthly: 100000, quarterly: 80000 } } : o) });
+const base: BookkeepingInput = {
+  configVersionId: "11111111-1111-4111-8111-111111111111", option: "managed", frequency: "monthly", supportLevel: "self_serve",
+  billing: "quarterly", entityId: null, entityReferences: ["Example GP LLC"], expectedTransactions: 40, financialAccounts: 2,
+  accountingMethod: "cash", reporting: "standard", reportingRequirements: "", effectiveOn: "2026-01-01", termMonths: 12,
+  addons: [], excludedScope: [], customMonthlyCents: null, customReason: "",
+};
+
+describe("bookkeeping pricing", () => {
+  it("default configuration publishes no prices: every option needs a quote", () => {
+    for (const option of ["self_service", "review", "managed"] as const) {
+      const r = calculateBookkeeping(config, { ...base, option, frequency: option === "self_service" ? null : option === "review" ? "quarterly" : "monthly" });
+      expect(r.listMonthly).toBeNull();
+      expect(r.invoiceCents).toBeNull();
+      expect(r.blockers.length).toBeGreaterThan(0);
+    }
   });
-  for (const [tier, transactions, accounts] of [["self_service", 250, 3], ["essential", 50, 2], ["growth", 150, 4], ["professional", 350, 8], ["enterprise", 500, null]] as const) it(`${tier} has exact included allowances`, () => {
-    const result = calculateBookkeeping(config, { ...input, tier });
-    expect(result.tier.transactions).toBe(transactions); expect(result.tier.accounts).toBe(accounts);
+
+  it("billing frequency multiplies the monthly-equivalent price independently of the close frequency", () => {
+    expect(calculateBookkeeping(priced, { ...base, billing: "monthly" }).invoiceCents).toBe(100000);
+    expect(calculateBookkeeping(priced, { ...base, billing: "quarterly" }).invoiceCents).toBe(300000);
+    expect(calculateBookkeeping(priced, { ...base, billing: "annual" }).invoiceCents).toBe(1200000);
+    expect(calculateBookkeeping(priced, { ...base, frequency: "quarterly", billing: "monthly" }).invoiceCents).toBe(80000);
   });
-  for (const [key, cents] of [["historical_cleanup", 10000], ["initial_cleanup", 50000], ["extra_transactions", 5000], ["extra_account", 2500], ["extra_entity", 20000], ["payroll_integration", 10000], ["ar_ap", 15000], ["runway", 25000], ["custom_report", 25000], ["analysis", 12500]] as const) it(`${key} retains the proposed optional rate`, () => {
-    expect(config.addons.find(a => a.key === key)?.unitCents).toBe(cents);
+
+  it("support level never changes price, schedule or deadline", () => {
+    const a = calculateBookkeeping(priced, { ...base, supportLevel: "self_serve" });
+    const b = calculateBookkeeping(priced, { ...base, supportLevel: "white_glove" });
+    expect(b.invoiceCents).toBe(a.invoiceCents);
+    expect(b.businessDays).toBe(a.businessDays);
+    expect(b.input.frequency).toBe(a.input.frequency);
   });
-  it("prices whole extra transaction blocks and accounts once", () => {
-    const result = calculateBookkeeping(config, { ...input, expectedTransactions: 101, financialAccounts: 3, addons: [{ key: "extra_transactions", quantity: 1 }] });
-    expect(result.extraTransactions).toBe(2); expect(result.extraAccounts).toBe(1); expect(result.monthlyCents).toBe(37500);
+
+  it("work beyond the configured limits requires a scope review before any extra charge", () => {
+    const r = calculateBookkeeping(priced, { ...base, expectedTransactions: 51 });
+    expect(r.scopeReview).toEqual(["51 monthly transactions (limit 50)"]);
+    expect(r.blockers[0]).toMatch(/scope review/);
+    expect(calculateBookkeeping(priced, { ...base, expectedTransactions: 51, customMonthlyCents: 120000, customReason: "Reviewed volume" }).blockers).toEqual([]);
   });
-  it("keeps one-time and quoted usage outside recurring billing", () => {
-    const result = calculateBookkeeping(config, { ...input, addons: [{ key: "initial_cleanup", quantity: 1 }, { key: "historical_cleanup", quantity: 3 }, { key: "custom_report", quantity: 2 }] });
-    expect(result.invoiceCents).toBe(25000); expect(result.oneTimeCents).toBe(50000); expect(result.usageCents).toBe(80000);
+
+  it("add-ons without approved prices cannot be added silently", () => {
+    const r = calculateBookkeeping(priced, { ...base, addons: [{ key: "payroll", quantity: 1, quotedCents: null }] });
+    expect(r.blockers).toContain("Payroll has no approved price; quote it before adding.");
+    const quoted = calculateBookkeeping(priced, { ...base, addons: [{ key: "payroll", quantity: 1, quotedCents: 20000 }] });
+    expect(quoted.monthlyCents).toBe(120000);
+    expect(quoted.needsExecutiveApproval).toBe(true);
   });
-  it("requires a documented custom Enterprise annual price", () => {
-    const unpriced = calculateBookkeeping(config, { ...input, tier: "enterprise", reconciliation: "annual" });
-    expect(unpriced.invoiceCents).toBeNull(); expect(unpriced.blockers.length).toBeGreaterThan(0);
-    const priced = calculateBookkeeping(config, { ...input, tier: "enterprise", reconciliation: "annual", customMonthlyCents: 275000, customReason: "Fictional approved scope" });
-    expect(priced.invoiceCents).toBe(275000); expect(priced.needsExecutiveApproval).toBe(true);
+
+  it("Self-Service has no service frequency and Managed has no annual close", () => {
+    expect(() => calculateBookkeeping(config, { ...base, option: "self_service", frequency: "monthly" })).toThrow();
+    expect(() => calculateBookkeeping(config, { ...base, option: "managed", frequency: "annual" })).toThrow();
+    expect(calculateBookkeeping(config, { ...base, frequency: null }).input.frequency).toBe("monthly");
   });
-  it("never invents an Enterprise account allowance or multi-entity scope", () => {
-    const result = calculateBookkeeping(config, { ...input, tier: "enterprise", entityReferences: ["Fictional A", "Fictional B"], customMonthlyCents: 300000, customReason: "Fictional scope" });
-    expect(result.tier.accounts).toBeNull(); expect(result.blockers.some(b => b.includes("every named entity"))).toBe(true);
-    expect(() => calculateBookkeeping(config, { ...input, entityReferences: ["Fictional A", "Fictional B"] })).toThrow(/Enterprise/);
+
+  it("Self-Service terms state no review, correction or accuracy guarantee", () => {
+    const priceSelf = bookkeepingConfigSchema.parse({ ...proposed, options: proposed.options.map((o) => o.key === "self_service" ? { ...o, monthlyCents: { ...o.monthlyCents, platform: 5000 } } : o) });
+    const terms = bookkeepingTerms(priceSelf, { ...base, option: "self_service", frequency: null });
+    expect(terms).toMatch(/no accuracy guarantee/);
   });
-  it("rejects duplicate entities and unconfigured optional services", () => {
-    expect(() => calculateBookkeeping(config, { ...input, entityReferences: ["Same entity", "Same entity"] })).toThrow(/once/);
-    expect(() => calculateBookkeeping(config, { ...input, addons: [{ key: "invented", quantity: 1 }] })).toThrow(/not configured/);
-  });
-  for (const [tier, days] of [["self_service", null], ["essential", 20], ["growth", 15], ["professional", 10], ["enterprise", 7]] as const) it(`${tier} uses the managed monthly deadline rule`, () => {
-    expect(calculateBookkeeping(config, { ...input, tier }).businessDays).toBe(days);
-  });
-  it("quarterly and annual targets follow the reconciliation cadence", () => {
-    expect(calculateBookkeeping(config, { ...input, reconciliation: "quarterly", billing: "annual" }).businessDays).toBe(20);
-    expect(calculateBookkeeping(config, { ...input, reconciliation: "annual", billing: "quarterly" }).businessDays).toBe(30);
-    expect(calculateBookkeeping(config, { ...input, tier: "self_service", reconciliation: "annual" }).businessDays).toBeNull();
-  });
-  it("starts deadline after later records receipt and excludes weekends", () => {
-    expect(bookkeepingDueOn("2026-10-31", "2026-11-06", 7)).toBe("2026-11-17");
-    expect(bookkeepingDueOn("2026-10-31", "2026-10-01", 20)).toBe("2026-11-27");
-    expect(bookkeepingDueOn("2026-10-31", "2026-11-06", null)).toBeNull();
-  });
-  it("staged terms cannot approve, activate, invoice or move money", () => {
-    expect(bookkeepingDraftBlocker([{ service_key: "BOOKKEEPING_ACCOUNTING" }])).not.toBeNull();
-    expect(bookkeepingDraftBlocker([{ service_key: "other", bookkeeping_snapshot: { publicationStatus: "proposed" } }])).not.toBeNull();
-    expect(bookkeepingDraftBlocker([{ service_key: "existing_accounting" }])).toBeNull();
-  });
-  it("frozen model output does not mutate inputs or configuration", () => {
-    const before = JSON.stringify({ config, input });
-    calculateBookkeeping(config, input); bookkeepingTerms(config, input);
-    expect(JSON.stringify({ config, input })).toBe(before);
-  });
-  it("configuration cannot silently give Enterprise annual an automatic rate", () => {
-    const changed = structuredClone(config); const enterprise = changed.tiers.find(t => t.key === "enterprise");
-    if (!enterprise) throw new Error("Missing enterprise fixture");
-    enterprise.monthlyCents.annual = 200000;
-    expect(bookkeepingConfigSchema.safeParse(changed).success).toBe(false);
+
+  it("quotes containing bookkeeping stay draft-only", () => {
+    expect(bookkeepingDraftBlocker([{ service_key: "BOOKKEEPING_ACCOUNTING" }])).toMatch(/proposed/);
+    expect(bookkeepingDraftBlocker([{ service_key: "OTHER" }])).toBeNull();
   });
 });

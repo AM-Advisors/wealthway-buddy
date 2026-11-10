@@ -16,6 +16,25 @@ export const getBookkeepingConfiguration = createServerFn({ method: "GET" }).mid
   return { canManage: who.roles.some(r => ["executive", "cro", "super_admin"].includes(r)), versions: data ?? [], versionId: latest?.id ?? null, effectiveOn: latest?.effective_on ?? "", configuration: bookkeepingConfigSchema.parse(latest?.configuration ?? proposed) };
 });
 
+/** Staff quote helper: a client's entities with existing coverage (labels, scope, dates only). */
+export const getBookkeepingEntityCoverage = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ clientId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    const { whoIsStaff } = await import("@/lib/service-catalog.functions");
+    const who = await whoIsStaff(context);
+    const { salesScope } = await import("@/lib/sales-model");
+    if (!who.isStaff && salesScope(who.roles) === "none") throw new Error("Harmonious staff access is required.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { loadEntityCoverage } = await import("@/lib/bookkeeping-coverage.server");
+    const { data: entities } = await supabaseAdmin.from("client_entities").select("id, legal_name, entity_type, offering_id, status").eq("client_id", data.clientId).order("legal_name");
+    const out = [];
+    for (const e of ((entities ?? []) as any[]).filter((x) => x.status !== "archived")) {
+      const coverage = await loadEntityCoverage(supabaseAdmin, e);
+      out.push({ id: e.id as string, legalName: e.legal_name as string, entityType: e.entity_type as string, offeringId: (e.offering_id as string | null) ?? null, coverage: coverage.rows });
+    }
+    return out;
+  });
+
 export const saveBookkeepingConfiguration = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ configuration: bookkeepingConfigSchema, effectiveOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reason: z.string().trim().min(3).max(1000) }))
   .handler(async ({ context, data }) => {

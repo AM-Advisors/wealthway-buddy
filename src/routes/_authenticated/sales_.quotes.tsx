@@ -26,6 +26,7 @@ import { Panel, money } from "@/components/sales/sales-ui";
 import { BookkeepingConfigurator } from "@/components/sales/bookkeeping-configurator";
 import { getBookkeepingConfiguration } from "@/lib/bookkeeping.functions";
 import { BOOKKEEPING_KEY, type BookkeepingInput } from "@/lib/bookkeeping-model";
+import { BOOKKEEPING_OPTIONS } from "@/lib/bookkeeping-options";
 import { Switch } from "@/components/ui/switch";
 import { isQuoteSectionShown, quoteLockFacts, quoteSectionBody, quoteSectionDef, sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import type { Section } from "@/lib/sales-documents-model";
@@ -227,9 +228,9 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
           onChange={(d) => { setDealId(d?.id ?? ""); if (d?.client_id && !clientId) setClientId(d.client_id); }} /></div>
       <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
-        <Button variant="outline" onClick={() => setShowBookkeeping(v => !v)}>{showBookkeeping ? "Close bookkeeping" : "Configure Bookkeeping & Accounting"}</Button>
+        <Button variant="outline" onClick={() => setShowBookkeeping(v => !v)}>{showBookkeeping ? "Close bookkeeping" : "Configure Bookkeeping"}</Button>
         {showBookkeeping && bookkeeping.error && <p className="mt-2 text-sm text-destructive">{(bookkeeping.error as Error).message}</p>}
-        {showBookkeeping && bookkeeping.data && <BookkeepingConfigurator configuration={bookkeeping.data.configuration} versionId={bookkeeping.data.versionId} onAdd={(input, invoiceCents) => { setLines(previous => [...previous, { serviceKey: BOOKKEEPING_KEY, label: `Bookkeeping & Accounting · ${input.tier.replace("_", " ")}`, quantity: 1, unitCents: invoiceCents, baselineUnitCents: invoiceCents, billingFrequency: input.billing, firstBillOn: input.effectiveOn, bookkeeping: input }]); setShowBookkeeping(false); }} />}
+        {showBookkeeping && bookkeeping.data && <BookkeepingConfigurator configuration={bookkeeping.data.configuration} versionId={bookkeeping.data.versionId} clientId={clientId} onAdd={(input, invoiceCents) => { setLines(previous => [...previous, { serviceKey: BOOKKEEPING_KEY, label: `Bookkeeping · ${BOOKKEEPING_OPTIONS[input.option].name}`, quantity: 1, unitCents: invoiceCents, baselineUnitCents: invoiceCents, billingFrequency: input.billing, firstBillOn: input.effectiveOn, bookkeeping: input }]); setShowBookkeeping(false); }} />}
         <Select value="" onValueChange={add}><SelectTrigger className="w-72"><SelectValue placeholder="Add a service from the rate card" /></SelectTrigger>
           <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX) && !String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
       </div>

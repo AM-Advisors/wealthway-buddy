@@ -387,6 +387,7 @@ import { Route as AuthenticatedClientFundsFundIdRouteImport } from './routes/_au
 import { Route as AuthenticatedClientFundsNewRouteImport } from './routes/_authenticated/client.funds.new'
 import { Route as AuthenticatedClientServicesIndexRouteImport } from './routes/_authenticated/client.services.index'
 import { Route as AuthenticatedClientServicesEngagementIdRouteImport } from './routes/_authenticated/client.services.$engagementId'
+import { Route as AuthenticatedClientServicesBookkeepingRouteImport } from './routes/_authenticated/client.services.bookkeeping'
 import { Route as AuthenticatedClientServicesRequestRouteImport } from './routes/_authenticated/client.services.request'
 import { Route as AuthenticatedFundOfferingIdDocumentsRouteImport } from './routes/_authenticated/fund.$offeringId.documents'
 import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes/_authenticated/fund.$offeringId.funding'
@@ -2637,6 +2638,12 @@ const AuthenticatedClientServicesEngagementIdRoute =
     path: '/services/$engagementId',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
+const AuthenticatedClientServicesBookkeepingRoute =
+  AuthenticatedClientServicesBookkeepingRouteImport.update({
+    id: '/services/bookkeeping',
+    path: '/services/bookkeeping',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedClientServicesRequestRoute =
   AuthenticatedClientServicesRequestRouteImport.update({
     id: '/services/request',
@@ -3645,6 +3652,7 @@ export interface FileRoutesByFullPath {
   '/client/funds/$fundId': typeof AuthenticatedClientFundsFundIdRoute
   '/client/funds/new': typeof AuthenticatedClientFundsNewRoute
   '/client/services/$engagementId': typeof AuthenticatedClientServicesEngagementIdRoute
+  '/client/services/bookkeeping': typeof AuthenticatedClientServicesBookkeepingRoute
   '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
@@ -4125,6 +4133,7 @@ export interface FileRoutesByTo {
   '/client/funds/$fundId': typeof AuthenticatedClientFundsFundIdRoute
   '/client/funds/new': typeof AuthenticatedClientFundsNewRoute
   '/client/services/$engagementId': typeof AuthenticatedClientServicesEngagementIdRoute
+  '/client/services/bookkeeping': typeof AuthenticatedClientServicesBookkeepingRoute
   '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
@@ -4613,6 +4622,7 @@ export interface FileRoutesById {
   '/_authenticated/client/funds/$fundId': typeof AuthenticatedClientFundsFundIdRoute
   '/_authenticated/client/funds/new': typeof AuthenticatedClientFundsNewRoute
   '/_authenticated/client/services/$engagementId': typeof AuthenticatedClientServicesEngagementIdRoute
+  '/_authenticated/client/services/bookkeeping': typeof AuthenticatedClientServicesBookkeepingRoute
   '/_authenticated/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/_authenticated/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/_authenticated/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
@@ -5102,6 +5112,7 @@ export interface FileRouteTypes {
     | '/client/funds/$fundId'
     | '/client/funds/new'
     | '/client/services/$engagementId'
+    | '/client/services/bookkeeping'
     | '/client/services/request'
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
@@ -5582,6 +5593,7 @@ export interface FileRouteTypes {
     | '/client/funds/$fundId'
     | '/client/funds/new'
     | '/client/services/$engagementId'
+    | '/client/services/bookkeeping'
     | '/client/services/request'
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
@@ -6069,6 +6081,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/funds/$fundId'
     | '/_authenticated/client/funds/new'
     | '/_authenticated/client/services/$engagementId'
+    | '/_authenticated/client/services/bookkeeping'
     | '/_authenticated/client/services/request'
     | '/_authenticated/fund/$offeringId/documents'
     | '/_authenticated/fund/$offeringId/funding'
@@ -8921,6 +8934,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientServicesEngagementIdRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
+    '/_authenticated/client/services/bookkeeping': {
+      id: '/_authenticated/client/services/bookkeeping'
+      path: '/services/bookkeeping'
+      fullPath: '/client/services/bookkeeping'
+      preLoaderRoute: typeof AuthenticatedClientServicesBookkeepingRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/client/services/request': {
       id: '/_authenticated/client/services/request'
       path: '/services/request'
@@ -9798,6 +9818,7 @@ interface AuthenticatedClientRouteChildren {
   AuthenticatedClientWiresRoute: typeof AuthenticatedClientWiresRoute
   AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
   AuthenticatedClientServicesEngagementIdRoute: typeof AuthenticatedClientServicesEngagementIdRoute
+  AuthenticatedClientServicesBookkeepingRoute: typeof AuthenticatedClientServicesBookkeepingRoute
   AuthenticatedClientServicesRequestRoute: typeof AuthenticatedClientServicesRequestRoute
   AuthenticatedClientServicesIndexRoute: typeof AuthenticatedClientServicesIndexRoute
   AuthenticatedClientInvoicesInvoiceIdQuoteRoute: typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
@@ -9824,6 +9845,8 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
   AuthenticatedClientServicesEngagementIdRoute:
     AuthenticatedClientServicesEngagementIdRoute,
+  AuthenticatedClientServicesBookkeepingRoute:
+    AuthenticatedClientServicesBookkeepingRoute,
   AuthenticatedClientServicesRequestRoute:
     AuthenticatedClientServicesRequestRoute,
   AuthenticatedClientServicesIndexRoute: AuthenticatedClientServicesIndexRoute,

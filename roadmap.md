@@ -1069,3 +1069,7 @@
 - [x] Manager Capital tab holds this fund's Wire approvals and Closing desk.
 - [x] Unpaid invoices show the invoice in place instead of opening the client portal in a new tab.
 - [ ] Next batch (investor side, 6–15 from the audit) waits on the user's go-ahead.
+
+## Bookkeeping options update (uploaded brief)
+- [x] Three options (Self-Service, Review, Managed) separate from Fund Accounting; responsibilities, real capabilities only, independent frequency/support/billing, quote-only add-ons, scope limits, duplicate-coverage checks; client chooser and request, staff quote configurator, pricing editor, fund Fund Accounting card. 19 rule tests pass.
+- [ ] Missing capabilities (reported, not shown as available): client-facing outstanding-items report; bank statement upload/reconciliation for non-fund entities; scheduled bookkeeping review/close work queue; client self-service tools for company/GP books.

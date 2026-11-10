@@ -54,11 +54,16 @@ function MyServices() {
             What we do for you, grouped by the company, fund or vehicle it relates to.
           </p>
         </div>
-        <Button asChild>
-          <Link to="/client/services/request">
-            <Plus className="mr-2 size-4" /> Add a service or entity
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link to="/client/services/bookkeeping">Bookkeeping options</Link>
+          </Button>
+          <Button asChild>
+            <Link to="/client/services/request">
+              <Plus className="mr-2 size-4" /> Add a service or entity
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {entitiesWithWork.length === 0 && (data?.clientWide ?? []).length === 0 && (
