@@ -16,8 +16,13 @@
   - [x] Currencies kept separate in totals, allocation, returns
   - [x] Returns: later cash excluded, ownership scaling, TWR needs values on every cash-flow day
   - [x] Reconciliation: screen = stored copy = CSV = PDF; published copy fingerprinted and fixed
-  - Summary: 8 checks, 7 pass, 1 blocked
-  - [ ] Real Wealth and investor Reports pages, signed in, read-only on real records: loading, navigation, report visibility, authorized downloads (blocked: account owner must set up the authenticator first). Mark Phase 1 "Production verified" only after these pass and results are recorded here.
+  - Summary: 8 checks, 7 pass, 1 blocked (real pages: 4 sub-checks blocked)
+  - [ ] Real-page production checks (attempt 2026-11-11, signed in as the account owner, read-only). Status stays: Sandbox validated; production verification pending.
+    - Loading: Blocked. /wealth and /investor-reporting?section=reports both stop at the two-step sign-in screen; no page errors. The owner now has a verified authenticator, but a second-step code from the owner's phone is required and cannot be supplied by the builder.
+    - Navigation: Blocked (same reason; Consolidated portfolio tab not reachable).
+    - Report visibility: Blocked by missing prerequisite. Production has 0 published portfolio reports (0 for this account, 0 overall) and 0 portfolio holdings for this account; none created to pass the check.
+    - Downloads: Blocked (no published report to download).
+    - To unblock: owner signs in to the preview and enters the authenticator code (session then carries the second step), and an authorized owner publishes a real quarterly report through the normal flow. Mark "Production verified" only after all four pass.
 - [ ] Later phases (not started by design): automated custodian feeds, benchmarks, risk, rebalancing, multi-currency conversion
 
 ## Bookkeeping remaining issues (2026-11-10)
