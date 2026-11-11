@@ -2703,6 +2703,13 @@
       "when": 1794355091133,
       "tag": "0385_fund_setup_request_details",
       "breakpoints": true
+    },
+    {
+      "idx": 386,
+      "version": "7",
+      "when": 1794363595447,
+      "tag": "0386_wealth_portfolio_reporting",
+      "breakpoints": true
     }
   ]
 }

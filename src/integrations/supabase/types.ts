@@ -39120,10 +39120,17 @@ export type Database = {
           cost_cents: number | null
           created_at: string
           currency: string
+          geography: string | null
+          holder_entity_id: string | null
           holding_id: string
           id: string
+          import_batch_id: string | null
+          import_row_hash: string | null
           name: string
           owner_user_id: string
+          represents_entity_id: string | null
+          sector: string | null
+          source: string
           source_note: string
           supersedes_id: string | null
           value_cents: number | null
@@ -39135,10 +39142,17 @@ export type Database = {
           cost_cents?: number | null
           created_at?: string
           currency?: string
+          geography?: string | null
+          holder_entity_id?: string | null
           holding_id: string
           id?: string
+          import_batch_id?: string | null
+          import_row_hash?: string | null
           name: string
           owner_user_id: string
+          represents_entity_id?: string | null
+          sector?: string | null
+          source?: string
           source_note: string
           supersedes_id?: string | null
           value_cents?: number | null
@@ -39150,10 +39164,17 @@ export type Database = {
           cost_cents?: number | null
           created_at?: string
           currency?: string
+          geography?: string | null
+          holder_entity_id?: string | null
           holding_id?: string
           id?: string
+          import_batch_id?: string | null
+          import_row_hash?: string | null
           name?: string
           owner_user_id?: string
+          represents_entity_id?: string | null
+          sector?: string | null
+          source?: string
           source_note?: string
           supersedes_id?: string | null
           value_cents?: number | null
@@ -50197,6 +50218,185 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wealth_audit_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          created_at: string
+          detail: Json
+          id: string
+          owner_user_id: string
+          record_ref: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          owner_user_id: string
+          record_ref?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          owner_user_id?: string
+          record_ref?: string | null
+        }
+        Relationships: []
+      }
+      wealth_import_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          file_name: string
+          file_sha256: string
+          id: string
+          imported_count: number
+          kind: string
+          owner_user_id: string
+          row_count: number
+          skipped_duplicates: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          file_name: string
+          file_sha256: string
+          id?: string
+          imported_count: number
+          kind: string
+          owner_user_id: string
+          row_count: number
+          skipped_duplicates?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          file_sha256?: string
+          id?: string
+          imported_count?: number
+          kind?: string
+          owner_user_id?: string
+          row_count?: number
+          skipped_duplicates?: number
+        }
+        Relationships: []
+      }
+      wealth_portfolio_records: {
+        Row: {
+          archived: boolean
+          created_at: string
+          created_by: string
+          detail: Json
+          id: string
+          import_batch_id: string | null
+          import_row_hash: string | null
+          kind: string
+          owner_user_id: string
+          record_id: string
+          source: string
+          supersedes_id: string | null
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          created_by: string
+          detail?: Json
+          id?: string
+          import_batch_id?: string | null
+          import_row_hash?: string | null
+          kind: string
+          owner_user_id: string
+          record_id: string
+          source?: string
+          supersedes_id?: string | null
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          created_by?: string
+          detail?: Json
+          id?: string
+          import_batch_id?: string | null
+          import_row_hash?: string | null
+          kind?: string
+          owner_user_id?: string
+          record_id?: string
+          source?: string
+          supersedes_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wealth_portfolio_records_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "wealth_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wealth_portfolio_records_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: true
+            referencedRelation: "wealth_portfolio_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wealth_report_versions: {
+        Row: {
+          id: string
+          owner_user_id: string
+          period_end: string
+          period_label: string
+          period_start: string
+          published_at: string
+          published_by: string
+          snapshot: Json
+          snapshot_sha256: string
+          supersedes_id: string | null
+          version: number
+        }
+        Insert: {
+          id?: string
+          owner_user_id: string
+          period_end: string
+          period_label: string
+          period_start: string
+          published_at?: string
+          published_by: string
+          snapshot: Json
+          snapshot_sha256: string
+          supersedes_id?: string | null
+          version: number
+        }
+        Update: {
+          id?: string
+          owner_user_id?: string
+          period_end?: string
+          period_label?: string
+          period_start?: string
+          published_at?: string
+          published_by?: string
+          snapshot?: Json
+          snapshot_sha256?: string
+          supersedes_id?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wealth_report_versions_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: true
+            referencedRelation: "wealth_report_versions"
             referencedColumns: ["id"]
           },
         ]

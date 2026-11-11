@@ -1,5 +1,15 @@
 # Roadmap
 
+## Portfolio Reporting & Analytics phase 1 (2026-11-11)
+- [ ] Consolidated portfolio on Wealth (manual, CSV import, fund records; source labels; connected hidden in test mode)
+- [ ] Ownership look-through (entities, percentages, no double counting, incomplete-ownership flags)
+- [ ] Private investments (fund records + outside commitments/cash flows, value history)
+- [ ] Performance (XIRR, multiples, TWR when enough history, periods/assumptions/warnings)
+- [ ] Allocation and liquidity (dimensions, unfunded, announced calls/distributions as projected)
+- [ ] Quarterly report PDF/CSV, published versions in investor portal
+- [ ] Data quality, import preview/validation, duplicates, audit trail, access (owner/delegate/staff)
+- [ ] Fictional sandbox demo + tests + end-to-end walk
+
 ## Bookkeeping remaining issues (2026-11-10)
 - [x] Organization and entity names on client confirmation, staff queue, request detail and quote selection; canonical IDs, server authorization, only the note editable on bookkeeping requests.
 - [x] Quotes for entities not on file stay drafts marked "Coverage check pending"; link entity on the quote page reruns coverage and open-request checks; submit, SOW draft and send rerun them again.
