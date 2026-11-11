@@ -6,7 +6,7 @@
  * anything not explicitly modeled is blocked.
  */
 import { createFileRoute, createRootRoute, createRoute, createRouter, RouterProvider, Outlet, createMemoryHistory, useParams, Link, redirect, useRouter, useRouterState } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CreateInvestor } from "@/components/create-investor";
 import { WireFromBankForm } from "@/components/wire-from-bank-form";
@@ -26,6 +26,11 @@ import { FoundationWorkspace } from "@/components/foundation-workspace";
 import { FoundationClientOnboarding } from "@/components/foundation-client-onboarding";
 import { FoundationConfigurator } from "@/components/sales/foundation-configurator";
 import { QA_FOUNDATION_CLIENT } from "@/lib/qa-sandbox/foundation-fixture";
+import { QA_REVIEWER, QA_SUBMISSION_FUND } from "@/lib/qa-sandbox/fund-submission-fixture";
+import { FundSubmissionSharedReview } from "@/components/fund-submission-shared-review";
+import { History as FundSubmissionHistory } from "@/components/fund-manager-setup-loader";
+import { useServerFn } from "@tanstack/react-start";
+import { listFundSubmissionsFn } from "@/lib/fund-manager-submissions.functions";
 import { SecurityGate } from "@/components/security-gate";
 import { createQaMfaAuth, QA_MFA_CODE, type QaMfaScenario } from "@/lib/qa-sandbox/mfa-fixture";
 import { Suspense } from "react";
@@ -148,7 +153,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey" | "foundation">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey" | "foundation" | "shared">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -175,11 +180,12 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "portfolio" ? "default" : "outline"} onClick={() => setTab("portfolio")}>Consolidated portfolio</Button>
             <Button size="sm" variant={tab === "signin" ? "default" : "outline"} onClick={() => setTab("signin")}>Sign-in check</Button>
             <Button size="sm" variant={tab === "foundation" ? "default" : "outline"} onClick={() => setTab("foundation")}>Foundation</Button>
+            <Button size="sm" variant={tab === "shared" ? "default" : "outline"} onClick={() => setTab("shared")}>Shared review: fund</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "foundation" ? <QaFoundationArea /> : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner John Smith: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "foundation" ? <QaFoundationArea /> : tab === "shared" ? <QaSharedFundReview key={formKey} /> : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner John Smith: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>
@@ -267,6 +273,24 @@ function QaSignInCheck() {
 }
 
 /** Fictional Foundation Administration: the Ops workspace plus the quote configurator, answered by the in-memory fixture. */
+/** The existing fund manager submission screen beside the shared presentation, over the same fictional records. */
+function QaSharedFundReview() {
+  const list = useServerFn(listFundSubmissionsFn);
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["fund-submissions", QA_SUBMISSION_FUND], queryFn: () => list({ data: { offeringId: QA_SUBMISSION_FUND } }) });
+  return (
+    <section aria-label="Shared review compatibility" className="space-y-4">
+      <p className="text-sm text-muted-foreground">Fictional fund Ridgeview Sample Fund I. Both panels read and decide the same fictional submissions through the same fund review action. Nothing reaches the real backend.</p>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div aria-label="Current fund screen" className="space-y-2 rounded-md border p-3"><h3 className="font-semibold">Current fund screen (unchanged)</h3>
+          {q.data ? <FundSubmissionHistory items={(q.data as any).items} isStaff={!!(q.data as any).isStaff} onChange={() => qc.invalidateQueries({ queryKey: ["fund-submissions", QA_SUBMISSION_FUND] })} /> : <p className="text-sm">Loading…</p>}</div>
+        <div aria-label="Shared framework" className="space-y-2 rounded-md border p-3"><h3 className="font-semibold">Shared administration framework</h3>
+          <FundSubmissionSharedReview offeringId={QA_SUBMISSION_FUND} viewerId={QA_REVIEWER} /></div>
+      </div>
+    </section>
+  );
+}
+
 function QaFoundationArea() {
   const [added, setAdded] = useState<{ label: string; unitCents: number; billing: string }[]>([]);
   const [view, setView] = useState<"staff" | "client">("staff");

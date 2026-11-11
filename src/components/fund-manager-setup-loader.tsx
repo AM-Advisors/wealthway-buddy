@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { listFundSubmissionsFn, submitFundInfoFn, submissionFileFn, reviewFundSubmissionFn } from "@/lib/fund-manager-submissions.functions";
 
 export type Section = "fund_details" | "fees_team" | "bank" | "document";
-const DOC_KINDS = [
+export const DOC_KINDS = [
   ["ein_letter", "IRS EIN letter"],
   ["signed_w9", "Signed W-9 (no EIN letter)"],
   ["operating_agreement", "Operating Agreement"],
@@ -22,7 +22,7 @@ const DOC_KINDS = [
   ["subscription_agreement", "Subscription Agreement"],
   ["other", "Other document"],
 ] as const;
-const SECTION_LABEL: Record<Section, string> = { fund_details: "Fund details", fees_team: "Fees & terms", bank: "Bank / wire instructions", document: "Document" };
+export const SECTION_LABEL: Record<Section, string> = { fund_details: "Fund details", fees_team: "Fees & terms", bank: "Bank / wire instructions", document: "Document" };
 
 function toBase64(file: File): Promise<string> {
   return new Promise((res, rej) => {

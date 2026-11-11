@@ -67,13 +67,13 @@ export function SendBackButton({ onSendBack, disabled, label = REVIEW_ACTIONS.se
  * can't decide (own submission, view-only role); the server still rechecks on every decision.
  */
 export function ReviewDecisionBar({ blockedReason, approveLabel = REVIEW_ACTIONS.apply, approveTitle, approveDescription, onApprove, onSendBack, pending, approveDisabled, recipient }: {
-  blockedReason?: string | null; approveLabel?: string; approveTitle: string; approveDescription: string; onApprove: () => void; onSendBack: (note: string) => void; pending?: boolean; approveDisabled?: boolean; recipient?: string;
+  blockedReason?: string | null | undefined; approveLabel?: string; approveTitle: string; approveDescription: string; onApprove: () => void; onSendBack: (note: string) => void; pending?: boolean | undefined; approveDisabled?: boolean | undefined; recipient?: string | undefined;
 }) {
   if (blockedReason) return <p className="text-sm text-muted-foreground">{blockedReason}</p>;
   return (
     <div className="flex flex-wrap gap-2">
-      <ApprovalButton size="sm" disabled={pending || approveDisabled} title={approveTitle} description={approveDescription} confirmLabel={approveLabel} undoLabel="Undo" waitingTitle="Decision waiting to send" waitingNote="You have 5 seconds to undo. Nothing has been decided yet." historyNote="Decisions stay in the history." onApprove={onApprove}>{approveLabel}</ApprovalButton>
-      <SendBackButton disabled={pending} onSendBack={onSendBack} {...(recipient ? { recipient } : {})} />
+      <ApprovalButton size="sm" disabled={!!(pending || approveDisabled)} title={approveTitle} description={approveDescription} confirmLabel={approveLabel} undoLabel="Undo" waitingTitle="Decision waiting to send" waitingNote="You have 5 seconds to undo. Nothing has been decided yet." historyNote="Decisions stay in the history." onApprove={onApprove}>{approveLabel}</ApprovalButton>
+      <SendBackButton disabled={!!pending} onSendBack={onSendBack} {...(recipient ? { recipient } : {})} />
     </div>
   );
 }

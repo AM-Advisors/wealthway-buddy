@@ -1,3 +1,4 @@
+import { canonicalVerificationStatus } from "@/lib/verification-status";
 /**
  * Foundation verification requirements (pure projection, browser-safe).
  *
@@ -44,11 +45,16 @@ export const usableDoc = (d: VDoc | undefined) => !!d && !d.superseded_by && (d.
 export const OWNERSHIP_NOTE = "Foundations have no equity owners, so no ownership percentages are collected. The people who need checks come from the directors, trustees, officers, signers and approvers on record.";
 export const SCREENING_NOT_CONNECTED = "Foundation screening runs only through the existing screening process, which isn't connected for foundations yet. It stays unresolved until it is.";
 
+/**
+ * Person-record KYC/AML through the platform's canonical normalization (same words as fund rosters).
+ * Only a real recorded result counts; an empty or not-started status stays missing.
+ */
 function personStatus(v: string | null | undefined): ReqStatus {
-  if (v === "approved") return "satisfied";
-  if (v === "declined") return "exception";
-  if (v === "pending" || v === "review" || v === "in_review") return "in_review";
-  return "missing";
+  const c = canonicalVerificationStatus(v);
+  if (c === "approved") return "satisfied";
+  if (c === "declined") return "exception";
+  if (c === "review") return "in_review";
+  return ["pending", "in_progress", "started"].includes(String(v ?? "").trim().toLowerCase()) ? "in_review" : "missing";
 }
 
 /** Authority the service scope needs someone to hold, with evidence. */

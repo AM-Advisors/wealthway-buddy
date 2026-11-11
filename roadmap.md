@@ -1153,7 +1153,8 @@
 - [ ] Release blockers: approved pricing policy, legal SOW wording, foundation screening via existing process, delivery workflows, nonprofit accounting, donors, grants, compliance calendar
 
 ## Shared administration framework: foundations first (2026-11-11)
-- [ ] Compare foundation review, people/authority, verification, documents, readiness and handoff with fund/SPV engines
-- [ ] Move foundation screens onto shared presentation (review states, requirement rows, task handoff) without new registries or broader authority
-- [ ] Show one existing fund/SPV workflow through the same shared presentation in isolated QA, unchanged behavior
-- [ ] Report shared vs still-to-consolidate, plus a short staff walkthrough
+- [x] Compare foundation review, people/authority, verification, documents, readiness and handoff with fund/SPV engines
+- [x] Move foundation screens onto shared presentation (review states, requirement rows, person picker, task words, canonical ID/screening reading) without new registries or broader authority
+- [x] Show fund manager submissions through the same shared presentation in the fictional sandbox beside the unchanged screen
+- [x] Report shared vs still-to-consolidate, plus a short staff walkthrough (Files)
+- [ ] Live fund screens onto the shared pieces: waits on approval after the sandbox demo; QA-database run of foundation screens still needs a fresh isolated draft

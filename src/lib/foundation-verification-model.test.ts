@@ -44,6 +44,15 @@ describe("people and authority", () => {
     expect(get(i, "person_identity:p1").status).toBe("satisfied");
     expect(get(i, "person_screening:p1").status).toBe("in_review");
   });
+  it("person results use the same canonical words as fund rosters", () => {
+    const i = { ...base, persons: { p1: { name: "Quinn Rivera", kyc_status: "verified", aml_status: "clear" } } };
+    expect(get(i, "person_identity:p1").status).toBe("satisfied");
+    expect(get(i, "person_screening:p1").status).toBe("satisfied");
+    const hit = { ...base, persons: { p1: { name: "Quinn Rivera", kyc_status: "approved", aml_status: "match" } } };
+    expect(get(hit, "person_screening:p1").status).toBe("exception");
+    const blank = { ...base, persons: { p1: { name: "Quinn Rivera", kyc_status: "not_started", aml_status: null } } };
+    expect(get(blank, "person_identity:p1").status).toBe("missing");
+  });
   it("an unreadable person record stays unresolved", () => expect(get({ ...base, persons: {} }, "person_identity:p1").status).toBe("missing"));
   it("paperwork preparers need no checks and grant no authority", () => {
     const i = { ...base, authority: [{ person_id: "p2", role: "paperwork_preparer", authority_scopes: ["prepare_paperwork"], evidence_document_id: null, status: "active" }] };

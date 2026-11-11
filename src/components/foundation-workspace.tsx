@@ -23,6 +23,12 @@ import {
 } from "@/lib/foundation-admin-model";
 import { money } from "@/components/sales/sales-ui";
 import { FoundationReleaseControls, FoundationReviewPanel, FoundationSwitches, FoundationVerificationPanel } from "@/components/foundation-review-panels";
+import { FundPersonPicker, type PickPerson } from "@/components/fund-person-picker";
+import { ReviewStateBadge } from "@/components/admin-review";
+import { foundationDocumentState, personPickState, taskStatusLabel } from "@/lib/admin-review-framework";
+
+/** Client people in the shared person picker, with the canonical person-record ID check (never the sign-in check). */
+const pickPeople = (people: any[]): PickPerson[] => people.map((p) => { const v = personPickState(p.kyc_status, p.aml_status); return { key: p.personId, name: p.name, email: p.email ?? null, detail: [p.title, p.email, v.detail].filter(Boolean).join(" · "), source: "Client person", kyc: v.kyc, hasAccount: !!p.hasAccount }; });
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOC_KINDS = { governing_document: "Governing document", determination_letter: "Determination letter", authority_evidence: "Authority evidence", supporting_evidence: "Supporting evidence" } as const;
@@ -70,8 +76,7 @@ function ProfileFields({ v, set, people }: { v: ProfileDraft; set: (v: ProfileDr
         <Select value={v.fiscalYearEndMonth} onValueChange={(x) => set({ ...v, fiscalYearEndMonth: x })}><SelectTrigger aria-label="Fiscal year end month"><SelectValue /></SelectTrigger>
           <SelectContent>{MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent></Select></div>
       <div className="space-y-1"><Label>Primary contact</Label>
-        <Select value={v.primaryContactPersonId || "none"} onValueChange={(x) => set({ ...v, primaryContactPersonId: x === "none" ? "" : x })}><SelectTrigger aria-label="Primary contact"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="none">Not chosen</SelectItem>{people.map((p) => <SelectItem key={p.personId} value={p.personId}>{p.name}{p.title ? ` · ${p.title}` : ""}</SelectItem>)}</SelectContent></Select></div>
+        <FundPersonPicker people={pickPeople(people)} value={v.primaryContactPersonId} onChange={(x) => set({ ...v, primaryContactPersonId: x })} empty="This client has no people linked to a person record yet." /></div>
       <div className="space-y-1 sm:col-span-3"><Label htmlFor="fa-mission">Mission</Label><Textarea id="fa-mission" rows={3} value={v.mission} onChange={(e) => set({ ...v, mission: e.target.value })} /></div>
     </div>
   );
@@ -218,8 +223,7 @@ function People({ clientId, f, people, canEdit }: { clientId: string; f: any; pe
           {!people.length && <p className="text-sm text-muted-foreground">This client has no people linked to a person record yet. Add them on the People tab first.</p>}
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-1"><Label>Person</Label>
-              <Select value={personId} onValueChange={setPersonId}><SelectTrigger aria-label="Person"><SelectValue placeholder="Choose a person" /></SelectTrigger>
-                <SelectContent>{people.map((p) => <SelectItem key={p.personId} value={p.personId}>{p.name}{p.email ? ` · ${p.email}` : ""}</SelectItem>)}</SelectContent></Select></div>
+              <FundPersonPicker people={pickPeople(people)} value={personId} onChange={setPersonId} empty="No people yet." /></div>
             <div className="space-y-1"><Label>Role</Label>
               <Select value={role} onValueChange={(x) => { setRole(x); if (x === "paperwork_preparer") setScopes((s) => s.filter((k) => k === "prepare_paperwork")); }}><SelectTrigger aria-label="Role"><SelectValue /></SelectTrigger>
                 <SelectContent>{Object.entries(AUTHORITY_ROLES).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select></div>
@@ -267,7 +271,7 @@ function Documents({ clientId, f, canEdit }: { clientId: string; f: any; canEdit
     onError: errMsg,
   });
   const open = async (id: string) => { try { const r = await openFn({ data: { documentId: id } }); window.open(r.url, "_blank", "noopener"); } catch (e) { errMsg(e); } };
-  const reviewBadge = (d: any) => d.source !== "client" ? null : <Badge variant={d.review === "accepted" ? "default" : d.review === "correction_requested" ? "destructive" : "secondary"}>{d.review === "accepted" ? "Client upload · accepted" : d.review === "correction_requested" ? "Client upload · correction asked" : "Client upload · waiting for review"}</Badge>;
+  const reviewBadge = (d: any) => d.source !== "client" ? null : <ReviewStateBadge state={foundationDocumentState(d)} prefix="Client upload" />;
   const row = (d: any) => <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"><span className="text-base">{d.title} <span className="text-sm text-muted-foreground">· {label(DOC_KINDS, d.kind)} · {new Date(d.uploaded_at).toLocaleDateString()}</span> {reviewBadge(d)}</span><Button size="sm" variant="outline" onClick={() => open(d.id)}>Open</Button></li>;
   return (
     <div className="space-y-5 pt-3">
@@ -327,7 +331,7 @@ function Tasks({ clientId, f, canEdit }: { clientId: string; f: any; canEdit: bo
   return (
     <div className="space-y-5 pt-3">
       {f.referenceDeadline && <p className="rounded-md bg-muted/40 p-3 text-base">Annual return reference date: <span className="font-semibold">{f.referenceDeadline}</span>. Filed by the foundation's tax preparer, never by Harmonious.</p>}
-      {f.tasks.length ? <ul className="space-y-2">{f.tasks.map((t: any) => <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"><span className="text-base">{t.title}</span><span className="text-sm text-muted-foreground">{String(t.status).replace(/_/g, " ")}{t.due_date ? ` · due ${t.due_date}` : ""}</span></li>)}</ul>
+      {f.tasks.length ? <ul className="space-y-2">{f.tasks.map((t: any) => <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"><span className="text-base">{t.title}</span><span className="text-sm text-muted-foreground">{taskStatusLabel(t.status)}{t.due_date ? ` · due ${t.due_date}` : ""}</span></li>)}</ul>
         : <p className="text-base text-muted-foreground">No Operations tasks yet.</p>}
       {canEdit && (
         <div className="space-y-3 rounded-md border p-4">

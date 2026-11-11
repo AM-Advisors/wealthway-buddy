@@ -57,6 +57,7 @@ import { amlFields, evaluateAml } from "@/lib/onboarding-intake-model";
 import { createQaPortfolio, handleQaPortfolioCall, QA_PORTFOLIO_FNS, type QaPortfolio } from "./portfolio-fixture";
 import { createQaJourney, handleQaJourneyCall, QA_JOURNEY_FNS, type QaJourney } from "./investor-journey-fixture";
 import { createQaFoundation, handleQaFoundationCall, QA_FOUNDATION_FNS, type QaFoundation } from "./foundation-fixture";
+import { createQaFundSubmissions, handleQaFundSubmissionCall, QA_FUND_SUBMISSION_FNS, type QaFundSubmissions } from "./fund-submission-fixture";
 
 export type QaRole = "staff" | "manager";
 
@@ -77,6 +78,7 @@ export type QaState = {
   portfolio?: QaPortfolio;
   journey?: QaJourney;
   foundation?: QaFoundation;
+  fundSubmissions?: QaFundSubmissions;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -101,6 +103,7 @@ const KNOWN_FNS = [
   ...QA_PORTFOLIO_FNS,
   ...QA_JOURNEY_FNS,
   ...QA_FOUNDATION_FNS,
+  ...QA_FUND_SUBMISSION_FNS,
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -128,6 +131,7 @@ export function handleQaServerCall(fnName: string, data: any, state: QaState): u
   if ((QA_PORTFOLIO_FNS as readonly string[]).includes(fnName)) return handleQaPortfolioCall(fnName, data, (state.portfolio ??= createQaPortfolio()));
   if ((QA_JOURNEY_FNS as readonly string[]).includes(fnName)) return handleQaJourneyCall(fnName, data, (state.journey ??= createQaJourney()));
   if ((QA_FOUNDATION_FNS as readonly string[]).includes(fnName)) return handleQaFoundationCall(fnName, data, (state.foundation ??= createQaFoundation()));
+  if ((QA_FUND_SUBMISSION_FNS as readonly string[]).includes(fnName)) return handleQaFundSubmissionCall(fnName, data, (state.fundSubmissions ??= createQaFundSubmissions()));
   switch (fnName) {
     case "investorComplianceFn": {
       if (data?.onboardingId === "qa-financial-investment") return {

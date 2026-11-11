@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,15 +14,13 @@ import {
   submitClientFoundationFacts, uploadClientFoundationDocument, withdrawClientFoundationSubmission,
 } from "@/lib/foundation-onboarding.functions";
 import { AUTHORITY_ROLES, CLASSIFICATIONS, EXEMPTION_STATUSES, LEGAL_STRUCTURES } from "@/lib/foundation-admin-model";
-import type { ChecklistStatus } from "@/lib/foundation-onboarding-model";
+import { foundationDocumentState, fromFoundationChecklist, fromFoundationRequirement } from "@/lib/admin-review-framework";
+import { RequirementList, ReviewStateBadge } from "@/components/admin-review";
+import { LoadError } from "@/components/load-error";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOC_KINDS = { governing_document: "Governing document (articles, bylaws or trust instrument)", determination_letter: "IRS determination letter", authority_evidence: "Board resolution or other proof of authority", supporting_evidence: "Other supporting document, such as the IRS EIN letter" } as const;
-const CHECK: Record<ChecklistStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  done: { label: "Done", variant: "default" }, in_review: { label: "With Harmonious", variant: "secondary" }, needed: { label: "Needed", variant: "outline" }, correction: { label: "Needs a fix", variant: "destructive" },
-};
-const VSTATUS: Record<string, string> = { satisfied: "Done", in_review: "In progress", missing: "Needed", exception: "In progress" };
-const SUB: Record<string, string> = { submitted: "With Harmonious", accepted: "Accepted", correction_requested: "Needs a fix", withdrawn: "Withdrawn" };
 const errMsg = (e: unknown) => toast.error((e as Error).message);
 const label = <T extends Record<string, string>>(o: T, k: string | null | undefined) => (k && k in o ? o[k as keyof T] : "Not recorded");
 
@@ -32,7 +29,7 @@ export function FoundationClientOnboarding() {
   const loadFn = useServerFn(getClientFoundations);
   const q = useQuery({ queryKey: ["client-foundations"], queryFn: () => loadFn() });
   if (q.isPending) return <Skeleton className="h-48 w-full" />;
-  if (q.error) return <p className="text-base text-destructive">{(q.error as Error).message}</p>;
+  if (q.error) return <LoadError error={q.error} what="Foundation onboarding" onRetry={() => q.refetch()} audience="account" />;
   const d = q.data as any;
   if (!d.available) return <p className="text-base text-muted-foreground">Foundation onboarding isn't available yet.</p>;
   if (!d.foundations.length) return <p className="text-base text-muted-foreground">There's no foundation set up for your organization yet. Harmonious sets it up first, then you can add the details here.</p>;
@@ -59,11 +56,7 @@ function ClientFoundation({ f }: { f: any }) {
         <CardHeader><CardTitle className="text-xl">What's left</CardTitle>
           <CardDescription className="text-base">{next ? `Next: ${next.label}.` : waiting ? "Harmonious is reviewing what you sent." : "Everything on your list is in. Send it to Harmonious when you're ready."}</CardDescription></CardHeader>
         <CardContent className="space-y-3">
-          <ul className="space-y-2">{(f.checklist as any[]).map((c) => (
-            <li key={c.key} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-base">
-              <span>{c.label}{c.note ? <span className="block text-sm text-muted-foreground">{c.note}</span> : null}</span>
-              <Badge variant={CHECK[c.status as ChecklistStatus].variant}>{CHECK[c.status as ChecklistStatus].label}</Badge>
-            </li>))}</ul>
+          <RequirementList audience="client" rows={(f.checklist as any[]).map((c) => ({ key: c.key, label: c.label, state: fromFoundationChecklist(c.status), note: c.note ?? null }))} />
           {f.canEdit && !waiting && <Button size="lg" disabled={ready.isPending} onClick={() => { if (window.confirm("Send everything to Harmonious for review? You can still add documents afterwards.")) ready.mutate(); }}>Send to Harmonious for review</Button>}
           {!f.canEdit && <p className="text-sm text-muted-foreground">Your access is view-only. Ask someone who manages your organization to make changes.</p>}
         </CardContent>
@@ -76,9 +69,7 @@ function ClientFoundation({ f }: { f: any }) {
       <Card>
         <CardHeader><CardTitle className="text-xl">Checks Harmonious runs</CardTitle>
           <CardDescription className="text-base">Harmonious checks the foundation and the people who act for it. Nothing is approved automatically.</CardDescription></CardHeader>
-        <CardContent><ul className="space-y-2">{(f.verification as any[]).map((v) => (
-          <li key={v.key} className="rounded-md border p-3 text-base"><div className="flex flex-wrap items-center justify-between gap-2"><span>{v.label}</span><Badge variant={v.status === "satisfied" ? "default" : "outline"}>{VSTATUS[v.status]}</Badge></div>
-            {v.items.length > 0 && <ul className="mt-1 list-disc pl-5 text-sm text-muted-foreground">{v.items.map((i: string) => <li key={i}>{i}</li>)}</ul>}</li>))}</ul></CardContent>
+        <CardContent><RequirementList audience="client" rows={(f.verification as any[]).map((v) => ({ key: v.key, label: v.label, state: fromFoundationRequirement(v.status), items: v.items }))} /></CardContent>
       </Card>
 
       {(f.submissions as any[]).length > 0 && (
@@ -87,7 +78,7 @@ function ClientFoundation({ f }: { f: any }) {
           <CardContent><ul className="space-y-2">{(f.submissions as any[]).map((s) => (
             <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-base">
               <span>{s.summary}<span className="block text-sm text-muted-foreground">Sent {new Date(s.submittedAt).toLocaleDateString()}{s.note ? ` · Harmonious: ${s.note}` : ""}</span></span>
-              <span className="flex items-center gap-2"><Badge variant={s.status === "correction_requested" ? "destructive" : "outline"}>{SUB[s.status]}</Badge>
+              <span className="flex items-center gap-2"><ReviewStateBadge engine="foundation_submission" status={s.status} />
                 {s.mine && s.status === "submitted" && <Button size="sm" variant="ghost" onClick={() => { if (window.confirm("Withdraw this?")) withdraw.mutate(s.id); }}>Withdraw</Button>}</span>
             </li>))}</ul></CardContent>
         </Card>)}
@@ -165,7 +156,7 @@ function Documents({ f, onDone }: { f: any; onDone: () => void }) {
         {current.length ? <ul className="space-y-2">{current.map((d) => (
           <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-base">
             <span>{d.title}<span className="block text-sm text-muted-foreground">{label(DOC_KINDS, d.kind)} · {new Date(d.uploadedAt).toLocaleDateString()}{d.reviewNote ? ` · Harmonious: ${d.reviewNote}` : ""}</span></span>
-            <span className="flex items-center gap-2"><Badge variant={d.source === "staff" || d.review === "accepted" ? "default" : d.review === "correction_requested" ? "destructive" : "secondary"}>{d.source === "staff" ? "On file" : d.review === "accepted" ? "Accepted" : d.review === "correction_requested" ? "Needs a fix" : "With Harmonious"}</Badge>
+            <span className="flex items-center gap-2"><ReviewStateBadge state={foundationDocumentState(d)} />
               <Button size="sm" variant="outline" onClick={() => open(d.id)}>Open</Button></span>
           </li>))}</ul> : <p className="text-base text-muted-foreground">No documents yet. Start with the governing documents.</p>}
         {f.canEdit && (
@@ -211,8 +202,9 @@ function People({ f, onDone }: { f: any; onDone: () => void }) {
             <div className="flex gap-2"><Button size="sm" variant={mode === "existing" ? "default" : "outline"} onClick={() => setMode("existing")}>Someone already listed</Button><Button size="sm" variant={mode === "new" ? "default" : "outline"} onClick={() => setMode("new")}>Someone new</Button></div>
             {mode === "existing" ? (
               <div className="max-w-md space-y-1"><Label>Person</Label>
-                <Select value={personId} onValueChange={setPersonId}><SelectTrigger aria-label="Person"><SelectValue placeholder={(f.people as any[]).length ? "Choose a person" : "No one listed yet"} /></SelectTrigger>
-                  <SelectContent>{(f.people as any[]).map((p) => <SelectItem key={p.personId} value={p.personId}>{p.name}{p.title ? ` · ${p.title}` : ""}</SelectItem>)}</SelectContent></Select></div>
+                {/* Same searchable picker staff use, without identity badges: clients never see other people's check status. */}
+                <SearchableSelect aria-label="Person" value={personId} onValueChange={setPersonId} placeholder={(f.people as any[]).length ? "Choose a person" : "No one listed yet"}
+                  options={(f.people as any[]).map((p) => ({ value: p.personId, label: p.title ? `${p.name} · ${p.title}` : p.name, keywords: [p.title ?? ""] }))} /></div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1"><Label htmlFor={`cp-first-${f.profileId}`}>First name</Label><Input id={`cp-first-${f.profileId}`} value={first} onChange={(e) => setFirst(e.target.value)} /></div>
