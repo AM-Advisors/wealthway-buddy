@@ -19,14 +19,14 @@ import { setFoundationFlag } from "@/lib/foundation-admin.functions";
 import { AUTHORITY_ROLES } from "@/lib/foundation-admin-model";
 import { CLIENT_FACT_FIELDS } from "@/lib/foundation-onboarding-model";
 import { FOUNDATION_FLAGS, REQUIRED_EVIDENCE, RELEASE_EVIDENCE, type FoundationFlagKey, type ReleaseDimension, type ReleaseEvidenceInput } from "@/lib/foundation-release-model";
-import { OWNERSHIP_NOTE, type ReqStatus } from "@/lib/foundation-verification-model";
+import { OWNERSHIP_NOTE } from "@/lib/foundation-verification-model";
+import { fromFoundationRequirement, personPickState, REVIEW_ACTIONS, type RequirementRow } from "@/lib/admin-review-framework";
+import { RequirementList, ReviewDecisionBar, ReviewStateBadge, reviewBlockedReason } from "@/components/admin-review";
+import { ApprovalButton } from "@/components/approval-button";
+import { FundPersonPicker, type PickPerson } from "@/components/fund-person-picker";
+import { LoadError } from "@/components/load-error";
 
 const errMsg = (e: unknown) => toast.error((e as Error).message);
-const STATUS: Record<ReqStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  satisfied: { label: "Done", variant: "default" }, in_review: { label: "In review", variant: "secondary" },
-  missing: { label: "Needed", variant: "outline" }, exception: { label: "Exception", variant: "destructive" },
-};
-const SUB_STATUS: Record<string, string> = { submitted: "Waiting for review", accepted: "Accepted", correction_requested: "Correction requested", withdrawn: "Withdrawn" };
 const roleName = (r: string) => AUTHORITY_ROLES[r as keyof typeof AUTHORITY_ROLES] ?? r;
 
 // ------------------------------------------------------------ Switches (Super Admin)
@@ -69,63 +69,60 @@ export function FoundationReviewPanel({ profileId, clientId }: { profileId: stri
   const docFn = useServerFn(reviewFoundationDocument);
   const q = useQuery({ queryKey: ["foundation-review", profileId], queryFn: () => loadFn({ data: { profileId } }) });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["foundation-review", profileId] }); qc.invalidateQueries({ queryKey: ["foundation-workspace", clientId] }); qc.invalidateQueries({ queryKey: ["foundation-verification", profileId] }); };
-  const decide = useMutation({ mutationFn: (v: any) => subFn({ data: v }), onSuccess: () => { toast.success("Decision recorded"); refresh(); }, onError: errMsg });
-  const docDecide = useMutation({ mutationFn: (v: any) => docFn({ data: v }), onSuccess: () => { toast.success("Review recorded"); refresh(); }, onError: errMsg });
+  const decide = useMutation({ mutationFn: (v: any) => subFn({ data: v }), onSuccess: (_r, v: any) => { toast.success(v.decision === "accepted" ? "Approved and applied to the foundation" : "Sent back to the client"); refresh(); }, onError: errMsg });
+  const docDecide = useMutation({ mutationFn: (v: any) => docFn({ data: v }), onSuccess: (_r, v: any) => { toast.success(v.decision === "accepted" ? "Approved as evidence" : "Sent back to the client"); refresh(); }, onError: errMsg });
   if (q.isPending) return <Skeleton className="h-24 w-full" />;
-  if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
+  if (q.error) return <LoadError error={q.error} what="Client submissions" onRetry={() => q.refetch()} />;
   const d = q.data as any;
-  const ask = (msg: string) => { const n = window.prompt(msg); return n && n.trim().length >= 3 ? n.trim() : null; };
   const open = d.submissions.filter((s: any) => s.status === "submitted");
   const past = d.submissions.filter((s: any) => s.status !== "submitted");
   return (
     <div className="space-y-5 pt-3">
-      <p className="text-base text-muted-foreground">What the client sent. Nothing here changes the foundation's records until someone other than the sender accepts it. Accepting a person never grants authority or access.</p>
+      <p className="text-base text-muted-foreground">What the client sent. Nothing here changes the foundation's records until someone other than the sender approves it. Approving a person never grants authority or access.</p>
       <section className="space-y-2"><h4 className="font-semibold">Documents waiting for review</h4>
         {d.pendingDocuments.length ? <ul className="space-y-2">{d.pendingDocuments.map((doc: any) => (
-          <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
-            <span className="text-base">{doc.title} <span className="text-sm text-muted-foreground">· {String(doc.kind).replace(/_/g, " ")} · {new Date(doc.uploaded_at).toLocaleDateString()}</span></span>
-            {d.canReview && !doc.ownUpload ? <div className="flex gap-2">
-              <Button size="sm" disabled={docDecide.isPending} onClick={() => { if (window.confirm("Accept this document as evidence?")) docDecide.mutate({ documentId: doc.id, decision: "accepted" }); }}>Accept</Button>
-              <Button size="sm" variant="outline" disabled={docDecide.isPending} onClick={() => { const note = ask("What needs to be corrected?"); if (note) docDecide.mutate({ documentId: doc.id, decision: "correction_requested", note }); }}>Ask for correction</Button>
-            </div> : <Badge variant="outline">{doc.ownUpload ? "You uploaded this" : "Waiting for a reviewer"}</Badge>}
+          <li key={doc.id} className="space-y-2 rounded-md border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-base">{doc.title} <span className="text-sm text-muted-foreground">· {String(doc.kind).replace(/_/g, " ")} · {new Date(doc.uploaded_at).toLocaleDateString()}</span></span><ReviewStateBadge state="waiting" /></div>
+            <ReviewDecisionBar blockedReason={reviewBlockedReason(!!doc.ownUpload, !!d.canReview)} approveLabel={REVIEW_ACTIONS.approve} approveTitle="Approve this document as evidence?" approveDescription="It can then support people's roles and the foundation records decision. Earlier copies stay on file." pending={docDecide.isPending}
+              onApprove={() => docDecide.mutate({ documentId: doc.id, decision: "accepted" })} onSendBack={(note) => docDecide.mutate({ documentId: doc.id, decision: "correction_requested", note })} recipient="the client" />
           </li>))}</ul> : <p className="text-base text-muted-foreground">None.</p>}
       </section>
       <section className="space-y-2"><h4 className="font-semibold">Submissions waiting for review</h4>
-        {open.length ? <ul className="space-y-3">{open.map((s: any) => <SubmissionCard key={s.id} s={s} canReview={d.canReview} pending={decide.isPending} onDecide={(v) => decide.mutate({ submissionId: s.id, ...v })} ask={ask} />)}</ul>
+        {open.length ? <ul className="space-y-3">{open.map((s: any) => <SubmissionCard key={s.id} s={s} canReview={d.canReview} pending={decide.isPending} onDecide={(v) => decide.mutate({ submissionId: s.id, ...v })} />)}</ul>
           : <p className="text-base text-muted-foreground">None.</p>}
       </section>
       {past.length > 0 && <details><summary className="cursor-pointer text-sm">Decided ({past.length})</summary>
-        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">{past.map((s: any) => <li key={s.id}>{new Date(s.submitted_at).toLocaleDateString()} · {String(s.kind).replace(/_/g, " ")} · {SUB_STATUS[s.status]}{s.review_note ? ` · ${s.review_note}` : ""}</li>)}</ul></details>}
+        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">{past.map((s: any) => <li key={s.id} className="flex flex-wrap items-center gap-2">{new Date(s.submitted_at).toLocaleDateString()} · {String(s.kind).replace(/_/g, " ")} <ReviewStateBadge engine="foundation_submission" status={s.status} />{s.review_note ? ` ${s.review_note}` : ""}</li>)}</ul></details>}
     </div>
   );
 }
 
-function SubmissionCard({ s, canReview, pending, onDecide, ask }: { s: any; canReview: boolean; pending: boolean; onDecide: (v: any) => void; ask: (m: string) => string | null }) {
+function SubmissionCard({ s, canReview, pending, onDecide }: { s: any; canReview: boolean; pending: boolean; onDecide: (v: any) => void }) {
   const [choice, setChoice] = useState<string>("");
   const can = canReview && !s.ownSubmission;
-  const accept = () => {
-    if (s.kind === "profile_facts" && s.changedSince.length && !window.confirm(`Changed since the client submitted: ${s.changedSince.map((f: string) => (CLIENT_FACT_FIELDS as any)[f]).join(", ")}. Replace them with the client's values?`)) return;
-    if (!window.confirm("Accept this submission?")) return;
-    onDecide({ decision: "accepted", confirmReplace: s.changedSince.length > 0, person: s.kind === "person_new" ? (choice && choice !== "new" ? { action: "use_existing", personId: choice } : { action: "create_new" }) : null });
-  };
+  const changed = s.kind === "profile_facts" ? (s.changedSince as string[]).map((f) => (CLIENT_FACT_FIELDS as any)[f]).join(", ") : "";
+  const needsChoice = s.kind === "person_new" && s.candidates.length > 0 && !choice;
+  const approve = () => onDecide({ decision: "accepted", confirmReplace: s.changedSince.length > 0, person: s.kind === "person_new" ? (choice && choice !== "new" ? { action: "use_existing", personId: choice } : { action: "create_new" }) : null });
+  const candidates: PickPerson[] = (s.candidates as any[]).map((c) => { const v = personPickState(c.kyc_status, c.aml_status); return { key: c.id, name: c.name, email: c.email, detail: c.email ? `${c.email} · ${v.detail}` : v.detail, source: "Existing person", kyc: v.kyc, hasAccount: !!c.hasLogin }; });
   return (
     <li className="space-y-2 rounded-md border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-base font-medium">{s.kind === "profile_facts" ? "Foundation details" : s.kind === "person_existing" ? `Person: ${s.personName}` : s.kind === "person_new" ? `New person: ${s.payload.firstName} ${s.payload.lastName}` : "Ready for review"}</span>
-        <span className="text-sm text-muted-foreground">Sent {new Date(s.submitted_at).toLocaleString()}</span></div>
+        <span className="flex items-center gap-2 text-sm text-muted-foreground">Sent {new Date(s.submitted_at).toLocaleString()} <ReviewStateBadge engine="foundation_submission" status={s.status} /></span></div>
       {s.kind === "profile_facts" && <table className="w-full text-sm"><thead><tr className="text-left text-muted-foreground"><th>Field</th><th>On record</th><th>Client proposes</th></tr></thead>
         <tbody>{s.changes.map((c: any) => <tr key={c.field} className={s.changedSince.includes(c.field) ? "font-medium" : ""}><td>{(CLIENT_FACT_FIELDS as any)[c.field]}{s.changedSince.includes(c.field) ? " (changed since)" : ""}</td><td>{c.from ?? "Not recorded"}</td><td>{c.to ?? "Cleared"}</td></tr>)}</tbody></table>}
       {(s.kind === "person_existing" || s.kind === "person_new") && <p className="text-sm">Role: {roleName(s.payload.role)}{s.payload.title ? ` · ${s.payload.title}` : ""}{s.payload.email ? ` · ${s.payload.email}` : ""}</p>}
       {s.kind === "person_new" && can && (
-        <div className="space-y-1">
-          {s.candidates.length ? <><Label>Possible existing people</Label>
-            <Select value={choice} onValueChange={setChoice}><SelectTrigger aria-label="Matching person"><SelectValue placeholder="Choose before accepting" /></SelectTrigger>
-              <SelectContent><SelectItem value="new">None of these: add a new person</SelectItem>{s.candidates.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}{c.email ? ` · ${c.email}` : ""}{c.hasLogin ? " · has a login" : ""}</SelectItem>)}</SelectContent></Select></>
-            : <p className="text-sm text-muted-foreground">No possible matches. Accepting adds a new person to this client without a login.</p>}
+        <div className="space-y-2">
+          {candidates.length ? <><Label>Possible existing people</Label>
+            <FundPersonPicker people={candidates} value={choice === "new" ? "" : choice} onChange={setChoice} empty="" />
+            <Button size="sm" variant={choice === "new" ? "default" : "outline"} onClick={() => setChoice(choice === "new" ? "" : "new")}>None of these: add a new person</Button></>
+            : <p className="text-sm text-muted-foreground">No possible matches. Approving adds a new person to this client without a login.</p>}
         </div>)}
-      {can ? <div className="flex gap-2">
-        <Button size="sm" disabled={pending || (s.kind === "person_new" && s.candidates.length > 0 && !choice)} onClick={accept}>Accept</Button>
-        <Button size="sm" variant="outline" disabled={pending} onClick={() => { const note = ask("What needs to be corrected?"); if (note) onDecide({ decision: "correction_requested", note }); }}>Ask for correction</Button>
-      </div> : <p className="text-sm text-muted-foreground">{s.ownSubmission ? "You sent this, so someone else must review it." : "Your role can view but not decide."}</p>}
+      <ReviewDecisionBar blockedReason={reviewBlockedReason(!!s.ownSubmission, canReview)} pending={pending} approveDisabled={needsChoice}
+        approveTitle="Approve and apply this submission?"
+        approveDescription={changed ? `Changed by Harmonious since the client sent this: ${changed}. Approving replaces them with the client's values.` : s.kind === "person_new" ? "The person is linked to this client without a login, and no authority is granted." : "The client's values are applied to the foundation's records."}
+        onApprove={approve} onSendBack={(note) => onDecide({ decision: "correction_requested", note })} recipient="the client" />
+      {needsChoice && <p className="text-sm text-muted-foreground">Choose a matching person or "None of these" before approving.</p>}
     </li>
   );
 }
@@ -142,10 +139,11 @@ export function FoundationVerificationPanel({ profileId }: { profileId: string }
   const [note, setNote] = useState("");
   const m = useMutation({ mutationFn: () => fn({ data: { profileId, decision, evidenceDocumentIds: evidence, note } }), onSuccess: () => { toast.success("Decision recorded"); setNote(""); setEvidence([]); qc.invalidateQueries({ queryKey: ["foundation-verification", profileId] }); }, onError: errMsg });
   if (q.isPending) return <Skeleton className="h-24 w-full" />;
-  if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
+  if (q.error) return <LoadError error={q.error} what="Verification" onRetry={() => q.refetch()} />;
   const d = q.data as any;
   const groups: [string, string][] = [["entity", "Foundation"], ["screening", "Screening"], ["person", "People"], ["authority", "Authority to act"]];
   const account = new Map((d.accountChecks as any[]).map((c) => [c.personId, c.status]));
+  const byKey = new Map((d.requirements as any[]).map((r) => [r.key, r]));
   return (
     <div className="space-y-5 pt-3">
       <p className="text-base text-muted-foreground">{d.summary.complete ? "Every requirement is met." : `${d.summary.unresolved} requirement${d.summary.unresolved === 1 ? "" : "s"} still open${d.summary.exceptions ? `, ${d.summary.exceptions} with exceptions` : ""}.`} Nothing is approved automatically: exemption status, uploaded documents, recorded roles and sign-in checks never count on their own.</p>
@@ -153,27 +151,25 @@ export function FoundationVerificationPanel({ profileId }: { profileId: string }
       {groups.map(([area, title]) => {
         const reqs = (d.requirements as any[]).filter((r) => r.area === area);
         if (!reqs.length) return null;
+        const rows: RequirementRow[] = reqs.map((r) => ({ key: r.key, label: r.label, state: fromFoundationRequirement(r.status), note: r.why, source: r.source, items: r.items }));
         return <section key={area} className="space-y-2"><h4 className="font-semibold">{title}</h4>
-          <ul className="space-y-2">{reqs.map((r) => (
-            <li key={r.key} className="rounded-md border p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-base font-medium">{r.label}</span><Badge variant={STATUS[r.status as ReqStatus].variant}>{STATUS[r.status as ReqStatus].label}</Badge></div>
-              <p className="text-sm text-muted-foreground">{r.why}{r.source ? ` · Source: ${r.source}` : ""}</p>
-              {r.items.length > 0 && <ul className="mt-1 list-disc pl-5 text-sm">{r.items.map((i: string) => <li key={i}>{i}</li>)}</ul>}
-              {r.personId && r.area === "person" && <p className="mt-1 text-sm text-muted-foreground">Sign-in account check (separate, not counted): {account.get(r.personId) ?? "no login"} · <a className="underline" href={`/ops/verifications?person=${r.personId}`}>Open verification</a></p>}
-            </li>))}</ul></section>;
+          <RequirementList audience="staff" rows={rows} renderExtra={(row) => {
+            const r = byKey.get(row.key);
+            return r?.personId && r.area === "person" ? <p className="mt-1 text-sm text-muted-foreground">Sign-in account check (separate, not counted): {account.get(r.personId) ?? "no login"} · <a className="underline" href={`/ops/verifications?person=${r.personId}`}>Open verification</a></p> : null;
+          }} /></section>;
       })}
       {d.canDecide ? (
         <div className="space-y-3 rounded-md border p-4">
           <h4 className="font-semibold">Record the foundation records decision</h4>
-          <p className="text-sm text-muted-foreground">Approval needs a current, accepted governing document and the EIN on file. You can't decide on documents you uploaded. Screening isn't decided here.</p>
+          <p className="text-sm text-muted-foreground">Approval needs a current, approved governing document and the EIN on file. You can't decide on documents you uploaded. Screening isn't decided here.</p>
           <div className="max-w-xs space-y-1"><Label>Decision</Label>
             <Select value={decision} onValueChange={(v) => setDecision(v as any)}><SelectTrigger aria-label="Decision"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="approved">Approve</SelectItem><SelectItem value="more_information">Ask for more information</SelectItem><SelectItem value="declined">Decline</SelectItem></SelectContent></Select></div>
           <fieldset className="space-y-1"><legend className="text-sm font-medium">Evidence reviewed</legend>
             {(d.evidenceOptions as any[]).length ? (d.evidenceOptions as any[]).map((o) => <label key={o.id} className={`flex items-center gap-2 text-base ${o.uploadedByMe ? "opacity-50" : ""}`}><Checkbox disabled={o.uploadedByMe} checked={evidence.includes(o.id)} onCheckedChange={(c) => setEvidence(c ? [...evidence, o.id] : evidence.filter((x) => x !== o.id))} />{o.title} <span className="text-sm text-muted-foreground">· {String(o.kind).replace(/_/g, " ")}{o.uploadedByMe ? " · uploaded by you" : ""}</span></label>)
-              : <p className="text-sm text-muted-foreground">No accepted documents yet.</p>}</fieldset>
+              : <p className="text-sm text-muted-foreground">No approved documents yet.</p>}</fieldset>
           <div className="space-y-1"><Label htmlFor={`fv-note-${profileId}`}>Note</Label><Textarea id={`fv-note-${profileId}`} rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></div>
-          <Button disabled={m.isPending || note.trim().length < 3} onClick={() => { if (window.confirm("Record this decision? It can't be edited afterwards.")) m.mutate(); }}>Record decision</Button>
+          <ApprovalButton disabled={m.isPending || note.trim().length < 3} title="Record this decision?" description="It can't be edited afterwards. A later change needs a new decision." confirmLabel="Record decision" undoLabel="Undo" waitingTitle="Decision waiting to send" waitingNote="You have 5 seconds to undo. Nothing has been recorded yet." historyNote="Decisions stay in the history." onApprove={() => m.mutate()}>Record decision</ApprovalButton>
         </div>
       ) : <p className="text-sm text-muted-foreground">Foundation records decisions are made by Compliance or an administrator.</p>}
       {(d.reviews as any[]).length > 0 && <details><summary className="cursor-pointer text-sm">Decision history ({d.reviews.length})</summary>

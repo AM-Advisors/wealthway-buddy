@@ -260,7 +260,10 @@ export async function getFoundationReview(userId: string, profileId: string) {
     let candidates: any[] = [];
     if (s.kind === "person_new" && s.status === "submitted") {
       const { findPersonCandidates } = await import("@/lib/person-resolution.server");
-      candidates = (await findPersonCandidates({ email: s.payload?.email ?? null, firstName: s.payload?.firstName, lastName: s.payload?.lastName })).map((c) => ({ id: c.id, name: `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim(), email: c.email, hasLogin: !!c.userId }));
+      const found = await findPersonCandidates({ email: s.payload?.email ?? null, firstName: s.payload?.firstName, lastName: s.payload?.lastName });
+      // Canonical person-record statuses only (display in the shared person picker; never decides anything).
+      const st = found.length ? (((await db.from("persons").select("id, kyc_status, aml_status").in("id", found.map((c) => c.id))).data ?? []) as any[]) : [];
+      candidates = found.map((c) => { const v = st.find((x) => x.id === c.id); return { id: c.id, name: `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim(), email: c.email, hasLogin: !!c.userId, kyc_status: v?.kyc_status ?? null, aml_status: v?.aml_status ?? null }; });
     }
     const changes = (s.payload?.changes ?? []) as FactChange[];
     out.push({

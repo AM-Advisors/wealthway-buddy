@@ -99,7 +99,12 @@ export async function getFoundationWorkspace(userId: string, clientId: string) {
   const ents = must(entities, "Couldn't read the client's entities.") as any[];
   const profs = must(profiles, "Couldn't read foundations.") as any[];
   const people = ((must(contacts, "Couldn't read the client's people.") ?? []) as any[]).filter((c) => c.status !== "inactive")
-    .map((c) => ({ personId: c.person_id as string, name: c.full_name as string, email: c.email as string | null, title: c.title as string | null }));
+    .map((c) => ({ personId: c.person_id as string, name: c.full_name as string, email: c.email as string | null, title: c.title as string | null, kyc_status: null as string | null, aml_status: null as string | null, hasAccount: false }));
+  // Canonical person-record verification for the shared person picker (staff-only workspace; display only).
+  if (people.length) {
+    const { data: ps } = await db.from("persons").select("id, kyc_status, aml_status, user_id").in("id", people.map((p) => p.personId));
+    for (const p of people) { const r = ((ps ?? []) as any[]).find((x) => x.id === p.personId); if (r) { p.kyc_status = r.kyc_status ?? null; p.aml_status = r.aml_status ?? null; p.hasAccount = !!r.user_id; } }
+  }
   const profileIds = profs.map((p) => p.id);
   const entityIds = profs.map((p) => p.client_entity_id);
   const [auth, docs, events, tasks, lines] = profileIds.length ? await Promise.all([
