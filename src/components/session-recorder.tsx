@@ -56,7 +56,9 @@ export function SessionRecorder() {
           emit: (e) => { buffer.push(e); },
           maskAllInputs: true,
           maskTextSelector: "[data-private]",
-          blockSelector: "[data-no-record]",
+          // rrweb 2.0.0-alpha.4 calls node.matches(blockSelector) on text nodes and throws on
+          // every page change; blocking by class avoids that path.
+          blockClass: "rr-block",
           sampling: { mousemove: 100, scroll: 150, input: "last" },
         }) ?? undefined;
       } catch { /* recording is best-effort and never blocks the page */ }
@@ -122,7 +124,7 @@ export function SessionRecorder() {
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   if (!signedIn) return null;
   return (
-    <div data-no-record className="fixed bottom-4 left-4 z-50 flex flex-col items-start gap-2">
+    <div data-no-record className="rr-block fixed bottom-4 left-4 z-50 flex flex-col items-start gap-2">
       {pending && (
         <div className="w-80 rounded-lg border bg-card p-3 text-card-foreground shadow-lg">
           <div className="mb-2 flex items-center justify-between">
