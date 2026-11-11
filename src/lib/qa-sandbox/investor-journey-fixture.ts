@@ -1,5 +1,5 @@
 /**
- * Fictional investor journey for /qa-sandbox: one invented investor (Casey Alden)
+ * Fictional investor journey for /qa-sandbox: one invented investor (John Smith)
  * investing in the invented fund. The real investor screens render against this
  * in-memory state; the step model is the same pure code the server uses.
  * Nothing here reaches the backend, sends email or moves money.
@@ -9,8 +9,8 @@ import { REQUIREMENT_LABELS, type RequirementKey, type RequirementResult, type R
 import { QA_FUND_ID, QA_FUND_NAME } from "./fictional-data";
 
 export const QA_JOURNEY_ID = "0a000000-0000-4000-8000-00000000a001";
-export const QA_JOURNEY_INVESTOR = "Casey Alden";
-export const QA_JOURNEY_EMAIL = "casey.alden@example.com";
+export const QA_JOURNEY_INVESTOR = "John Smith";
+export const QA_JOURNEY_EMAIL = "john.smith@example.com";
 export const QA_JOURNEY_MINIMUM_CENTS = 5_000_000;
 
 const DOCS = [
@@ -134,7 +134,7 @@ export function handleQaJourneyCall(fnName: string, data: any, j: QaJourney): un
     case "profileUploadStateFn": return [];
     case "fundingInstructionsFn": {
       if (!j.approvedToFund) return { unlocked: false, reasons: ["Funding opens once your subscription is accepted."] };
-      return { unlocked: true, saved: null, instructions: { bankName: "First Fictional Bank", details: { account_name: QA_FUND_NAME, routing_number: "000000000", account_number: "••••0000" }, reference: "FABLEWOOD-ALDEN", expectedAmountCents: j.amountCents, warning: "Always confirm wire instructions by phone before sending. They will never change by email.", methods: [{ method: "wire", timeline: "Usually arrives the same business day." }] } };
+      return { unlocked: true, saved: null, instructions: { bankName: "First Fictional Bank", details: { account_name: QA_FUND_NAME, routing_number: "000000000", account_number: "••••0000" }, reference: "FABLEWOOD-SMITH", expectedAmountCents: j.amountCents, warning: "Always confirm wire instructions by phone before sending. They will never change by email.", methods: [{ method: "wire", timeline: "Usually arrives the same business day." }] } };
     }
     case "investorReportsFundsSentFn": { j.reportedSent = { sentOn: data?.sentOn ?? null, amountCents: data?.amountCents ?? j.amountCents, sendingBank: data?.sendingBank ?? null }; return { ok: true }; }
     case "investorFundingLedgerFn": {
