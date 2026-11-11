@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { FOUNDATION_FLAG_KEYS } from "@/lib/foundation-release-model";
 import { AUTHORITY_ROLES, AUTHORITY_SCOPES, CLASSIFICATIONS, COMPONENT_KEYS, EXEMPTION_STATUSES, LEGAL_STRUCTURES } from "@/lib/foundation-admin-model";
 
 const F = () => import("@/lib/foundation-admin.server");
@@ -12,7 +13,7 @@ export const getFoundationWorkspace = createServerFn({ method: "GET" }).middlewa
   .handler(async ({ data, context }) => (await F()).getFoundationWorkspace(context.userId, data.clientId));
 
 export const setFoundationFlag = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator((d) => z.object({ enabled: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse(d))
+  .validator((d) => z.object({ key: z.enum(FOUNDATION_FLAG_KEYS).optional(), enabled: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse(d))
   .handler(async ({ data, context }) => (await F()).setFoundationFlag(context.userId, data));
 
 export const saveFoundationProfile = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -64,3 +65,6 @@ export const getQuoteFoundationOptions = createServerFn({ method: "GET" }).middl
 
 export const getFoundationFlagState = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await F()).foundationFlagState(context.userId));
+
+export const getFoundationReleaseView = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await F()).foundationReleaseView(context.userId));

@@ -22,7 +22,8 @@ import { canAddSalesContact } from "@/lib/sales-contact-model";
 import { addSalesQuoteContact, changeSalesQuoteSigner, sendSalesQuoteEmail, sendSalesQuotePackage, updateSalesQuoteDetails } from "@/lib/sales-hub.functions";
 import { Textarea } from "@/components/ui/textarea";
 import { bookkeepingCoverageBlocker, bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
-import { foundationReleaseBlocker } from "@/lib/foundation-admin-model";
+import { foundationReleaseBlocker, isFoundationKey } from "@/lib/foundation-admin-model";
+import { getFoundationReleaseView } from "@/lib/foundation-admin.functions";
 import { BookkeepingCoveragePanel } from "@/components/sales/bookkeeping-coverage-panel";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes_/$id")({
@@ -84,6 +85,9 @@ function QuotePage() {
 
   const linkedFn = useServerFn(getSalesLinkedRecords);
   const linked = useQuery({ queryKey: ["sales-linked", id], queryFn: () => linkedFn({ data: { id } }) });
+  const releaseFn = useServerFn(getFoundationReleaseView);
+  const hasFoundation = ((q.data as any)?.lines ?? []).some((l: any) => l.foundation_snapshot || isFoundationKey(l.service_key));
+  const released = useQuery({ queryKey: ["foundation-release-view"], queryFn: () => releaseFn(), enabled: hasFoundation });
 
   if (q.error) return <main className="mx-auto max-w-5xl px-4 py-10 text-sm text-destructive">{(q.error as Error).message}</main>;
   const d = q.data as any;
@@ -91,8 +95,8 @@ function QuotePage() {
   const s = d.quote.status as string;
   const releaseBlocker = bookkeepingDraftBlocker(d.lines);
   const bookkeepingBlocker = bookkeepingCoverageBlocker(d.lines) ?? releaseBlocker;
-  // Unreleased Foundation Administration: drafts and internal approval only. The server blocks the rest too.
-  const foundationBlocker = foundationReleaseBlocker(d.lines, "send");
+  // Unreleased Foundation Administration components: drafts and internal approval only. The server and database block the rest too.
+  const foundationBlocker = foundationReleaseBlocker(d.lines, "send", released.data ?? undefined);
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <Link to="/sales/quotes" className="text-sm text-muted-foreground hover:underline">← Quotes</Link>

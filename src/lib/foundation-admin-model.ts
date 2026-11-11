@@ -164,9 +164,6 @@ export const componentByKey = (k: string) => FOUNDATION_COMPONENTS.find((c) => c
 export const foundationServiceKey = (k: ComponentKey) => `${FOUNDATION_KEY_PREFIX}${k}`;
 export const isFoundationKey = (k: string | null | undefined) => typeof k === "string" && k.startsWith(FOUNDATION_KEY_PREFIX);
 
-/** No component is released in phase 1. A future release needs approved pricing and terms per component. */
-export const RELEASED_COMPONENTS: readonly ComponentKey[] = [];
-
 export const RETAINED_RESPONSIBILITIES: readonly { party: string; items: string[] }[] = [
   { party: "Board and trustees", items: [RETAINED_ALWAYS, "Approving grants, budgets, investments and payments", "Fiduciary duties to the foundation"] },
   { party: "Legal counsel", items: ["Legal advice, governing document drafting and exemption applications"] },
@@ -241,11 +238,16 @@ export function foundationCoverageConflict(input: Pick<FoundationLineInput, "com
 export type FoundationActionKind = "send" | "contract" | "sign" | "invoice";
 const ACTION_WORDS: Record<FoundationActionKind, string> = { send: "sent to the client", contract: "turned into an SOW or agreement", sign: "signed", invoice: "billed" };
 
-/** Phase 1: drafts save and can be approved internally; nothing with an unreleased component moves toward the client, contract or billing. */
-export function foundationReleaseBlocker(lines: readonly { service_key?: string | null; foundation_snapshot?: unknown }[], action: FoundationActionKind): string | null {
+/**
+ * Drafts save and can be approved internally. A quote with a component that isn't commercially released never moves
+ * toward the client, a contract or signing; invoicing also needs that component's delivery readiness released.
+ * Releases come from foundation_component_release_events (see foundation-release-model.ts); none exist yet.
+ */
+export function foundationReleaseBlocker(lines: readonly { service_key?: string | null; foundation_snapshot?: unknown }[], action: FoundationActionKind, released: { commercial: readonly string[]; delivery: readonly string[] } = { commercial: [], delivery: [] }): string | null {
   const keys = lines.filter((l) => isFoundationKey(l.service_key) || (l.foundation_snapshot != null))
     .map((l) => String(l.service_key ?? "").slice(FOUNDATION_KEY_PREFIX.length) as ComponentKey);
-  const unreleased = [...new Set(keys.filter((k) => !RELEASED_COMPONENTS.includes(k)))];
+  const ok = (k: ComponentKey) => released.commercial.includes(k) && (action !== "invoice" || released.delivery.includes(k));
+  const unreleased = [...new Set(keys.filter((k) => !ok(k)))];
   if (!unreleased.length) return null;
   const names = unreleased.map((k) => componentByKey(k)?.name ?? "Foundation Administration").join(", ");
   return `Foundation Administration isn't released yet, so this quote can be saved and approved internally but not ${ACTION_WORDS[action]}. Not released: ${names}.`;

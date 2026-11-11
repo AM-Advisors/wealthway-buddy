@@ -19906,6 +19906,85 @@ export type Database = {
           },
         ]
       }
+      foundation_component_release_events: {
+        Row: {
+          action: string
+          actor_id: string
+          component: string
+          created_at: string
+          dimension: string
+          evidence: Json
+          id: string
+          reason: string
+          request_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          component: string
+          created_at?: string
+          dimension: string
+          evidence?: Json
+          id?: string
+          reason: string
+          request_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          component?: string
+          created_at?: string
+          dimension?: string
+          evidence?: Json
+          id?: string
+          reason?: string
+          request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_component_release_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_component_release_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_document_reviews: {
+        Row: {
+          created_at: string
+          decision: string
+          document_id: string
+          id: string
+          note: string | null
+          reviewed_by: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          document_id: string
+          id?: string
+          note?: string | null
+          reviewed_by: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          document_id?: string
+          id?: string
+          note?: string | null
+          reviewed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_document_reviews_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       foundation_documents: {
         Row: {
           file_name: string
@@ -19915,6 +19994,7 @@ export type Database = {
           mime_type: string
           sha256: string
           size_bytes: number
+          source: string
           storage_bucket: string
           storage_path: string
           superseded_by: string | null
@@ -19930,6 +20010,7 @@ export type Database = {
           mime_type: string
           sha256: string
           size_bytes: number
+          source?: string
           storage_bucket?: string
           storage_path: string
           superseded_by?: string | null
@@ -19945,6 +20026,7 @@ export type Database = {
           mime_type?: string
           sha256?: string
           size_bytes?: number
+          source?: string
           storage_bucket?: string
           storage_path?: string
           superseded_by?: string | null
@@ -20082,6 +20164,100 @@ export type Database = {
             columns: ["primary_contact_person_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_submissions: {
+        Row: {
+          base: Json
+          foundation_profile_id: string
+          id: string
+          kind: string
+          payload: Json
+          resolution: Json | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          submitted_by: string
+        }
+        Insert: {
+          base?: Json
+          foundation_profile_id: string
+          id?: string
+          kind: string
+          payload?: Json
+          resolution?: Json | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+        }
+        Update: {
+          base?: Json
+          foundation_profile_id?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          resolution?: Json | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_submissions_foundation_profile_id_fkey"
+            columns: ["foundation_profile_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_verification_reviews: {
+        Row: {
+          created_at: string
+          decided_by: string
+          decision: string
+          evidence_document_ids: string[]
+          foundation_profile_id: string
+          id: string
+          note: string
+          requirement: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by: string
+          decision: string
+          evidence_document_ids?: string[]
+          foundation_profile_id: string
+          id?: string
+          note: string
+          requirement: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string
+          decision?: string
+          evidence_document_ids?: string[]
+          foundation_profile_id?: string
+          id?: string
+          note?: string
+          requirement?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_verification_reviews_foundation_profile_id_fkey"
+            columns: ["foundation_profile_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -51403,6 +51579,15 @@ export type Database = {
         }[]
       }
       find_verified_user_by_email: { Args: { _email: string }; Returns: string }
+      foundation_component_released: {
+        Args: { _component: string; _dimension: string }
+        Returns: boolean
+      }
+      foundation_document_usable: { Args: { _doc: string }; Returns: boolean }
+      foundation_quote_all_released: {
+        Args: { _quote: string }
+        Returns: boolean
+      }
       fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
       fund_deletion_impact: { Args: { p_offering_id: string }; Returns: Json }
       fund_dependency_counts: {

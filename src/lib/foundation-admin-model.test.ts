@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   annualReturnReferenceDate, authorityProblem, foundationAccessProblem, foundationCoverageConflict, foundationHandoffTasks,
   foundationLineInputSchema, foundationReleaseBlocker, foundationSnapshot, holdsAuthority, priceFoundationLine,
-  RELEASED_COMPONENTS, type FoundationLineInput,
+  type FoundationLineInput,
 } from "./foundation-admin-model";
 import { quoteInputsFromRows, sowLinesFromQuote } from "./quote-sow-sync";
 
@@ -88,7 +88,6 @@ describe("missing and custom pricing", () => {
 
 describe("unreleased services never progress", () => {
   const lines = [{ service_key: "FOUNDATION_ADMIN:grant_administration", foundation_snapshot: {} }];
-  it("nothing is released in phase 1", () => expect(RELEASED_COMPONENTS).toEqual([]));
   it.each(["send", "contract", "sign", "invoice"] as const)("blocks %s with a reason", (action) => {
     expect(foundationReleaseBlocker(lines, action)).toMatch(/Grant administration/);
   });

@@ -15,13 +15,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   addFoundationAuthority, endFoundationAuthority, getFoundationWorkspace, openFoundationDocument, saveFoundationProfile,
-  setFoundationFlag, startFoundationHandoff, storeFoundationTaxId, uploadFoundationDocument,
+  startFoundationHandoff, storeFoundationTaxId, uploadFoundationDocument,
 } from "@/lib/foundation-admin.functions";
 import {
   AUTHORITY_ROLES, AUTHORITY_SCOPES, CLASSIFICATIONS, EXEMPTION_STATUSES, FOUNDATION_COMPONENTS, FOUNDATION_ROLE_DISCLAIMER,
   LEGAL_STRUCTURES, RETAINED_RESPONSIBILITIES, authorityProblem, type AuthorityScope, type ComponentKey,
 } from "@/lib/foundation-admin-model";
 import { money } from "@/components/sales/sales-ui";
+import { FoundationReleaseControls, FoundationReviewPanel, FoundationSwitches, FoundationVerificationPanel } from "@/components/foundation-review-panels";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOC_KINDS = { governing_document: "Governing document", determination_letter: "Determination letter", authority_evidence: "Authority evidence", supporting_evidence: "Supporting evidence" } as const;
@@ -38,39 +39,14 @@ export function FoundationWorkspace({ clientId }: { clientId: string }) {
   const d = q.data as any;
   return (
     <div className="space-y-6">
-      <FlagCard enabled={d.enabled} canToggle={d.canToggle} />
+      <FoundationSwitches flags={d.flags} canToggle={d.canToggle} />
       {d.enabled && <>
+        <FoundationReleaseControls />
         {d.canEdit && <ProfileForm clientId={clientId} entities={d.entities.filter((e: any) => e.eligible && !e.hasProfile)} people={d.people} />}
         {!d.foundations.length && <p className="text-base text-muted-foreground">No foundation is set up for this client yet.</p>}
         {d.foundations.map((f: any) => <FoundationCard key={f.profile.id} clientId={clientId} f={f} people={d.people} canEdit={d.canEdit} />)}
       </>}
     </div>
-  );
-}
-
-function FlagCard({ enabled, canToggle }: { enabled: boolean; canToggle: boolean }) {
-  const qc = useQueryClient();
-  const fn = useServerFn(setFoundationFlag);
-  const [reason, setReason] = useState("");
-  const m = useMutation({
-    mutationFn: () => fn({ data: { enabled: !enabled, reason } }),
-    onSuccess: () => { toast.success(enabled ? "Foundation Administration turned off" : "Foundation Administration turned on for staff"); setReason(""); qc.invalidateQueries(); },
-    onError: errMsg,
-  });
-  if (enabled && !canToggle) return null;
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Foundation Administration {enabled ? "is on" : "is off"}</CardTitle>
-        <CardDescription className="text-base">
-          {enabled ? "Staff can record foundations and draft quotes. Sending, contracts, billing and money movement stay blocked until the service is released." : "Turning it on lets staff record foundations and draft quotes. Nothing is sent to clients, contracted or billed."}
-        </CardDescription>
-      </CardHeader>
-      {canToggle && <CardContent className="flex flex-wrap items-end gap-2">
-        <div className="min-w-72 flex-1 space-y-1"><Label htmlFor="fa-flag-reason">Reason</Label><Input id="fa-flag-reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why this is changing" /></div>
-        <Button variant={enabled ? "outline" : "default"} disabled={m.isPending || reason.trim().length < 3} onClick={() => { if (window.confirm(enabled ? "Turn Foundation Administration off for everyone?" : "Turn Foundation Administration on for staff?")) m.mutate(); }}>{enabled ? "Turn off" : "Turn on"}</Button>
-      </CardContent>}
-    </Card>
   );
 }
 
@@ -152,12 +128,16 @@ function FoundationCard({ clientId, f, people, canEdit }: { clientId: string; f:
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="services">Services, quotes and agreements</TabsTrigger>
             <TabsTrigger value="tasks">Tasks and deadlines</TabsTrigger>
+            <TabsTrigger value="review">Client submissions</TabsTrigger>
+            <TabsTrigger value="verification">Verification</TabsTrigger>
           </TabsList>
           <TabsContent value="overview"><Overview clientId={clientId} f={f} people={people} canEdit={canEdit} /></TabsContent>
           <TabsContent value="people"><People clientId={clientId} f={f} people={people} canEdit={canEdit} /></TabsContent>
           <TabsContent value="documents"><Documents clientId={clientId} f={f} canEdit={canEdit} /></TabsContent>
           <TabsContent value="services"><Services f={f} /></TabsContent>
           <TabsContent value="tasks"><Tasks clientId={clientId} f={f} canEdit={canEdit} /></TabsContent>
+          <TabsContent value="review"><FoundationReviewPanel profileId={f.profile.id} clientId={clientId} /></TabsContent>
+          <TabsContent value="verification"><FoundationVerificationPanel profileId={f.profile.id} /></TabsContent>
         </Tabs>
       </CardContent>
     </Card>
@@ -205,7 +185,8 @@ function People({ clientId, f, people, canEdit }: { clientId: string; f: any; pe
   const qc = useQueryClient();
   const addFn = useServerFn(addFoundationAuthority);
   const endFn = useServerFn(endFoundationAuthority);
-  const docs = (f.documents as any[]).filter((d) => !d.superseded_by);
+  // Evidence must be current and, for client uploads, reviewed and accepted (the database re-checks).
+  const docs = (f.documents as any[]).filter((d) => !d.superseded_by && d.usable !== false);
   const [personId, setPersonId] = useState("");
   const [role, setRole] = useState("director");
   const [title, setTitle] = useState("");
@@ -286,7 +267,8 @@ function Documents({ clientId, f, canEdit }: { clientId: string; f: any; canEdit
     onError: errMsg,
   });
   const open = async (id: string) => { try { const r = await openFn({ data: { documentId: id } }); window.open(r.url, "_blank", "noopener"); } catch (e) { errMsg(e); } };
-  const row = (d: any) => <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"><span className="text-base">{d.title} <span className="text-sm text-muted-foreground">· {label(DOC_KINDS, d.kind)} · {new Date(d.uploaded_at).toLocaleDateString()}</span></span><Button size="sm" variant="outline" onClick={() => open(d.id)}>Open</Button></li>;
+  const reviewBadge = (d: any) => d.source !== "client" ? null : <Badge variant={d.review === "accepted" ? "default" : d.review === "correction_requested" ? "destructive" : "secondary"}>{d.review === "accepted" ? "Client upload · accepted" : d.review === "correction_requested" ? "Client upload · correction asked" : "Client upload · waiting for review"}</Badge>;
+  const row = (d: any) => <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"><span className="text-base">{d.title} <span className="text-sm text-muted-foreground">· {label(DOC_KINDS, d.kind)} · {new Date(d.uploaded_at).toLocaleDateString()}</span> {reviewBadge(d)}</span><Button size="sm" variant="outline" onClick={() => open(d.id)}>Open</Button></li>;
   return (
     <div className="space-y-5 pt-3">
       <p className="text-base text-muted-foreground">Private to Harmonious and this client. Replacing a document keeps the earlier version.</p>

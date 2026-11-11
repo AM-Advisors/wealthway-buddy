@@ -11,17 +11,33 @@ import {
   type ComponentKey, type FoundationActionKind, type FoundationCoverageRow,
 } from "@/lib/foundation-admin-model";
 
-const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
-const today = () => new Date().toISOString().slice(0, 10);
-const must = <T>(r: { data: T; error: any }, msg: string): T => { if (r.error) { console.error(msg, r.error); throw new Error(msg); } return r.data; };
+import { FOUNDATION_FLAGS, NOTHING_RELEASED, releasedSets, type FoundationFlagKey, type ReleaseEvent, type ReleasedSets } from "@/lib/foundation-release-model";
 
-export async function foundationFlagEnabled(db?: any): Promise<boolean> {
+export const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+const today = () => new Date().toISOString().slice(0, 10);
+export const must = <T>(r: { data: T; error: any }, msg: string): T => { if (r.error) { console.error(msg, r.error); throw new Error(msg); } return r.data; };
+
+/** Missing row means off. Each switch is separate; none of them releases a service component. */
+export async function foundationFlagEnabled(db?: any, key: FoundationFlagKey = FOUNDATION_FLAG): Promise<boolean> {
   const d = db ?? await admin();
-  const { data } = await d.from("platform_feature_flags").select("enabled").eq("key", FOUNDATION_FLAG).maybeSingle();
+  const { data } = await d.from("platform_feature_flags").select("enabled").eq("key", key).maybeSingle();
   return data?.enabled === true;
 }
 
-async function actor(db: any, userId: string) {
+export async function foundationFlags(db: any): Promise<Record<FoundationFlagKey, boolean>> {
+  const { data } = await db.from("platform_feature_flags").select("key, enabled").in("key", Object.keys(FOUNDATION_FLAGS));
+  const on = new Set(((data ?? []) as any[]).filter((r) => r.enabled === true).map((r) => r.key));
+  return Object.fromEntries(Object.keys(FOUNDATION_FLAGS).map((k) => [k, on.has(k)])) as Record<FoundationFlagKey, boolean>;
+}
+
+/** Released components from the append-only release history (same rule as the database). */
+export async function foundationReleasedSets(db: any): Promise<ReleasedSets> {
+  const { data, error } = await db.from("foundation_component_release_events").select("id, component, dimension, action, request_id, evidence, reason, actor_id, created_at");
+  if (error) { console.error("foundation releases", error); return NOTHING_RELEASED; }
+  return releasedSets((data ?? []) as ReleaseEvent[]);
+}
+
+export async function actor(db: any, userId: string) {
   const [{ data: roleRows }, { data: members }] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", userId),
     db.from("client_users").select("client_id").eq("user_id", userId).is("revoked_at", null),
@@ -39,25 +55,28 @@ async function authorize(db: any, userId: string, clientId: string, write: boole
   return a;
 }
 
-async function profileFor(db: any, profileId: string) {
+export async function profileFor(db: any, profileId: string) {
   const p = must(await db.from("foundation_profiles").select("*").eq("id", profileId).maybeSingle(), "Couldn't read the foundation.");
   if (!p) throw new Error("Foundation not found.");
   return p as any;
 }
 
-async function logEvent(db: any, profileId: string, actorId: string, event: string, detail: Record<string, unknown> = {}) {
+export async function logEvent(db: any, profileId: string, actorId: string, event: string, detail: Record<string, unknown> = {}) {
   must(await db.from("foundation_profile_events").insert({ foundation_profile_id: profileId, actor_id: actorId, event, detail }), "Couldn't record the foundation history. Nothing else changed.");
 }
 
 // ------------------------------------------------------------ Flag
 
-export async function setFoundationFlag(userId: string, d: { enabled: boolean; reason: string }) {
+export async function setFoundationFlag(userId: string, d: { key?: FoundationFlagKey | undefined; enabled: boolean; reason: string }) {
   const db = await admin();
   const a = await actor(db, userId);
   if (!a.superAdmin) throw new Error("Only a Super Admin can turn Foundation Administration on or off.");
   if (d.reason.trim().length < 3) throw new Error("Give a short reason.");
-  must(await db.from("platform_feature_flags").upsert({ key: FOUNDATION_FLAG, enabled: d.enabled, reason: d.reason.trim(), updated_by: userId, updated_at: new Date().toISOString() }), "Couldn't change the setting.");
-  return { enabled: d.enabled };
+  const key = d.key ?? FOUNDATION_FLAG;
+  if (!(key in FOUNDATION_FLAGS)) throw new Error("Unknown setting.");
+  if (d.enabled && key !== FOUNDATION_FLAG && !(await foundationFlagEnabled(db))) throw new Error("Turn on the staff workspace first.");
+  must(await db.from("platform_feature_flags").upsert({ key, enabled: d.enabled, reason: d.reason.trim(), updated_by: userId, updated_at: new Date().toISOString() }), "Couldn't change the setting.");
+  return { key, enabled: d.enabled };
 }
 
 // ------------------------------------------------------------ Workspace
@@ -67,8 +86,9 @@ export async function getFoundationWorkspace(userId: string, clientId: string) {
   const a = await actor(db, userId);
   const problem = foundationAccessProblem({ ...a, clientId, write: false });
   if (problem) throw new Error(problem);
-  const enabled = await foundationFlagEnabled(db);
-  const base = { enabled, canEdit: a.capabilities.includes("clients:prepare"), canToggle: a.superAdmin };
+  const flags = await foundationFlags(db);
+  const enabled = flags.foundation_administration;
+  const base = { enabled, flags, canEdit: a.capabilities.includes("clients:prepare"), canReview: a.capabilities.includes("clients:review"), canToggle: a.superAdmin, userId };
   if (!enabled) return { ...base, entities: [], people: [], foundations: [] };
 
   const [entities, contacts, profiles] = await Promise.all([
@@ -84,11 +104,15 @@ export async function getFoundationWorkspace(userId: string, clientId: string) {
   const entityIds = profs.map((p) => p.client_entity_id);
   const [auth, docs, events, tasks, lines] = profileIds.length ? await Promise.all([
     db.from("foundation_authority_roles").select("*").in("foundation_profile_id", profileIds).order("created_at"),
-    db.from("foundation_documents").select("id, foundation_profile_id, kind, title, file_name, size_bytes, superseded_by, uploaded_at").in("foundation_profile_id", profileIds).order("uploaded_at", { ascending: false }),
+    db.from("foundation_documents").select("id, foundation_profile_id, kind, title, file_name, size_bytes, superseded_by, uploaded_at, uploaded_by, source").in("foundation_profile_id", profileIds).order("uploaded_at", { ascending: false }),
     db.from("foundation_profile_events").select("id, foundation_profile_id, event, detail, created_at").in("foundation_profile_id", profileIds).order("created_at", { ascending: false }).limit(100),
     db.from("staff_tasks").select("id, title, status, due_date, related_entity_id, assignee_user_id").eq("client_id", clientId).in("related_entity_id", entityIds).order("due_date", { ascending: true }),
     db.from("sales_quote_lines").select("quote_id, label, unit_cents, billing_frequency, foundation_snapshot").not("foundation_snapshot", "is", null),
   ]) : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
+  const docIds = ((docs.data ?? []) as any[]).map((d) => d.id);
+  const reviews = docIds.length ? (((await db.from("foundation_document_reviews").select("document_id, decision, note, created_at").in("document_id", docIds).order("created_at")).data ?? []) as any[]) : [];
+  const latestReview = new Map<string, any>(); for (const r of reviews) latestReview.set(r.document_id, r);
+  for (const d of (docs.data ?? []) as any[]) { const r = latestReview.get(d.id); d.review = r?.decision ?? null; d.review_note = r?.note ?? null; d.usable = !d.superseded_by && (d.source === "staff" || d.review === "accepted"); }
   const fLines = ((lines.data ?? []) as any[]).filter((l) => entityIds.includes(l.foundation_snapshot?.clientEntityId));
   const quoteIds = [...new Set(fLines.map((l) => l.quote_id))];
   const quotes = quoteIds.length ? ((await db.from("sales_quotes").select("id, quote_number, version, status, title, client_id, deleted_at").in("id", quoteIds)).data ?? []) as any[] : [];
@@ -173,10 +197,17 @@ export async function storeFoundationTaxId(userId: string, d: { profileId: strin
 const KINDS = ["governing_document", "determination_letter", "authority_evidence", "supporting_evidence"];
 const MIMES = ["application/pdf", "image/png", "image/jpeg", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"];
 
-export async function uploadFoundationDocument(userId: string, d: { profileId: string; kind: string; title: string; fileName: string; mimeType: string; base64: string; replacesId?: string | null | undefined }) {
+export type FoundationUpload = { profileId: string; kind: string; title: string; fileName: string; mimeType: string; base64: string; replacesId?: string | null | undefined };
+
+export async function uploadFoundationDocument(userId: string, d: FoundationUpload) {
   const db = await admin();
   const p = await profileFor(db, d.profileId);
   await authorize(db, userId, p.client_id, true);
+  return storeFoundationDocument(db, p, userId, d, "staff");
+}
+
+/** Shared by staff and client uploads; callers authorize first. Client uploads stay pending until someone else reviews them. */
+export async function storeFoundationDocument(db: any, p: any, userId: string, d: FoundationUpload, source: "staff" | "client") {
   if (!KINDS.includes(d.kind)) throw new Error("Choose the document type.");
   if (!MIMES.includes(d.mimeType)) throw new Error("Upload a PDF, Word document or image.");
   const bytes = Uint8Array.from(atob(d.base64), (c) => c.charCodeAt(0));
@@ -184,6 +215,12 @@ export async function uploadFoundationDocument(userId: string, d: { profileId: s
   if (d.replacesId) {
     const old = must(await db.from("foundation_documents").select("id, foundation_profile_id, superseded_by").eq("id", d.replacesId).maybeSingle(), "Couldn't read the document being replaced.") as any;
     if (!old || old.foundation_profile_id !== p.id || old.superseded_by) throw new Error("Only a current document of this foundation can be replaced.");
+    if (source === "client") {
+      const { data: full } = await db.from("foundation_documents").select("source").eq("id", d.replacesId).maybeSingle();
+      if (full?.source !== "client") throw new Error("Documents Harmonious recorded can't be replaced here. Upload a new document instead.");
+      const { data: last } = await db.from("foundation_document_reviews").select("decision").eq("document_id", d.replacesId).order("created_at", { ascending: false }).limit(1);
+      if ((last ?? [])[0]?.decision === "accepted") throw new Error("That document was already accepted. Upload a new document instead, and Harmonious will review it.");
+    }
   }
   const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((b) => b.toString(16).padStart(2, "0")).join("");
   const docId = crypto.randomUUID();
@@ -191,9 +228,9 @@ export async function uploadFoundationDocument(userId: string, d: { profileId: s
   const path = `${p.client_id}/foundation/${p.id}/${docId}/${safe}`;
   const up = await db.storage.from("client-contracts").upload(path, bytes, { contentType: d.mimeType, upsert: false });
   if (up.error) { console.error("foundation upload", up.error); throw new Error("Couldn't upload the file."); }
-  must(await db.from("foundation_documents").insert({ id: docId, foundation_profile_id: p.id, kind: d.kind, title: d.title.trim(), storage_path: path, file_name: safe, mime_type: d.mimeType, size_bytes: bytes.length, sha256: hash, uploaded_by: userId }), "Couldn't record the document.");
+  must(await db.from("foundation_documents").insert({ id: docId, foundation_profile_id: p.id, kind: d.kind, title: d.title.trim(), storage_path: path, file_name: safe, mime_type: d.mimeType, size_bytes: bytes.length, sha256: hash, uploaded_by: userId, source }), "Couldn't record the document.");
   if (d.replacesId) must(await db.from("foundation_documents").update({ superseded_by: docId }).eq("id", d.replacesId).is("superseded_by", null), "The file was saved but the older version couldn't be marked as replaced.");
-  await logEvent(db, p.id, userId, d.replacesId ? "document_replaced" : "document_uploaded", { documentId: docId, kind: d.kind, title: d.title.trim(), replaces: d.replacesId ?? null });
+  await logEvent(db, p.id, userId, d.replacesId ? "document_replaced" : "document_uploaded", { documentId: docId, kind: d.kind, title: d.title.trim(), replaces: d.replacesId ?? null, source });
   return { id: docId };
 }
 
@@ -223,6 +260,8 @@ export async function addFoundationAuthority(userId: string, d: { profileId: str
   if (d.evidenceDocumentId) {
     const ev = must(await db.from("foundation_documents").select("id, foundation_profile_id, superseded_by").eq("id", d.evidenceDocumentId).maybeSingle(), "Couldn't read the evidence.") as any;
     if (!ev || ev.foundation_profile_id !== p.id || ev.superseded_by) throw new Error("Evidence must be a current document of this foundation.");
+    const { data: ok } = await db.rpc("foundation_document_usable", { _doc: d.evidenceDocumentId });
+    if (ok !== true) throw new Error("That evidence was uploaded by the client and hasn't been reviewed and accepted yet.");
   }
   const row = must(await db.from("foundation_authority_roles").insert({ foundation_profile_id: p.id, person_id: d.personId, role: d.role, title: d.title?.trim() || null, authority_scopes: [...new Set(d.scopes)], evidence_document_id: d.evidenceDocumentId || null, evidence_note: d.evidenceNote?.trim() || null, effective_on: d.effectiveOn || today(), created_by: userId }).select("id").single(), "Couldn't record that role. The person may already hold it.") as any;
   await logEvent(db, p.id, userId, "authority_recorded", { roleId: row.id, personId: d.personId, role: d.role, scopes: d.scopes, evidenceDocumentId: d.evidenceDocumentId ?? null });
@@ -268,7 +307,7 @@ export async function startFoundationHandoff(userId: string, d: { profileId: str
 
 /** Validates one Foundation Administration quote line and returns the priced line plus its frozen snapshot. */
 export async function verifyFoundationQuoteLine(db: any, ctx: { clientId: string | null; rateCents: number | null; excludeQuoteIds: string[]; siblings: { component: ComponentKey; clientEntityId: string; serviceStartOn: string; serviceEndOn: string | null }[] }, raw: unknown) {
-  if (!(await foundationFlagEnabled(db))) throw new Error("Foundation Administration is turned off.");
+  if (!(await foundationQuotingEnabled(db))) throw new Error("Foundation Administration quoting is turned off.");
   const input = foundationLineInputSchema.parse(raw);
   if (!ctx.clientId) throw new Error("Choose the client before adding Foundation Administration.");
   const p = await profileFor(db, input.foundationProfileId);
@@ -303,12 +342,20 @@ async function foundationCoverageRows(db: any, entityId: string, excludeQuoteIds
   return [...quoteRows, ...svc.filter((s) => s.status !== "removed").map((s) => ({ source: "engagement" as const, ref: s.engagement_id, component: (componentByKey(String(s.service_key).split(":")[1] ?? "")?.key ?? null), clientEntityId: entityId, startOn: s.effective_date ?? null, endOn: s.end_date ?? null }))];
 }
 
+/** Drafting quotes needs both the staff workspace and its own quote-drafting switch. */
+export async function foundationQuotingEnabled(db: any): Promise<boolean> {
+  const f = await foundationFlags(db);
+  return f.foundation_administration && f.foundation_quote_drafting;
+}
+
 /** Server-side release gate for every client-facing, contracting or billing entry point. */
 export async function assertFoundationReleased(db: any, quoteId: string | null | undefined, action: FoundationActionKind) {
   if (!quoteId) return;
   const { data, error } = await db.from("sales_quote_lines").select("service_key, foundation_snapshot").eq("quote_id", quoteId);
   if (error) throw new Error("Couldn't check the quote's services.");
-  const blocker = foundationReleaseBlocker(((data ?? []) as any[]).filter((l) => isFoundationKey(l.service_key) || l.foundation_snapshot), action);
+  const fLines = ((data ?? []) as any[]).filter((l) => isFoundationKey(l.service_key) || l.foundation_snapshot);
+  if (!fLines.length) return;
+  const blocker = foundationReleaseBlocker(fLines, action, await foundationReleasedSets(db));
   if (blocker) throw new Error(blocker);
 }
 
@@ -319,7 +366,7 @@ export async function quoteFoundationOptions(userId: string, clientId: string) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   const db = await admin();
-  if (!(await foundationFlagEnabled(db))) return { enabled: false, foundations: [] as { profileId: string; clientEntityId: string; name: string; classification: string; exemptionStatus: string }[] };
+  if (!(await foundationQuotingEnabled(db))) return { enabled: false, foundations: [] as { profileId: string; clientEntityId: string; name: string; classification: string; exemptionStatus: string }[] };
   const profs = must(await db.from("foundation_profiles").select("id, client_entity_id, classification, exemption_status").eq("client_id", clientId).eq("status", "active"), "Couldn't read foundations.") as any[];
   const ids = profs.map((p) => p.client_entity_id);
   const ents = ids.length ? (must(await db.from("client_entities").select("id, legal_name").in("id", ids), "Couldn't read foundations.") as any[]) : [];
@@ -330,6 +377,16 @@ export async function quoteFoundationOptions(userId: string, clientId: string) {
 export async function foundationFlagState(userId: string) {
   const db = await admin();
   const a = await actor(db, userId);
-  const enabled = await foundationFlagEnabled(db);
-  return { enabled, canToggle: a.superAdmin, show: a.superAdmin || (enabled && a.capabilities.includes("clients:see")) };
+  const flags = await foundationFlags(db);
+  const enabled = flags.foundation_administration;
+  return { enabled, flags, canToggle: a.superAdmin, show: a.superAdmin || (enabled && a.capabilities.includes("clients:see")) };
+}
+
+/** Released components for the quote screen's explanation. The server and database re-check on every action. */
+export async function foundationReleaseView(userId: string) {
+  const db = await admin();
+  const { salesActor } = await import("@/lib/sales-hub.server");
+  const a = await salesActor(userId);
+  if (!a.roles.length) throw new Error("Not allowed.");
+  return foundationReleasedSets(db);
 }

@@ -294,8 +294,8 @@ export async function submitQuote(userId: string, id: string) {
   if (linesError) throw new Error("Couldn't check the quote's service terms.");
   const foundationLines = ((quoteLines ?? []) as any[]).filter((l) => l.foundation_snapshot);
   if (foundationLines.length) {
-    const { foundationFlagEnabled } = await import("@/lib/foundation-admin.server");
-    if (!(await foundationFlagEnabled(db))) throw new Error("Foundation Administration is turned off.");
+    const { foundationQuotingEnabled } = await import("@/lib/foundation-admin.server");
+    if (!(await foundationQuotingEnabled(db))) throw new Error("Foundation Administration quoting is turned off.");
     if (foundationLines.some((l) => l.foundation_snapshot.priceSource !== "rate_card") && !q.needs_exec_approval) throw new Error("Negotiated Foundation Administration pricing needs executive approval. Save the draft again.");
   }
   await assertBookkeepingCoverage(db, q.client_id, quoteLines ?? []);

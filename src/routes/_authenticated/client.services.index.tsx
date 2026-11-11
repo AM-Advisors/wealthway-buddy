@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { getMyServices, intentLabel } from "@/lib/client-services.functions";
 import { ENTITY_TYPES } from "@/lib/entities.functions";
+import { getClientFoundationAvailability } from "@/lib/foundation-onboarding.functions";
 
 export const Route = createFileRoute("/_authenticated/client/services/")({
   head: () => ({
@@ -39,6 +40,8 @@ const typeLabel = (v: string) => ENTITY_TYPES.find((t) => t.value === v)?.label 
 function MyServices() {
   const load = useServerFn(getMyServices);
   const { data, isLoading } = useQuery({ queryKey: ["my-services"], queryFn: () => load() });
+  const foundationFn = useServerFn(getClientFoundationAvailability);
+  const foundation = useQuery({ queryKey: ["client-foundation-available"], queryFn: () => foundationFn() });
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
 
@@ -55,6 +58,11 @@ function MyServices() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {foundation.data?.available && (
+            <Button asChild variant="outline">
+              <Link to="/client/services/foundation">Foundation onboarding</Link>
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link to="/client/services/bookkeeping">Bookkeeping options</Link>
           </Button>
