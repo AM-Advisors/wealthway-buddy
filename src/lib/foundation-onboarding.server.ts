@@ -12,7 +12,7 @@ import {
 import { clientVerificationView, foundationRequirements, verificationSummary, type VDoc } from "@/lib/foundation-verification-model";
 import {
   PROTECTED_FINANCIAL, RELEASE_DIMENSIONS, RELEASE_EVIDENCE, REQUIRED_EVIDENCE, releaseApprovalProblem, releaseRequestProblem, releaseState,
-  type ReleaseDimension, type ReleaseEvent, type ReleaseEvidenceKey,
+  type ReleaseDimension, type ReleaseEvent, type ReleaseEvidenceInput,
 } from "@/lib/foundation-release-model";
 import { actor, admin, foundationFlags, logEvent, must, profileFor, storeFoundationDocument, type FoundationUpload } from "@/lib/foundation-admin.server";
 
@@ -413,7 +413,7 @@ export async function getFoundationReleaseControls(userId: string) {
   };
 }
 
-export async function requestFoundationRelease(userId: string, d: { component: ComponentKey; dimension: ReleaseDimension; evidence: Partial<Record<ReleaseEvidenceKey, string>>; reason: string }) {
+export async function requestFoundationRelease(userId: string, d: { component: ComponentKey; dimension: ReleaseDimension; evidence: ReleaseEvidenceInput; reason: string }) {
   const db = await admin();
   const a = await actor(db, userId);
   const state = releaseState(await releaseEvents(db));

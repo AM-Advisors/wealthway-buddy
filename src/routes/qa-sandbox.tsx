@@ -23,6 +23,7 @@ import { QaSelfServeFund } from "@/components/qa-self-serve-fund";
 import { FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 import { WealthPortfolio } from "@/components/wealth-portfolio";
 import { FoundationWorkspace } from "@/components/foundation-workspace";
+import { FoundationClientOnboarding } from "@/components/foundation-client-onboarding";
 import { FoundationConfigurator } from "@/components/sales/foundation-configurator";
 import { QA_FOUNDATION_CLIENT } from "@/lib/qa-sandbox/foundation-fixture";
 import { SecurityGate } from "@/components/security-gate";
@@ -268,10 +269,12 @@ function QaSignInCheck() {
 /** Fictional Foundation Administration: the Ops workspace plus the quote configurator, answered by the in-memory fixture. */
 function QaFoundationArea() {
   const [added, setAdded] = useState<{ label: string; unitCents: number; billing: string }[]>([]);
+  const [view, setView] = useState<"staff" | "client">("staff");
   return (
     <section aria-label="Foundation Administration" className="space-y-6">
       <p className="text-sm text-muted-foreground">Fictional client with Fablewood Community Foundation. Nothing here reaches the real backend, and nothing is sent, contracted or billed.</p>
-      <FoundationWorkspace clientId={QA_FOUNDATION_CLIENT} />
+      <div className="flex gap-2"><Button size="sm" variant={view === "staff" ? "default" : "outline"} onClick={() => setView("staff")}>Harmonious view</Button><Button size="sm" variant={view === "client" ? "default" : "outline"} onClick={() => setView("client")}>Client view</Button></div>
+      {view === "client" ? <FoundationClientOnboarding /> : <FoundationWorkspace clientId={QA_FOUNDATION_CLIENT} />}
       <FoundationConfigurator clientId={QA_FOUNDATION_CLIENT} rateCents={() => null} onAdd={(l) => setAdded((a) => [...a, { label: l.label, unitCents: l.unitCents, billing: l.billingFrequency ?? "one_time" }])} onClose={() => undefined} />
       {added.length > 0 && <ul aria-label="Fictional quote lines" className="space-y-1 text-sm">{added.map((l, i) => <li key={i}>{l.label} · ${(l.unitCents / 100).toLocaleString()} · {l.billing}</li>)}</ul>}
     </section>

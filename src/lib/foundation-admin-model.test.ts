@@ -21,6 +21,7 @@ describe("exact-client access", () => {
   });
   it("lets an exact-client member read but never change", () => {
     expect(foundationAccessProblem({ capabilities: [], memberClientIds: ["mine"], clientId: "mine", write: false })).toBeNull();
+    expect(foundationAccessProblem({ capabilities: [], memberClientIds: ["other"], clientId: "mine", write: true })).toBe("Foundation not found.");
     expect(foundationAccessProblem({ capabilities: [], memberClientIds: ["mine"], clientId: "mine", write: true })).not.toBeNull();
   });
   it("requires clients:prepare for staff changes", () => {

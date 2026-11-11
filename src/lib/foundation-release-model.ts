@@ -34,6 +34,7 @@ export const RELEASE_EVIDENCE = {
   validation: "Validation evidence: tests and QA results",
 } as const;
 export type ReleaseEvidenceKey = keyof typeof RELEASE_EVIDENCE;
+export type ReleaseEvidenceInput = { [K in ReleaseEvidenceKey]?: string | undefined };
 
 export const REQUIRED_EVIDENCE: Record<ReleaseDimension, readonly ReleaseEvidenceKey[]> = {
   delivery: ["delivery_workflow", "validation"],
@@ -49,7 +50,7 @@ export const PROTECTED_FINANCIAL = [
 
 export type ReleaseEvent = {
   id: string; component: string; dimension: string; action: "requested" | "approved" | "withdrawn" | "revoked";
-  request_id: string | null; evidence: Record<string, unknown>; reason: string; actor_id: string; created_at: string;
+  request_id: string | null; evidence: Record<string, string>; reason: string; actor_id: string; created_at: string;
 };
 
 export type DimensionState = { released: boolean; openRequest: ReleaseEvent | null; lastDecision: ReleaseEvent | null };
@@ -86,11 +87,11 @@ export function releasedSets(events: readonly ReleaseEvent[]): ReleasedSets {
   };
 }
 
-export function missingEvidence(dimension: ReleaseDimension, evidence: Partial<Record<ReleaseEvidenceKey, string>>): ReleaseEvidenceKey[] {
+export function missingEvidence(dimension: ReleaseDimension, evidence: ReleaseEvidenceInput): ReleaseEvidenceKey[] {
   return REQUIRED_EVIDENCE[dimension].filter((k) => (evidence[k] ?? "").trim().length < 10);
 }
 
-export function releaseRequestProblem(input: { component: string; dimension: ReleaseDimension; evidence: Partial<Record<ReleaseEvidenceKey, string>>; reason: string; roles: readonly string[]; state: DimensionState }): string | null {
+export function releaseRequestProblem(input: { component: string; dimension: ReleaseDimension; evidence: ReleaseEvidenceInput; reason: string; roles: readonly string[]; state: DimensionState }): string | null {
   if (!componentByKey(input.component)) return "Choose a Foundation Administration component.";
   if (!input.roles.some((r) => r === "admin" || r === "super_admin")) return "Only an administrator can request a release.";
   if (input.state.released) return "This is already released.";

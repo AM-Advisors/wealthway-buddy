@@ -239,7 +239,7 @@ export async function openFoundationDocument(userId: string, documentId: string)
   const doc = must(await db.from("foundation_documents").select("*").eq("id", documentId).maybeSingle(), "Couldn't read the document.") as any;
   if (!doc) throw new Error("Document not found.");
   const p = await profileFor(db, doc.foundation_profile_id);
-  await authorize(db, userId, p.client_id, false);
+  try { await authorize(db, userId, p.client_id, false); } catch { throw new Error("Document not found."); }
   const { data, error } = await db.storage.from(doc.storage_bucket).createSignedUrl(doc.storage_path, 60);
   if (error || !data?.signedUrl) throw new Error("Couldn't open the document.");
   await logEvent(db, p.id, userId, "document_opened", { documentId });

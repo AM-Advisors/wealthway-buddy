@@ -322,7 +322,8 @@ export function annualReturnReferenceDate(fiscalYearEndMonth: number | null | un
 
 /** Staff need clients:see to read and clients:prepare to change; client members may only read their own exact client. */
 export function foundationAccessProblem(input: { capabilities: readonly string[]; memberClientIds: readonly string[]; clientId: string; write: boolean }): string | null {
-  if (input.write) return input.capabilities.includes("clients:prepare") ? null : "Your role can't change foundation records.";
+  // Outsiders always get "not found", so they can't learn whether a foundation exists.
+  if (input.write) return input.capabilities.includes("clients:prepare") ? null : input.capabilities.includes("clients:see") ? "Your role can't change foundation records." : "Foundation not found.";
   if (input.capabilities.includes("clients:see") || input.memberClientIds.includes(input.clientId)) return null;
   return "Foundation not found.";
 }

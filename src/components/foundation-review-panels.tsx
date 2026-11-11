@@ -18,7 +18,7 @@ import {
 import { setFoundationFlag } from "@/lib/foundation-admin.functions";
 import { AUTHORITY_ROLES } from "@/lib/foundation-admin-model";
 import { CLIENT_FACT_FIELDS } from "@/lib/foundation-onboarding-model";
-import { FOUNDATION_FLAGS, REQUIRED_EVIDENCE, RELEASE_EVIDENCE, type FoundationFlagKey, type ReleaseDimension, type ReleaseEvidenceKey } from "@/lib/foundation-release-model";
+import { FOUNDATION_FLAGS, REQUIRED_EVIDENCE, RELEASE_EVIDENCE, type FoundationFlagKey, type ReleaseDimension, type ReleaseEvidenceInput } from "@/lib/foundation-release-model";
 import { OWNERSHIP_NOTE, type ReqStatus } from "@/lib/foundation-verification-model";
 
 const errMsg = (e: unknown) => toast.error((e as Error).message);
@@ -191,7 +191,7 @@ export function FoundationReleaseControls() {
   const decFn = useServerFn(decideFoundationRelease);
   const q = useQuery({ queryKey: ["foundation-release-controls"], queryFn: () => loadFn() });
   const [form, setForm] = useState<{ component: string; dimension: ReleaseDimension } | null>(null);
-  const [ev, setEv] = useState<Partial<Record<ReleaseEvidenceKey, string>>>({});
+  const [ev, setEv] = useState<ReleaseEvidenceInput>({});
   const [reason, setReason] = useState("");
   const refresh = () => qc.invalidateQueries({ queryKey: ["foundation-release-controls"] });
   const request = useMutation({ mutationFn: () => reqFn({ data: { component: form!.component as any, dimension: form!.dimension, evidence: ev, reason } }), onSuccess: () => { toast.success("Release requested. A different Super Admin must approve it."); setForm(null); setEv({}); setReason(""); refresh(); }, onError: errMsg });

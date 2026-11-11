@@ -210,7 +210,8 @@ function QuotePage() {
                   <span className="min-w-0"><span className="font-medium">{d.contact.full_name}</span><span className="block truncate text-xs text-muted-foreground">{d.contact.email}</span></span>
                   <Badge variant={s === "signed" ? "default" : "outline"}>{s === "signed" ? "Signed" : "Can sign"}</Badge>
                 </div>
-                {(s === "approved" || s === "sent") ? <Button size="sm" variant="outline" className="mt-2" onClick={() => link.mutate()} disabled={link.isPending}>Copy sign link</Button>
+                {(s === "approved" || s === "sent") && foundationBlocker ? <p className="mt-2 text-xs text-muted-foreground">No sign link: Foundation Administration isn't released yet.</p>
+                  : (s === "approved" || s === "sent") ? <Button size="sm" variant="outline" className="mt-2" onClick={() => link.mutate()} disabled={link.isPending}>Copy sign link</Button>
                   : s !== "signed" && <p className="mt-2 text-xs text-muted-foreground">The sign link appears once this quote is approved.</p>}
                 {!["signed", "superseded", "lost"].includes(s) && (changingSigner ? (
                   <div className="mt-3 border-t pt-3">

@@ -1141,3 +1141,13 @@
 - [x] Scope terms (Harmonious duties vs retained responsibilities), Operations handoff without fund creation
 - [x] Feature flag + migration 0389; unit tests, rolled-back database checks, sandbox browser check
 - [ ] Release blockers (waiting on user decisions/build-out): approved rates or negotiated-price policy per component, foundation SOW template approval, client-facing onboarding, foundation KYB/AML, nonprofit accounting, donors, grants, compliance calendar, payments
+
+## Foundation Administration phase 2 (uploaded brief, 2026-11-11)
+- [x] Phase 1 integration validation on an isolated QA draft database (9/9 checks; two fixes ported to main)
+- [x] Client foundation onboarding: details, documents, people requests, submit for review, status and corrections
+- [x] Staff review of submissions and client documents (different reviewer, no silent overwrite)
+- [x] Foundation verification requirements and Compliance records decision; screening left open
+- [x] Per-component release controls with evidence, maker-checker and append-only history; DB gates read them
+- [x] Draft pricing policy, SOW scope, onboarding checklist and release matrix (in Files)
+- [ ] QA backend run of the new phase 2 screens (needs a new isolated draft from this version)
+- [ ] Release blockers: approved pricing policy, legal SOW wording, foundation screening via existing process, delivery workflows, nonprofit accounting, donors, grants, compliance calendar
