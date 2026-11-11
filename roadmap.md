@@ -1086,3 +1086,13 @@
 - [x] Automated: 54 bookkeeping/quote tests pass; read-only database checks (entity types, feature keys, approval guards, zero bookkeeping requests/engagements/quotes).
 - [x] Fixed: partial overlaps show only the scope to be quoted; company/GP Managed rows no longer promise fund-only categorization/reconciliation; Fund Accounting shows only included items; staff quotes reject unavailable entity options.
 - [ ] Signed-in browser checks: blocked on an isolated fictional QA environment, a named test account and its two-step code holder.
+
+## One place for new SPV requests and Setup (2026-11-10)
+- [ ] Shared request→fund copier used by submission and staff conversion (no stranded answers).
+- [ ] Create Chapter 2 (Walkthrough Capital LLC test org) from its stranded request.
+- [ ] Requested signer recorded as fund signer (title as signer title, not company).
+- [ ] Uploaded request documents land in Setup Documents.
+- [ ] Bank name, tax preparer, eligibility, GP commitment, notes, series/master, services, document path editable in Setup.
+- [ ] One-class funds keep class name and minimum.
+- [ ] Agreements "Request a fund" and legacy first-fund form use the shared request form.
+- [ ] Staff Setup view shows request answers; check table compares real values.

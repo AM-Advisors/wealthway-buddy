@@ -35,8 +35,12 @@ describe("fund request answers vs Setup", () => {
     const rows = checkRequestAgainstSetup(request, snap({ carryPct: 15 }));
     expect(state(rows, "carry")).toBe("changed");
   });
-  it("lists answers with no Setup field for a person to check", () => {
-    expect(state(checkRequestAgainstSetup(request, snap()), "investor_eligibility")).toBe("reference");
+  it("investor eligibility now has a Setup home (More fund details) and is matched against it", () => {
+    expect(state(checkRequestAgainstSetup(request, snap()), "investor_eligibility")).toBe("missing");
+    expect(state(checkRequestAgainstSetup(request, snap({ setupDetails: { investor_eligibility: "Accredited only" } })), "investor_eligibility")).toBe("in_setup");
+  });
+  it("older intake answers with no Setup field stay for a person to check", () => {
+    expect(state(checkRequestAgainstSetup({ fund_name: "Old I", expected_investors: "12" }, snap()), "expected_investors")).toBe("reference");
   });
   it("matches the signatory only when that person is a recorded signer", () => {
     expect(state(checkRequestAgainstSetup(request, snap({ teamNames: ["Thomas Morgan"] })), "signatory")).toBe("missing");

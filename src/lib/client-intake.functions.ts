@@ -139,11 +139,12 @@ export const getIntakeRequirement = createServerFn({ method: "GET" })
     ]);
 
     const rows = (intakes ?? []) as any[];
-    const submitted = rows.some((r) => r.status !== "draft");
+    // Drafts (older form or the shared Add Fund or SPV form) keep the form open until sent.
+    const submitted = rows.some((r) => r.status !== "draft" && r.status !== "request_draft");
     // A client that already has a fund on the platform never sees the form.
     if (submitted || (funds ?? []).length > 0) return empty;
 
-    const draft = rows.find((r) => r.status === "draft") ?? null;
+    const draft = rows.find((r) => r.status === "request_draft" && r.details?._kind === "fund_request_v2") ?? null;
 
     return {
       required: true,

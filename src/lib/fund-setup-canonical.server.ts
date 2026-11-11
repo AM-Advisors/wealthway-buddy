@@ -415,6 +415,7 @@ async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: a
     db().from("offering_documents").select("id", { count: "exact", head: true }).eq("offering_id", offeringId).is("removed_at", null),
     db().from("fund_questionnaire_sections").select("status, version, questions").eq("offering_id", offeringId),
   ]);
+  const { data: versionFiles } = await db().from("offering_document_versions").select("file_name").eq("offering_id", offeringId).limit(500);
   const signerRows = (signers.data ?? []) as any[];
   const personIds = [...new Set([...signerRows.map((r) => r.person_id), o.fund_signatory_person_id].filter(Boolean))];
   const { data: people } = personIds.length ? await db().from("persons").select("id, legal_first_name, legal_last_name").in("id", personIds) : { data: [] };
@@ -432,7 +433,41 @@ async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: a
     fundTermMonths: setup?.fund_term_months ?? null, investmentPeriodMonths: setup?.investment_period_months ?? null,
     classNames: classes.map((c) => c.name), hasEin, bankingStarted: bankingStarted || !!o.banking_path,
     documentCount: docs.count ?? 0, serviceProviders: providers, investmentStrategy: setup?.investment_strategy ?? null,
+    setupDetails: (setup?.setup_details && typeof setup.setup_details === "object" ? setup.setup_details : {}) as Record<string, unknown>,
+    documentFileNames: ((versionFiles ?? []) as any[]).map((v) => String(v.file_name ?? "")).filter(Boolean),
   }) : [];
   const questions = questionsStatus((sections.data ?? []) as any[]);
   return { hasRequest: !!row, submittedAt: (row?.submitted_at ?? null) as string | null, rows, questions, summary: checkSummary(rows, questions) };
+}
+
+/** "More fund details" in Setup: request-only answers, service providers and strategy, edited in one place. */
+export async function fundSetupDetails(userId: string, offeringId: string) {
+  const actor = await assertRead(userId, offeringId);
+  const canEdit = actor.isStaff || (await (await import("@/lib/self-serve.server")).selfServeAllows(userId, offeringId, "fund_setup"));
+  const { data: s } = await db().from("fund_setups").select("id, setup_details, service_providers, investment_strategy").eq("offering_id", offeringId).maybeSingle();
+  return {
+    canEdit,
+    hasSetup: !!s,
+    details: (s?.setup_details && typeof s.setup_details === "object" ? s.setup_details : {}) as import("@/lib/fund-setup-details").SetupDetails,
+    providers: (s?.service_providers && typeof s.service_providers === "object" ? s.service_providers : {}) as import("@/lib/fund-setup-details").Providers,
+    investmentStrategy: (s?.investment_strategy ?? "") as string,
+  };
+}
+
+export async function saveFundSetupDetails(userId: string, input: { offeringId: string; details?: Record<string, unknown> | undefined; providers?: Record<string, unknown> | undefined; investmentStrategy?: string | null | undefined }) {
+  await assertStaffFor(userId, input.offeringId);
+  const m = await import("@/lib/fund-setup-details");
+  const { data: o } = await db().from("offerings").select("fund_type").eq("id", input.offeringId).maybeSingle();
+  const setup = await ensureSetup(userId, input.offeringId, o?.fund_type ?? null);
+  const { data: cur } = await db().from("fund_setups").select("setup_details, service_providers, investment_strategy").eq("id", setup.id).maybeSingle();
+  const detailEdit = m.cleanSetupDetails(input.details);
+  const providerEdit = m.cleanProviders(input.providers);
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (Object.keys(detailEdit).length) patch["setup_details"] = m.applyDetailEdit(cur?.setup_details ?? {}, detailEdit);
+  if (Object.keys(providerEdit).length) patch["service_providers"] = m.applyProviderEdit(cur?.service_providers ?? {}, providerEdit);
+  if (input.investmentStrategy !== undefined) patch["investment_strategy"] = (input.investmentStrategy ?? "").trim().slice(0, 2000) || null;
+  const { error } = await db().from("fund_setups").update(patch).eq("id", setup.id);
+  if (error) throw new Error("Fund details could not be saved.");
+  await (await import("@/lib/fund-audit.server")).logFundAudit(userId, { offeringId: input.offeringId, eventType: "setup_details_saved", summary: "Saved more fund details", values: { ...detailEdit, ...providerEdit, ...(input.investmentStrategy !== undefined ? { investment_strategy: input.investmentStrategy } : {}) } });
+  return { ok: true };
 }

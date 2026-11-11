@@ -24,6 +24,7 @@ import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { Link } from "@tanstack/react-router";
 import { FundClassSummary } from "@/components/fund-class-summary";
 import { FundQuestionSectionCard } from "@/components/fund-question-section-card";
+import { FundSetupMoreDetails } from "@/components/fund-setup-more-details";
 import { SetupRequestCheck, questionsLabel, requestCheckLabel, useSetupRequestCheck } from "@/components/setup-request-check";
 import { EconomicsCard } from "@/components/fund-setup-canonical";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
@@ -173,6 +174,10 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       <FundW9Card offeringId={offeringId} />
       {fieldSection("offering")}
       <ManagerTerms offeringId={offeringId} onChanged={refresh} />
+      <SetupSection open={open} setOpen={setOpen} id="more" title="More fund details">
+        <p className="text-sm text-muted-foreground">Investment, service providers and other answers from the fund request. Edit them here; the request keeps its original answers.</p>
+        <FundSetupMoreDetails offeringId={offeringId} onSaved={refresh} />
+      </SetupSection>
 
       <SetupSection open={open} setOpen={setOpen} id="team" title="Team & Signatory" status={<Chip tone={stepOf("team")?.status === "done" ? "done" : "miss"}>{stepOf("team")?.statusLabel ?? ""}</Chip>}>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SetupRequestCheck } from "@/components/setup-request-check";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { ServiceProvidersSection } from "@/components/fund-setup-extras";
 import { useEffect, useState } from "react";
@@ -114,6 +115,7 @@ export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch =
         </CardContent>
       </Card>
 
+      {(d as any).requestCheck?.hasRequest && <Card><CardHeader><CardTitle>Fund request answers</CardTitle></CardHeader><CardContent><SetupRequestCheck check={(d as any).requestCheck} /></CardContent></Card>}
       <GuidedSetup
         steps={[
           { label: "Basics", body: <>

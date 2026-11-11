@@ -148,6 +148,10 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
 
 export async function createSetupDocument(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
   await assertStaff(userId, input.offeringId);
+  return createSetupDocumentRow(userId, input);
+}
+
+async function createSetupDocumentRow(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
   const title = input.category === "other" ? (input.title ?? "").trim() : DOCUMENT_CATEGORY_LABELS[input.category];
   if (!title) throw new Error("Give the document a clear name.");
   if (input.category !== "other") {
@@ -168,6 +172,10 @@ export async function createSetupDocument(userId: string, input: { offeringId: s
 export async function uploadDocumentVersion(userId: string, input: { documentId: string; filePath: string; fileName: string; fileSizeBytes: number; effectiveDate?: string | null | undefined; selfServeGenerated?: boolean; generationIssues?: string[] }) {
   const d = await docRow(input.documentId);
   await assertStaff(userId, d.offering_id);
+  return appendDocumentVersion(userId, d, input);
+}
+
+async function appendDocumentVersion(userId: string, d: any, input: { filePath: string; fileName: string; fileSizeBytes: number; effectiveDate?: string | null | undefined; selfServeGenerated?: boolean; generationIssues?: string[] }) {
   if (!input.filePath.startsWith(`${d.offering_id}/`)) throw new Error("That file does not belong to this fund.");
   const { data: latest } = await db().from("offering_document_versions").select("version, signing_config, self_serve_review_state").eq("offering_document_id", d.id).order("version", { ascending: false }).limit(1).maybeSingle();
   const version = Number(latest?.version ?? 0) + 1;
@@ -510,4 +518,40 @@ export async function acknowledgeDocument(userId: string, input: { onboardingId:
     // A failed readiness refresh never undoes the acknowledgment.
   }
   return { ok: true };
+}
+
+/**
+ * Server-only: files the client uploaded with their new fund request become versions in Setup's
+ * Documents, each needing the usual review and explicit activation. Only called after the caller
+ * was authorized for the request (submission by the client's member, or Operations conversion).
+ * Paths must sit under that client's request folder; files already imported are skipped.
+ */
+export async function importRequestDocuments(userId: string, input: { offeringId: string; clientId: string; documents: { kind: string; fileName: string; path: string }[] }) {
+  const prefix = `client/${input.clientId}/fund-requests/`;
+  const imported: string[] = [];
+  const failed: string[] = [];
+  const { data: prior } = await db().from("offering_document_events").select("detail").eq("offering_id", input.offeringId).eq("event", "request_document_imported");
+  const done = new Set(((prior ?? []) as any[]).map((e) => e.detail?.sourcePath).filter(Boolean));
+  for (const doc of input.documents) {
+    const name = String(doc.fileName ?? "").trim() || "document.pdf";
+    if (!doc.path?.startsWith(prefix) || doc.path.includes("..")) { failed.push(name); continue; }
+    if (done.has(doc.path)) continue;
+    try {
+      const { data: blob, error: readError } = await db().storage.from("client-contracts").download(doc.path);
+      if (readError || !blob) throw new Error("Could not read the uploaded file.");
+      const { requestDocumentCategory } = await import("@/lib/offering-document-model");
+      const { category, title } = requestDocumentCategory(String(doc.kind ?? ""));
+      const { id } = await createSetupDocumentRow(userId, { offeringId: input.offeringId, category, title });
+      const dest = `${input.offeringId}/${Date.now()}-${name.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
+      const { error } = await db().storage.from("offering-files").upload(dest, blob);
+      if (error) throw new Error(error.message);
+      await appendDocumentVersion(userId, await docRow(id), { filePath: dest, fileName: name, fileSizeBytes: blob.size });
+      await event(input.offeringId, id, null, "request_document_imported", userId, { sourcePath: doc.path, fileName: name, kind: doc.kind });
+      imported.push(name);
+    } catch (e) {
+      console.warn("[offering-documents] request document not imported", (e as Error).message);
+      failed.push(name);
+    }
+  }
+  return { imported, failed };
 }

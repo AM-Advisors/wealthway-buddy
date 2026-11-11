@@ -32,7 +32,7 @@ export function requestCheckLabel(c: Check | undefined) {
   return c.summary.missing ? `${c.summary.missing} answer${c.summary.missing === 1 ? "" : "s"} not in Setup yet` : "All answers carried into Setup";
 }
 
-const ANCHOR: Partial<Record<string, string>> = { basic: "setup-form-basic", details: "setup-form-details", jurisdiction: "setup-form-jurisdiction", team: "setup-form-team", documents: "setup-form-documents" };
+const ANCHOR: Partial<Record<string, string>> = { basic: "setup-form-basic", details: "setup-form-details", jurisdiction: "setup-form-jurisdiction", team: "setup-form-team", documents: "setup-form-documents", more: "setup-form-more" };
 const goTo = (place: string) => (ANCHOR[place] ? `#${ANCHOR[place]}` : null);
 
 /** Every answer from the client's fund request beside where it lives in Setup. */

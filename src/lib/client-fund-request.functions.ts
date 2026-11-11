@@ -108,16 +108,22 @@ export const submitFundRequest = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const member = await requireMember(context, data.clientId, true);
-    const { missingFields, offeringFieldsFor, setupPrefillFor, flatAnswers, isSpv } = await import("@/lib/fund-request-model");
+    const { missingFields, offeringFieldsFor, flatAnswers, isSpv } = await import("@/lib/fund-request-model");
     const r = data.request as FundRequest;
     const missing = missingFields(r);
     if (Object.keys(missing).length) throw new Error(`Still needed: ${Object.values(missing).flat().join(", ")}.`);
     const db = await admin();
+    // A request is sent once: a submitted or converted request can't create a second fund.
+    if (data.draftId) {
+      const { data: prior } = await db.from("client_fund_intakes").select("status, client_id").eq("id", data.draftId).maybeSingle();
+      if (!prior || String(prior.client_id) !== data.clientId) throw new Error("That draft was not found.");
+      if (prior.status !== "request_draft") throw new Error("This request was already sent. Open the fund's Setup to make changes.");
+    }
 
     // The $2,500 setup fee and any a la carte add-ons must be paid first (verified server-side).
     const { fundAddOnKeys } = await import("@/lib/fund-request-model");
     const pay = await import("@/lib/fund-payments.server");
-    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r), serviceLevel: r.service_level ?? null });
+    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r), serviceLevel: r.service_level ?? null, firstFundCovered: await pay.firstFundCovered(db, data.clientId, context.userId) });
     // Harmonious staff setting up a fund for a client are not charged here; billing follows the client's SOW.
     const payment = member.staff ? null : await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
@@ -133,70 +139,9 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     }
 
     if (offeringId) {
-      const prefill = setupPrefillFor(r);
-      const { bootstrapFundSetup } = await import("@/lib/fund-setup.server");
-      const setup = await bootstrapFundSetup(context.userId, {
-        offeringId, clientId: data.clientId, structure: prefill.structure,
-        legalFundName: r.legal_name.trim() || null, displayName: prefill.display_name,
-      });
-      const { structure: _s, ...rest } = prefill;
-      await db.from("fund_setups").update(rest).eq("id", (setup as any).id);
-
-      // Enter once: fee terms and classes the client typed go to Setup's Fees & terms (as a draft
-      // for the usual approval) and to the fund's fee terms on the Team tab.
-      const { economicsFromRequest } = await import("@/lib/request-economics");
-      const econ = economicsFromRequest(r);
-      if (econ.hasAny) {
-        const cls = (r.classes ?? []).filter((c) => c.name || c.fee || c.carry || c.hurdle);
-        const notes = ["From the client's fund request.", ...cls.map((c) => `${c.name || "Class"}: fee ${c.fee || "-"}, carry ${c.carry || "-"}, hurdle ${c.hurdle || "-"}`)].join(" ");
-        try {
-          const { setFees } = await import("@/lib/fund-tabs.server");
-          await setFees(context.userId, offeringId, { managementFeePct: econ.fees.managementFeePct, managementFeeBasis: "", carryPct: econ.fees.carryPct, hurdlePct: econ.fees.hurdlePct, notes }, { skipSetupSync: true });
-        } catch (e: any) { console.warn("Fee terms kept on request only:", e?.message); }
-        try {
-          const { syncFeesToEconomics } = await import("@/lib/fund-setup.server");
-          const res = await syncFeesToEconomics({ offeringId, actorId: context.userId, fees: econ.fees, classes: econ.classes, seedTerms: econ.terms as any, onlyIfEmpty: true, reason: "From the client's fund request" });
-          if (!res.synced && res.reason !== "already_has_terms") throw new Error(res.reason);
-        } catch (e: any) {
-          console.warn("Setup fees & terms kept on request only:", e?.message);
-          await db.from("staff_tasks").insert({
-            title: `Fees & terms not copied into Setup for ${r.fund_name}`, description: "The client's fee, carry and class answers are on the fund request. Enter them in Setup → Fees & terms.",
-            priority: "high", status: "open", created_by: context.userId, team: "operations", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "client_fund_request", offering_id: offeringId, client_id: data.clientId,
-          } as any).then(() => undefined, () => undefined);
-        }
-      }
-
-      // Enter once: managers and signatory go onto the Fund's Team tab as unclaimed contacts.
-      const people = [
-        ...(r.managers ?? []).filter((p) => p.name?.trim()).map((p) => ({ ...p, role: "gp" })),
-        ...(r.signatory?.name?.trim() ? [{ ...r.signatory, role: "manager" }] : []),
-      ];
-      const seen = new Set<string>();
-      const rows = people.filter((p) => { const k = (p.email || p.name).trim().toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
-        .map((p) => ({
-          offering_id: offeringId, full_name: p.name.trim(), email: p.email?.trim().toLowerCase() || null,
-          company: p.title?.trim() || null, team_role: p.role, permissions: ["view"], created_by: context.userId, added_as: "client_request",
-        }));
-      if (rows.length) {
-        const { error } = await db.from("fund_team_members").insert(rows as any);
-        if (error) console.warn("Team contacts kept on request only:", error.message);
-      }
-
-      // SS-4 answers prefill EIN & SS-4 for Operations review; also kept on the request. Never filed.
-      const { ss4For } = await import("@/lib/fund-request-model");
-      const ss4 = ss4For(r);
-      if (ss4) {
-        const { error } = await context.supabase.rpc("save_offering_entity_details", {
-          p_offering_id: offeringId, p_has_ein: false, p_ein: "", p_ss4: ss4 as any,
-        });
-        if (error) {
-          console.warn("SS-4 prefill kept on request only:", error.message);
-          await db.from("staff_tasks").insert({
-            title: `SS-4 answers not saved for ${r.fund_name}`, description: "The client's SS-4 answers are on the fund request. Copy them into EIN & SS-4.",
-            priority: "high", status: "open", created_by: context.userId, team: "operations", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "client_fund_request", offering_id: offeringId, client_id: data.clientId,
-          } as any).then(() => undefined, () => undefined);
-        }
-      }
+      // Enter once: every answer is copied into the new fund's Setup (shared with Operations conversion).
+      const { applyRequestToFund } = await import("@/lib/fund-request-apply.server");
+      await applyRequestToFund({ actorId: context.userId, actorSupabase: context.supabase, clientId: data.clientId, offeringId, request: r });
     }
 
     // Service level: Self Serve unless a paid level was chosen and the payment is confirmed (wire/ACH waits for receipt).
@@ -252,7 +197,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       submitted_by: context.userId, submitted_at: new Date().toISOString(),
     };
     if (data.draftId) {
-      await db.from("client_fund_intakes").update(intakeRow).eq("id", data.draftId).eq("client_id", data.clientId);
+      await db.from("client_fund_intakes").update(intakeRow).eq("id", data.draftId).eq("client_id", data.clientId).eq("status", "request_draft");
     } else {
       await db.from("client_fund_intakes").insert({ ...intakeRow, created_by: context.userId });
     }
@@ -401,4 +346,65 @@ export const listStaffFundDrafts = createServerFn({ method: "GET" })
       kind: String(r.details?.kind || ""), startedBy: r.created_by ? names.get(String(r.created_by)) || "Unknown" : "Unknown",
       createdAt: String(r.created_at), updatedAt: String(r.updated_at),
     }));
+  });
+
+/** Operations: sent requests that never became a fund (older submissions or held name matches). */
+export const listUnlinkedFundRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { requireOperations } = await import("@/lib/ops-access.functions");
+    await requireOperations(context, "funds", "see");
+    const db = await admin();
+    const { data, error } = await db.from("client_fund_intakes")
+      .select("id, client_id, details, submitted_at, created_at, clients(name)")
+      .eq("status", "submitted").is("offering_id", null).order("created_at", { ascending: false }).limit(100);
+    if (error) throw new Error("Requests could not be loaded.");
+    return ((data ?? []) as any[]).filter((r) => r.details?._kind === KIND).map((r) => ({
+      id: String(r.id), clientId: String(r.client_id), clientName: r.clients?.name ?? "Unknown client",
+      fundName: String(r.details?.fund_name || r.details?.legal_name || "Untitled request"),
+      possibleDuplicate: !!r.details?.duplicate_review, submittedAt: String(r.submitted_at ?? r.created_at),
+    }));
+  });
+
+/**
+ * Operations: turn a sent request with no fund into its fund, copying every answer into Setup
+ * through the same step a client submission uses. Payment, service level and emails are not
+ * re-run; the request keeps its original answers as history.
+ */
+export const createFundFromRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ intakeId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { requireOperations } = await import("@/lib/ops-access.functions");
+    await requireOperations(context, "funds", "prepare");
+    const db = await admin();
+    const { data: row } = await db.from("client_fund_intakes").select("id, client_id, status, offering_id, details").eq("id", data.intakeId).maybeSingle();
+    if (!row || row.details?._kind !== KIND) throw new Error("Request not found.");
+    if (row.status !== "submitted") throw new Error("Only sent requests can become a fund.");
+    if (row.offering_id) return { ok: true, offeringId: String(row.offering_id), already: true };
+    const { emptyRequest, offeringFieldsFor } = await import("@/lib/fund-request-model");
+    const r = { ...emptyRequest(), ...(row.details as FundRequest) } as FundRequest;
+    if (!r.fund_name?.trim()) throw new Error("The request has no fund name.");
+    const clientId = String(row.client_id);
+    const { createClientRequestedOffering } = await import("@/lib/client-fund-creation.server");
+    const { offeringId } = await createClientRequestedOffering({ clientId, actorId: context.userId, fields: offeringFieldsFor(r) });
+    // Link first (guarded), so a second click can never create a second fund.
+    const { data: linked } = await db.from("client_fund_intakes").update({ offering_id: offeringId, details: { ...row.details, duplicate_review: false } })
+      .eq("id", row.id).is("offering_id", null).select("id");
+    if (!(linked ?? []).length) throw new Error("Someone else already created this fund. Refresh the page.");
+    const { applyRequestToFund } = await import("@/lib/fund-request-apply.server");
+    const { issues } = await applyRequestToFund({ actorId: context.userId, actorSupabase: context.supabase, clientId, offeringId, request: r });
+    // Service level as on submission, without payment: paid levels wait for payment or a quote.
+    const { resolveLevelOnSubmit, normalizeServiceLevel } = await import("@/lib/service-level");
+    const lv = resolveLevelOnSubmit(r.service_level, null);
+    await db.from("offerings").update({ service_level: lv.active }).eq("id", offeringId);
+    await db.from("fund_service_level_events").insert({
+      offering_id: offeringId, requested_level: normalizeServiceLevel(r.service_level), status: lv.status, payment_id: null,
+      effective_on: lv.status === "active" ? new Date().toISOString().slice(0, 10) : null, actor_id: context.userId,
+    }).then(() => undefined, () => undefined);
+    await db.from("contract_audit_events").insert({
+      actor_id: context.userId, actor_role: "operations", client_id: clientId, offering_id: offeringId, area: "onboarding",
+      action: "created fund from a sent fund request", target: r.fund_name, new_value: { fund_id: offeringId, intake_id: row.id, issues: issues.map((i) => i.title) }, source: "web",
+    });
+    return { ok: true, offeringId, already: false, issues: issues.map((i) => i.title) };
   });

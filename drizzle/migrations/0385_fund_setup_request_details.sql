@@ -1,0 +1,3 @@
+ALTER TABLE public.fund_setups ADD COLUMN IF NOT EXISTS setup_details jsonb NOT NULL DEFAULT '{}'::jsonb;
+COMMENT ON COLUMN public.fund_setups.setup_details IS 'Fund facts first collected on the new fund request that have no dedicated column (investor eligibility, GP commitment, client notes, documents path, bank preference, series master details, management LLC path, requested services, single-class name). Edited in Setup; the submitted request stays the historical snapshot.';
+COMMENT ON TABLE public.fund_requests IS 'DEPRECATED for new submissions: the Agreements request form now opens the shared new fund request (client_fund_intakes). Retained for history.';

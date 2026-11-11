@@ -465,3 +465,50 @@ export async function isFundSignerUser(offeringId: string, userId: string | null
   if (mgr) return true;
   return (await fundSignerUserIds(offeringId)).includes(userId);
 }
+
+/**
+ * Server-only: records the signer the client named on their new fund request as the fund's signatory.
+ * Called only after the request itself was authorized (the client's own submission or Operations
+ * conversion). Uses the same Client contact + Person Resolution path as staff "Add new person":
+ * a possible existing match stops for review instead of silent reuse. Returns a note when it could not.
+ */
+export async function addRequestedSignatory(userId: string, offeringId: string, person: { fullName: string; email?: string | null; title?: string | null }): Promise<{ added: boolean; note: string | null }> {
+  const fullName = person.fullName.trim();
+  if (!fullName) return { added: false, note: null };
+  const { data: o } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
+  if (!o?.client_id) return { added: false, note: "The fund has no client, so the requested signer could not be recorded." };
+  try {
+    const { data: existing } = await db().from("client_contacts").select("id, full_name, email, designations, title").eq("client_id", o.client_id).eq("status", "active").is("deactivated_at", null);
+    const row = { full_name: fullName, email: person.email?.trim().toLowerCase() || null, title: person.title?.trim() || null, designations: ["Signatory"] };
+    const plan = planContactSave(existing ?? [], [...((existing ?? []) as any[]).map((e) => ({ ...e })), row], []);
+    if (plan.error) return { added: false, note: plan.error };
+    const matched = plan.rows[plan.rows.length - 1]!;
+    let contactId: string;
+    if (matched.id) {
+      contactId = matched.id;
+      await db().from("client_contacts").update({ designations: matched.designations, updated_at: new Date().toISOString() }).eq("id", contactId);
+    } else {
+      const { data: c, error } = await db().from("client_contacts").insert({
+        client_id: o.client_id, full_name: row.full_name, email: row.email, title: row.title, designations: row.designations, status: "active", created_by: userId,
+      }).select("id").single();
+      if (error || !c) return { added: false, note: error?.message ?? "Could not add the signer as a client contact." };
+      contactId = c.id;
+    }
+    const { data: c } = await db().from("client_contacts").select("*").eq("id", contactId).maybeSingle();
+    const personId = await personForContact(userId, c, false);
+    const { data: already } = await db().from("fund_signatories").select("id").eq("offering_id", offeringId).eq("person_id", personId).eq("status", "active").maybeSingle();
+    if (already) return { added: true, note: null };
+    const { count } = await db().from("fund_signatories").select("id", { count: "exact", head: true }).eq("offering_id", offeringId).eq("status", "active");
+    const primary = !count;
+    const { error } = await db().from("fund_signatories").insert({
+      offering_id: offeringId, person_id: personId, client_contact_id: contactId, title: row.title, capacity: null, is_primary: primary, added_by: userId,
+    });
+    if (error) return { added: false, note: error.code === "23505" ? null : error.message };
+    if (primary) await syncPrimary(offeringId);
+    await audit(offeringId, userId, "fund_signatory_added", "Fund signatory recorded from the client's fund request", { personId, contactId, primary, source: "client_request" });
+    await ensureTeamSignatoryPermission(userId, offeringId, personId);
+    return { added: true, note: null };
+  } catch (e) {
+    return { added: false, note: (e instanceof Error ? e.message : String(e)).replace(/^Forbidden:\s*/i, "") };
+  }
+}

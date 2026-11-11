@@ -18,7 +18,7 @@ async function admin() {
 }
 
 /** Works out the client and the a la carte keys on the server - never trusts a client-sent price. */
-export async function resolveTarget(context: any, t: Target): Promise<{ clientId: string; addOnKeys: string[]; offeringId: string | null; serviceLevel: string | null; onboardingId?: string }> {
+export async function resolveTarget(context: any, t: Target): Promise<{ clientId: string; addOnKeys: string[]; offeringId: string | null; serviceLevel: string | null; onboardingId?: string; firstFundCovered?: boolean }> {
   if (t.kind === "side_letter") {
     const { resolveSideLetterTarget } = await import("@/lib/side-letter-fee.server");
     const r = await resolveSideLetterTarget(context.userId, t.onboardingId);
@@ -32,7 +32,8 @@ export async function resolveTarget(context: any, t: Target): Promise<{ clientId
   const { coreServicesFor } = await import("@/lib/client-portal-model");
   if (t.kind === "new_fund_request") {
     const { fundAddOnKeys } = await import("@/lib/fund-request-model");
-    return { clientId, addOnKeys: fundAddOnKeys(t.request as any), offeringId: null, serviceLevel: (t.request as any)?.service_level ?? null };
+    const { firstFundCovered } = await import("@/lib/fund-payments.server");
+    return { clientId, addOnKeys: fundAddOnKeys(t.request as any), offeringId: null, serviceLevel: (t.request as any)?.service_level ?? null, firstFundCovered: await firstFundCovered(await admin(), clientId, context.userId) };
   }
   const core = coreServicesFor(t.answers["vehicle_structure"], t.answers["offering_exemption"], t.answers["jurisdiction"]);
   return { clientId, addOnKeys: t.serviceKeys.filter((k) => !core.includes(k)), offeringId: t.offeringId ?? null, serviceLevel: null as string | null };
@@ -45,7 +46,7 @@ async function quoteFor(db: any, kind: Target["kind"], t: Awaited<ReturnType<typ
     return { items, totalCents: items.reduce((a, i) => a + i.cents, 0) };
   }
   const { buildQuote } = await import("@/lib/fund-payments.server");
-  return buildQuote(db, { clientId: t.clientId, kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
+  return buildQuote(db, { clientId: t.clientId, kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel, firstFundCovered: !!t.firstFundCovered });
 }
 
 export const quoteFundPayment = createServerFn({ method: "POST" })

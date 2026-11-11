@@ -24619,6 +24619,7 @@ export type Database = {
           series_designation: string | null
           series_parent_id: string | null
           service_providers: Json
+          setup_details: Json
           stage: string
           structure: string
           structure_other: string | null
@@ -24658,6 +24659,7 @@ export type Database = {
           series_designation?: string | null
           series_parent_id?: string | null
           service_providers?: Json
+          setup_details?: Json
           stage?: string
           structure?: string
           structure_other?: string | null
@@ -24697,6 +24699,7 @@ export type Database = {
           series_designation?: string | null
           series_parent_id?: string | null
           service_providers?: Json
+          setup_details?: Json
           stage?: string
           structure?: string
           structure_other?: string | null

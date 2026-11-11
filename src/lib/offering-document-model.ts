@@ -282,3 +282,13 @@ export const INVESTOR_DOCUMENT_ORDER: Record<string, number> = { ppm: 0, subscri
 export function investorDocumentRank(category: string | null | undefined, docType: string | null | undefined): number {
   return INVESTOR_DOCUMENT_ORDER[String(category ?? "")] ?? INVESTOR_DOCUMENT_ORDER[String(docType ?? "")] ?? 9;
 }
+
+/** Request document kinds (as typed on the new fund request) to Setup document types. */
+export function requestDocumentCategory(kind: string): { category: DocumentCategory; title: string | null } {
+  const k = kind.toLowerCase();
+  if (k.includes("subscription")) return { category: "subscription_agreement", title: null };
+  if (k.includes("operating") || k.includes("lpa")) return { category: "operating_agreement", title: null };
+  if (k.includes("ppm") || k.includes("placement")) return { category: "ppm", title: null };
+  return { category: "other", title: kind.trim() || "Document from fund request" };
+}
+

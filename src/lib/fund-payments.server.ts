@@ -65,11 +65,31 @@ export function setupFeeItem(waived: boolean): PayItem {
     : { key: "fund_setup_fee", name: "New fund setup fee", cents: FUND_SETUP_FEE_CENTS, source: "setup_fee" };
 }
 
-export async function buildQuote(db: any, args: { clientId: string; kind: "new_fund_request" | "service_request"; addOnKeys: string[]; offeringId?: string | null; serviceLevel?: string | null }) {
+/**
+ * A Harmonious-invited client's first fund (main contact, no fund and no sent request yet) is covered by their
+ * statement of work, as it was on the older first-fund form; the setup fee shows as $0.
+ */
+export async function firstFundCovered(db: any, clientId: string, userId: string): Promise<boolean> {
+  const MAIN = ["client_gp", "client_signatory", "client_finance", "client_legal", "client_compliance"];
+  const [{ data: cu }, { count: funds }, { data: intakes }, { data: client }] = await Promise.all([
+    db.from("client_users").select("client_role").eq("client_id", clientId).eq("user_id", userId),
+    db.from("offerings").select("id", { count: "exact", head: true }).eq("client_id", clientId),
+    db.from("client_fund_intakes").select("status").eq("client_id", clientId),
+    db.from("clients").select("created_by").eq("id", clientId).maybeSingle(),
+  ]);
+  // Organizations a person started themselves (Start a fund) pay the setup fee.
+  if (!client || client.created_by === userId) return false;
+  if (!((cu ?? []) as any[]).some((r) => MAIN.includes(String(r.client_role)))) return false;
+  if ((funds ?? 0) > 0) return false;
+  return !((intakes ?? []) as any[]).some((r) => r.status !== "draft" && r.status !== "request_draft");
+}
+
+export async function buildQuote(db: any, args: { clientId: string; kind: "new_fund_request" | "service_request"; addOnKeys: string[]; offeringId?: string | null; serviceLevel?: string | null; firstFundCovered?: boolean }) {
   const addOns = await priceAddOns(db, args.clientId, [...new Set(args.addOnKeys)].sort(), args.offeringId);
-  const items: PayItem[] = args.kind === "new_fund_request"
-    ? [setupFeeItem(await hasSetupFeeWaiver(db, args.clientId)), ...addOns]
-    : addOns;
+  const setupFee = args.firstFundCovered
+    ? { key: "fund_setup_fee", name: "New fund setup fee (first fund, covered by your statement of work)", cents: 0, source: "setup_fee" } as PayItem
+    : setupFeeItem(await hasSetupFeeWaiver(db, args.clientId));
+  const items: PayItem[] = args.kind === "new_fund_request" ? [setupFee, ...addOns] : addOns;
   const { serviceLevelItem } = await import("@/lib/service-level");
   const lvl = args.kind === "new_fund_request" ? serviceLevelItem(args.serviceLevel) : null;
   if (lvl) items.push(lvl);

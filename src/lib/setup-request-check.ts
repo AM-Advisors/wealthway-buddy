@@ -31,6 +31,10 @@ export type SetupSnapshot = {
   documentCount: number;
   serviceProviders: Record<string, string | null>;
   investmentStrategy: string | null;
+  /** fund_setups.setup_details: request answers with no dedicated fund column. */
+  setupDetails?: Record<string, unknown> | null;
+  /** File names of Setup document versions (to match files uploaded with the request). */
+  documentFileNames?: string[];
 };
 
 /** Where in Setup an answer belongs (matches the setup page section ids). */
@@ -43,6 +47,7 @@ export const SETUP_PLACES = {
   team: "Team & Signatory",
   bank: "Banking",
   documents: "Documents",
+  more: "More fund details",
   admin: "Administration (Harmonious)",
 } as const;
 export type SetupPlace = keyof typeof SETUP_PLACES;
@@ -114,21 +119,40 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   // Entity, banking, documents, providers
   const hasEin = v2 ? str(details["has_ein"]) : details["has_ein"] === true ? "yes" : details["has_ein"] === false ? "" : "";
   if (hasEin === "yes") add({ key: "ein", question: "Fund already has an EIN", answer: "Yes", place: "ein", setup: (s) => (s.hasEin ? "Recorded" : null), same: () => true });
-  const bank = str(details["bank_name"]) || str(details["bank_or_custodian"]);
-  add({ key: "bank", question: "Bank", answer: bank, place: "bank", setup: (s) => (s.bankingStarted ? "Bank setup started" : null), same: () => true });
+  const detail = (s: SetupSnapshot, k: string) => { const x = s.setupDetails?.[k]; return typeof x === "string" && x.trim() ? x.trim() : null; };
+  const bankName = str(details["bank_name"]);
+  add({ key: "bank", question: "Preferred bank", answer: bankName, place: "more", setup: (s) => detail(s, "bank_name") });
+  const custodian = str(details["bank_or_custodian"]);
+  add({ key: "provider_bank_or_custodian", question: "Bank or custodian", answer: custodian, place: "more", setup: (s) => s.serviceProviders["bank_or_custodian"] ?? null });
   const docs = Array.isArray(details["documents"]) ? details["documents"].filter((d: any) => str(d?.fileName)) : [];
-  if (docs.length) add({ key: "documents", question: "Documents uploaded with the request", answer: docs.map((d: any) => `${str(d.kind) || "Document"}: ${str(d.fileName)}`).join("; "), place: "documents", setup: (s) => (s.documentCount ? `${s.documentCount} on file` : null), same: () => true });
+  for (const d of docs) {
+    const name = str(d.fileName);
+    add({ key: `document_${norm(name)}`, question: `Document: ${str(d.kind) || "Document"}`, answer: name, place: "documents", setup: (s) => ((s.documentFileNames ?? []).some((f) => norm(f) === norm(name)) ? name : null) });
+  }
+  const docPath = str(details["documents_path"]);
+  add({ key: "documents_path", question: "Offering documents", answer: docPath === "have" ? "Client provides the documents" : docPath === "prepare" ? "Harmonious prepares from templates" : docPath, place: "more", setup: (s) => detail(s, "documents_path"), same: (a, s) => norm(a).includes(norm(s)) || (s === "have" && /client/i.test(a)) || (s === "prepare" && /harmonious/i.test(a)) });
   const providers: [string, string, string][] = v2
-    ? [["counsel", "Fund counsel", "counsel"], ["auditor", "Auditor", "auditor"]]
+    ? [["counsel", "Fund counsel", "counsel"], ["auditor", "Auditor", "auditor"], ["tax_preparer", "Tax preparer", "tax_preparer"]]
     : [["lawyer", "Fund counsel", "counsel"], ["accountant", "Accountant", "auditor"]];
   for (const [k, q, sk] of providers) {
     const a = v2 ? str(details[k]) : [str(details[k]?.name), str(details[k]?.firm)].filter(Boolean).join(", ");
-    add({ key: `provider_${k}`, question: q, answer: a, place: "admin", setup: (s) => s.serviceProviders[sk] ?? null, same: () => true });
+    add({ key: `provider_${k}`, question: q, answer: a, place: "more", setup: (s) => s.serviceProviders[sk] ?? null });
   }
-  add({ key: "investment_asset", question: "Investment", answer: str(details["investment_asset"]), place: "admin", setup: (s) => s.investmentStrategy, same: () => true });
+  add({ key: "investment_asset", question: "Investment", answer: str(details["investment_asset"]), place: "more", setup: (s) => s.investmentStrategy });
+  if (classes.length === 1) {
+    const only = classes[0];
+    add({ key: "class_name", question: "Class name", answer: str(only.name), place: "more", setup: (s) => detail(s, "class_name") });
+  }
 
-  // Answers that have no Setup field: shown so a person checks them, never auto-applied.
-  for (const [k, q, place] of [["investor_eligibility", "Investor eligibility", "admin"], ["gp_commitment", "GP commitment", "fees"], ["expected_investors", "Expected investors", "details"], ["distribution_source", "Distribution source", "bank"], ["notes", "Notes to Harmonious", "admin"]] as [string, string, SetupPlace][]) {
+  // Answers kept in More fund details.
+  for (const [k, q, dk] of [["investor_eligibility", "Investor eligibility", "investor_eligibility"], ["gp_commitment", "GP commitment", "gp_commitment"], ["notes", "Notes to Harmonious", "client_notes"], ["management_llc_path", "Management company", "management_llc_path"]] as [string, string, string][]) {
+    add({ key: k, question: q, answer: str(details[k]), place: "more", setup: (s) => detail(s, dk), same: (a, s) => norm(a) === norm(s) || (k === "management_llc_path") });
+  }
+  if (v2 && str(details["series_home"]) && str(details["vehicle_structure"]) === "Series LLC") {
+    add({ key: "series_master", question: "Series master", answer: str(details["series_home"]).replace(/_/g, " "), place: "more", setup: (s) => detail(s, "series_master"), same: () => true });
+  }
+  // Older intake answers with no Setup field: shown so a person checks them, never auto-applied.
+  for (const [k, q, place] of [["expected_investors", "Expected investors", "details"], ["distribution_source", "Distribution source", "bank"]] as [string, string, SetupPlace][]) {
     add({ key: k, question: q, answer: str(details[k]), place, setup: () => null, reference: true });
   }
   return out;

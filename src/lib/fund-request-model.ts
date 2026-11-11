@@ -236,7 +236,7 @@ export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { n
     date_formed: r.already_formed === "yes" && r.date_formed ? r.date_formed : null,
     reg_type: EXEMPTION_TO_REG[r.offering_exemption] ?? null,
     target_raise_cents: dollarsToCents(r.target_raise),
-    min_investment_cents: dollarsToCents(r.minimum_investment) ?? 0,
+    min_investment_cents: dollarsToCents(r.minimum_investment) ?? singleClassOf(r)?.minimumCents ?? 0,
     banking_path: r.banking_path || null,
     ein_path: einPathFor(r),
     offering_close_date: /^\d{4}-\d{2}-\d{2}$/.test(r.expected_close ?? "") ? r.expected_close : null,
@@ -245,6 +245,35 @@ export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { n
     gp_entity_name: (r.managers ?? []).map((m) => m.name?.trim()).find(Boolean) || null,
     ...requestClassFields(r),
   };
+}
+
+/** A one-class request: its name and minimum are kept (the class's fees become the fund defaults). */
+export function singleClassOf(r: Pick<FundRequest, "classes">): { name: string; minimumCents: number | null } | null {
+  const named = (r.classes ?? []).filter((c) => c.name?.trim() && (c.fee || c.carry || c.hurdle || c.minimum));
+  if (named.length !== 1) return null;
+  return { name: named[0]!.name.trim(), minimumCents: dollarsToCents(named[0]!.minimum) };
+}
+
+/** Request answers with no dedicated fund column; Setup shows and edits them (fund_setups.setup_details). */
+export function setupDetailsFor(r: FundRequest): import("@/lib/fund-setup-details").SetupDetails {
+  const series = r.series_home === "own" ? r.series_existing : r.series_home === "new" ? r.series_new : null;
+  const seriesText = [
+    isSeries(r) && r.series_home ? `Master: ${SERIES_HOMES.find((h) => h.value === r.series_home)?.label ?? r.series_home}` : "",
+    ...(series ? Object.entries(series).filter(([, v]) => String(v ?? "").trim()).map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v).trim()}`) : []),
+    r.series_home === "new" && r.series_fee_ack ? `Annual series management fee acknowledged (${SERIES_NEW_ANNUAL_FEE})` : "",
+  ].filter(Boolean).join("; ");
+  const out: import("@/lib/fund-setup-details").SetupDetails = { source: "client_request" };
+  const put = (k: import("@/lib/fund-setup-details").SetupDetailKey, v: string | null | undefined) => { const t = String(v ?? "").trim(); if (t) out[k] = t; };
+  put("investor_eligibility", r.investor_eligibility);
+  put("gp_commitment", r.gp_commitment);
+  put("class_name", singleClassOf(r)?.name);
+  put("documents_path", r.documents_path);
+  put("bank_name", r.bank_name);
+  put("series_master", seriesText);
+  put("management_llc_path", r.management_llc_path);
+  put("client_notes", r.notes);
+  if (r.service_keys?.length) out.requested_services = [...r.service_keys];
+  return out;
 }
 
 /** Two or more named classes with terms mean the fund has multiple classes; one class is the fund default. */
@@ -286,7 +315,7 @@ export function setupPrefillFor(r: FundRequest) {
     regulatory_structure: r.offering_exemption || null,
     investment_strategy: r.investment_asset || null,
     target_size_cents: dollarsToCents(r.target_raise),
-    min_investment_cents: dollarsToCents(r.minimum_investment),
+    min_investment_cents: dollarsToCents(r.minimum_investment) ?? singleClassOf(r)?.minimumCents ?? null,
     target_close: r.expected_close || null,
     fund_term_months: r.fund_term ? months(r.fund_term) : null,
     investment_period_months: r.investment_period ? months(r.investment_period) : null,

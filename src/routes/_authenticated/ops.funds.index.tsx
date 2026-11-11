@@ -5,7 +5,7 @@ import type { FundFilter } from "@/lib/ops-funds-model";
 const FILTERS: FundFilter[] = ["all", "active", "onboarding", "needs_harmonious", "blocked", "ready", "closing_soon", "agreement_follow_up"];
 
 import { OpsFundsDashboard } from "@/components/ops-funds-dashboard";
-import { OpsFundDrafts } from "@/components/ops-fund-drafts";
+import { OpsFundDrafts, OpsUnlinkedFundRequests } from "@/components/ops-fund-drafts";
 
 export const Route = createFileRoute("/_authenticated/ops/funds/")({
   head: () => ({
@@ -28,7 +28,7 @@ function Page() {
   return (
     <>
       <OpsFundsDashboard key={filter ?? "all"} initialFilter={filter} />
-      <div id="draft-funds" className="mx-auto max-w-6xl px-4 pb-6"><OpsFundDrafts /></div>
+      <div id="draft-funds" className="mx-auto max-w-6xl space-y-4 px-4 pb-6"><OpsUnlinkedFundRequests /><OpsFundDrafts /></div>
       <div id="related-person-reviews" className="mx-auto max-w-6xl px-4 pb-10"><RelatedPersonReviews /></div>
     </>
   );

@@ -113,6 +113,21 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
     return __auto(result, { offeringId: data.offeringId });
   });
 
+export const fundSetupDetailsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ offeringId: uuid }).parse)
+  .handler(async ({ data, context }) => (await engine()).fundSetupDetails(context.userId, data.offeringId));
+
+export const saveFundSetupDetailsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({
+    offeringId: uuid,
+    details: z.record(z.string().max(40), z.string().max(2000)).optional(),
+    providers: z.record(z.string().max(40), z.string().max(300)).optional(),
+    investmentStrategy: z.string().max(2000).nullish(),
+  }).parse)
+  .handler(async ({ data, context }) => (await engine()).saveFundSetupDetails(context.userId, data));
+
 export const seriesMasterForFundFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ offeringId: uuid }).parse)
