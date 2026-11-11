@@ -6,6 +6,7 @@ import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingCoverageBlocker, b
 import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "@/lib/quote-sow-sync";
 import { sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import { normalizeQuoteBilling } from "@/lib/quote-billing";
+import { isFoundationKey } from "@/lib/foundation-admin-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -146,19 +147,39 @@ export async function getQuote(userId: string, id: string) {
   };
 }
 
-export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; expectedUpdatedAt?: string | undefined; sections?: unknown; lines: QuoteLineInput[]; billingContactId?: string | null | undefined }, sowPatch?: Record<string, unknown>) {
+export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; expectedUpdatedAt?: string | undefined; sections?: unknown; lines: QuoteLineInput[]; billingContactId?: string | null | undefined; supersedingQuoteId?: string | undefined }, sowPatch?: Record<string, unknown>) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   if (!d.lines.length) throw new Error("Add at least one service.");
   const { loadBaseline } = await import("@/lib/commercial-pricing.server");
   const base = await loadBaseline(d.clientId ?? null);
   const card = new Map([...base.lines, ...(await adminCatalog())].map((l: any) => [l.serviceKey, l]));
-  const unknown = d.lines.find((l) => l.serviceKey !== BOOKKEEPING_KEY && !card.has(l.serviceKey));
+  const unknown = d.lines.find((l) => l.serviceKey !== BOOKKEEPING_KEY && !isFoundationKey(l.serviceKey) && !card.has(l.serviceKey));
   if (unknown) throw new Error(`"${unknown.label || unknown.serviceKey}" isn't on the current rate card.`);
   // Baseline and label always come from the live rate card, never from the browser.
   const db = await admin();
   const snapshots = new Map<number, any>();
+  const foundationSnaps = new Map<number, any>();
+  let foundationNeedsExec = false;
+  // Foundation Administration: approved rate when one exists, otherwise an explicit negotiated price
+  // that always needs executive approval; never $0, never auto-approved, never sent while unreleased.
+  if (d.lines.some((l) => isFoundationKey(l.serviceKey) || l.foundation)) {
+    const { verifyFoundationQuoteLine } = await import("@/lib/foundation-admin.server");
+    const exclude = [d.id, d.supersedingQuoteId].filter((x): x is string => !!x);
+    const seen: { component: any; clientEntityId: string; serviceStartOn: string; serviceEndOn: string | null }[] = [];
+    for (const [i, l] of d.lines.entries()) {
+      if (!isFoundationKey(l.serviceKey) && !l.foundation) continue;
+      if (!isFoundationKey(l.serviceKey) || !l.foundation) throw new Error("Configure the Foundation Administration component first.");
+      if (l.serviceKey !== `FOUNDATION_ADMIN:${l.foundation.component}`) throw new Error("That Foundation Administration line doesn't match its component.");
+      const c: any = card.get(l.serviceKey);
+      const r = await verifyFoundationQuoteLine(db, { clientId: d.clientId ?? null, rateCents: c && Number(c.baselineCents) > 0 ? Number(c.baselineCents) : null, excludeQuoteIds: exclude, siblings: seen }, l.foundation);
+      seen.push({ component: r.input.component, clientEntityId: r.input.clientEntityId, serviceStartOn: r.input.serviceStartOn, serviceEndOn: r.input.serviceEndOn });
+      foundationSnaps.set(i, { snapshot: r.snapshot, line: r.line });
+      if (r.needsExecutiveApproval) foundationNeedsExec = true;
+    }
+  }
   const verifiedLines = await Promise.all(d.lines.map(async (l, i) => {
+    if (foundationSnaps.has(i)) return { ...l, ...foundationSnaps.get(i).line, foundation: undefined, bookkeeping: undefined } as QuoteLineInput;
     if (l.serviceKey !== BOOKKEEPING_KEY) {
       if (l.bookkeeping) throw new Error("Bookkeeping terms can only be attached to bookkeeping lines.");
       const c: any = card.get(l.serviceKey);
@@ -186,12 +207,12 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   let id = d.id ?? null;
   const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null, offering_id: d.offeringId || null,
     valid_until: d.validUntil || null, notes: d.notes || null, ...(d.billingContactId !== undefined ? { billing_contact_id: d.billingContactId || null } : {}), total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
-    needs_exec_approval: priced.needsExecApproval || [...snapshots.values()].some((s) => s.pricing?.needsExecutiveApproval), pricing_version_id: base.versionId, updated_at: now,
+    needs_exec_approval: priced.needsExecApproval || foundationNeedsExec || [...snapshots.values()].some((s) => s.pricing?.needsExecutiveApproval), pricing_version_id: base.versionId, updated_at: now,
     ...(d.sections !== undefined ? { sections: sanitizeQuoteSections(d.sections) } : {}) };
   const savedLines = priced.lines.map((l, i) => ({ service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents,
     baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
     billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null,
-    bookkeeping_snapshot: snapshots.get(i) ?? null, service_details: cleanLineDetails(l.details) ?? {} }));
+    bookkeeping_snapshot: snapshots.get(i) ?? null, foundation_snapshot: foundationSnaps.get(i)?.snapshot ?? null, service_details: cleanLineDetails(l.details) ?? {} }));
   if (id) {
     const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
     if (!q || !canSee(a, q.owner_user_id) || !["draft", "rejected"].includes(q.status)) throw new Error("Only draft quotes can be edited. Create a new version instead.");
@@ -269,8 +290,14 @@ export async function submitQuote(userId: string, id: string) {
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
   if (!q || !canSee(a, q.owner_user_id) || !["draft", "rejected"].includes(q.status)) throw new Error("This quote can't be submitted.");
   if (!q.client_id) throw new Error("Choose the client before submitting for approval.");
-  const { data: quoteLines, error: linesError } = await db.from("sales_quote_lines").select("service_key,bookkeeping_snapshot").eq("quote_id", id);
+  const { data: quoteLines, error: linesError } = await db.from("sales_quote_lines").select("service_key,bookkeeping_snapshot,foundation_snapshot").eq("quote_id", id);
   if (linesError) throw new Error("Couldn't check the quote's service terms.");
+  const foundationLines = ((quoteLines ?? []) as any[]).filter((l) => l.foundation_snapshot);
+  if (foundationLines.length) {
+    const { foundationFlagEnabled } = await import("@/lib/foundation-admin.server");
+    if (!(await foundationFlagEnabled(db))) throw new Error("Foundation Administration is turned off.");
+    if (foundationLines.some((l) => l.foundation_snapshot.priceSource !== "rate_card") && !q.needs_exec_approval) throw new Error("Negotiated Foundation Administration pricing needs executive approval. Save the draft again.");
+  }
   await assertBookkeepingCoverage(db, q.client_id, quoteLines ?? []);
   const stagedBlocker = bookkeepingDraftBlocker(quoteLines ?? []);
   if (stagedBlocker) throw new Error(stagedBlocker);
@@ -284,7 +311,7 @@ export async function submitQuote(userId: string, id: string) {
     return { ok: true, autoApproved: true };
   }
   await db.from("sales_quotes").update({ status: "pending_approval", updated_at: now }).eq("id", id);
-  await event(id, "submitted", userId, "Below rate card: needs CEO or CRO");
+  await event(id, "submitted", userId, foundationLines.length ? "Foundation Administration pricing: needs CEO or CRO" : "Below rate card: needs CEO or CRO");
   return { ok: true, autoApproved: false };
 }
 
@@ -317,6 +344,7 @@ export async function createAgreements(userId: string, id: string) {
 export async function draftAgreements(userId: string, q: any) {
   const db = await admin();
   if (q.sow_id) return { sowId: q.sow_id as string };
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, q.id, "contract");
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", q.id).order("sort_order");
   await assertBookkeepingCoverage(db, q.client_id, lines ?? []);
   const stagedBlocker = bookkeepingDraftBlocker(lines ?? []);
@@ -368,6 +396,7 @@ export async function markSent(userId: string, id: string) {
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
   if (!q || !canSee(a, q.owner_user_id) || q.status !== "approved") throw new Error("Only approved quotes can be sent.");
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, id, "send");
   const { data: sendLines, error: sendLinesError } = await db.from("sales_quote_lines").select("service_key,bookkeeping_snapshot").eq("quote_id", id);
   if (sendLinesError) throw new Error("Couldn't check the quote's service terms.");
   await assertBookkeepingCoverage(db, q.client_id, sendLines ?? []);
@@ -391,7 +420,7 @@ export async function newVersion(userId: string, id: string) {
   if (!q || !canSee(a, q.owner_user_id) || ["signed", "superseded"].includes(q.status)) throw new Error("This quote can't be revised.");
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order");
   const { id: newId } = await saveQuote(userId, { title: q.title, clientId: q.client_id, contactId: q.contact_id, billingContactId: q.billing_contact_id ?? null, dealId: q.deal_id, offeringId: q.offering_id, validUntil: q.valid_until, notes: q.notes,
-    lines: ((lines ?? []) as any[]).map((l) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined, details: l.service_details ?? undefined })) });
+    lines: ((lines ?? []) as any[]).map((l) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined, foundation: l.foundation_snapshot?.input ?? undefined, details: l.service_details ?? undefined })), supersedingQuoteId: q.id });
   if (q.sow_id) {
     // The old SOW stays with its old quote/version; the revision gets its own unsigned draft.
     const { data: draftLines, error: readError } = await db.from("sales_quote_lines").select("*").eq("quote_id", newId).order("sort_order");
@@ -579,6 +608,7 @@ export async function sendQuoteEmail(userId: string, d: { id: string; subject: s
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", d.id).maybeSingle();
   if (!q || !canSee(a, q.owner_user_id) || !["approved", "sent"].includes(q.status)) throw new Error("Only an approved or sent quote can be emailed.");
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, q.id, "send");
   const { data: c } = q.contact_id ? await db.from("crm_contacts").select("id, full_name, email").eq("id", q.contact_id).maybeSingle() : { data: null };
   if (!c?.email) throw new Error("Add a signer with an email address first.");
   const resend = q.status === "sent";
@@ -613,6 +643,7 @@ export async function sendQuotePackage(userId: string, d: { id: string; subject:
   const { packageBlocker, packageInvoicePlan, packageThrough } = await import("@/lib/quote-package-model");
   const blocked = packageBlocker(q);
   if (blocked) throw new Error(blocked);
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, q.id, "invoice");
   // Never bill on top of invoices already prepared for this client: that would double-charge.
   const { count: waiting } = await db.from("invoices").select("id", { count: "exact", head: true }).eq("client_id", q.client_id).eq("status", "draft");
   if (waiting) throw new Error(`This client already has ${waiting} draft invoice${waiting === 1 ? "" : "s"} waiting. Send or cancel those first so nothing is billed twice.`);

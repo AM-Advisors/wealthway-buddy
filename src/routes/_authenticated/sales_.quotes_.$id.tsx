@@ -22,6 +22,7 @@ import { canAddSalesContact } from "@/lib/sales-contact-model";
 import { addSalesQuoteContact, changeSalesQuoteSigner, sendSalesQuoteEmail, sendSalesQuotePackage, updateSalesQuoteDetails } from "@/lib/sales-hub.functions";
 import { Textarea } from "@/components/ui/textarea";
 import { bookkeepingCoverageBlocker, bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
+import { foundationReleaseBlocker } from "@/lib/foundation-admin-model";
 import { BookkeepingCoveragePanel } from "@/components/sales/bookkeeping-coverage-panel";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes_/$id")({
@@ -90,6 +91,8 @@ function QuotePage() {
   const s = d.quote.status as string;
   const releaseBlocker = bookkeepingDraftBlocker(d.lines);
   const bookkeepingBlocker = bookkeepingCoverageBlocker(d.lines) ?? releaseBlocker;
+  // Unreleased Foundation Administration: drafts and internal approval only. The server blocks the rest too.
+  const foundationBlocker = foundationReleaseBlocker(d.lines, "send");
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <Link to="/sales/quotes" className="text-sm text-muted-foreground hover:underline">← Quotes</Link>
@@ -103,7 +106,7 @@ function QuotePage() {
       </div>
 
       <ActionBar secondary={<>
-        {(s === "approved" || s === "sent") && <Button size="sm" variant="outline" onClick={() => link.mutate()} disabled={link.isPending}>Copy sign link</Button>}
+        {(s === "approved" || s === "sent") && !foundationBlocker && <Button size="sm" variant="outline" onClick={() => link.mutate()} disabled={link.isPending}>Copy sign link</Button>}
         {!["signed", "superseded"].includes(s) && <Button size="sm" variant="ghost" onClick={() => revise.mutate()} disabled={revise.isPending}>New version</Button>}
         {!["signed", "superseded"].includes(s) && !d.canEdit && <Button size="sm" variant="outline" onClick={() => adjust.mutate()} disabled={adjust.isPending}>Adjust</Button>}
         <Button size="sm" variant="ghost" onClick={() => archive.mutate(!d.quote.archived_at)} disabled={archive.isPending}>{d.quote.archived_at ? "Restore" : "Archive"}</Button>
@@ -111,16 +114,16 @@ function QuotePage() {
       </>}>
         {d.canEdit && !editing && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>}
         {(s === "approved" || s === "sent") && !details && <Button size="sm" variant="outline" onClick={() => setDetails({ title: d.quote.title ?? "", notes: d.quote.notes ?? "", validUntil: d.quote.valid_until ?? "" })}>Update quote</Button>}
-        {(s === "approved" || s === "sent") && d.contact?.email && !mail && !(d.quote as any).package_issued_at && <Button size="sm" onClick={() => setMail({ subject: `Your Harmonious quote, agreement and invoices: ${d.quote.title}`, message: "", pkg: true } as any)}>Send quote, SOW and invoices</Button>}
-        {(s === "approved" || s === "sent") && d.contact?.email && !mail && <Button size="sm" variant="outline" onClick={() => setMail({ subject: `Your Harmonious quote: ${d.quote.title}`, message: "" })}>{s === "sent" ? "Resend quote" : "Email quote"}</Button>}
+        {(s === "approved" || s === "sent") && !foundationBlocker && d.contact?.email && !mail && !(d.quote as any).package_issued_at && <Button size="sm" onClick={() => setMail({ subject: `Your Harmonious quote, agreement and invoices: ${d.quote.title}`, message: "", pkg: true } as any)}>Send quote, SOW and invoices</Button>}
+        {(s === "approved" || s === "sent") && !foundationBlocker && d.contact?.email && !mail && <Button size="sm" variant="outline" onClick={() => setMail({ subject: `Your Harmonious quote: ${d.quote.title}`, message: "" })}>{s === "sent" ? "Resend quote" : "Email quote"}</Button>}
         {d.canEdit && <Button size="sm" onClick={() => submit.mutate()} disabled={submit.isPending || !!bookkeepingBlocker}>{d.quote.needs_exec_approval ? "Submit for approval" : "Finalize quote"}</Button>}
         {s === "pending_approval" && (d.canApprove ? (
           <><Input className="h-9 max-w-xs" placeholder="Note (required to request changes)" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button size="sm" onClick={() => decide.mutate(true)} disabled={decide.isPending}>Approve</Button>
             <Button size="sm" variant="outline" onClick={() => decide.mutate(false)} disabled={decide.isPending}>Request changes</Button></>
         ) : <span className="text-sm text-muted-foreground">{d.approvalBlocker}</span>)}
-        {s === "approved" && !d.quote.sow_id && <Button size="sm" onClick={() => draft.mutate()} disabled={draft.isPending}>Create SOW draft</Button>}
-        {s === "approved" && d.quote.sow_id && <Button size="sm" onClick={() => sent.mutate()} disabled={sent.isPending}>Mark sent to client</Button>}
+        {s === "approved" && !foundationBlocker && !d.quote.sow_id && <Button size="sm" onClick={() => draft.mutate()} disabled={draft.isPending}>Create SOW draft</Button>}
+        {s === "approved" && !foundationBlocker && d.quote.sow_id && <Button size="sm" onClick={() => sent.mutate()} disabled={sent.isPending}>Mark sent to client</Button>}
         {s === "sent" && <span className="text-sm text-muted-foreground">Waiting for the client to sign.</span>}
         {s === "signed" && <span className="text-sm text-foreground">Signed {d.quote.signed_at ? new Date(d.quote.signed_at).toLocaleDateString() : ""}. Counted as revenue closed.</span>}
       </ActionBar>
@@ -147,13 +150,14 @@ function QuotePage() {
         </Panel>
       )}
       {releaseBlocker && <p className="text-sm text-muted-foreground">{releaseBlocker}</p>}
+      {foundationBlocker && <p className="rounded-md border bg-muted/40 p-3 text-sm text-foreground">{foundationBlocker}</p>}
       <BookkeepingCoveragePanel quoteId={id} clientId={d.quote.client_id ?? null} canEdit={!!d.canEdit} lines={d.lines} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
       {editing ? (
         <QuoteBuilder onCancel={() => { setEditing(false); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); }} initial={{ id, title: d.quote.title, clientId: d.quote.client_id, contactId: d.quote.contact_id, billingContactId: (d.quote as any).billing_contact_id ?? null, offeringId: (d.quote as any).offering_id ?? null, dealId: (d.quote as any).deal_id ?? null, validUntil: d.quote.valid_until, notes: d.quote.notes, expectedUpdatedAt: d.quote.updated_at, sections: (d.quote as any).sections ?? null,
-          lines: d.lines.map((l: any) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined, details: l.service_details ?? null })) }} />
+          lines: d.lines.map((l: any) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined, foundation: l.foundation_snapshot?.input ?? undefined, details: l.service_details ?? null })) }} />
       ) : (
         <Panel title="Services">
           <Table>
@@ -163,7 +167,16 @@ function QuotePage() {
             ))}</TableBody>
           </Table>
           <div className="mt-3 text-right text-sm">Rate card {money(d.quote.baseline_cents)} · <span className="font-semibold text-foreground">Total {money(d.quote.total_cents)}</span></div>
-          {d.quote.needs_exec_approval && <p className="mt-2 text-sm text-muted-foreground">Below the rate card: needs CEO or CRO approval.</p>}
+          {d.quote.needs_exec_approval && <p className="mt-2 text-sm text-muted-foreground">{d.lines.some((l: any) => l.foundation_snapshot) ? "Includes negotiated or below-rate pricing: needs CEO or CRO approval." : "Below the rate card: needs CEO or CRO approval."}</p>}
+          {d.lines.filter((l: any) => l.foundation_snapshot).map((l: any) => <details key={`fa-${l.id}`} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">Foundation terms · {l.foundation_snapshot.componentName} ({l.foundation_snapshot.priceSource === "rate_card" ? "approved rate" : "negotiated price"})</summary>
+            <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+              <p>Harmonious does: {(l.foundation_snapshot.terms?.harmoniousDuties ?? []).join("; ")}</p>
+              {(l.foundation_snapshot.terms?.retainedResponsibilities ?? []).map((r: any) => <p key={r.party}>{r.party} keeps: {r.items.join("; ")}</p>)}
+              {(l.foundation_snapshot.terms?.limits ?? []).length > 0 && <p>Limits: {l.foundation_snapshot.terms.limits.map((x: any) => `${x.label} ${x.quantity} ${x.unit}`).join("; ")}</p>}
+              <p>Service {l.foundation_snapshot.terms?.serviceStartOn}{l.foundation_snapshot.terms?.serviceEndOn ? ` to ${l.foundation_snapshot.terms.serviceEndOn}` : ""}; billing starts {l.foundation_snapshot.terms?.billingStartOn}{l.foundation_snapshot.terms?.optional ? "; optional component" : ""}</p>
+              {l.foundation_snapshot.pricing?.negotiatedReason && <p>Price basis: {l.foundation_snapshot.pricing.negotiatedReason}</p>}
+              <p className="text-xs">{l.foundation_snapshot.terms?.disclaimer}</p>
+            </div></details>)}
           {d.quote.notes && <p className="mt-2 text-sm text-muted-foreground">Notes: {d.quote.notes}</p>}
           {d.quote.decision_note && <p className="mt-2 text-sm text-foreground">Decision note: {d.quote.decision_note}</p>}
           {d.lines.filter((l: any) => l.bookkeeping_snapshot).map((l: any) => <details key={l.id} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">Proposed bookkeeping SOW scope</summary><p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{l.bookkeeping_snapshot.scope}</p></details>)}

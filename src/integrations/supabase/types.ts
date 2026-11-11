@@ -19830,6 +19830,262 @@ export type Database = {
           },
         ]
       }
+      foundation_authority_roles: {
+        Row: {
+          authority_scopes: string[]
+          created_at: string
+          created_by: string
+          effective_on: string
+          ended_by: string | null
+          ended_on: string | null
+          ended_reason: string | null
+          evidence_document_id: string | null
+          evidence_note: string | null
+          foundation_profile_id: string
+          id: string
+          person_id: string
+          role: string
+          status: string
+          title: string | null
+        }
+        Insert: {
+          authority_scopes?: string[]
+          created_at?: string
+          created_by: string
+          effective_on?: string
+          ended_by?: string | null
+          ended_on?: string | null
+          ended_reason?: string | null
+          evidence_document_id?: string | null
+          evidence_note?: string | null
+          foundation_profile_id: string
+          id?: string
+          person_id: string
+          role: string
+          status?: string
+          title?: string | null
+        }
+        Update: {
+          authority_scopes?: string[]
+          created_at?: string
+          created_by?: string
+          effective_on?: string
+          ended_by?: string | null
+          ended_on?: string | null
+          ended_reason?: string | null
+          evidence_document_id?: string | null
+          evidence_note?: string | null
+          foundation_profile_id?: string
+          id?: string
+          person_id?: string
+          role?: string
+          status?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_authority_roles_evidence_document_id_fkey"
+            columns: ["evidence_document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_authority_roles_foundation_profile_id_fkey"
+            columns: ["foundation_profile_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_authority_roles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_documents: {
+        Row: {
+          file_name: string
+          foundation_profile_id: string
+          id: string
+          kind: string
+          mime_type: string
+          sha256: string
+          size_bytes: number
+          storage_bucket: string
+          storage_path: string
+          superseded_by: string | null
+          title: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          foundation_profile_id: string
+          id?: string
+          kind: string
+          mime_type: string
+          sha256: string
+          size_bytes: number
+          storage_bucket?: string
+          storage_path: string
+          superseded_by?: string | null
+          title: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          file_name?: string
+          foundation_profile_id?: string
+          id?: string
+          kind?: string
+          mime_type?: string
+          sha256?: string
+          size_bytes?: number
+          storage_bucket?: string
+          storage_path?: string
+          superseded_by?: string | null
+          title?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_documents_foundation_profile_id_fkey"
+            columns: ["foundation_profile_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_documents_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_profile_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          foundation_profile_id: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          foundation_profile_id: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          foundation_profile_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_profile_events_foundation_profile_id_fkey"
+            columns: ["foundation_profile_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_profiles: {
+        Row: {
+          classification: string
+          client_entity_id: string
+          client_id: string
+          created_at: string
+          created_by: string
+          determination_letter_on: string | null
+          exemption_effective_on: string | null
+          exemption_status: string
+          fiscal_year_end_month: number | null
+          id: string
+          legal_structure: string
+          legal_structure_other: string | null
+          mission: string | null
+          primary_contact_person_id: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          classification?: string
+          client_entity_id: string
+          client_id: string
+          created_at?: string
+          created_by: string
+          determination_letter_on?: string | null
+          exemption_effective_on?: string | null
+          exemption_status?: string
+          fiscal_year_end_month?: number | null
+          id?: string
+          legal_structure: string
+          legal_structure_other?: string | null
+          mission?: string | null
+          primary_contact_person_id?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          classification?: string
+          client_entity_id?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          determination_letter_on?: string | null
+          exemption_effective_on?: string | null
+          exemption_status?: string
+          fiscal_year_end_month?: number | null
+          id?: string
+          legal_structure?: string
+          legal_structure_other?: string | null
+          mission?: string | null
+          primary_contact_person_id?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_profiles_client_entity_id_fkey"
+            columns: ["client_entity_id"]
+            isOneToOne: true
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_profiles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_profiles_primary_contact_person_id_fkey"
+            columns: ["primary_contact_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_access_requests: {
         Row: {
           created_at: string
@@ -39504,6 +39760,57 @@ export type Database = {
           },
         ]
       }
+      platform_feature_flag_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          enabled: boolean
+          id: string
+          key: string
+          reason: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          enabled: boolean
+          id?: string
+          key: string
+          reason: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          key?: string
+          reason?: string
+        }
+        Relationships: []
+      }
+      platform_feature_flags: {
+        Row: {
+          enabled: boolean
+          key: string
+          reason: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          enabled?: boolean
+          key: string
+          reason: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          reason?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
       policy_acceptances: {
         Row: {
           accepted_at: string
@@ -43759,6 +44066,7 @@ export type Database = {
           bookkeeping_snapshot: Json | null
           created_at: string
           first_bill_on: string | null
+          foundation_snapshot: Json | null
           id: string
           label: string
           line_cents: number
@@ -43775,6 +44083,7 @@ export type Database = {
           bookkeeping_snapshot?: Json | null
           created_at?: string
           first_bill_on?: string | null
+          foundation_snapshot?: Json | null
           id?: string
           label: string
           line_cents: number
@@ -43791,6 +44100,7 @@ export type Database = {
           bookkeeping_snapshot?: Json | null
           created_at?: string
           first_bill_on?: string | null
+          foundation_snapshot?: Json | null
           id?: string
           label?: string
           line_cents?: number
@@ -51509,6 +51819,17 @@ export type Database = {
           _task: string
         }
         Returns: Json
+      }
+      store_client_entity_tax_id: {
+        Args: {
+          _actor: string
+          _ciphertext: string
+          _entity: string
+          _iv: string
+          _key_version: number
+          _last4: string
+        }
+        Returns: undefined
       }
       store_offering_rp_identifier: {
         Args: {

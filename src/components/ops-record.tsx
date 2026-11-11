@@ -39,6 +39,8 @@ import { allowedActions, recordPath, recordTabs, RECORD_AREA, type InvestorListR
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { FundCapTable } from "@/components/fund-cap-table";
+import { FoundationWorkspace } from "@/components/foundation-workspace";
+import { getFoundationFlagState } from "@/lib/foundation-admin.functions";
 import { InvestmentChecklist } from "@/components/investment-readiness";
 
 const LABELS: Record<OpsRecordType, { title: string; plural: string }> = {
@@ -315,6 +317,8 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
     queryKey: ["ops-record", type, id],
     queryFn: () => (load as any)({ data: { id } }),
   });
+  const flagFn = useServerFn(getFoundationFlagState);
+  const foundationFlag = useQuery({ queryKey: ["foundation-flag"], queryFn: () => flagFn(), enabled: type === "client" });
 
   if (query.isPending) {
     return (
@@ -346,7 +350,9 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
   }
 
   const { record, capabilities } = query.data as { record: any; capabilities: OpsCapability[] };
-  const tabs = recordTabs(type, capabilities);
+  const tabs = recordTabs(type, capabilities)
+    .filter((t) => t.id !== "foundation" || foundationFlag.data?.show === true)
+    .map((t) => (t.id === "foundation" ? { ...t, hidden: false } : t));
   const active = tabs.find((t) => t.id === search.tab)?.id ?? tabs[0]?.id ?? "overview";
   const actions = allowedActions(RECORD_AREA[type], capabilities);
 
@@ -444,6 +450,8 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
             <ClientContractsPanel clientId={id} />
           </div>
         </div>
+      ) : type === "client" && active === "foundation" ? (
+        <FoundationWorkspace clientId={id} />
       ) : type === "client" && active === "contacts" ? (
         <ClientPeoplePanel clientId={id} />
       ) : type === "client" && active === "funds" ? (

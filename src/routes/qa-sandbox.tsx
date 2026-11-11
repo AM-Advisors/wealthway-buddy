@@ -22,6 +22,9 @@ import { QaFundDocuments } from "@/components/qa-fund-documents";
 import { QaSelfServeFund } from "@/components/qa-self-serve-fund";
 import { FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 import { WealthPortfolio } from "@/components/wealth-portfolio";
+import { FoundationWorkspace } from "@/components/foundation-workspace";
+import { FoundationConfigurator } from "@/components/sales/foundation-configurator";
+import { QA_FOUNDATION_CLIENT } from "@/lib/qa-sandbox/foundation-fixture";
 import { SecurityGate } from "@/components/security-gate";
 import { createQaMfaAuth, QA_MFA_CODE, type QaMfaScenario } from "@/lib/qa-sandbox/mfa-fixture";
 import { Suspense } from "react";
@@ -144,7 +147,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey" | "foundation">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -170,11 +173,12 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "questionnaire" ? "default" : "outline"} onClick={() => setTab("questionnaire")}>Investor questionnaire</Button>
             <Button size="sm" variant={tab === "portfolio" ? "default" : "outline"} onClick={() => setTab("portfolio")}>Consolidated portfolio</Button>
             <Button size="sm" variant={tab === "signin" ? "default" : "outline"} onClick={() => setTab("signin")}>Sign-in check</Button>
+            <Button size="sm" variant={tab === "foundation" ? "default" : "outline"} onClick={() => setTab("foundation")}>Foundation</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner John Smith: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "foundation" ? <QaFoundationArea /> : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner John Smith: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>
@@ -257,6 +261,19 @@ function QaSignInCheck() {
           <p className="p-6 font-medium" data-testid="qa-requested-page">Requested page opened</p>
         </SecurityGate>
       </div>
+    </section>
+  );
+}
+
+/** Fictional Foundation Administration: the Ops workspace plus the quote configurator, answered by the in-memory fixture. */
+function QaFoundationArea() {
+  const [added, setAdded] = useState<{ label: string; unitCents: number; billing: string }[]>([]);
+  return (
+    <section aria-label="Foundation Administration" className="space-y-6">
+      <p className="text-sm text-muted-foreground">Fictional client with Fablewood Community Foundation. Nothing here reaches the real backend, and nothing is sent, contracted or billed.</p>
+      <FoundationWorkspace clientId={QA_FOUNDATION_CLIENT} />
+      <FoundationConfigurator clientId={QA_FOUNDATION_CLIENT} rateCents={() => null} onAdd={(l) => setAdded((a) => [...a, { label: l.label, unitCents: l.unitCents, billing: l.billingFrequency ?? "one_time" }])} onClose={() => undefined} />
+      {added.length > 0 && <ul aria-label="Fictional quote lines" className="space-y-1 text-sm">{added.map((l, i) => <li key={i}>{l.label} · ${(l.unitCents / 100).toLocaleString()} · {l.billing}</li>)}</ul>}
     </section>
   );
 }

@@ -12,6 +12,9 @@ export async function handoffSignedQuote(quoteId: string) {
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("id, quote_number, title, client_id, sow_id, owner_user_id, status, onboarded_at, total_cents, deal_id").eq("id", quoteId).maybeSingle();
   if (!q || q.status !== "signed" || q.onboarded_at || !q.client_id || !q.sow_id) return;
+  // Foundation Administration never creates a fund; its Operations work is started from the foundation's record.
+  const { data: fLines } = await db.from("sales_quote_lines").select("id").eq("quote_id", q.id).not("foundation_snapshot", "is", null).limit(1);
+  if (fLines?.length) return;
   // Claim first so concurrent page loads can't create two funds.
   const { data: claimed } = await db.from("sales_quotes").update({ onboarded_at: new Date().toISOString() }).eq("id", q.id).is("onboarded_at", null).select("id");
   if (!claimed?.length) return;

@@ -28,6 +28,7 @@ import { getBookkeepingConfiguration } from "@/lib/bookkeeping.functions";
 import { BOOKKEEPING_KEY, type BookkeepingInput } from "@/lib/bookkeeping-model";
 import { BOOKKEEPING_OPTIONS } from "@/lib/bookkeeping-options";
 import { Switch } from "@/components/ui/switch";
+import { FoundationConfigurator } from "@/components/sales/foundation-configurator";
 import { isQuoteSectionShown, quoteLockFacts, quoteSectionBody, quoteSectionDef, sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import type { Section } from "@/lib/sales-documents-model";
 
@@ -162,6 +163,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const [lines, setLines] = useState<Line[]>(initial?.lines ?? []);
   const [openDetails, setOpenDetails] = useState<number | null>(null);
   const [showBookkeeping, setShowBookkeeping] = useState(false);
+  const [showFoundation, setShowFoundation] = useState(false);
   const loadBookkeeping = useServerFn(getBookkeepingConfiguration);
   const bookkeeping = useQuery({ queryKey: ["bookkeeping-proposed-configuration"], queryFn: () => loadBookkeeping(), enabled: showBookkeeping });
   const cat = useServerFn(getQuoteCatalog);
@@ -191,7 +193,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
     <Panel title={initial ? "Edit quote" : "New quote"}>
       <div className="grid gap-3 sm:grid-cols-4">
         <Input placeholder="Quote title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { if (v === "__new") { setNewClient(""); return; } setClientId(v === "none" ? null : v); setOfferingId(null); setSignerId(null); setPayerId(null); setLines(previous => previous.filter(l => !l.bookkeeping)); }}>
+        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { if (v === "__new") { setNewClient(""); return; } setClientId(v === "none" ? null : v); setOfferingId(null); setSignerId(null); setPayerId(null); setLines(previous => previous.filter(l => !l.bookkeeping && !l.foundation)); setShowFoundation(false); }}>
           <SelectTrigger aria-label="Client"><SelectValue placeholder="Client" /></SelectTrigger>
           <SelectContent><SelectItem value="none">Choose client…</SelectItem><SelectItem value="__new">+ Add new client</SelectItem>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
         </SearchablePeoplePicker>
@@ -229,6 +231,8 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
         <Button variant="outline" onClick={() => setShowBookkeeping(v => !v)}>{showBookkeeping ? "Close bookkeeping" : "Configure Bookkeeping"}</Button>
+        {clientId && <Button variant="outline" className="ml-2" onClick={() => setShowFoundation(v => !v)}>{showFoundation ? "Close Foundation Administration" : "Configure Foundation Administration"}</Button>}
+        {showFoundation && clientId && <FoundationConfigurator clientId={clientId} rateCents={(key) => { const r = c.data?.lines.find((x: any) => x.serviceKey === key); return r && Number(r.baselineCents) > 0 ? Number(r.baselineCents) : null; }} onAdd={(line) => { setLines(previous => [...previous, line]); setShowFoundation(false); }} onClose={() => setShowFoundation(false)} />}
         {showBookkeeping && bookkeeping.error && <p className="mt-2 text-sm text-destructive">{(bookkeeping.error as Error).message}</p>}
         {showBookkeeping && bookkeeping.data && <BookkeepingConfigurator configuration={bookkeeping.data.configuration} versionId={bookkeeping.data.versionId} clientId={clientId} onAdd={(input, invoiceCents) => { setLines(previous => [...previous, { serviceKey: BOOKKEEPING_KEY, label: `Bookkeeping · ${BOOKKEEPING_OPTIONS[input.option].name}`, quantity: 1, unitCents: invoiceCents, baselineUnitCents: invoiceCents, billingFrequency: input.billing, firstBillOn: input.effectiveOn, bookkeeping: input }]); setShowBookkeeping(false); }} />}
         <Select value="" onValueChange={add}><SelectTrigger className="w-72"><SelectValue placeholder="Add a service from the rate card" /></SelectTrigger>
@@ -240,6 +244,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
           {(["one_time", "annual", "event"] as FeeGroup[]).flatMap((g) => {
             const rows = displayLines.map((l, i) => ({ l, i })).filter(({ l }) => {
               const rate = c.data?.lines.find((x: any) => x.serviceKey === l.serviceKey);
+              if (l.foundation) return (l.billingFrequency === "one_time" ? "one_time" : "annual") === g;
               return (rate && recurringQuoteRate(rate) ? "annual" : feeGroup(l.serviceKey, rate?.pricingModel)) === g;
             });
             if (!rows.length) return [];
@@ -248,9 +253,9 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
               ...rows.flatMap(({ l, i }) => [
             <TableRow key={i}>
               <TableCell>{l.label}</TableCell>
-              <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
-              <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x)))} /></TableCell>
-              <TableCell><Select disabled={!!l.bookkeeping} value={l.billingFrequency ?? "one_time"} onValueChange={(value) => {
+              <TableCell><Input disabled={!!l.bookkeeping || !!l.foundation} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
+              <TableCell><Input disabled={!!l.bookkeeping || !!l.foundation} inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x)))} /></TableCell>
+              <TableCell><Select disabled={!!l.bookkeeping || !!l.foundation} value={l.billingFrequency ?? "one_time"} onValueChange={(value) => {
                 const frequency = BILLING_FREQUENCIES.find(f => f.id === value)?.id;
                 if (!frequency) return;
                 const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
@@ -259,8 +264,8 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
                 const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
                 return !rate || !recurringQuoteRate(rate) || f.id === "quarterly" || f.id === "annual" || f.id === l.billingFrequency || f.id === "monthly" && hasRoasWhiteGloveCadences(offeringId, l.serviceKey);
               }).map(f => <SelectItem key={f.id} value={f.id}>{f.label}</SelectItem>)}</SelectContent></Select></TableCell>
-              <TableCell><Input disabled={!!l.bookkeeping} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
-              <TableCell className="text-right text-muted-foreground">{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</TableCell>
+              <TableCell><Input disabled={!!l.bookkeeping || !!l.foundation} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
+              <TableCell className="text-right text-muted-foreground">{l.foundation && !c.data?.lines.some((x: any) => x.serviceKey === l.serviceKey && Number(x.baselineCents) > 0) ? <Badge variant="outline">Negotiated · needs CEO or CRO</Badge> : <>{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</>}</TableCell>
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}{l.billingFrequency && l.billingFrequency !== "one_time" && <span className="block text-xs text-muted-foreground">per {l.billingFrequency === "annual" ? "year" : l.billingFrequency === "quarterly" ? "quarter" : "month"}</span>}</TableCell>
               <TableCell className="whitespace-nowrap">
                 <Button size="sm" variant="ghost" onClick={() => setOpenDetails(openDetails === i ? null : i)}>{l.details ? "Details ✓" : "Details"}</Button>
@@ -280,7 +285,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         </TableBody>
       </Table>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-        <span className="text-muted-foreground">Rate card {money(baseline)} · Quote <span className="font-semibold text-foreground">{money(total)}</span>{belowBaseline && " · below rate card: needs CEO or CRO approval"}</span>
+        <span className="text-muted-foreground">Rate card {money(baseline)} · Quote <span className="font-semibold text-foreground">{money(total)}</span>{belowBaseline && " · below rate card: needs CEO or CRO approval"}{lines.some(l => l.foundation) && " · Foundation Administration pricing needs CEO or CRO approval and can't be sent until released"}</span>
         <Input className="max-w-sm" placeholder="Notes for the approver" value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
       <div className="mt-4 rounded-lg border bg-card p-4">

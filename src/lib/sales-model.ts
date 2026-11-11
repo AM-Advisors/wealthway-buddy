@@ -100,7 +100,7 @@ export function cleanLineDetails(d: QuoteLineDetails | null | undefined): QuoteL
   return out.scope || out.included!.length || out.excluded!.length ? out : null;
 }
 
-export type QuoteLineInput = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual" | undefined; firstBillOn?: string | null | undefined; bookkeeping?: import("./bookkeeping-model").BookkeepingInput | undefined; details?: QuoteLineDetails | null | undefined };
+export type QuoteLineInput = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual" | undefined; firstBillOn?: string | null | undefined; bookkeeping?: import("./bookkeeping-model").BookkeepingInput | undefined; foundation?: import("./foundation-admin-model").FoundationLineInput | undefined; details?: QuoteLineDetails | null | undefined };
 export function priceQuote(lines: readonly QuoteLineInput[]) {
   const priced = lines.map((l) => ({ ...l, lineCents: Math.round(l.quantity * l.unitCents) }));
   const total = priced.reduce((a, l) => a + l.lineCents, 0);

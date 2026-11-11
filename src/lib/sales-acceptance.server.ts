@@ -79,6 +79,12 @@ async function acceptanceFor(db: any, key: string) {
 
 /** Build the client link for an approved record (staff side). */
 export async function acceptLinkFor(kind: AcceptKind, id: string, version: number, email: string) {
+  // Unreleased Foundation Administration never gets a signing link, whichever screen asks for one.
+  {
+    const db = await admin();
+    const quoteId = kind === "quote" ? id : ((await db.from("sales_documents").select("quote_id").eq("id", id).maybeSingle()).data?.quote_id ?? null);
+    await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, quoteId, "sign");
+  }
   const { signAcceptToken, TRACKING_BASE } = await import("@/lib/email-tracking.server");
   const token = await signAcceptToken({ kind, id, version, email });
   try {
@@ -248,6 +254,7 @@ async function linkSowToAcceptance(db: any, r: Loaded, acc: any): Promise<string
 }
 
 async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any, sowId: string | null = null) {
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, r.quoteId, "invoice");
   // Already billed by the one-click package send: signing must never invoice again.
   if (r.quoteId) {
     const { data: pq } = await db.from("sales_quotes").select("package_issued_at").eq("id", r.quoteId).maybeSingle();
@@ -297,6 +304,7 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
   const t = await fromToken(d.token);
   const db = await admin();
   const r = await loadRecord(db, t.kind, t.id);
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, r.quoteId, "sign");
   const key = acceptanceKey(t.kind, t.id, t.version);
   const prior = await acceptanceFor(db, key);
   if (!prior) {

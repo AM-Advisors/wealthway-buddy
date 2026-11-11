@@ -36,6 +36,8 @@ export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
     { id: "overview", title: "Overview", area: "clients" },
     { id: "contacts", title: "People", area: "clients" },
     { id: "services", title: "Services, Pricing & Contracts", area: "clients" },
+    // Foundation Administration: feature-flagged. Hidden here; the record page shows it only while the flag is on.
+    { id: "foundation", title: "Foundation", area: "clients", hidden: true },
     { id: "funds", title: "Funds & SPVs", area: "funds" },
     { id: "companies", title: "Companies / Cap Tables", area: "companies" },
     { id: "documents", title: "Documents", area: "documents" },

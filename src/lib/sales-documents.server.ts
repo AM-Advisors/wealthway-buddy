@@ -346,6 +346,7 @@ async function approvedSections(a: Awaited<ReturnType<typeof access>>) {
 
 export async function sendDocument(userId: string, id: string, d: { subject: string; message: string; ccUserIds?: string[] | undefined; toContactIds?: string[] | undefined; signerContactIds?: string[] | undefined; extraCc?: string[] | undefined }) {
   const a = await access(userId, id);
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(a.db, a.doc.quote_id, "send");
   const allowed = await listCcOptions(userId);
   const emailRe = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
   const extra = (d.extraCc ?? []).map((e) => e.trim().toLowerCase()).filter(Boolean);
@@ -449,6 +450,7 @@ async function ensureCrmContact(userId: string, db: any, clientId: string, entry
 /** A view-only review link for the approved version, for Sales staff to share by hand. No sign button; signing still goes through the emailed per-person link. */
 export async function shareLink(userId: string, id: string) {
   const a = await access(userId, id);
+  await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(a.db, a.doc.quote_id, "send");
   if (!a.doc.approved_version) throw new Error("Approve the document first. Only an approved version can be shared.");
   const { signProposalView } = await import("@/lib/email-tracking.server");
   const url = await signProposalView(id, a.doc.approved_version);

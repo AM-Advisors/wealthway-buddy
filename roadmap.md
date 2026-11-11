@@ -1131,3 +1131,13 @@
 - [x] Agreements "Request a fund" and legacy first-fund form use the shared request form.
 - [x] Staff Setup view shows request answers; check table compares real values.
 - [ ] Signed-in browser walk of Setup and Create fund: blocked by two-step sign-in.
+
+## Foundation Administration phase 1 (uploaded brief, 2026-11-11)
+- [ ] Foundation profile linked to an existing client entity (legal vs charitable classification, exemption status incl. pending/unknown, contact, documents, encrypted EIN reuse)
+- [ ] Foundation sections in client/entity navigation: Overview, People and authority, Documents, Services/quotes/agreements, Tasks
+- [ ] People and authority: canonical Persons, roles + authority scope + evidence; preparer never grants sign/verify/grant/bank/payment authority; exact-client/entity server checks
+- [ ] Service catalog: Foundation Administration with six components, delivery readiness, not shown as available
+- [ ] Quotes via existing editor/pricing/approvals: no invented prices, missing price needs negotiated price + executive approval, drafts save, unreleased blocks send/contract/bill everywhere
+- [ ] Foundation SOW scope (Harmonious duties vs retained responsibilities), Operations handoff without fund creation
+- [ ] Feature flag + additive migrations; tests for access, preparer vs signer, pricing, release blocks, duplicate coverage, version consistency, signed history, handoff
+- [ ] Dependencies report for banking, nonprofit accounting, donors, grants, compliance, payments
