@@ -16,8 +16,8 @@
   - [x] Currencies kept separate in totals, allocation, returns
   - [x] Returns: later cash excluded, ownership scaling, TWR needs values on every cash-flow day
   - [x] Reconciliation: screen = stored copy = CSV = PDF; published copy fingerprinted and fixed
-  - [ ] Real Wealth and Reports pages signed in (blocked: two-step sign-in setup needs the account owner's authenticator)
-- [ ] Signed-in check on the real Wealth page: blocked by two-step sign-in; not verified with a real account
+  - Summary: 8 checks, 7 pass, 1 blocked
+  - [ ] Real Wealth and investor Reports pages, signed in, read-only on real records: loading, navigation, report visibility, authorized downloads (blocked: account owner must set up the authenticator first). Mark Phase 1 "Production verified" only after these pass and results are recorded here.
 - [ ] Later phases (not started by design): automated custodian feeds, benchmarks, risk, rebalancing, multi-currency conversion
 
 ## Bookkeeping remaining issues (2026-11-10)
