@@ -29,8 +29,9 @@ export function WealthReportsPanel({ ownerUserId, ownerLabel, canPublish, curren
     try {
       const r = await get({ data: { reportId: id } });
       const snap = r.snapshot as { view: PortfolioView; periodLabel: string };
-      if (kind === 'pdf') await downloadPdfDoc(portfolioReportPdf(snap.view, snap.periodLabel, ownerLabel, r.version));
-      else saveText(portfolioReportCsv(snap.view, snap.periodLabel), `portfolio-report-${snap.periodLabel.replace(/\s+/g, '-').toLowerCase()}-v${r.version}.csv`);
+      if (r.integrity !== 'verified') toast.warning('This report copy could not be verified against its published fingerprint. Contact Harmonious before relying on it.');
+      if (kind === 'pdf') await downloadPdfDoc(portfolioReportPdf(snap.view, snap.periodLabel, ownerLabel, r.version, r.sha256));
+      else saveText(portfolioReportCsv(snap.view, snap.periodLabel, r.sha256), `portfolio-report-${snap.periodLabel.replace(/\s+/g, '-').toLowerCase()}-v${r.version}.csv`);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
   };
   const doPublish = async () => {
@@ -49,7 +50,9 @@ export function WealthReportsPanel({ ownerUserId, ownerLabel, canPublish, curren
     </div>
     {!reports.length ? <p className="rounded-md border border-dashed p-6 text-base text-muted-foreground">No quarterly report published yet.{canPublish ? ` Publish ${q.label} when your figures are complete.` : ''}</p> :
       <ul className="divide-y rounded-md border">{reports.map(r => <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-        <div><div className="text-base font-medium">{r.periodLabel} <span className="text-muted-foreground">· version {r.version}</span> {r.current ? <Badge variant="outline">Current</Badge> : <Badge variant="secondary">Replaced</Badge>}</div><p className="text-sm text-muted-foreground">Published {new Date(r.publishedAt).toLocaleDateString()}</p></div>
+        <div><div className="text-base font-medium">{r.periodLabel} <span className="text-muted-foreground">· version {r.version}</span> {r.current ? <Badge variant="outline">Current</Badge> : <Badge variant="secondary">Replaced</Badge>}</div><p className="text-sm text-muted-foreground">Published {new Date(r.publishedAt).toLocaleDateString()}</p>
+          {r.totals.length ? <p className="text-sm">{r.totals.map(t => `${t.currency} ${new Intl.NumberFormat('en-US', { style: 'currency', currency: t.currency, maximumFractionDigits: 0 }).format(t.valueCents / 100)}`).join(' · ')}</p> : null}
+          {!r.complete && r.completenessMessage ? <p className="text-sm text-destructive">{r.completenessMessage}</p> : null}</div>
         <div className="flex gap-2"><Button variant="outline" disabled={busy === `${r.id}:pdf`} onClick={() => void download(r.id, 'pdf')}><Download className="mr-2 size-4" />PDF</Button><Button variant="outline" disabled={busy === `${r.id}:csv`} onClick={() => void download(r.id, 'csv')}><Download className="mr-2 size-4" />CSV</Button></div>
       </li>)}</ul>}
   </section>;

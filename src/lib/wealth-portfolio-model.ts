@@ -339,10 +339,55 @@ export type PortfolioInput = {
   entities: PortfolioEntity[]; links: OwnershipLink[]; holdings: PortfolioHolding[]; funds: FundPosition[];
   commitments: PrivateCommitment[]; privateFlows: PrivateCashFlow[]; projected: ProjectedItem[]; personalCash: PersonalCash[];
   connected: ConnectedAccount[]; connectedLive: boolean;
+  /** Holdings whose only values are dated after asOf (supplied by the server reader). */
+  excludedAfterPeriod?: { holdingId: string; name: string; firstValueDate: string }[];
 };
 
+export type Completeness = {
+  complete: boolean;
+  /** Holdings left out because no value is dated on or before the as-of date. */
+  excluded: { name: string; reason: string }[];
+  withoutValue: string[];
+  notCounted: { name: string; reason: string }[];
+  stale: string[];
+  message: string;
+};
+
+/** Pick each holding's latest value on or before asOf; holdings with only later values are reported, never estimated. */
+export function holdingsAsOf(holdings: PortfolioHolding[], asOf: string) {
+  const included: PortfolioHolding[] = [];
+  const excluded: { holdingId: string; name: string; firstValueDate: string }[] = [];
+  for (const h of holdings) {
+    if (h.asOf <= asOf) { included.push({ ...h, history: (h.history ?? []).filter(x => x.asOf < h.asOf) }); continue; }
+    const earlier = (h.history ?? []).filter(x => x.asOf <= asOf).sort((a, b) => a.asOf.localeCompare(b.asOf));
+    const last = earlier[earlier.length - 1];
+    if (last) { const { observationId: _later, ...rest } = h; included.push({ ...rest, asOf: last.asOf, valueCents: last.valueCents, history: earlier.slice(0, -1) }); }
+    else excluded.push({ holdingId: h.holdingId, name: h.name, firstValueDate: [...(h.history ?? []).map(x => x.asOf), h.asOf].sort()[0]! });
+  }
+  return { included, excluded };
+}
+
+export function completenessOf(lines: PortfolioLine[], excludedAfter: { name: string; firstValueDate: string }[], asOf: string, staleDays = STALE_VALUE_DAYS): Completeness {
+  const excluded = excludedAfter.map(e => ({ name: e.name, reason: `No value dated on or before ${asOf}; first value is ${e.firstValueDate}.` }));
+  const withoutValue = lines.filter(l => l.counted && l.valueCents === null).map(l => l.name);
+  const notCounted = lines.filter(l => !l.counted && !l.representsEntityId).map(l => ({ name: l.name, reason: l.excludedReason ?? 'Not counted.' }));
+  const stale = lines.filter(l => l.counted && l.valueCents !== null && l.valueDate && daysBetween(l.valueDate, asOf) > staleDays).map(l => l.name);
+  const complete = !excluded.length && !withoutValue.length && !notCounted.length;
+  const parts = [
+    excluded.length ? `${excluded.length} holding(s) have no value on or before ${asOf} and are left out` : '',
+    withoutValue.length ? `${withoutValue.length} holding(s) have no value recorded` : '',
+    notCounted.length ? `${notCounted.length} holding(s) are not counted because ownership is incomplete` : '',
+    stale.length ? `${stale.length} value(s) are more than ${staleDays} days old` : '',
+  ].filter(Boolean);
+  const message = complete && !stale.length ? 'Every recorded holding has a dated value and is included.'
+    : `${complete ? 'Included, but check the dates' : 'This total does not represent the entire portfolio'}: ${parts.join('; ')}.`;
+  return { complete, excluded, withoutValue, notCounted, stale, message };
+}
+
 export function buildPortfolio(input: PortfolioInput) {
-  const holdings = input.holdings.filter(h => h.asOf <= input.asOf);
+  const resolved = holdingsAsOf(input.holdings, input.asOf);
+  const holdings = resolved.included;
+  const excludedAfter = [...resolved.excluded, ...(input.excludedAfterPeriod ?? []).filter(e => !resolved.excluded.some(x => x.holdingId === e.holdingId) && !holdings.some(h => h.holdingId === e.holdingId))];
   const { lines, issues, shares } = lookThroughLines({ entities: input.entities, links: input.links, holdings, funds: input.funds, connected: input.connectedLive ? input.connected : [] });
   const performance: InvestmentPerformance[] = [];
   const combinedInputs: Parameters<typeof combinedPerformance>[0] = [];
@@ -353,18 +398,22 @@ export function buildPortfolio(input: PortfolioInput) {
     const valuations = f.valuations.map(v => ({ date: v.date, valueCents: Math.round(v.valueCents * s) }));
     const p = investmentPerformance({ key: `fund:${f.positionId}`, name: f.fundName, currency: 'USD', asOf: input.asOf, flows, valuations });
     performance.push(p);
-    combinedInputs.push({ currency: 'USD', flows, latest: p.valueCents !== null && p.valueDate ? { date: p.valueDate, valueCents: p.valueCents } : null });
+    combinedInputs.push({ currency: 'USD', flows: p.measuredFlows, latest: p.valueCents !== null && p.valueDate ? { date: p.valueDate, valueCents: p.valueCents } : null });
   }
   for (const c of input.commitments) {
     const s = c.holderEntityId === null ? 1 : shares.get(c.holderEntityId) ?? 0;
     if (s === 0) continue;
     const flows = input.privateFlows.filter(f => f.commitmentId === c.recordId && f.status === 'actual').map(f => ({ id: f.recordId, date: f.date, kind: f.flowType, amountCents: Math.round(f.amountCents * s), source: f.source }));
-    const holding = c.holdingId ? input.holdings.find(h => h.holdingId === c.holdingId) : undefined;
-    const valuations = holding ? [...(holding.history ?? []), { asOf: holding.asOf, valueCents: holding.valueCents }].map(v => ({ date: v.asOf, valueCents: v.valueCents === null ? null : Math.round(v.valueCents * s) })) : [];
+    const linked = c.holdingId ? holdings.find(h => h.holdingId === c.holdingId) : undefined;
+    const ownerMismatch = Boolean(linked && (linked.holderEntityId ?? null) !== (c.holderEntityId ?? null));
+    const holding = ownerMismatch ? undefined : linked;
+    const valuations = holding && holding.currency === c.currency ? [...(holding.history ?? []), { asOf: holding.asOf, valueCents: holding.valueCents }].map(v => ({ date: v.asOf, valueCents: v.valueCents === null ? null : Math.round(v.valueCents * s) })) : [];
     const p = investmentPerformance({ key: `private:${c.recordId}`, name: c.name, currency: c.currency, asOf: input.asOf, flows, valuations });
-    if (!holding) p.warnings.push('Link this commitment to a holding so its value history can be used.');
+    if (ownerMismatch) p.warnings.push('This investment and its linked holding are recorded under different owners, so its value is not used for returns. Record both under the same owner.');
+    else if (linked && linked.currency !== c.currency) p.warnings.push(`The linked holding is in ${linked.currency} but the commitment is in ${c.currency}; returns are not converted.`);
+    else if (!holding) p.warnings.push(c.holdingId ? 'The linked holding has no value on or before this date.' : 'Link this commitment to a holding so its value history can be used.');
     performance.push(p);
-    combinedInputs.push({ currency: c.currency, flows, latest: p.valueCents !== null && p.valueDate ? { date: p.valueDate, valueCents: p.valueCents } : null });
+    combinedInputs.push({ currency: c.currency, flows: p.measuredFlows, latest: p.valueCents !== null && p.valueDate ? { date: p.valueDate, valueCents: p.valueCents } : null });
   }
   const projected = [
     ...input.projected,
@@ -393,6 +442,7 @@ export function buildPortfolio(input: PortfolioInput) {
     }),
     funds: input.funds.map(f => ({ positionId: f.positionId, fundName: f.fundName, profileLabel: f.profileLabel, commitmentCents: f.commitmentCents, contributedCents: f.contributedCents, distributionsCents: f.distributionsCents, unfundedCents: f.unfundedCents, valueCents: f.valueCents, valueDate: f.valueDate, valuations: f.valuations })),
     issues: quality,
+    completeness: completenessOf(lines, excludedAfter, input.asOf),
     connectedLive: input.connectedLive,
   };
 }
@@ -519,10 +569,24 @@ export function previewFlowImport(text: string, ctx: { commitments: PrivateCommi
 
 // ------------------------------------------------------------- report export
 
+/** Stable JSON (sorted keys) so a stored snapshot can be re-hashed after the database reorders keys. */
+export function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
+  if (Array.isArray(value)) return `[${value.map(v => v === undefined ? 'null' : canonicalJson(v)).join(',')}]`;
+  const obj = value as Record<string, unknown>;
+  return `{${Object.keys(obj).filter(k => obj[k] !== undefined).sort().map(k => `${JSON.stringify(k)}:${canonicalJson(obj[k])}`).join(',')}}`;
+}
+
 const csvCell = (v: unknown) => { const s = v === null || v === undefined ? '' : String(v); return /[",\n\r]/.test(s) || /^[=+\-@]/.test(s) ? `"${(/^[=+\-@]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"` : s; };
 const dollars = (c: number | null | undefined) => c === null || c === undefined ? '' : (c / 100).toFixed(2);
-export function portfolioReportCsv(view: PortfolioView, periodLabel: string) {
-  const out: string[][] = [['Harmonious portfolio report', periodLabel, `As of ${view.asOf}`], [], ['Holdings'], ['Name', 'Held by', 'Asset class', 'Sector', 'Region', 'Currency', 'Your share %', 'Value', 'Value date', 'Source', 'Counted']];
+export function portfolioReportCsv(view: PortfolioView, periodLabel: string, fingerprint?: string | null) {
+  const c = view.completeness ?? completenessOf(view.lines, [], view.asOf);
+  const out: string[][] = [['Harmonious portfolio report', periodLabel, `As of ${view.asOf}`], ...(fingerprint ? [['Report fingerprint', fingerprint.slice(0, 16)]] : []), [],
+    ['Totals (your share, by currency; never added across currencies)'], ['Currency', 'Total value', 'Holdings counted', 'Without value'],
+    ...view.totals.map(t => [t.currency, dollars(t.valueCents), String(t.lines), String(t.missingValues)]),
+    [], ['Completeness', c.complete ? 'Complete' : 'Incomplete', c.message],
+    ...c.excluded.map(e => ['Not included', e.name, e.reason]), ...c.notCounted.map(e => ['Not counted', e.name, e.reason]), ...c.withoutValue.map(n => ['No value', n, '']), ...c.stale.map(n => ['Value older than 120 days', n, '']),
+    [], ['Holdings'], ['Name', 'Held by', 'Asset class', 'Sector', 'Region', 'Currency', 'Your share %', 'Value', 'Value date', 'Source', 'Counted']];
   for (const l of view.lines) out.push([l.name, l.holder, ASSET_CLASS_LABELS[l.assetClass] ?? l.assetClass, l.sector, l.geography, l.currency, (l.sharePct * 100).toFixed(2), dollars(l.valueCents), l.valueDate ?? '', SOURCE_LABELS[l.source], l.counted ? 'Yes' : `No: ${l.excludedReason ?? ''}`]);
   out.push([], ['Performance'], ['Investment', 'Currency', 'Period start', 'Period end', 'Paid in', 'Distributions', 'Value', 'Value date', 'XIRR %', 'XIRR status', 'TVPI', 'DPI', 'TWR %', 'Warnings']);
   for (const p of view.performance) out.push([p.name, p.currency, p.periodStart ?? '', p.periodEnd, dollars(p.paidInCents), dollars(p.distributionsCents), dollars(p.valueCents), p.valueDate ?? '', p.irr.bps === null ? '' : (p.irr.bps / 100).toFixed(2), p.irr.status, p.tvpi === null ? '' : String(p.tvpi), p.dpi === null ? '' : String(p.dpi), p.twr?.bps == null ? '' : (p.twr.bps / 100).toFixed(2), p.warnings.join(' ')]);
@@ -537,19 +601,22 @@ export function portfolioReportCsv(view: PortfolioView, periodLabel: string) {
 const money = (c: number | null | undefined, currency = 'USD') => c === null || c === undefined ? 'Not recorded' : new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(c / 100);
 const pctText = (bps: number | null | undefined) => bps === null || bps === undefined ? 'Not calculated' : `${(bps / 100).toFixed(2)}%`;
 /** Branded quarterly report for the shared PDF renderer. Only recorded figures; gaps print as "Not recorded". */
-export function portfolioReportPdf(view: PortfolioView, periodLabel: string, ownerLabel: string, version: number | null): PdfDocSpec {
+export function portfolioReportPdf(view: PortfolioView, periodLabel: string, ownerLabel: string, version: number | null, fingerprint?: string | null): PdfDocSpec {
+  const c = view.completeness ?? completenessOf(view.lines, [], view.asOf);
   const short = (t: string, n = 48) => t.length > n ? `${t.slice(0, n - 1)}…` : t;
   const x = (m: number | null) => m === null ? 'n/a' : `${m.toFixed(2)}x`;
   const excluded = view.lines.filter(l => !l.counted);
   const notes = [...excluded.map(l => `${l.name}: not counted. ${l.excludedReason ?? ''}`), ...view.issues.filter(i => i.severity === 'warning').map(i => i.message), ...view.performance.flatMap(p => p.warnings.map(w => `${p.name}: ${w}`))];
   return {
     kicker: 'Quarterly portfolio report', title: periodLabel, subtitle: ownerLabel, badge: version ? `Version ${version}` : 'Draft preview',
-    meta: [{ label: 'Period', value: `${view.periodStart} to ${view.asOf}` }, ...view.totals.map(t => ({ label: `Total value (${t.currency})`, value: money(t.valueCents, t.currency) + (t.missingValues ? ` · ${t.missingValues} without value` : '') }))],
+    meta: [{ label: 'Period', value: `${view.periodStart} to ${view.asOf}` }, ...view.totals.map(t => ({ label: `Total value (${t.currency})`, value: money(t.valueCents, t.currency) + (t.missingValues ? ` · ${t.missingValues} without value` : '') })), { label: 'Completeness', value: c.complete ? (c.stale.length ? 'Complete; some values are old' : 'Complete') : 'Incomplete: see "Not included in this total"' }, ...(fingerprint ? [{ label: 'Report fingerprint', value: fingerprint.slice(0, 16) }] : [])],
     sections: [
+      { heading: 'Completeness', text: c.message },
+      { heading: 'Not included in this total', rows: [...c.excluded.map(e => ({ label: short(e.name), value: e.reason })), ...c.notCounted.map(e => ({ label: short(e.name), value: e.reason })), ...c.withoutValue.map(n => ({ label: short(n), value: 'No value recorded' }))] },
       { heading: 'Holdings (your share, value date)', rows: view.lines.filter(l => l.counted).map(l => ({ label: short(l.name), value: `${money(l.valueCents, l.currency)} · ${l.valueDate ?? 'no date'}` })) },
       { heading: 'Held through entities', rows: view.lines.filter(l => l.counted && l.sharePct < 1).map(l => ({ label: short(`${l.name}, via ${l.holder}`, 60), value: `${(l.sharePct * 100).toFixed(1)}% of ${money(l.grossValueCents, l.currency)}` })) },
-      { heading: 'Returns: XIRR, TVPI, DPI', rows: view.performance.map(p => ({ label: short(p.name), value: `${p.irr.status === 'solved' ? pctText(p.irr.bps) : 'n/a'} · ${x(p.tvpi)} · ${x(p.dpi)}` })) },
-      { heading: 'Time-weighted return (3 or more values)', rows: view.performance.filter(p => p.twr).map(p => ({ label: short(p.name), value: p.twr!.status === 'solved' ? pctText(p.twr!.bps) : 'n/a' })) },
+      { heading: 'Returns: XIRR, TVPI, DPI', rows: view.performance.map(p => ({ label: short(`${p.name} (${p.currency})`), value: `${p.irr.status === 'solved' ? pctText(p.irr.bps) : 'n/a'} · ${x(p.tvpi)} · ${x(p.dpi)}` })) },
+      { heading: 'Time-weighted return', rows: view.performance.filter(p => p.twr).map(p => ({ label: short(`${p.name} (${p.currency})`), value: p.twr!.status === 'solved' ? pctText(p.twr!.bps) : 'Not shown, see data notes' })) },
       ...view.allocation.map(a => ({ heading: `Allocation by type (${a.currency})`, rows: a.assetClass.map(g => ({ label: g.label, value: `${money(g.valueCents, a.currency)} · ${g.pct ?? 0}%` })) })),
       { heading: 'Cash activity (actual)', rows: view.cash.length ? view.cash.map(c => ({ label: short(`${c.date} · ${c.name}`, 60), value: `${c.direction === 'inflow' ? '+' : '-'}${money(c.amountCents, c.currency)}` })) : [{ label: 'No cash activity recorded in this period', value: '' }] },
       { heading: 'Cash needs', rows: view.liquidity.flatMap(l => [{ label: `Available cash (${l.currency})`, value: money(l.availableCashCents, l.currency) }, { label: `Still to pay on commitments (${l.currency})`, value: money(l.unfundedCents, l.currency) }]) },

@@ -9,6 +9,14 @@
 - [x] Quarterly report PDF/CSV, fixed published versions, shown in investor Reports
 - [x] Data quality, import preview/validation, duplicates, change history, access (owner edits; delegate/staff read only)
 - [x] Fictional sandbox demo (/qa-sandbox → Consolidated portfolio) walked end to end; 17 model tests
+- Phase 1 validation (release status: Sandbox validated; production verification pending)
+  - [x] Access: owner/delegate/staff/manager/revoked/scoped/direct report links tested (18 tests); only whole-person sharing opens a portfolio
+  - [x] Ownership: diamond, nested, circular, partial, missing %, duplicates tested
+  - [x] Quarter reports list left-out holdings and warn when incomplete
+  - [x] Currencies kept separate in totals, allocation, returns
+  - [x] Returns: later cash excluded, ownership scaling, TWR needs values on every cash-flow day
+  - [x] Reconciliation: screen = stored copy = CSV = PDF; published copy fingerprinted and fixed
+  - [ ] Real Wealth and Reports pages signed in (blocked: two-step sign-in setup needs the account owner's authenticator)
 - [ ] Signed-in check on the real Wealth page: blocked by two-step sign-in; not verified with a real account
 - [ ] Later phases (not started by design): automated custodian feeds, benchmarks, risk, rebalancing, multi-currency conversion
 

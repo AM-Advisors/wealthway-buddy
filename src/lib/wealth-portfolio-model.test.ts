@@ -64,14 +64,15 @@ describe('returns', () => {
     expect(p.tvpi).toBeCloseTo(1.1);
     expect(p.dpi).toBe(0);
   });
-  it('never invents a return without a value, and hides time-weighted return with fewer than 3 values', () => {
+  it("never invents a return without a value, and hides time-weighted return with fewer than 3 values", () => {
     const p = investmentPerformance({ key: 'k', name: 'Fictional', currency: 'USD', asOf: '2026-09-30', flows, valuations: [] });
     expect(p.irr.bps).toBeNull();
     expect(p.tvpi).toBeNull();
     expect(p.twr).toBeNull();
     expect(p.warnings.join(' ')).toMatch(/No dated value/);
     const two = investmentPerformance({ key: 'k', name: 'Fictional', currency: 'USD', asOf: '2026-09-30', flows, valuations: [{ date: '2026-03-31', valueCents: 100_000_00 }, { date: '2026-09-30', valueCents: 105_000_00 }] });
-    expect(two.twr).toBeNull();
+    expect(two.twr?.status).toBe('not_eligible');
+    expect(two.twr?.bps).toBeNull();
   });
   it('time-weighted return chains 10% and 10% into 21% with three values', () => {
     const p = investmentPerformance({ key: 'k', name: 'Fictional', currency: 'USD', asOf: '2026-09-30', flows, valuations: [{ date: '2025-09-30', valueCents: 100_000_00 }, { date: '2026-03-31', valueCents: 110_000_00 }, { date: '2026-09-30', valueCents: 121_000_00 }] });
@@ -139,5 +140,183 @@ describe('quarterly report', () => {
     const csv = portfolioReportCsv(view, 'Q3 2026');
     expect(csv).toContain(`"'=HYPERLINK(""x"")"`);
     expect(csv).toContain('Upcoming (projected, not actual)');
+  });
+});
+
+// ---------------------------------------------------------------- Phase 1 validation
+
+const A: PortfolioEntity = { recordId: 'a0000000-0000-4000-8000-00000000000a', name: 'Fictional A Trust', entityType: 'trust', investmentProfileId: null };
+const B: PortfolioEntity = { recordId: 'b0000000-0000-4000-8000-00000000000b', name: 'Fictional B LLC', entityType: 'llc', investmentProfileId: null };
+const C: PortfolioEntity = { recordId: 'c0000000-0000-4000-8000-00000000000c', name: 'Fictional C LP', entityType: 'partnership', investmentProfileId: null };
+const D: PortfolioEntity = { recordId: 'd0000000-0000-4000-8000-00000000000d', name: 'Fictional D Corp', entityType: 'corporation', investmentProfileId: null };
+const hold = (id: string, over: Partial<import('./wealth-portfolio-model').PortfolioHolding> = {}) => ({ holdingId: id, name: `Holding ${id}`, assetClass: 'public_equity', currency: 'USD', valueCents: 100_000_00, costCents: null, asOf: '2026-09-30', source: 'manual' as const, sector: 'Tech', geography: 'US', holderEntityId: null, representsEntityId: null, ...over });
+
+describe('ownership validation', () => {
+  it('sums multiple paths (diamond): 50%x20% + 50%x30% = 25%, and a child of the diamond is 25%x40% = 10%', () => {
+    const links: OwnershipLink[] = [
+      { recordId: '1', parentId: SELF, childId: A.recordId, pctBps: 5000 }, { recordId: '2', parentId: SELF, childId: B.recordId, pctBps: 5000 },
+      { recordId: '3', parentId: A.recordId, childId: C.recordId, pctBps: 2000 }, { recordId: '4', parentId: B.recordId, childId: C.recordId, pctBps: 3000 },
+      { recordId: '5', parentId: C.recordId, childId: D.recordId, pctBps: 4000 },
+    ];
+    const { shares, issues } = ownershipShares([A, B, C, D], links);
+    expect(shares.get(C.recordId)).toBeCloseTo(0.25);
+    expect(shares.get(D.recordId)).toBeCloseTo(0.10);
+    expect(issues).toEqual([]);
+    const view = buildPortfolio(base({ entities: [A, B, C, D], links, holdings: [hold('h1', { holderEntityId: D.recordId, valueCents: 1_000_000_00 })] }));
+    expect(view.totals[0]!.valueCents).toBe(100_000_00);
+  });
+  it('circular ownership is flagged, the loop is not followed, and shares never exceed 100%', () => {
+    const links: OwnershipLink[] = [{ recordId: '1', parentId: SELF, childId: A.recordId, pctBps: 6000 }, { recordId: '2', parentId: A.recordId, childId: B.recordId, pctBps: 5000 }, { recordId: '3', parentId: B.recordId, childId: A.recordId, pctBps: 5000 }];
+    const { shares, issues } = ownershipShares([A, B], links);
+    expect(issues.map(i => i.code)).toContain('ownership_cycle');
+    expect(shares.get(A.recordId)).toBeCloseTo(0.6);
+    expect(shares.get(B.recordId)).toBeCloseTo(0.3);
+    const view = buildPortfolio(base({ entities: [A, B], links, holdings: [hold('h1', { holderEntityId: B.recordId, valueCents: 1_000_00 })] }));
+    expect(view.totals[0]!.valueCents).toBe(300_00);
+  });
+  it('partial ownership counts the recorded share only; a missing percentage leaves the holding out and makes the total incomplete', () => {
+    const partial = buildPortfolio(base({ entities: [A], links: [{ recordId: '1', parentId: SELF, childId: A.recordId, pctBps: 3333 }], holdings: [hold('h1', { holderEntityId: A.recordId, valueCents: 900_00 })] }));
+    expect(partial.totals[0]!.valueCents).toBe(299_97);
+    expect(partial.completeness.complete).toBe(true);
+    const missing = buildPortfolio(base({ entities: [A], links: [{ recordId: '1', parentId: SELF, childId: A.recordId, pctBps: null }], holdings: [hold('h1', { holderEntityId: A.recordId }), hold('h2')] }));
+    expect(missing.totals[0]!.valueCents).toBe(100_000_00);
+    expect(missing.completeness.complete).toBe(false);
+    expect(missing.completeness.notCounted.map(n => n.name)).toEqual(['Holding h1']);
+  });
+  it('a stake that represents an entity is skipped only when that entity is itself counted', () => {
+    const counted = buildPortfolio(base({ entities: [A], links: [{ recordId: '1', parentId: SELF, childId: A.recordId, pctBps: 10000 }], holdings: [hold('inside', { holderEntityId: A.recordId }), hold('stake', { representsEntityId: A.recordId })] }));
+    expect(counted.totals[0]!.valueCents).toBe(100_000_00);
+    expect(counted.completeness.complete).toBe(true);
+    const unlinked = buildPortfolio(base({ entities: [A], links: [], holdings: [hold('inside', { holderEntityId: A.recordId }), hold('stake', { representsEntityId: A.recordId, valueCents: 40_000_00 })] }));
+    expect(unlinked.lines.find(l => l.holdingId === 'stake')!.counted).toBe(true);
+    expect(unlinked.totals[0]!.valueCents).toBe(40_000_00);
+  });
+  it('flags the same holding recorded twice for the same owner and currency', () => {
+    const view = buildPortfolio(base({ holdings: [hold('h1', { name: 'Fictional Index Fund' }), hold('h2', { name: 'fictional  index fund' }), hold('h3', { name: 'Fictional Index Fund', currency: 'EUR' })] }));
+    expect(view.issues.filter(i => i.code === 'possible_duplicate_holding')).toHaveLength(1);
+  });
+});
+
+describe('quarter-end completeness', () => {
+  it('uses the latest value on or before quarter end, lists holdings with only later values, and warns the total is incomplete', () => {
+    const view = buildPortfolio(base({ holdings: [
+      hold('h1', { name: 'Has earlier value', asOf: '2026-10-15', valueCents: 999_00, history: [{ asOf: '2026-09-15', valueCents: 500_00 }] }),
+      hold('h2', { name: 'Only later value', asOf: '2026-10-15', valueCents: 700_00 }),
+    ], excludedAfterPeriod: [{ holdingId: 'h9', name: 'Server-reported later holding', firstValueDate: '2026-11-01' }] }));
+    expect(view.totals[0]!.valueCents).toBe(500_00);
+    expect(view.completeness.complete).toBe(false);
+    expect(view.completeness.excluded.map(e => e.name)).toEqual(['Only later value', 'Server-reported later holding']);
+    expect(view.completeness.message).toMatch(/does not represent the entire portfolio/);
+    const csv = portfolioReportCsv(view, 'Q3 2026');
+    expect(csv).toContain('Not included,Only later value');
+    expect(csv).toContain('Completeness,Incomplete');
+  });
+  it('a fully valued portfolio is complete', () => {
+    expect(buildPortfolio(base({ holdings: [hold('h1')] })).completeness.complete).toBe(true);
+  });
+});
+
+describe('currencies stay separate', () => {
+  it('totals, allocation and combined returns are per currency and never added together', () => {
+    const view = buildPortfolio(base({
+      holdings: [hold('u', { valueCents: 100_00 }), hold('e', { currency: 'EUR', valueCents: 50_00 })],
+      commitments: [{ recordId: 'cu', name: 'USD fund', currency: 'USD', commitmentCents: 100_00, holderEntityId: null, holdingId: 'u', startDate: '2025-09-30' }, { recordId: 'ce', name: 'EUR fund', currency: 'EUR', commitmentCents: 100_00, holderEntityId: null, holdingId: 'e', startDate: '2025-09-30' }],
+      privateFlows: [{ recordId: 'f1', commitmentId: 'cu', date: '2025-09-30', flowType: 'contribution', status: 'actual', amountCents: 100_00, note: '', source: 'manual' }, { recordId: 'f2', commitmentId: 'ce', date: '2025-09-30', flowType: 'contribution', status: 'actual', amountCents: 100_00, note: '', source: 'manual' }],
+    }));
+    expect(view.totals).toEqual([{ currency: 'EUR', valueCents: 50_00, missingValues: 0, lines: 1 }, { currency: 'USD', valueCents: 100_00, missingValues: 0, lines: 1 }]);
+    expect(view.allocation.map(a => a.currency)).toEqual(['EUR', 'USD']);
+    expect(view.combined.map(c => [c.currency, c.investments])).toEqual([['EUR', 1], ['USD', 1]]);
+    expect(view.combined.find(c => c.currency === 'EUR')!.irr.bps).toBeLessThan(-4000);
+    expect(Math.abs(view.combined.find(c => c.currency === 'USD')!.irr.bps ?? 99)).toBeLessThanOrEqual(1);
+    expect(view.liquidity.every(l => l.currency === 'USD' || l.currency === 'EUR')).toBe(true);
+  });
+  it('a commitment linked to a holding in another currency gets no converted return', () => {
+    const view = buildPortfolio(base({ holdings: [hold('e', { currency: 'EUR' })], commitments: [{ recordId: 'c', name: 'Mismatch', currency: 'USD', commitmentCents: 1, holderEntityId: null, holdingId: 'e', startDate: '2025-01-01' }], privateFlows: [{ recordId: 'f', commitmentId: 'c', date: '2025-09-30', flowType: 'contribution', status: 'actual', amountCents: 100, note: '', source: 'manual' }] }));
+    expect(view.performance[0]!.irr.bps).toBeNull();
+    expect(view.performance[0]!.warnings.join(' ')).toMatch(/not converted/);
+  });
+});
+
+describe('returns validation', () => {
+  const contrib = (id: string, date: string, amountCents: number) => ({ id, date, kind: 'contribution' as const, amountCents, source: 't' });
+  const dist = (id: string, date: string, amountCents: number) => ({ id, date, kind: 'distribution' as const, amountCents, source: 't' });
+  it('XIRR and multiples stop at the latest value; later cash is left out with a warning, not set against an old value', () => {
+    const p = investmentPerformance({ key: 'k', name: 'F', currency: 'USD', asOf: '2026-09-30', flows: [contrib('a', '2025-06-30', 100_000_00), contrib('b', '2026-08-01', 50_000_00)], valuations: [{ date: '2026-06-30', valueCents: 110_000_00 }] });
+    expect(p.paidInCents).toBe(100_000_00);
+    expect(p.tvpi).toBeCloseTo(1.1);
+    expect(p.periodEnd).toBe('2026-06-30');
+    expect(Math.abs((p.irr.bps ?? 0) - 1000)).toBeLessThanOrEqual(2);
+    expect(p.warnings.join(' ')).toMatch(/1 cash flow\(s\) after the latest value/);
+  });
+  it('distributions count toward DPI and TVPI: $100k in, $30k out, $90k value is 1.20x TVPI, 0.30x DPI', () => {
+    const p = investmentPerformance({ key: 'k', name: 'F', currency: 'USD', asOf: '2026-09-30', flows: [contrib('a', '2025-09-30', 100_000_00), dist('b', '2026-03-31', 30_000_00)], valuations: [{ date: '2026-09-30', valueCents: 90_000_00 }] });
+    expect(p.tvpi).toBeCloseTo(1.2); expect(p.dpi).toBeCloseTo(0.3); expect(p.rvpi).toBeCloseTo(0.9);
+    expect(p.irr.status).toBe('solved');
+  });
+  it('time-weighted return is not shown when cash moves between valuation dates, even with three or more values', () => {
+    const p = investmentPerformance({ key: 'k', name: 'F', currency: 'USD', asOf: '2026-09-30', flows: [contrib('a', '2025-09-30', 100_000_00), contrib('b', '2026-05-15', 50_000_00)], valuations: [{ date: '2025-09-30', valueCents: 100_000_00 }, { date: '2026-03-31', valueCents: 110_000_00 }, { date: '2026-09-30', valueCents: 170_000_00 }] });
+    expect(p.twr?.status).toBe('not_eligible');
+    expect(p.twr?.bps).toBeNull();
+    expect(p.twr?.detail).toMatch(/2026-05-15/);
+  });
+  it('a contribution on a valuation date is removed from that value: $100k → $160k incl. $50k call → $176k chains 10% and 10% into 21%', () => {
+    const p = investmentPerformance({ key: 'k', name: 'F', currency: 'USD', asOf: '2026-09-30', flows: [contrib('a', '2025-12-31', 100_000_00), contrib('b', '2026-03-31', 50_000_00)], valuations: [{ date: '2025-12-31', valueCents: 100_000_00 }, { date: '2026-03-31', valueCents: 160_000_00 }, { date: '2026-06-30', valueCents: 176_000_00 }] });
+    expect(p.twr?.status).toBe('solved');
+    expect(p.twr?.bps).toBe(2100);
+  });
+  it('the measured span starts at the first value above zero', () => {
+    const p = investmentPerformance({ key: 'k', name: 'F', currency: 'USD', asOf: '2026-09-30', flows: [contrib('a', '2025-12-31', 100_00)], valuations: [{ date: '2025-06-30', valueCents: 0 }, { date: '2025-12-31', valueCents: 100_00 }, { date: '2026-03-31', valueCents: 110_00 }] });
+    expect(p.twr?.status).toBe('not_eligible');
+    expect(p.twr?.detail).toMatch(/2 recorded from 2025-12-31/);
+  });
+  it('ownership share scales flows and values together, so the return is unchanged and amounts are 40%', () => {
+    const fund = { positionId: 'p', offeringId: 'o', fundName: 'Fictional Fund', investmentProfileId: 'prof', profileLabel: null, commitmentCents: 0, contributedCents: 0, distributionsCents: 0, unfundedCents: 0, valueCents: 110_000_00, valueDate: '2026-09-30', valuations: [{ date: '2026-09-30', valueCents: 110_000_00 }], flows: [{ id: 'f', date: '2025-09-30', kind: 'contribution' as const, amountCents: 100_000_00 }] };
+    const ent: PortfolioEntity = { ...A, investmentProfileId: 'prof' };
+    const view = buildPortfolio(base({ entities: [ent], links: [{ recordId: '1', parentId: SELF, childId: A.recordId, pctBps: 4000 }], funds: [fund] }));
+    const p = view.performance[0]!;
+    expect(p.paidInCents).toBe(40_000_00); expect(p.valueCents).toBe(44_000_00);
+    expect(Math.abs((p.irr.bps ?? 0) - 1000)).toBeLessThanOrEqual(2);
+    expect(view.totals[0]!.valueCents).toBe(44_000_00);
+  });
+  it('a commitment and its holding recorded under different owners give no return', () => {
+    const view = buildPortfolio(base({ entities: [A], links: [{ recordId: '1', parentId: SELF, childId: A.recordId, pctBps: 5000 }], holdings: [hold('h', { holderEntityId: A.recordId })], commitments: [{ recordId: 'c', name: 'C', currency: 'USD', commitmentCents: 1, holderEntityId: null, holdingId: 'h', startDate: '2025-01-01' }], privateFlows: [{ recordId: 'f', commitmentId: 'c', date: '2025-09-30', flowType: 'contribution', status: 'actual', amountCents: 100, note: '', source: 'manual' }] }));
+    expect(view.performance[0]!.irr.bps).toBeNull();
+    expect(view.performance[0]!.warnings.join(' ')).toMatch(/different owners/);
+  });
+});
+
+describe('report reconciliation', () => {
+  const fixture = () => buildPortfolio(base({ entities: [A], links: [{ recordId: '1', parentId: SELF, childId: A.recordId, pctBps: 5000 }],
+    holdings: [hold('h1', { name: 'Fictional Bond Ladder', assetClass: 'fixed_income', valueCents: 123_456_78 }), hold('h2', { name: 'Fictional Rental', holderEntityId: A.recordId, valueCents: 200_000_01 }), hold('h3', { name: 'Fictional Euro Cash', assetClass: 'cash', currency: 'EUR', valueCents: 10_000_00 })] }));
+  it('the stored snapshot, CSV and PDF show the same totals and holdings as the screen view', async () => {
+    const screen = fixture();
+    const stored = JSON.parse(JSON.stringify(screen)) as typeof screen; // what the database returns
+    expect(stored.totals).toEqual(screen.totals);
+    expect(stored.lines.map(l => [l.name, l.valueCents])).toEqual(screen.lines.map(l => [l.name, l.valueCents]));
+    const csv = parseCsv(portfolioReportCsv(stored, 'Q3 2026', 'abcdef0123456789ffff'));
+    const totalRows = csv.filter(r => r.length === 4 && /^[A-Z]{3}$/.test(r[0]!));
+    expect(totalRows.map(r => [r[0], Math.round(Number(r[1]) * 100)])).toEqual(screen.totals.map(t => [t.currency, t.valueCents]));
+    const hStart = csv.findIndex(r => r[0] === 'Holdings') + 2;
+    const holdingRows = csv.slice(hStart, hStart + screen.lines.length);
+    expect(holdingRows.map(r => [r[0], Math.round(Number(r[7]) * 100)])).toEqual(screen.lines.map(l => [l.name, l.valueCents]));
+    expect(csv.some(r => r[0] === 'Report fingerprint' && r[1] === 'abcdef0123456789')).toBe(true);
+    const { portfolioReportPdf } = await import('./wealth-portfolio-model');
+    const pdf = portfolioReportPdf(stored, 'Q3 2026', 'Fictional Owner', 1, 'abcdef0123456789ffff');
+    const fmt = (c: number, cur: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(c / 100);
+    for (const t of screen.totals) expect(pdf.meta!.find(m => m.label === `Total value (${t.currency})`)!.value).toBe(fmt(t.valueCents, t.currency));
+    const pdfHoldings = pdf.sections!.find(s => s.heading?.startsWith('Holdings'))!.rows!;
+    expect(pdfHoldings.map(r => r.value.split(' · ')[0])).toEqual(screen.lines.filter(l => l.counted).map(l => fmt(l.valueCents!, l.currency)));
+  });
+  it('a stored report does not change when records are edited later, and its fingerprint still matches', async () => {
+    const { canonicalJson } = await import('./wealth-portfolio-model');
+    const published = JSON.parse(JSON.stringify({ periodLabel: 'Q3 2026', view: fixture() }));
+    const before = canonicalJson(published);
+    const later = buildPortfolio(base({ holdings: [hold('h1', { valueCents: 1 })] })); // a later correction
+    expect(later.totals[0]!.valueCents).toBe(1);
+    expect(canonicalJson(published)).toBe(before);
+    expect(portfolioReportCsv(published.view, 'Q3 2026')).toContain('123456.78');
+    const reordered = JSON.parse(JSON.stringify(published, Object.keys(published).reverse()));
+    expect(canonicalJson({ view: published.view, periodLabel: published.periodLabel })).toBe(before);
+    expect(reordered).toBeTruthy();
   });
 });

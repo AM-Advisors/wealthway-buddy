@@ -64,6 +64,15 @@ function PortfolioBody({ ownerUserId, ownerLabel, asOf, start }: { ownerUserId?:
       {v.totals.length ? v.totals.map(t => <Stat key={t.currency} label={`Total value · ${t.currency}`} value={money(t.valueCents, t.currency)} note={t.missingValues ? `${t.missingValues} holding(s) without a value` : `${t.lines} holding(s), your share`} />) : <Stat label="Total value" value="Nothing recorded" />}
       <Stat label="Things to check" value={String(warnings.length)} note={warnings.length ? 'See Data quality' : 'All values dated and current'} />
     </div>
+    {v.completeness && (!v.completeness.complete || v.completeness.stale.length) ? <div role="status" className="rounded-md border border-destructive/40 bg-destructive/5 p-4">
+      <p className="flex items-center gap-2 font-medium"><AlertTriangle className="size-4 shrink-0 text-destructive" />{v.completeness.complete ? 'Totals include old values' : 'Totals are incomplete'}</p>
+      <p className="mt-1 text-muted-foreground">{v.completeness.message}</p>
+      {v.completeness.excluded.length || v.completeness.notCounted.length || v.completeness.withoutValue.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+        {v.completeness.excluded.map(e => <li key={`x:${e.name}`}>{e.name}: {e.reason}</li>)}
+        {v.completeness.notCounted.map(e => <li key={`n:${e.name}`}>{e.name}: {e.reason}</li>)}
+        {v.completeness.withoutValue.map(n => <li key={`v:${n}`}>{n}: no value recorded</li>)}
+      </ul> : null}
+    </div> : null}
     {canEdit ? <div className="flex flex-wrap gap-2"><Button size="lg" onClick={() => { setHoldingEdit(null); setDialog('holding'); }}><Plus className="mr-2 size-4" />Add holding</Button><Button size="lg" variant="outline" onClick={() => setDialog('import')}><Upload className="mr-2 size-4" />Import spreadsheet</Button></div> : null}
     <p className="text-sm text-muted-foreground">Values are added up only within the same currency. Fund figures come from the fund's published statements. {v.connectedLive ? '' : 'Linked bank and brokerage accounts are not included yet.'}</p>
 
@@ -116,7 +125,7 @@ function PortfolioBody({ ownerUserId, ownerLabel, asOf, start }: { ownerUserId?:
         {v.combined.map(c => <Stat key={c.currency} label={`All private investments · ${c.currency} · since first cash flow (XIRR)`} value={c.irr.status === 'solved' ? pct(c.irr.bps) : 'Not calculated'} note={c.irr.status === 'solved' ? `${c.investments} investment(s)` : c.irr.detail} />)}
         {!v.performance.length ? <Empty>Returns appear once private investments have dated cash flows and a value.</Empty> :
           <div className="overflow-x-auto"><table className="w-full text-left"><thead className="text-sm text-muted-foreground"><tr><th className="py-3 pr-3">Investment</th><th className="pr-3">Period</th><th className="pr-3 text-right">XIRR</th><th className="pr-3 text-right">TVPI</th><th className="pr-3 text-right">DPI</th><th className="pr-3 text-right">RVPI</th><th className="pr-3 text-right">Time-weighted</th></tr></thead>
-            <tbody>{v.performance.map(p => <tr key={p.key} className="border-t align-top"><td className="py-3 pr-3 font-medium">{p.name}{p.warnings.map(w => <p key={w} className="text-sm font-normal text-muted-foreground">{w}</p>)}</td><td className="pr-3">{p.periodStart ?? 'n/a'} to {p.periodEnd}</td><td className="pr-3 text-right">{p.irr.status === 'solved' ? pct(p.irr.bps) : 'n/a'}</td><td className="pr-3 text-right">{multiple(p.tvpi)}</td><td className="pr-3 text-right">{multiple(p.dpi)}</td><td className="pr-3 text-right">{multiple(p.rvpi)}</td><td className="pr-3 text-right">{p.twr?.status === 'solved' ? pct(p.twr.bps) : 'n/a'}</td></tr>)}</tbody></table></div>}
+            <tbody>{v.performance.map(p => <tr key={p.key} className="border-t align-top"><td className="py-3 pr-3 font-medium">{p.name} <span className="font-normal text-muted-foreground">· {p.currency}</span>{p.warnings.map(w => <p key={w} className="text-sm font-normal text-muted-foreground">{w}</p>)}</td><td className="pr-3">{p.periodStart ?? 'n/a'} to {p.periodEnd}</td><td className="pr-3 text-right">{p.irr.status === 'solved' ? pct(p.irr.bps) : 'n/a'}</td><td className="pr-3 text-right">{multiple(p.tvpi)}</td><td className="pr-3 text-right">{multiple(p.dpi)}</td><td className="pr-3 text-right">{multiple(p.rvpi)}</td><td className="pr-3 text-right">{p.twr?.status === 'solved' ? pct(p.twr.bps) : 'n/a'}</td></tr>)}</tbody></table></div>}
         <details className="rounded-md border p-4"><summary className="cursor-pointer font-medium">How returns are calculated</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">{v.assumptions.map(a => <li key={a}>{a}</li>)}</ul></details>
       </TabsContent>
 

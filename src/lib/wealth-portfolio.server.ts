@@ -12,6 +12,7 @@ import {
   previewFlowImport,
   rowFingerprint,
   quarterOf,
+  canonicalJson,
   SELF,
   type FundPosition,
   type OwnershipLink,
@@ -31,18 +32,31 @@ const admin = async () => (await import('@/integrations/supabase/client.server')
 const num = (v: unknown) => { const n = Number(v ?? 0); return Number.isFinite(n) ? n : 0; };
 function checked<T>(r: { data: T; error: any }, what = 'Portfolio records'): T { if (r.error) { console.error('[wealth-portfolio]', what, r.error?.code); throw new Error(`${what} could not be loaded. Please try again.`); } return r.data; }
 
-export async function resolvePortfolioAccess(actorId: string, ownerId: string) {
-  if (actorId === ownerId) return portfolioAccess({ actorId, ownerId, delegationAllowed: false, staffCanSee: false })!;
+/**
+ * A consolidated portfolio spans every investment the person holds, so only a
+ * live whole-person delegation carrying view_investments opens it. Fund- or
+ * investing-party-scoped delegations, and managing one of the person's funds,
+ * grant nothing here.
+ */
+export async function personDelegationAllows(actorId: string, ownerId: string) {
   const { canAct } = await import('./delegated-access.server');
   const decision = await canAct(actorId, 'view_investments', { type: 'person', id: ownerId });
+  if (!decision.allowed || !decision.delegationId) return false;
+  const row = checked<any>(await (await admin()).from('delegations').select('id,scope_type,scope_id,principal_user_id').eq('id', decision.delegationId).maybeSingle(), 'Access');
+  return Boolean(row && row.scope_type === 'person' && row.scope_id === ownerId && row.principal_user_id === ownerId);
+}
+
+export async function resolvePortfolioAccess(actorId: string, ownerId: string) {
+  if (actorId === ownerId) return portfolioAccess({ actorId, ownerId, delegationAllowed: false, staffCanSee: false })!;
+  const delegationAllowed = await personDelegationAllows(actorId, ownerId);
   let staffCanSee = false;
-  if (!decision.allowed) {
+  if (!delegationAllowed) {
     const db = await admin();
     const roles = (checked<any[]>(await db.from('user_roles').select('role').eq('user_id', actorId), 'Access') ?? []).map(r => String(r.role));
     const { capabilitiesFor } = await import('./ops-capabilities');
     staffCanSee = capabilitiesFor(roles).some(c => c === 'reports:see');
   }
-  const access = portfolioAccess({ actorId, ownerId, delegationAllowed: decision.allowed, staffCanSee });
+  const access = portfolioAccess({ actorId, ownerId, delegationAllowed, staffCanSee });
   if (!access) throw new Error('You do not have access to this portfolio.');
   return access;
 }
@@ -53,9 +67,8 @@ export async function portfolioSubjects(actorId: string) {
   const out: { ownerId: string; label: string; role: 'owner' | 'delegate' | 'staff' }[] = [{ ownerId: actorId, label: 'My portfolio', role: 'owner' }];
   const delegations = checked<any[]>(await db.from('delegations').select('principal_user_id,status,revoked_at,expires_at').eq('delegate_user_id', actorId), 'Shared portfolios') ?? [];
   const principals = [...new Set(delegations.filter(d => d.status === 'active' && !d.revoked_at && (!d.expires_at || new Date(d.expires_at) > new Date())).map(d => String(d.principal_user_id)))].filter(id => id !== actorId);
-  const { canAct } = await import('./delegated-access.server');
   const allowed: string[] = [];
-  for (const id of principals) if ((await canAct(actorId, 'view_investments', { type: 'person', id })).allowed) allowed.push(id);
+  for (const id of principals) if (await personDelegationAllows(actorId, id)) allowed.push(id);
   const roles = (checked<any[]>(await db.from('user_roles').select('role').eq('user_id', actorId), 'Access') ?? []).map(r => String(r.role));
   const { capabilitiesFor } = await import('./ops-capabilities');
   const staff = capabilitiesFor(roles).some(c => c === 'reports:see');
@@ -104,7 +117,13 @@ async function loadHoldings(db: any, ownerId: string, asOf: string) {
     return { holdingId: r.holding_id, observationId: r.id, sourceNote: r.source_note, name: r.name, assetClass: r.asset_class, currency: r.currency, valueCents: r.value_cents, costCents: r.cost_cents, asOf: r.as_of, source: r.source === 'import' ? 'import' : 'manual', sector: r.sector ?? null, geography: r.geography ?? null, holderEntityId: r.holder_entity_id ?? null, representsEntityId: r.represents_entity_id ?? null,
       history: [...byDate.values()].sort((a, b) => a.as_of.localeCompare(b.as_of)).map(x => ({ asOf: x.as_of, valueCents: x.value_cents })) };
   });
-  return { rows, holdings };
+  // Holdings that exist now but whose values are all dated after asOf: reported as left out, never estimated.
+  const latestById = new Map<string, any>();
+  for (const r of rows) { const replacedAll = rows.some(x => x.supersedes_id === r.id); if (!replacedAll) latestById.set(r.holding_id, r); }
+  const excludedAfterPeriod = [...latestById.values()]
+    .filter(r => !r.archived && !holdings.some(h => h.holdingId === r.holding_id))
+    .map(r => ({ holdingId: String(r.holding_id), name: String(r.name), firstValueDate: rows.filter(x => x.holding_id === r.holding_id && !x.archived).map(x => String(x.as_of)).sort()[0] ?? String(r.as_of) }));
+  return { rows, holdings, excludedAfterPeriod };
 }
 
 const CONTRIBUTION_EVENTS = new Set(['contribution', 'contribution_settled', 'transfer_in']);
@@ -118,13 +137,13 @@ async function loadFunds(db: any, ownerId: string, asOf: string) {
   const ids = positions.map(p => p.id), offeringIds = [...new Set(positions.map(p => p.offering_id))];
   const [offerings, statements, events, callLines, distLines] = await Promise.all([
     db.from('offerings').select('id,name').in('id', offeringIds),
-    db.from('investor_statements').select('position_id,period_end,snapshot,status').in('position_id', ids).eq('status', 'published').lte('period_end', asOf).order('period_end', { ascending: true }),
+    db.from('investor_statements').select('id,position_id,period_end,snapshot,status,version,supersedes_id').in('position_id', ids).eq('status', 'published').lte('period_end', asOf).order('period_end', { ascending: true }),
     db.from('commitment_events').select('id,position_id,event_type,amount_cents,effective_date').in('position_id', ids).lte('effective_date', asOf).order('effective_date', { ascending: true }),
     db.from('capital_call_lines').select('id,capital_call_id,position_id,called_cents,received_cents,due_date,offering_id').eq('investor_user_id', ownerId),
     db.from('distribution_lines').select('id,batch_id,position_id,net_cents,currency,offering_id,payment_state').eq('investor_user_id', ownerId),
   ]);
   const names = new Map((checked<any[]>(offerings, 'Fund records') ?? []).map(o => [o.id, o.name]));
-  const st = checked<any[]>(statements, 'Fund statements') ?? [];
+  const st = currentStatements(checked<any[]>(statements, 'Fund statements') ?? []);
   const ev = (checked<any[]>(events, 'Fund cash flows') ?? []).filter(e => CONTRIBUTION_EVENTS.has(e.event_type) || DISTRIBUTION_EVENTS.has(e.event_type));
   const funds: FundPosition[] = positions.map(p => {
     const mine = st.filter(s => s.position_id === p.id);
@@ -165,6 +184,19 @@ async function loadFunds(db: any, ownerId: string, asOf: string) {
   return { funds, projected };
 }
 
+/** One published statement per position and period: corrections replace earlier versions instead of adding a second value. */
+export function currentStatements<T extends { id?: string; position_id: string; period_end: string; version?: number | null; supersedes_id?: string | null }>(rows: T[]): T[] {
+  const replaced = new Set(rows.map(r => r.supersedes_id).filter(Boolean));
+  const best = new Map<string, T>();
+  for (const r of rows) {
+    if (r.id && replaced.has(r.id)) continue;
+    const k = `${r.position_id}|${r.period_end}`;
+    const prior = best.get(k);
+    if (!prior || Number(r.version ?? 0) >= Number(prior.version ?? 0)) best.set(k, r);
+  }
+  return [...best.values()].sort((a, b) => String(a.period_end).localeCompare(String(b.period_end)));
+}
+
 async function loadPersonalCash(db: any, ownerId: string, asOf: string): Promise<PersonalCash[]> {
   const rows = (checked<any[]>(await db.from('personal_wealth_financial_records').select('*').eq('owner_user_id', ownerId), 'Personal cash records')) ?? [];
   const { currentFinancialRecords } = await import('./wealth-dashboard');
@@ -189,7 +221,7 @@ export async function portfolioView(actorId: string, ownerId: string, asOf: stri
   const access = await resolvePortfolioAccess(actorId, ownerId);
   const db = await admin();
   const [records, holdings, fund, personalCash, connected] = await Promise.all([loadRecords(db, ownerId), loadHoldings(db, ownerId, asOf), loadFunds(db, ownerId, asOf), loadPersonalCash(db, ownerId, asOf), loadConnected(db, ownerId)]);
-  const view = buildPortfolio({ asOf, periodStart, entities: records.entities, links: records.links, holdings: holdings.holdings, funds: fund.funds, commitments: records.commitments, privateFlows: records.flows, projected: fund.projected, personalCash, connected: connected.accounts, connectedLive: connected.live });
+  const view = buildPortfolio({ asOf, periodStart, excludedAfterPeriod: holdings.excludedAfterPeriod, entities: records.entities, links: records.links, holdings: holdings.holdings, funds: fund.funds, commitments: records.commitments, privateFlows: records.flows, projected: fund.projected, personalCash, connected: connected.accounts, connectedLive: connected.live });
   const profiles = access.canEdit ? (checked<any[]>(await db.from('investment_profiles').select('id,display_label,legal_name,profile_type').eq('owner_user_id', ownerId), 'Investing parties') ?? []).map(p => ({ id: p.id, label: p.display_label || p.legal_name || 'Investing party', type: p.profile_type ?? null })) : [];
   return { access, ownerId, view, profiles, holdingOptions: holdings.holdings.map(h => ({ holdingId: h.holdingId, name: h.name })) };
 }
@@ -226,6 +258,14 @@ export async function saveRecord(client: OwnerClient, ownerId: string, input: { 
   }
   if (input.kind === 'cash_flow' && !records.commitments.some(c => c.recordId === d['commitmentId'])) throw new Error('Choose the private investment for this cash flow.');
   if (input.kind === 'commitment' && d['holderEntityId'] && !records.entities.some(e => e.recordId === d['holderEntityId'])) throw new Error('Choose an entity on file.');
+  if (input.kind === 'commitment' && d['holdingId'] && !input.archived) {
+    const obs = checked<any[]>(await db.from('personal_wealth_observations').select('id,holding_id,holder_entity_id,currency,archived,supersedes_id').eq('owner_user_id', ownerId).eq('holding_id', String(d['holdingId'])), 'Holding') ?? [];
+    const replaced = new Set(obs.map(o => o.supersedes_id).filter(Boolean));
+    const cur = obs.find(o => !replaced.has(o.id) && !o.archived);
+    if (!cur) throw new Error('Choose a holding on file.');
+    if ((cur.holder_entity_id ?? null) !== (d['holderEntityId'] ?? null)) throw new Error('The linked holding is held by a different owner. Choose the same owner for both.');
+    if (cur.currency !== d['currency']) throw new Error('The linked holding uses a different currency.');
+  }
   const r = await client.from('wealth_portfolio_records').insert({ owner_user_id: ownerId, created_by: ownerId, record_id: recordId, supersedes_id: input.priorId ?? null, kind: input.kind, detail: d, archived: Boolean(input.archived) });
   if (r.error) throw new Error(r.error.code === '23505' ? 'Someone already corrected this record. Refresh and try again.' : 'The record could not be saved. Please try again.');
   await audit(client, ownerId, input.archived ? `${input.kind}.archived` : input.priorId ? `${input.kind}.corrected` : `${input.kind}.added`, recordId, { detail: d });
@@ -282,8 +322,9 @@ export async function publishQuarterReport(client: OwnerClient, ownerId: string,
   if (q.end !== periodEnd) throw new Error('Choose a quarter end date.');
   if (q.end > today) throw new Error('A quarterly report can only be published after the quarter ends.');
   const { view } = await portfolioView(ownerId, ownerId, q.end, q.start);
-  const snapshot = { periodLabel: q.label, periodStart: q.start, periodEnd: q.end, generatedAt: new Date().toISOString(), view };
-  const text = JSON.stringify(snapshot);
+  // Stored exactly as the database will return it, hashed over sorted keys so the copy can be re-verified on every download.
+  const snapshot = JSON.parse(JSON.stringify({ periodLabel: q.label, periodStart: q.start, periodEnd: q.end, generatedAt: new Date().toISOString(), view }));
+  const text = canonicalJson(snapshot);
   const db = await admin();
   const prior = (checked<any[]>(await db.from('wealth_report_versions').select('id,version').eq('owner_user_id', ownerId).eq('period_end', q.end).order('version', { ascending: false }).limit(1)) ?? [])[0];
   // Reports are inserted by the server only, from the server-computed view, so figures cannot be supplied by the browser.
@@ -296,17 +337,19 @@ export async function publishQuarterReport(client: OwnerClient, ownerId: string,
 export async function reportList(actorId: string, ownerId: string) {
   await resolvePortfolioAccess(actorId, ownerId);
   const db = await admin();
-  const rows = checked<any[]>(await db.from('wealth_report_versions').select('id,period_label,period_start,period_end,version,published_at,supersedes_id').eq('owner_user_id', ownerId).order('period_end', { ascending: false }).order('version', { ascending: false })) ?? [];
+  const rows = checked<any[]>(await db.from('wealth_report_versions').select('id,period_label,period_start,period_end,version,published_at,supersedes_id,totals:snapshot->view->totals,complete:snapshot->view->completeness->complete,completenessMessage:snapshot->view->completeness->message').eq('owner_user_id', ownerId).order('period_end', { ascending: false }).order('version', { ascending: false })) ?? [];
   const replaced = new Set(rows.map(r => r.supersedes_id).filter(Boolean));
-  return rows.map(r => ({ id: r.id, periodLabel: r.period_label, periodStart: r.period_start, periodEnd: r.period_end, version: r.version, publishedAt: r.published_at, current: !replaced.has(r.id) }));
+  return rows.map(r => ({ id: r.id, periodLabel: r.period_label, periodStart: r.period_start, periodEnd: r.period_end, version: r.version, publishedAt: r.published_at, current: !replaced.has(r.id), totals: (Array.isArray(r.totals) ? r.totals : []) as { currency: string; valueCents: number; missingValues: number; lines: number }[], complete: r.complete === true, completenessMessage: typeof r.completenessMessage === 'string' ? r.completenessMessage : null }));
 }
 
 export async function reportSnapshot(actorId: string, reportId: string) {
   const db = await admin();
   const row = checked<any>(await db.from('wealth_report_versions').select('id,owner_user_id,period_label,version,snapshot,snapshot_sha256,published_at').eq('id', reportId).maybeSingle(), 'Report');
+  // Unknown and not-yours look the same, so report IDs cannot be probed.
   if (!row) throw new Error('Report not found.');
-  await resolvePortfolioAccess(actorId, row.owner_user_id);
-  return { id: row.id, periodLabel: row.period_label, version: row.version, publishedAt: row.published_at, sha256: row.snapshot_sha256, snapshot: row.snapshot };
+  try { await resolvePortfolioAccess(actorId, row.owner_user_id); } catch { throw new Error('Report not found.'); }
+  const integrity = (await sha256(canonicalJson(row.snapshot))) === row.snapshot_sha256 ? 'verified' as const : 'unverified' as const;
+  return { id: row.id, periodLabel: row.period_label, version: row.version, publishedAt: row.published_at, sha256: row.snapshot_sha256, integrity, snapshot: row.snapshot };
 }
 
 export async function auditTrail(actorId: string, ownerId: string) {

@@ -44,7 +44,7 @@ export function createQaPortfolio(): QaPortfolio {
     commitments: [{ recordId: VENTURE, rowId: 'row-c1', name: 'Fictional Venture Partners II', currency: 'USD', commitmentCents: 25_000_000, holderEntityId: null, holdingId: VENTURE_HOLDING, startDate: '2025-10-01' }],
     flows: [
       { recordId: 'pf1', rowId: 'row-pf1', commitmentId: VENTURE, date: '2025-10-15', flowType: 'contribution', status: 'actual', amountCents: 10_000_000, note: 'First call', source: 'manual' },
-      { recordId: 'pf2', rowId: 'row-pf2', commitmentId: VENTURE, date: '2026-04-15', flowType: 'contribution', status: 'actual', amountCents: 5_000_000, note: '', source: 'manual' },
+      { recordId: 'pf2', rowId: 'row-pf2', commitmentId: VENTURE, date: '2026-03-31', flowType: 'contribution', status: 'actual', amountCents: 5_000_000, note: '', source: 'manual' },
       { recordId: 'pf3', rowId: 'row-pf3', commitmentId: VENTURE, date: '2026-12-15', flowType: 'contribution', status: 'projected', amountCents: 5_000_000, note: 'Expected next call', source: 'manual' },
     ],
     projected: [{ id: 'qa-call', kind: 'capital_call', name: 'Fablewood Ventures I LP · fourth call', currency: 'USD', amountCents: 10_000_000, date: '2027-01-15', source: 'fund_records' }],
@@ -114,21 +114,21 @@ export function handleQaPortfolioCall(fnName: string, data: any, p: QaPortfolio)
     }
     case 'listWealthReports': {
       const replaced = new Set(p.reports.map(r => r.supersedes).filter(Boolean));
-      return p.reports.map(r => ({ id: r.id, periodLabel: r.periodLabel, periodStart: r.periodStart, periodEnd: r.periodEnd, version: r.version, publishedAt: r.publishedAt, current: !replaced.has(r.id) }));
+      return p.reports.map(r => { const v = (r.snapshot as any)?.view; return { id: r.id, periodLabel: r.periodLabel, periodStart: r.periodStart, periodEnd: r.periodEnd, version: r.version, publishedAt: r.publishedAt, current: !replaced.has(r.id), totals: v?.totals ?? [], complete: v?.completeness?.complete === true, completenessMessage: v?.completeness?.message ?? null }; });
     }
     case 'publishWealthReport': {
       const q = lastCompletedQuarter(today());
       if (data?.periodEnd !== q.end) throw new Error('Choose a quarter end date.');
       const prior = p.reports.filter(r => r.periodEnd === q.end).sort((a, b) => b.version - a.version)[0];
       const id = `qa-report-${p.seq++}`;
-      p.reports.unshift({ id, periodLabel: q.label, periodStart: q.start, periodEnd: q.end, version: (prior?.version ?? 0) + 1, publishedAt: new Date().toISOString(), snapshot: { periodLabel: q.label, view: view(p, q.end, q.start) }, supersedes: prior?.id ?? null });
+      p.reports.unshift({ id, periodLabel: q.label, periodStart: q.start, periodEnd: q.end, version: (prior?.version ?? 0) + 1, publishedAt: new Date().toISOString(), snapshot: JSON.parse(JSON.stringify({ periodLabel: q.label, view: view(p, q.end, q.start) })), supersedes: prior?.id ?? null });
       log(p, 'report.published', `Version ${(prior?.version ?? 0) + 1}`);
       return { ok: true, version: (prior?.version ?? 0) + 1 };
     }
     case 'getWealthReportSnapshot': {
       const r = p.reports.find(x => x.id === data?.reportId);
       if (!r) throw new Error('Report not found.');
-      return { id: r.id, periodLabel: r.periodLabel, version: r.version, publishedAt: r.publishedAt, sha256: 'fictional', snapshot: r.snapshot };
+      return { id: r.id, periodLabel: r.periodLabel, version: r.version, publishedAt: r.publishedAt, sha256: 'f1c7f1c7f1c7f1c7fictional', integrity: 'verified', snapshot: r.snapshot };
     }
     case 'getWealthAuditTrail': return p.audit;
     default: return undefined;
