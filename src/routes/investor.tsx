@@ -1,4 +1,4 @@
-import { Link, Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +6,7 @@ import { clearStoredClientContext } from "@/lib/client-context-storage";
 import { PolicyGate } from "@/components/policy-gate";
 import { AccountKycGate } from "@/components/account-kyc-gate";
 import { SecurityGate } from "@/components/security-gate";
-import { Button } from "@/components/ui/button";
+import { InvestorPortalFrame } from "@/components/investor-portal-frame";
 import { logSecurityEvent } from "@/lib/account-security.functions";
 
 /**
@@ -42,37 +42,14 @@ function InvestorLayout() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link to="/investor" className="font-heading text-lg font-semibold text-primary">
-            Harmonious <span className="font-normal text-muted-foreground">Investor Portal</span>
-          </Link>
-          <nav className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/investor" activeOptions={{ exact: true }} activeProps={{ className: "bg-accent" }}>
-                My investments
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/investor/tax" activeProps={{ className: "bg-accent" }}>Tax</Link>
-            </Button>
-            <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
-          </nav>
-        </div>
-      </header>
-      <main className="flex-1">
-        <PolicyGate onSignOut={signOut}>
-          <AccountKycGate onSignOut={signOut}>
-            <SecurityGate onSignOut={signOut}>
-              <Outlet />
-            </SecurityGate>
-          </AccountKycGate>
-        </PolicyGate>
-      </main>
-      <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        Harmonious fund administration · Confidential to you
-      </footer>
-    </div>
+    <InvestorPortalFrame onSignOut={signOut}>
+      <PolicyGate onSignOut={signOut}>
+        <AccountKycGate onSignOut={signOut}>
+          <SecurityGate onSignOut={signOut}>
+            <Outlet />
+          </SecurityGate>
+        </AccountKycGate>
+      </PolicyGate>
+    </InvestorPortalFrame>
   );
 }

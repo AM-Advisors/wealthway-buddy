@@ -5,7 +5,7 @@
  * touching real records, emails or money. Every server call is intercepted;
  * anything not explicitly modeled is blocked.
  */
-import { createFileRoute, createRootRoute, createRoute, createRouter, RouterProvider, Outlet, createMemoryHistory, useParams, Link } from "@tanstack/react-router";
+import { createFileRoute, createRootRoute, createRoute, createRouter, RouterProvider, Outlet, createMemoryHistory, useParams, Link, redirect, useRouter, useRouterState } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CreateInvestor } from "@/components/create-investor";
@@ -25,6 +25,7 @@ import { WealthPortfolio } from "@/components/wealth-portfolio";
 import { SecurityGate } from "@/components/security-gate";
 import { createQaMfaAuth, QA_MFA_CODE, type QaMfaScenario } from "@/lib/qa-sandbox/mfa-fixture";
 import { Suspense } from "react";
+import { QaAccreditationPage, QaFundDocumentsPage, QaInvestorHomePage, QaInvestorJourneyLauncher, QaJourneyPage } from "@/components/qa-investor-journey";
 
 export const Route = createFileRoute("/qa-sandbox")({
   head: () => ({
@@ -79,8 +80,16 @@ function QaSandboxPage() {
     const index = createRoute({ getParentRoute: () => root, path: "/", component: SandboxHome });
     const record = createRoute({ getParentRoute: () => root, path: "/manager/fund/$fundId/investor/$onboardingId", component: FictionalRecord });
     const opsRecord = createRoute({ getParentRoute: () => root, path: "/ops/fund/$fundId/investor/$onboardingId", component: FictionalRecord });
+    // Fictional investor journey: the real investor screens, answered by the sandbox state.
+    const st = () => stateRef.current ?? createQaState("staff");
+    const journey = createRoute({ getParentRoute: () => root, path: "/investor/journey", component: () => <QaJourneyPage state={st()} /> });
+    const investorHome = createRoute({ getParentRoute: () => root, path: "/investor", component: () => <QaInvestorHomePage state={st()} /> });
+    const fundDocs = createRoute({ getParentRoute: () => root, path: "/fund/$offeringId/documents", component: () => <QaFundDocumentsPage state={st()} /> });
+    const accreditation = createRoute({ getParentRoute: () => root, path: "/onboarding/accreditation", component: () => <QaAccreditationPage state={st()} /> });
+    const toJourney = (path: string) => createRoute({ getParentRoute: () => root, path, beforeLoad: () => { throw redirect({ to: "/investor/journey" as never }); } });
+    const toHome = createRoute({ getParentRoute: () => root, path: "/home", beforeLoad: () => { throw redirect({ to: "/investor" }); } });
     return createRouter({
-      routeTree: root.addChildren([index, record, opsRecord]),
+      routeTree: root.addChildren([index, record, opsRecord, journey, investorHome, fundDocs, accreditation, toJourney("/fund/$offeringId/funding"), toJourney("/onboarding/documents"), toHome]),
       history: createMemoryHistory({ initialEntries: ["/"] }),
     });
     // Role is read through context at render time; the router itself is stable.
@@ -95,14 +104,27 @@ function QaSandboxPage() {
   );
 }
 
+const INVESTOR_PATHS = /^\/(investor|fund|onboarding)(\/|$)/;
+
 function SandboxShell({ children }: { children: React.ReactNode }) {
   const { state, role, setRole } = useQa();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const investorView = INVESTOR_PATHS.test(pathname);
+  // Plain links inside real screens stay inside the sandbox instead of leaving for the real app.
+  const keepInside = (e: React.MouseEvent) => {
+    const a = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
+    const href = a?.getAttribute("href") ?? "";
+    if (!a || !href.startsWith("/") || href.startsWith("//")) return;
+    e.preventDefault();
+    void router.navigate({ to: href.split("?")[0] as never });
+  };
   // Update the mock state synchronously so remounted queries see the new role.
   const pick = (r: QaRole) => { state.role = r; setRole(r); void queryClient.invalidateQueries(); };
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b bg-muted/60 px-4 py-3">
+      <div className="border-b bg-muted/60 px-4 py-3" data-qa-chrome="banner">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Badge variant="secondary">Fictional QA sandbox</Badge>
@@ -115,14 +137,14 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">{children}</div>
+      {investorView ? <div onClickCapture={keepInside}>{children}</div> : <div className="mx-auto max-w-3xl space-y-4 px-4 py-6" onClickCapture={keepInside}>{children}</div>}
     </div>
   );
 }
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -143,6 +165,7 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "documents" ? "default" : "outline"} onClick={() => setTab("documents")}>Fund documents</Button>
             <Button size="sm" variant={tab === "fund" ? "default" : "outline"} onClick={() => setTab("fund")}>Self Serve fund</Button>
             <Button size="sm" variant={tab === "guide" ? "default" : "outline"} onClick={() => setTab("guide")}>Investor walkthrough</Button>
+            <Button size="sm" variant={tab === "journey" ? "default" : "outline"} onClick={() => setTab("journey")}>Investor journey</Button>
             <Button size="sm" variant={tab === "tax" ? "default" : "outline"} onClick={() => setTab("tax")}>Investor tax review</Button>
             <Button size="sm" variant={tab === "questionnaire" ? "default" : "outline"} onClick={() => setTab("questionnaire")}>Investor questionnaire</Button>
             <Button size="sm" variant={tab === "portfolio" ? "default" : "outline"} onClick={() => setTab("portfolio")}>Consolidated portfolio</Button>
@@ -151,7 +174,7 @@ function SandboxHome() {
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner Casey Alden: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner Casey Alden: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>

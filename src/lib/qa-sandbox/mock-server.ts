@@ -54,6 +54,7 @@ import { IRS_FORM_REVISIONS } from "@/lib/onboarding-compliance-model";
 import { taxReviewDetails } from "@/lib/investor-step-prefill";
 import { amlFields, evaluateAml } from "@/lib/onboarding-intake-model";
 import { createQaPortfolio, handleQaPortfolioCall, QA_PORTFOLIO_FNS, type QaPortfolio } from "./portfolio-fixture";
+import { createQaJourney, handleQaJourneyCall, QA_JOURNEY_FNS, type QaJourney } from "./investor-journey-fixture";
 
 export type QaRole = "staff" | "manager";
 
@@ -72,6 +73,7 @@ export type QaState = {
   financialAnswers?: Record<string, string>;
   financialReview?: string;
   portfolio?: QaPortfolio;
+  journey?: QaJourney;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -94,6 +96,7 @@ const KNOWN_FNS = [
   "getFundSetupOverview", "saveFundSetupFieldsFn",
   "investorComplianceFn", "previewTaxFormFn", "certifyTaxFormFn", "myTaxDocumentUrlFn", "submitAmlFn",
   ...QA_PORTFOLIO_FNS,
+  ...QA_JOURNEY_FNS,
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -102,7 +105,7 @@ function resolveFnName(url: string): string | null {
   const direct = match(url);
   if (direct) return direct;
   try {
-    const segment = url.split("/").pop() ?? "";
+    const segment = (url.split("?")[0] ?? "").split("/").pop() ?? "";
     const decoded = atob(segment.replace(/-/g, "+").replace(/_/g, "/"));
     // Ids are either JSON { file, export } or "file#export".
     if (decoded.includes("#")) return KNOWN_FNS.find((name) => decoded.split("#").pop() === name || decoded.endsWith(`#${name}`)) ?? match(decoded.split("#").pop() ?? "");
@@ -119,6 +122,7 @@ export class QaBlockedError extends Error {}
 /** Pure handler for one mocked server-function call. Throws Error with a user-facing message on failure. */
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
   if ((QA_PORTFOLIO_FNS as readonly string[]).includes(fnName)) return handleQaPortfolioCall(fnName, data, (state.portfolio ??= createQaPortfolio()));
+  if ((QA_JOURNEY_FNS as readonly string[]).includes(fnName)) return handleQaJourneyCall(fnName, data, (state.journey ??= createQaJourney()));
   switch (fnName) {
     case "investorComplianceFn": {
       if (data?.onboardingId === "qa-financial-investment") return {
@@ -306,7 +310,7 @@ export function installQaFetchMock(state: QaState): () => void {
     try {
       return json(handleQaServerCall(fnName, data, state));
     } catch (e) {
-      return fail((e as Error).message, e instanceof QaBlockedError ? 403 : 400);
+      return fail((e as Error).message, e instanceof QaBlockedError || (e as Error).name === "QaBlockedError" ? 403 : 400);
     }
   };
   return () => {

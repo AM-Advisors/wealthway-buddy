@@ -17,7 +17,6 @@ import { Route as CapTableRouteImport } from './routes/cap-table'
 import { Route as CapTableManagementRouteImport } from './routes/cap-table-management'
 import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
 import { Route as CapTableTermsRouteImport } from './routes/cap-table-terms'
-import { Route as CaptureOnboardingDemoRouteImport } from './routes/capture-onboarding-demo'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as ContactusRouteImport } from './routes/contactus'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
@@ -536,11 +535,6 @@ const CapTablePrivacyRoute = CapTablePrivacyRouteImport.update({
 const CapTableTermsRoute = CapTableTermsRouteImport.update({
   id: '/cap-table-terms',
   path: '/cap-table-terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CaptureOnboardingDemoRoute = CaptureOnboardingDemoRouteImport.update({
-  id: '/capture-onboarding-demo',
-  path: '/capture-onboarding-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientLoginRoute = ClientLoginRouteImport.update({
@@ -3302,7 +3296,6 @@ export interface FileRoutesByFullPath {
   '/cap-table-management': typeof CapTableManagementRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
-  '/capture-onboarding-demo': typeof CaptureOnboardingDemoRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
   '/data-deletion': typeof DataDeletionRoute
@@ -3791,7 +3784,6 @@ export interface FileRoutesByTo {
   '/cap-table-management': typeof CapTableManagementRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
-  '/capture-onboarding-demo': typeof CaptureOnboardingDemoRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
   '/data-deletion': typeof DataDeletionRoute
@@ -4276,7 +4268,6 @@ export interface FileRoutesById {
   '/cap-table-management': typeof CapTableManagementRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
-  '/capture-onboarding-demo': typeof CaptureOnboardingDemoRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
   '/data-deletion': typeof DataDeletionRoute
@@ -4768,7 +4759,6 @@ export interface FileRouteTypes {
     | '/cap-table-management'
     | '/cap-table-privacy'
     | '/cap-table-terms'
-    | '/capture-onboarding-demo'
     | '/client-login'
     | '/contactus'
     | '/data-deletion'
@@ -5257,7 +5247,6 @@ export interface FileRouteTypes {
     | '/cap-table-management'
     | '/cap-table-privacy'
     | '/cap-table-terms'
-    | '/capture-onboarding-demo'
     | '/client-login'
     | '/contactus'
     | '/data-deletion'
@@ -5741,7 +5730,6 @@ export interface FileRouteTypes {
     | '/cap-table-management'
     | '/cap-table-privacy'
     | '/cap-table-terms'
-    | '/capture-onboarding-demo'
     | '/client-login'
     | '/contactus'
     | '/data-deletion'
@@ -6233,7 +6221,6 @@ export interface RootRouteChildren {
   CapTableManagementRoute: typeof CapTableManagementRoute
   CapTablePrivacyRoute: typeof CapTablePrivacyRoute
   CapTableTermsRoute: typeof CapTableTermsRoute
-  CaptureOnboardingDemoRoute: typeof CaptureOnboardingDemoRoute
   ClientLoginRoute: typeof ClientLoginRoute
   ContactusRoute: typeof ContactusRoute
   DataDeletionRoute: typeof DataDeletionRoute
@@ -6368,13 +6355,6 @@ declare module '@tanstack/react-router' {
       path: '/cap-table-terms'
       fullPath: '/cap-table-terms'
       preLoaderRoute: typeof CapTableTermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/capture-onboarding-demo': {
-      id: '/capture-onboarding-demo'
-      path: '/capture-onboarding-demo'
-      fullPath: '/capture-onboarding-demo'
-      preLoaderRoute: typeof CaptureOnboardingDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client-login': {
@@ -10786,7 +10766,6 @@ const rootRouteChildren: RootRouteChildren = {
   CapTableManagementRoute: CapTableManagementRoute,
   CapTablePrivacyRoute: CapTablePrivacyRoute,
   CapTableTermsRoute: CapTableTermsRoute,
-  CaptureOnboardingDemoRoute: CaptureOnboardingDemoRoute,
   ClientLoginRoute: ClientLoginRoute,
   ContactusRoute: ContactusRoute,
   DataDeletionRoute: DataDeletionRoute,
