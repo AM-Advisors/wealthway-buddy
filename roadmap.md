@@ -1133,11 +1133,11 @@
 - [ ] Signed-in browser walk of Setup and Create fund: blocked by two-step sign-in.
 
 ## Foundation Administration phase 1 (uploaded brief, 2026-11-11)
-- [ ] Foundation profile linked to an existing client entity (legal vs charitable classification, exemption status incl. pending/unknown, contact, documents, encrypted EIN reuse)
-- [ ] Foundation sections in client/entity navigation: Overview, People and authority, Documents, Services/quotes/agreements, Tasks
-- [ ] People and authority: canonical Persons, roles + authority scope + evidence; preparer never grants sign/verify/grant/bank/payment authority; exact-client/entity server checks
-- [ ] Service catalog: Foundation Administration with six components, delivery readiness, not shown as available
-- [ ] Quotes via existing editor/pricing/approvals: no invented prices, missing price needs negotiated price + executive approval, drafts save, unreleased blocks send/contract/bill everywhere
-- [ ] Foundation SOW scope (Harmonious duties vs retained responsibilities), Operations handoff without fund creation
-- [ ] Feature flag + additive migrations; tests for access, preparer vs signer, pricing, release blocks, duplicate coverage, version consistency, signed history, handoff
-- [ ] Dependencies report for banking, nonprofit accounting, donors, grants, compliance, payments
+- [x] Foundation profile linked to an existing client entity, classification, exemption, EIN vault, documents
+- [x] Foundation tab on the Ops client record: Overview, People and authority, Documents, Services/quotes/agreements, Tasks and deadlines
+- [x] People and authority with evidence; preparer limits enforced in app and database
+- [x] Six components with truthful readiness; none released
+- [x] Quotes through the existing editor: negotiated price + executive approval, drafts save, send/SOW/sign/invoice blocked everywhere
+- [x] Scope terms (Harmonious duties vs retained responsibilities), Operations handoff without fund creation
+- [x] Feature flag + migration 0389; unit tests, rolled-back database checks, sandbox browser check
+- [ ] Release blockers (waiting on user decisions/build-out): approved rates or negotiated-price policy per component, foundation SOW template approval, client-facing onboarding, foundation KYB/AML, nonprofit accounting, donors, grants, compliance calendar, payments

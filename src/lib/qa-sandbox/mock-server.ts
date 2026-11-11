@@ -33,6 +33,7 @@ function decodeCrossJson(node: any): any {
   if (node === null || typeof node !== "object") return node;
   if (Array.isArray(node)) return node.map(decodeCrossJson);
   if (typeof node.t !== "number") return node;
+  if (node.t === 9 && Array.isArray(node.a)) return node.a.map(decodeCrossJson); // array
   if (node.t === 0) return node.s; // number
   if (node.t === 1) return unescapeSeroval(String(node.s)); // string
   if (node.t === 2) return [null, undefined, true, false, -0, Infinity, -Infinity, NaN][node.s as number]; // constant
