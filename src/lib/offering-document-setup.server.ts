@@ -530,17 +530,22 @@ export async function importRequestDocuments(userId: string, input: { offeringId
   const prefix = `client/${input.clientId}/fund-requests/`;
   const imported: string[] = [];
   const failed: string[] = [];
+  const formation: string[] = [];
   const { data: prior } = await db().from("offering_document_events").select("detail").eq("offering_id", input.offeringId).eq("event", "request_document_imported");
   const done = new Set(((prior ?? []) as any[]).map((e) => e.detail?.sourcePath).filter(Boolean));
   for (const doc of input.documents) {
     const name = String(doc.fileName ?? "").trim() || "document.pdf";
     if (!doc.path?.startsWith(prefix) || doc.path.includes("..")) { failed.push(name); continue; }
     if (done.has(doc.path)) continue;
+    const { requestDocumentCategory, sameFileName } = await import("@/lib/offering-document-model");
+    const target = requestDocumentCategory(String(doc.kind ?? ""));
+    if (!target) { formation.push(name); continue; }
+    const { data: existingFiles } = await db().from("offering_document_versions").select("file_name").eq("offering_id", input.offeringId);
+    if (((existingFiles ?? []) as any[]).some((f) => sameFileName(String(f.file_name ?? ""), name))) continue;
     try {
       const { data: blob, error: readError } = await db().storage.from("client-contracts").download(doc.path);
       if (readError || !blob) throw new Error("Could not read the uploaded file.");
-      const { requestDocumentCategory } = await import("@/lib/offering-document-model");
-      const { category, title } = requestDocumentCategory(String(doc.kind ?? ""));
+      const { category, title } = target;
       const { id } = await createSetupDocumentRow(userId, { offeringId: input.offeringId, category, title });
       const dest = `${input.offeringId}/${Date.now()}-${name.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
       const { error } = await db().storage.from("offering-files").upload(dest, blob);
@@ -553,5 +558,5 @@ export async function importRequestDocuments(userId: string, input: { offeringId
       failed.push(name);
     }
   }
-  return { imported, failed };
+  return { imported, failed, formation };
 }

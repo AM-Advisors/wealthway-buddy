@@ -67,10 +67,21 @@ describe("request answers land in Setup", () => {
   });
 
   it("uploaded request documents go to the matching Setup document type", () => {
-    expect(requestDocumentCategory("Subscription agreement").category).toBe("subscription_agreement");
-    expect(requestDocumentCategory("Operating agreement / LPA").category).toBe("operating_agreement");
-    expect(requestDocumentCategory("PPM").category).toBe("ppm");
+    expect(requestDocumentCategory("Subscription agreement")?.category).toBe("subscription_agreement");
+    expect(requestDocumentCategory("Operating agreement / LPA")?.category).toBe("operating_agreement");
+    expect(requestDocumentCategory("PPM")?.category).toBe("ppm");
     expect(requestDocumentCategory("Side letter")).toEqual({ category: "other", title: "Side letter" });
+    expect(requestDocumentCategory("Formation document")).toBeNull();
+  });
+
+  it("a copied file with a download suffix counts as the same document; formation papers are checked by hand", () => {
+    const details = { _kind: "fund_request_v2", fund_name: "F", documents: [
+      { kind: "Subscription agreement", fileName: "Subscription Agreement - Firehawk.pdf", path: "x" },
+      { kind: "Formation document", fileName: "IRS EIN Confirmation.pdf", path: "y" },
+    ] };
+    const rows = checkRequestAgainstSetup(details, snap({ documentFileNames: ["Subscription Agreement - Firehawk (1).pdf"] }));
+    expect(rows.find((r) => r.answer === "Subscription Agreement - Firehawk.pdf")?.state).toBe("in_setup");
+    expect(rows.find((r) => r.answer === "IRS EIN Confirmation.pdf")?.state).toBe("reference");
   });
 
   it("the Setup check compares the real stored values, not just whether something exists", () => {

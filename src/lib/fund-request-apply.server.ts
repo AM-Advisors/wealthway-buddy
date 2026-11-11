@@ -100,6 +100,7 @@ export async function applyRequestToFund(input: {
     const { importRequestDocuments } = await import("@/lib/offering-document-setup.server");
     const res = await importRequestDocuments(actorId, { offeringId, clientId, documents: docs });
     if (res.failed.length) issues.push({ title: "Request documents not copied", description: `Upload these in Setup → Documents: ${res.failed.join(", ")}.` });
+    if (res.formation.length) issues.push({ title: "Formation papers from the request", description: `The client uploaded these with the request. Add them in Setup → Formation evidence or EIN: ${res.formation.join(", ")}.` });
   }
 
   for (const issue of issues) {

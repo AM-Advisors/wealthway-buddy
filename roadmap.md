@@ -1088,11 +1088,12 @@
 - [ ] Signed-in browser checks: blocked on an isolated fictional QA environment, a named test account and its two-step code holder.
 
 ## One place for new SPV requests and Setup (2026-11-10)
-- [ ] Shared request→fund copier used by submission and staff conversion (no stranded answers).
-- [ ] Create Chapter 2 (Walkthrough Capital LLC test org) from its stranded request.
-- [ ] Requested signer recorded as fund signer (title as signer title, not company).
-- [ ] Uploaded request documents land in Setup Documents.
-- [ ] Bank name, tax preparer, eligibility, GP commitment, notes, series/master, services, document path editable in Setup.
-- [ ] One-class funds keep class name and minimum.
-- [ ] Agreements "Request a fund" and legacy first-fund form use the shared request form.
-- [ ] Staff Setup view shows request answers; check table compares real values.
+- [x] Shared request→fund copier used by submission and staff conversion (no stranded answers).
+- [ ] Create Chapter 2 (Walkthrough Capital LLC test org) from its stranded request: "Create fund" button built on Operations → Funds; running it needs a staff sign-in with two-step verification (blocked for the assistant).
+- [x] Requested signer recorded as fund signer (title as signer title, not company).
+- [x] Uploaded request documents land in Setup Documents.
+- [x] Bank name, tax preparer, eligibility, GP commitment, notes, series/master, services, document path in Setup → More fund details.
+- [x] One-class funds keep class name and minimum.
+- [x] Agreements "Request a fund" and legacy first-fund form use the shared request form.
+- [x] Staff Setup view shows request answers; check table compares real values.
+- [ ] Signed-in browser walk of Setup and Create fund: blocked by two-step sign-in.

@@ -4,6 +4,7 @@
  * beside where it lives in Setup, and says whether Setup already has it. It never
  * writes, never marks anything complete and never shows tax identifiers.
  */
+import { requestDocumentCategory, sameFileName } from "@/lib/offering-document-model";
 
 export type SetupSnapshot = {
   legalName: string | null;
@@ -127,7 +128,9 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   const docs = Array.isArray(details["documents"]) ? details["documents"].filter((d: any) => str(d?.fileName)) : [];
   for (const d of docs) {
     const name = str(d.fileName);
-    add({ key: `document_${norm(name)}`, question: `Document: ${str(d.kind) || "Document"}`, answer: name, place: "documents", setup: (s) => ((s.documentFileNames ?? []).some((f) => norm(f) === norm(name)) ? name : null) });
+    // Formation papers and EIN letters belong to formation evidence: shown for a person to check.
+    if (!requestDocumentCategory(str(d.kind))) { add({ key: `document_${norm(name)}`, question: `Formation paper: ${str(d.kind) || "Document"}`, answer: name, place: "jurisdiction", setup: () => null, reference: true }); continue; }
+    add({ key: `document_${norm(name)}`, question: `Document: ${str(d.kind) || "Document"}`, answer: name, place: "documents", setup: (s) => ((s.documentFileNames ?? []).some((f) => sameFileName(f, name)) ? name : null) });
   }
   const docPath = str(details["documents_path"]);
   add({ key: "documents_path", question: "Offering documents", answer: docPath === "have" ? "Client provides the documents" : docPath === "prepare" ? "Harmonious prepares from templates" : docPath, place: "more", setup: (s) => detail(s, "documents_path"), same: (a, s) => norm(a).includes(norm(s)) || (s === "have" && /client/i.test(a)) || (s === "prepare" && /harmonious/i.test(a)) });

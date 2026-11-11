@@ -284,11 +284,19 @@ export function investorDocumentRank(category: string | null | undefined, docTyp
 }
 
 /** Request document kinds (as typed on the new fund request) to Setup document types. */
-export function requestDocumentCategory(kind: string): { category: DocumentCategory; title: string | null } {
+export function requestDocumentCategory(kind: string): { category: DocumentCategory; title: string | null } | null {
   const k = kind.toLowerCase();
+  // Formation papers and EIN letters are formation evidence, not offering documents.
+  if (/formation|certificate|\bein\b|ss-?4|irs/.test(k)) return null;
   if (k.includes("subscription")) return { category: "subscription_agreement", title: null };
   if (k.includes("operating") || k.includes("lpa")) return { category: "operating_agreement", title: null };
   if (k.includes("ppm") || k.includes("placement")) return { category: "ppm", title: null };
   return { category: "other", title: kind.trim() || "Document from fund request" };
 }
 
+
+/** File names compare without download copy suffixes like " (1)" and case. */
+export const sameFileName = (a: string, b: string) => {
+  const n = (x: string) => x.toLowerCase().replace(/\s*\(\d+\)(?=\.[a-z0-9]+$|$)/, "").replace(/[^a-z0-9.]+/g, " ").trim();
+  return n(a) === n(b);
+};
