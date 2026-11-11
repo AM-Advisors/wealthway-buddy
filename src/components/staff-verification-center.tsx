@@ -192,6 +192,7 @@ function EnterVerificationDialog({ open, onOpenChange, initialPersonId, onSaved 
           </section>
 
           <section className="space-y-3 rounded-md border p-4">
+            {!doAml && person && person.amlStatus !== "cleared" && person.amlStatus !== "verified" ? <p className="rounded-md border border-destructive/40 p-2 text-sm text-destructive">Watchlist screening still needed. Identity alone won't finish this person's verification.</p> : null}
             <label className="flex items-center gap-2 text-base font-medium"><Checkbox checked={doAml} onCheckedChange={(v) => setDoAml(v === true)} />Watchlist screening (AML)</label>
             {doAml ? (
               <div className="grid gap-3 sm:grid-cols-2">
