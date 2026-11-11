@@ -1,6 +1,6 @@
 import { isStaffSurface } from "@/lib/host-routing";
 import { canEnrollPasskey } from "@/lib/passkeys";
-import { mfaStage } from "@/lib/mfa-stage";
+import { resolveGateStage, type GateAuth } from "@/lib/mfa-stage";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -46,22 +46,27 @@ function getGps(): Promise<Gps> {
   });
 }
 
-type Stage = "loading" | "setup" | "verify" | "codes" | "ok";
+type Stage = "loading" | "setup" | "verify" | "error" | "codes" | "ok";
 
-export function SecurityGate({ children, onSignOut }: { children: ReactNode; onSignOut: () => void }) {
+export function SecurityGate({
+  children,
+  onSignOut,
+  auth = supabase.auth as unknown as GateAuth,
+}: {
+  children: ReactNode;
+  onSignOut: () => void;
+  /** Only the QA sandbox overrides this, with a fictional sign-in service. */
+  auth?: GateAuth;
+}) {
   const [stage, setStage] = useState<Stage>("loading");
   const [codes, setCodes] = useState<string[]>([]);
   const log = useServerFn(logSecurityEvent);
 
   const check = useCallback(async () => {
-    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    // Factors are read from the sign-in service, not the cached session copy (see mfa-stage.ts).
-    const { data: f, error } = await supabase.auth.mfa.listFactors();
-    const verified = error || !f ? null : f.all.filter((x) => x.status === "verified").length;
-    const next = mfaStage({ currentLevel: data?.currentLevel, verifiedFactorCount: verified });
+    const next = await resolveGateStage(auth);
     if (next === "ok") return setStage((s) => (s === "codes" ? s : "ok"));
     setStage(next);
-  }, []);
+  }, [auth]);
 
   useEffect(() => {
     void check();
@@ -87,12 +92,31 @@ export function SecurityGate({ children, onSignOut }: { children: ReactNode; onS
 
   if (stage === "loading")
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Checking security…</div>;
+  if (stage === "error")
+    return (
+      <Shell onSignOut={onSignOut}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading">We couldn't check your sign-in security</CardTitle>
+            <CardDescription>
+              Your second sign-in step is still required. Check your connection and try again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full" onClick={() => { setStage("loading"); void check(); }}>
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
+      </Shell>
+    );
   if (stage === "setup")
     return (
       <Shell onSignOut={onSignOut}>
         <MfaSetup
+          auth={auth}
           onDone={async () => {
-            await supabase.auth.refreshSession();
+            await auth.refreshSession();
             void send("mfa_enrolled");
             try {
               const r = await generateRecoveryCodes();
@@ -109,14 +133,15 @@ export function SecurityGate({ children, onSignOut }: { children: ReactNode; onS
     return (
       <Shell onSignOut={onSignOut}>
         <MfaVerify
+          auth={auth}
           onDone={async () => {
-            await supabase.auth.refreshSession();
+            await auth.refreshSession();
             void send("mfa_verified");
             setStage("ok");
           }}
           onFail={() => void send("mfa_failed")}
           onRecovered={async () => {
-            await supabase.auth.refreshSession();
+            await auth.refreshSession();
             setStage("setup");
           }}
         />
@@ -151,14 +176,14 @@ function Shell({ children, onSignOut }: { children: ReactNode; onSignOut: () => 
 
 const passkeysSupported = () => typeof window !== "undefined" && !!window.PublicKeyCredential;
 
-function MfaSetup({ onDone }: { onDone: () => void }) {
+function MfaSetup({ onDone, auth }: { onDone: () => void; auth: GateAuth }) {
   const [totp, setTotp] = useState<{ id: string; qr: string; secret: string } | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function addPasskey() {
     setBusy(true);
-    const { error } = await supabase.auth.mfa.webauthn.register({ friendlyName: `Passkey ${new Date().toLocaleDateString()}` });
+    const { error } = await auth.mfa.webauthn!.register({ friendlyName: `Passkey ${new Date().toLocaleDateString()}` });
     setBusy(false);
     if (error) { toast.error("Passkey setup didn't finish. Try again or use an authenticator app."); return; }
     onDone();
@@ -166,7 +191,7 @@ function MfaSetup({ onDone }: { onDone: () => void }) {
 
   async function startTotp() {
     setBusy(true);
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", issuer: "Harmonious", friendlyName: `Authenticator ${Date.now()}` });
+    const { data, error } = await auth.mfa.enroll({ factorType: "totp", issuer: "Harmonious", friendlyName: `Authenticator ${Date.now()}` });
     setBusy(false);
     if (error || !data) { toast.error("Couldn't start authenticator setup."); return; }
     setTotp({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
@@ -175,7 +200,7 @@ function MfaSetup({ onDone }: { onDone: () => void }) {
   async function confirmTotp() {
     if (!totp) return;
     setBusy(true);
-    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: totp.id, code: code.trim() });
+    const { error } = await auth.mfa.challengeAndVerify({ factorId: totp.id, code: code.trim() });
     setBusy(false);
     if (error) { toast.error("That code didn't match. Check the app and try again."); return; }
     onDone();
@@ -187,13 +212,13 @@ function MfaSetup({ onDone }: { onDone: () => void }) {
         <CardTitle className="font-heading">Protect your account</CardTitle>
         <CardDescription>
           Harmonious requires a second step at every sign-in.{" "}
-          {canEnrollPasskey() ? "Choose a passkey or an authenticator app." : "Set up an authenticator app such as Google Authenticator, 1Password or Authy."}
+          {canEnrollPasskey() && auth.mfa.webauthn ? "Choose a passkey or an authenticator app." : "Set up an authenticator app such as Google Authenticator, 1Password or Authy."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!totp && (
           <>
-            {canEnrollPasskey() && (
+            {canEnrollPasskey() && auth.mfa.webauthn && (
               <Button className="w-full" disabled={busy} onClick={addPasskey}>
                 Use a passkey (Face ID, Touch ID, Windows Hello)
               </Button>
@@ -226,10 +251,12 @@ function MfaSetup({ onDone }: { onDone: () => void }) {
 }
 
 function MfaVerify({
+  auth,
   onDone,
   onFail,
   onRecovered,
 }: {
+  auth: GateAuth;
   onDone: () => void;
   onFail: () => void;
   onRecovered: () => void;
@@ -242,10 +269,10 @@ function MfaVerify({
   const useCode = useServerFn(useRecoveryCode);
 
   useEffect(() => {
-    void supabase.auth.mfa.listFactors().then(({ data }) => {
+    void auth.mfa.listFactors().then(({ data }) => {
       setFactors(((data?.all ?? []) as any[]).filter((f) => f.status === "verified"));
     });
-  }, []);
+  }, [auth]);
 
   const passkey = factors.find((f) => f.factor_type === "webauthn");
   const totp = factors.find((f) => f.factor_type === "totp");
@@ -253,7 +280,7 @@ function MfaVerify({
   async function viaPasskey() {
     if (!passkey) return;
     setBusy(true);
-    const { error } = await supabase.auth.mfa.webauthn.authenticate({ factorId: passkey.id });
+    const { error } = await auth.mfa.webauthn!.authenticate({ factorId: passkey.id });
     setBusy(false);
     if (error) {
       onFail();
@@ -265,7 +292,7 @@ function MfaVerify({
   async function viaTotp() {
     if (!totp) return;
     setBusy(true);
-    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: totp.id, code: code.trim() });
+    const { error } = await auth.mfa.challengeAndVerify({ factorId: totp.id, code: code.trim() });
     setBusy(false);
     if (error) {
       onFail();

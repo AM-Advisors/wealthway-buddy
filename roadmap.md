@@ -24,6 +24,13 @@
     - Downloads: Blocked (no published report to download).
     - 2026-11-11 auth handoff finding: setup screen was an app issue. The gate read enrolled factors from the cached browser session copy, which can lack them (the builder's test session did); the sign-in service reported 1 verified authenticator. Fixed: gate now reads factors from the sign-in service. Rechecked with the builder session: both pages show "Confirm it's you" with the code box. Builder sessions cannot complete the code, so the owner runs the real-page checklist and reports results.
     - Evidence for "no reports": direct database count (read-only, all owners) = 0 published portfolio reports, 0 portfolio records, 0 wealth observations. Not inferred from a page.
+    - 2026-11-11 isolated QA of the sign-in fix (fictional sign-in service in /qa-sandbox "Sign-in check"; 0 real backend requests, 0 page errors):
+      - Enrolled user with out-of-date session sees "Confirm it's you": Pass (automated + browser)
+      - Unenrolled user completes setup; wrong setup code stays on setup: Pass (automated + browser)
+      - Failed lookup shows "We couldn't check your sign-in security" with Try again, no enrollment offer, no entry; recovers to code screen after outage ends: Pass (automated + browser)
+      - Valid code opens the requested page; invalid code stays blocked: Pass (automated + browser)
+      - Regression on preview with the builder test session (read-only): both pages show "Confirm it's you": Pass (browser)
+    - Environments: preview results are owner-verified preview results only; preview shares production data but does not prove the live site has the fix. After publishing, repeat loading and navigation on the live URL. Production verified needs all four checks to pass on the live site.
     - To unblock: owner signs in to the preview and enters the authenticator code (session then carries the second step), and an authorized owner publishes a real quarterly report through the normal flow. Mark "Production verified" only after all four pass.
 - [ ] Later phases (not started by design): automated custodian feeds, benchmarks, risk, rebalancing, multi-currency conversion
 

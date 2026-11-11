@@ -22,6 +22,8 @@ import { QaFundDocuments } from "@/components/qa-fund-documents";
 import { QaSelfServeFund } from "@/components/qa-self-serve-fund";
 import { FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 import { WealthPortfolio } from "@/components/wealth-portfolio";
+import { SecurityGate } from "@/components/security-gate";
+import { createQaMfaAuth, QA_MFA_CODE, type QaMfaScenario } from "@/lib/qa-sandbox/mfa-fixture";
 import { Suspense } from "react";
 
 export const Route = createFileRoute("/qa-sandbox")({
@@ -120,7 +122,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -144,11 +146,12 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "tax" ? "default" : "outline"} onClick={() => setTab("tax")}>Investor tax review</Button>
             <Button size="sm" variant={tab === "questionnaire" ? "default" : "outline"} onClick={() => setTab("questionnaire")}>Investor questionnaire</Button>
             <Button size="sm" variant={tab === "portfolio" ? "default" : "outline"} onClick={() => setTab("portfolio")}>Consolidated portfolio</Button>
+            <Button size="sm" variant={tab === "signin" ? "default" : "outline"} onClick={() => setTab("signin")}>Sign-in check</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner Casey Alden: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner Casey Alden: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>
@@ -196,5 +199,41 @@ function FictionalRecord() {
         <Link to="/" className="inline-flex items-center text-sm font-medium text-primary underline-offset-4 hover:underline">Back to the sandbox</Link>
       </CardContent>
     </Card>
+  );
+}
+
+const QA_MFA_SCENARIOS: { id: QaMfaScenario; label: string }[] = [
+  { id: "enrolled_stale", label: "Enrolled, out-of-date session" },
+  { id: "unenrolled", label: "Not enrolled yet" },
+  { id: "lookup_outage", label: "Check fails, then recovers" },
+  { id: "lookup_down", label: "Check keeps failing" },
+];
+
+/** Real SecurityGate driven by a fictional in-memory sign-in service; never touches the real backend. */
+function QaSignInCheck() {
+  const [scenario, setScenario] = useState<QaMfaScenario>("enrolled_stale");
+  const [run, setRun] = useState(0);
+  const qa = useMemo(() => createQaMfaAuth(scenario), [scenario, run]);
+  return (
+    <section aria-label="Sign-in check" className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Fictional sign-in service. The fictional authenticator code is {QA_MFA_CODE}; any other code is rejected.
+      </p>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Sign-in scenario">
+        {QA_MFA_SCENARIOS.map((x) => (
+          <Button key={x.id} size="sm" variant={scenario === x.id ? "default" : "outline"} onClick={() => { setScenario(x.id); setRun((r) => r + 1); }}>
+            {x.label}
+          </Button>
+        ))}
+      </div>
+      {scenario === "lookup_outage" && (
+        <Button size="sm" variant="ghost" onClick={qa.restore}>End fictional outage</Button>
+      )}
+      <div className="rounded-md border">
+        <SecurityGate key={`${scenario}-${run}`} auth={qa.auth} onSignOut={() => setRun((r) => r + 1)}>
+          <p className="p-6 font-medium" data-testid="qa-requested-page">Requested page opened</p>
+        </SecurityGate>
+      </div>
+    </section>
   );
 }
