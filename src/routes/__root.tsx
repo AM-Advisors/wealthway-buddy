@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { isStaleBuildError, reloadOnceForStaleBuild } from "@/lib/stale-build-reload";
 import {
   Outlet,
   Link,
@@ -44,10 +45,19 @@ function NotFoundComponent() {
   );
 }
 
+// A missing page file after an update reloads once to pick up the new version (see stale-build-reload.ts).
+if (typeof window !== "undefined") {
+  window.addEventListener("vite:preloadError", (e) => {
+    if (reloadOnceForStaleBuild(new Error("Failed to fetch dynamically imported module"))) e.preventDefault();
+  });
+}
+
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
+  const reloading = isStaleBuildError(error);
   useEffect(() => {
+    if (reloadOnceForStaleBuild(error)) return;
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
@@ -55,7 +65,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {reloading ? "Loading the latest version…" : "This page didn't load"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
