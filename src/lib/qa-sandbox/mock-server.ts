@@ -129,10 +129,10 @@ export function handleQaServerCall(fnName: string, data: any, state: QaState): u
         aml: { state: state.financialReview === "review_required" ? "review_required" : state.financialReview ? "valid" : "missing", answers: state.financialAnswers ?? { occupation: "Engineer" }, fields: amlFields({}, { profileType: "individual", commitmentCents: 25000000, known: { citizenship: "US", residence: "US" }, answers: state.financialAnswers as any }) },
       };
       if (data?.onboardingId !== "qa-tax-investment") throw new QaBlockedError("Only the fictional tax investment is available.");
-      return { profileName: "Casey Alden", profileType: "individual", taxIntake: { answers: { usPerson: "yes" }, questions: [], state: "valid" }, tax: { state: state.taxSigned ? "valid" : "missing", form: IRS_FORM_REVISIONS.w9, needsTin: true, tinKind: "ssn", uploadedCopy: null, reviewDetails: taxReviewDetails({ address_line1: "10 Fictional St", city: "Denver" }, { profile_type: "individual", legal_name: "Casey Alden" }), current: state.taxSigned ? { formType: "w9", revision: IRS_FORM_REVISIONS.w9.revision, tinMasked: "•••-••-6789" } : null } };
+      return { profileName: "John Smith", profileType: "individual", taxIntake: { answers: { usPerson: "yes" }, questions: [], state: "valid" }, tax: { state: state.taxSigned ? "valid" : "missing", form: IRS_FORM_REVISIONS.w9, needsTin: true, tinKind: "ssn", uploadedCopy: null, reviewDetails: taxReviewDetails({ address_line1: "10 Fictional St", city: "Denver" }, { profile_type: "individual", legal_name: "John Smith" }), current: state.taxSigned ? { formType: "w9", revision: IRS_FORM_REVISIONS.w9.revision, tinMasked: "•••-••-6789" } : null } };
     }
     case "submitAmlFn": {
-      if (data?.onboardingId !== "qa-financial-investment" || data?.certifiedName !== "Casey Alden") throw new QaBlockedError("Only the fictional financial questionnaire is available.");
+      if (data?.onboardingId !== "qa-financial-investment" || data?.certifiedName !== "John Smith") throw new QaBlockedError("Only the fictional financial questionnaire is available.");
       const result = evaluateAml({}, { profileType: "individual", commitmentCents: 25000000, known: { citizenship: "US", residence: "US" }, answers: data.answers });
       if (!result.complete) throw new Error("Please answer every question shown.");
       state.financialAnswers = { ...data.answers };
@@ -145,7 +145,7 @@ export function handleQaServerCall(fnName: string, data: any, state: QaState): u
       return { pdfBase64: btoa(pdf), revision: IRS_FORM_REVISIONS.w9.revision };
     }
     case "certifyTaxFormFn": {
-      if (data?.onboardingId !== "qa-tax-investment" || data?.certifiedName !== "Casey Alden") throw new QaBlockedError("Only the fictional signer is available.");
+      if (data?.onboardingId !== "qa-tax-investment" || data?.certifiedName !== "John Smith") throw new QaBlockedError("Only the fictional signer is available.");
       state.taxSigned = true;
       return { ok: true };
     }

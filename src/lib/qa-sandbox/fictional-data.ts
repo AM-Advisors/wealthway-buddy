@@ -23,9 +23,9 @@ export type QaPerson = {
 export const QA_PEOPLE: QaPerson[] = [
   {
     personId: "qa-person-0001",
-    email: "casey.alden@example.com",
-    firstName: "Casey",
-    lastName: "Alden",
+    email: "john.smith@example.com",
+    firstName: "John",
+    lastName: "Smith",
     inFund: true,
     profiles: [{ id: "qa-profile-0001", type: "individual", legalName: null }],
   },

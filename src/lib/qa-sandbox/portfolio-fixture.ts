@@ -24,8 +24,8 @@ const h = (id: string, name: string, assetClass: string, valueCents: number | nu
 export function createQaPortfolio(): QaPortfolio {
   return {
     entities: [
-      { recordId: TRUST, rowId: 'row-trust', name: 'Alden Family Trust', entityType: 'trust', investmentProfileId: null },
-      { recordId: LLC, rowId: 'row-llc', name: 'Alden Harbor Holdings LLC', entityType: 'llc', investmentProfileId: null },
+      { recordId: TRUST, rowId: 'row-trust', name: 'Smith Family Trust', entityType: 'trust', investmentProfileId: null },
+      { recordId: LLC, rowId: 'row-llc', name: 'Smith Harbor Holdings LLC', entityType: 'llc', investmentProfileId: null },
     ],
     links: [
       { recordId: 'l1', rowId: 'row-l1', parentId: SELF, childId: TRUST, pctBps: 10000 },
@@ -35,10 +35,10 @@ export function createQaPortfolio(): QaPortfolio {
       h('a0000000-0000-4000-8000-0000000000b1', 'Fictional checking account', 'cash', 25_000_000, '2026-10-31', { geography: 'United States' }),
       h('a0000000-0000-4000-8000-0000000000b2', 'Fictional index portfolio', 'public_equity', 120_000_000, '2026-10-31', { holderEntityId: TRUST, sector: 'Diversified' }),
       h('a0000000-0000-4000-8000-0000000000b3', 'Fictional harbor building', 'real_estate', 200_000_000, '2026-06-15', { holderEntityId: LLC, sector: 'Real estate' }),
-      h('a0000000-0000-4000-8000-0000000000b5', 'Trust interest in Alden Harbor Holdings', 'business', 80_000_000, '2026-06-15', { holderEntityId: TRUST, representsEntityId: LLC }),
+      h('a0000000-0000-4000-8000-0000000000b5', 'Trust interest in Smith Harbor Holdings', 'business', 80_000_000, '2026-06-15', { holderEntityId: TRUST, representsEntityId: LLC }),
       h(VENTURE_HOLDING, 'Fictional Venture Partners II', 'private_fund', 21_000_000, '2026-09-30', { sector: 'Technology', history: [{ asOf: '2025-12-31', valueCents: 9_500_000 }, { asOf: '2026-03-31', valueCents: 16_000_000 }, { asOf: '2026-06-30', valueCents: 17_500_000 }] }),
     ],
-    funds: [{ positionId: 'qa-pos-1', offeringId: 'qa-off-1', fundName: 'Fablewood Ventures I LP', investmentProfileId: null, profileLabel: 'Casey Alden', commitmentCents: 50_000_000, contributedCents: 30_000_000, distributionsCents: 2_500_000, unfundedCents: 20_000_000, valueCents: 33_000_000, valueDate: '2026-09-30',
+    funds: [{ positionId: 'qa-pos-1', offeringId: 'qa-off-1', fundName: 'Fablewood Ventures I LP', investmentProfileId: null, profileLabel: 'John Smith', commitmentCents: 50_000_000, contributedCents: 30_000_000, distributionsCents: 2_500_000, unfundedCents: 20_000_000, valueCents: 33_000_000, valueDate: '2026-09-30',
       valuations: [{ date: '2025-12-31', valueCents: 15_500_000 }, { date: '2026-03-31', valueCents: 26_000_000 }, { date: '2026-09-30', valueCents: 33_000_000 }],
       flows: [{ id: 'qf1', date: '2025-07-01', kind: 'contribution', amountCents: 15_000_000 }, { id: 'qf2', date: '2026-02-01', kind: 'contribution', amountCents: 15_000_000 }, { id: 'qf3', date: '2026-08-15', kind: 'distribution', amountCents: 2_500_000 }] }],
     commitments: [{ recordId: VENTURE, rowId: 'row-c1', name: 'Fictional Venture Partners II', currency: 'USD', commitmentCents: 25_000_000, holderEntityId: null, holdingId: VENTURE_HOLDING, startDate: '2025-10-01' }],

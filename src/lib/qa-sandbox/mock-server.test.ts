@@ -16,16 +16,16 @@ describe("QA sandbox mock server", () => {
   it("saves and reads fictional financial answers through the protected model only", () => {
     const state = createQaState();
     const answers = { occupation: "Engineer", sourceOfFunds: "employment_income", fundsOriginCountry: "US", thirdPartyFunding: "no", politicallyExposed: "no", expectedActivity: "single_investment" };
-    handleQaServerCall("submitAmlFn", { onboardingId: "qa-financial-investment", certifiedName: "Casey Alden", answers }, state);
+    handleQaServerCall("submitAmlFn", { onboardingId: "qa-financial-investment", certifiedName: "John Smith", answers }, state);
     expect((handleQaServerCall("investorComplianceFn", { onboardingId: "qa-financial-investment" }, state) as any).aml).toMatchObject({ state: "valid", answers });
-    expect(() => handleQaServerCall("submitAmlFn", { onboardingId: "real-investment", certifiedName: "Casey Alden", answers }, state)).toThrow(QaBlockedError);
+    expect(() => handleQaServerCall("submitAmlFn", { onboardingId: "real-investment", certifiedName: "John Smith", answers }, state)).toThrow(QaBlockedError);
   });
   it("reuses fictional tax details and saves only the fictional confirmation", () => {
     const state = createQaState();
     const view = handleQaServerCall("investorComplianceFn", { onboardingId: "qa-tax-investment" }, state) as any;
-    expect(view.tax.reviewDetails.legalName).toBe("Casey Alden");
+    expect(view.tax.reviewDetails.legalName).toBe("John Smith");
     expect(view.tax.state).toBe("missing");
-    handleQaServerCall("certifyTaxFormFn", { onboardingId: "qa-tax-investment", certifiedName: "Casey Alden" }, state);
+    handleQaServerCall("certifyTaxFormFn", { onboardingId: "qa-tax-investment", certifiedName: "John Smith" }, state);
     expect((handleQaServerCall("investorComplianceFn", { onboardingId: "qa-tax-investment" }, state) as any).tax.state).toBe("valid");
     expect(() => handleQaServerCall("investorComplianceFn", { onboardingId: "real-investment" }, state)).toThrow(QaBlockedError);
   });
@@ -46,10 +46,10 @@ describe("QA sandbox mock server", () => {
   });
   it("searches fictional people by email and masks the result", () => {
     const state = createQaState();
-    const r = handleQaServerCall("searchInvestorsFn", { email: "casey.alden@example.com" }, state) as any;
+    const r = handleQaServerCall("searchInvestorsFn", { email: "john.smith@example.com" }, state) as any;
     expect(r.matches).toHaveLength(1);
     expect(r.matches[0].strength).toBe("email");
-    expect(r.matches[0].maskedEmail).not.toContain("casey.alden@example.com");
+    expect(r.matches[0].maskedEmail).not.toContain("john.smith@example.com");
     expect(r.matches[0].alreadyInFund).toBe(true);
   });
 
@@ -71,9 +71,9 @@ describe("QA sandbox mock server", () => {
 
   it("blocks creating a new person when an exact email match exists and was not confirmed", () => {
     const state = createQaState();
-    handleQaServerCall("searchInvestorsFn", { email: "casey.alden@example.com" }, state);
+    handleQaServerCall("searchInvestorsFn", { email: "john.smith@example.com" }, state);
     expect(() =>
-      handleQaServerCall("createInvestorFn", { ...newInvestor, person: { firstName: "Casey", lastName: "Alden", email: "casey.alden@example.com" } }, state),
+      handleQaServerCall("createInvestorFn", { ...newInvestor, person: { firstName: "John", lastName: "Smith", email: "john.smith@example.com" } }, state),
     ).toThrow(/already exists/);
   });
 
