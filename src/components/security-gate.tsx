@@ -1,5 +1,6 @@
 import { isStaffSurface } from "@/lib/host-routing";
 import { canEnrollPasskey } from "@/lib/passkeys";
+import { mfaStage } from "@/lib/mfa-stage";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -54,9 +55,12 @@ export function SecurityGate({ children, onSignOut }: { children: ReactNode; onS
 
   const check = useCallback(async () => {
     const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (!data) return setStage("setup");
-    if (data.currentLevel === "aal2") return setStage((s) => (s === "codes" ? s : "ok"));
-    setStage(data.nextLevel === "aal2" ? "verify" : "setup");
+    // Factors are read from the sign-in service, not the cached session copy (see mfa-stage.ts).
+    const { data: f, error } = await supabase.auth.mfa.listFactors();
+    const verified = error || !f ? null : f.all.filter((x) => x.status === "verified").length;
+    const next = mfaStage({ currentLevel: data?.currentLevel, verifiedFactorCount: verified });
+    if (next === "ok") return setStage((s) => (s === "codes" ? s : "ok"));
+    setStage(next);
   }, []);
 
   useEffect(() => {

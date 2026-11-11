@@ -22,6 +22,8 @@
     - Navigation: Blocked (same reason; Consolidated portfolio tab not reachable).
     - Report visibility: Blocked by missing prerequisite. Production has 0 published portfolio reports (0 for this account, 0 overall) and 0 portfolio holdings for this account; none created to pass the check.
     - Downloads: Blocked (no published report to download).
+    - 2026-11-11 auth handoff finding: setup screen was an app issue. The gate read enrolled factors from the cached browser session copy, which can lack them (the builder's test session did); the sign-in service reported 1 verified authenticator. Fixed: gate now reads factors from the sign-in service. Rechecked with the builder session: both pages show "Confirm it's you" with the code box. Builder sessions cannot complete the code, so the owner runs the real-page checklist and reports results.
+    - Evidence for "no reports": direct database count (read-only, all owners) = 0 published portfolio reports, 0 portfolio records, 0 wealth observations. Not inferred from a page.
     - To unblock: owner signs in to the preview and enters the authenticator code (session then carries the second step), and an authorized owner publishes a real quarterly report through the normal flow. Mark "Production verified" only after all four pass.
 - [ ] Later phases (not started by design): automated custodian feeds, benchmarks, risk, rebalancing, multi-currency conversion
 
