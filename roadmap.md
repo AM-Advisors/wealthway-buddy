@@ -1,14 +1,16 @@
 # Roadmap
 
 ## Portfolio Reporting & Analytics phase 1 (2026-11-11)
-- [ ] Consolidated portfolio on Wealth (manual, CSV import, fund records; source labels; connected hidden in test mode)
-- [ ] Ownership look-through (entities, percentages, no double counting, incomplete-ownership flags)
-- [ ] Private investments (fund records + outside commitments/cash flows, value history)
-- [ ] Performance (XIRR, multiples, TWR when enough history, periods/assumptions/warnings)
-- [ ] Allocation and liquidity (dimensions, unfunded, announced calls/distributions as projected)
-- [ ] Quarterly report PDF/CSV, published versions in investor portal
-- [ ] Data quality, import preview/validation, duplicates, audit trail, access (owner/delegate/staff)
-- [ ] Fictional sandbox demo + tests + end-to-end walk
+- [x] Consolidated portfolio on Wealth (manual, CSV import, fund records; source labels; connected accounts excluded while in test mode)
+- [x] Ownership look-through (entities, percentages, no double counting, incomplete-ownership flags)
+- [x] Private investments (fund records + outside commitments/cash flows, value history)
+- [x] Performance (XIRR, multiples, TWR with 3+ values, periods/assumptions/warnings)
+- [x] Allocation and cash needs (type/sector/region/currency, unfunded, announced calls/distributions as projected)
+- [x] Quarterly report PDF/CSV, fixed published versions, shown in investor Reports
+- [x] Data quality, import preview/validation, duplicates, change history, access (owner edits; delegate/staff read only)
+- [x] Fictional sandbox demo (/qa-sandbox → Consolidated portfolio) walked end to end; 17 model tests
+- [ ] Signed-in check on the real Wealth page: blocked by two-step sign-in; not verified with a real account
+- [ ] Later phases (not started by design): automated custodian feeds, benchmarks, risk, rebalancing, multi-currency conversion
 
 ## Bookkeeping remaining issues (2026-11-10)
 - [x] Organization and entity names on client confirmation, staff queue, request detail and quote selection; canonical IDs, server authorization, only the note editable on bookkeeping requests.

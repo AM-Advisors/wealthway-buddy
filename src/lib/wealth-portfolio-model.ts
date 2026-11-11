@@ -4,6 +4,7 @@
  * combined into one look-through view. Nothing here posts fund books, moves
  * money or invents a value: missing data stays missing and is flagged.
  */
+import type { PdfDocSpec } from './pdf-render';
 import {
   contributionFlow,
   distributionFlow,
@@ -33,10 +34,10 @@ export const ENTITY_TYPE_LABELS: Record<EntityType, string> = { trust: 'Trust', 
 export const ASSET_CLASS_LABELS: Record<string, string> = { cash: 'Cash', public_equity: 'Public equity', fixed_income: 'Fixed income', private_fund: 'Private fund', real_estate: 'Real estate', business: 'Private business', other: 'Other' };
 export const NOT_RECORDED = 'Not recorded';
 
-export type PortfolioEntity = { recordId: string; name: string; entityType: EntityType; investmentProfileId: string | null };
-export type OwnershipLink = { recordId: string; parentId: string; childId: string; pctBps: number | null };
+export type PortfolioEntity = { recordId: string; name: string; entityType: EntityType; investmentProfileId: string | null; rowId?: string };
+export type OwnershipLink = { recordId: string; parentId: string; childId: string; pctBps: number | null; rowId?: string };
 export type PortfolioHolding = {
-  holdingId: string; name: string; assetClass: string; currency: string;
+  holdingId: string; observationId?: string; sourceNote?: string; name: string; assetClass: string; currency: string;
   valueCents: number | null; costCents: number | null; asOf: string; source: DataSource;
   sector: string | null; geography: string | null; holderEntityId: string | null; representsEntityId: string | null;
   /** Earlier dated values of the same holding, oldest first, for value history. */
@@ -49,8 +50,8 @@ export type FundPosition = {
   valuations: { date: string; valueCents: number }[];
   flows: { id: string; date: string; kind: 'contribution' | 'distribution'; amountCents: number }[];
 };
-export type PrivateCommitment = { recordId: string; name: string; currency: string; commitmentCents: number; holderEntityId: string | null; holdingId: string | null; startDate: string };
-export type PrivateCashFlow = { recordId: string; commitmentId: string; date: string; flowType: 'contribution' | 'distribution'; status: 'actual' | 'projected'; amountCents: number; note: string; source: DataSource };
+export type PrivateCommitment = { recordId: string; name: string; currency: string; commitmentCents: number; holderEntityId: string | null; holdingId: string | null; startDate: string; rowId?: string };
+export type PrivateCashFlow = { recordId: string; commitmentId: string; date: string; flowType: 'contribution' | 'distribution'; status: 'actual' | 'projected'; amountCents: number; note: string; source: DataSource; rowId?: string };
 export type ProjectedItem = { id: string; kind: 'capital_call' | 'distribution'; name: string; currency: string; amountCents: number | null; date: string | null; source: DataSource };
 export type PersonalCash = { id: string; name: string; currency: string; amountCents: number; date: string; direction: 'inflow' | 'outflow' };
 
@@ -105,6 +106,7 @@ export type PortfolioLine = {
   assetClass: string; sector: string; geography: string; currency: string;
   grossValueCents: number | null; sharePct: number; valueCents: number | null; costCents: number | null;
   valueDate: string | null; source: DataSource; counted: boolean; excludedReason: string | null; holdingId: string | null; positionId: string | null;
+  observationId: string | null; holderEntityId: string | null; representsEntityId: string | null;
 };
 export type ConnectedAccount = { id: string; name: string; currency: string; balanceCents: number | null; accountType: string; observedAt: string };
 
@@ -125,7 +127,7 @@ export function lookThroughLines(input: { entities: PortfolioEntity[]; links: Ow
     else if (share === 0) excluded = 'Ownership incomplete, so this is not counted.';
     lines.push({ key: `holding:${h.holdingId}`, kind: 'holding', name: h.name, holder: entityName(h.holderEntityId), assetClass: h.assetClass, sector: h.sector?.trim() || NOT_RECORDED, geography: h.geography?.trim() || NOT_RECORDED, currency: h.currency,
       grossValueCents: h.valueCents, sharePct: share, valueCents: excluded || h.valueCents === null ? null : Math.round(h.valueCents * share), costCents: h.costCents === null ? null : Math.round(h.costCents * share),
-      valueDate: h.asOf, source: h.source, counted: !excluded, excludedReason: excluded, holdingId: h.holdingId, positionId: null });
+      valueDate: h.asOf, source: h.source, counted: !excluded, excludedReason: excluded, holdingId: h.holdingId, positionId: null, observationId: h.observationId ?? null, holderEntityId: h.holderEntityId, representsEntityId: h.representsEntityId });
     if (h.representsEntityId && !entityHasContent(h.representsEntityId)) issues.push({ code: 'represents_empty_entity', severity: 'info', message: `${h.name} is marked as your interest in ${entityName(h.representsEntityId)}, which has no holdings recorded, so the interest itself is counted.`, ref: h.holdingId });
   }
   const seenPositions = new Set<string>();
@@ -136,11 +138,11 @@ export function lookThroughLines(input: { entities: PortfolioEntity[]; links: Ow
     const excluded = share === 0 ? 'Ownership incomplete, so this is not counted.' : null;
     lines.push({ key: `fund:${f.positionId}`, kind: 'fund', name: f.fundName, holder: holderId ? entityName(holderId) : (f.profileLabel || 'You directly'), assetClass: 'private_fund', sector: NOT_RECORDED, geography: NOT_RECORDED, currency: 'USD',
       grossValueCents: f.valueCents, sharePct: share, valueCents: excluded || f.valueCents === null ? null : Math.round(f.valueCents * share), costCents: Math.round(f.contributedCents * share),
-      valueDate: f.valueDate, source: 'fund_records', counted: !excluded, excludedReason: excluded, holdingId: null, positionId: f.positionId });
+      valueDate: f.valueDate, source: 'fund_records', counted: !excluded, excludedReason: excluded, holdingId: null, positionId: f.positionId, observationId: null, holderEntityId: holderId, representsEntityId: null });
   }
   for (const a of input.connected) {
     lines.push({ key: `connected:${a.id}`, kind: 'connected', name: a.name, holder: 'You directly', assetClass: a.accountType === 'depository' ? 'cash' : 'public_equity', sector: NOT_RECORDED, geography: NOT_RECORDED, currency: a.currency,
-      grossValueCents: a.balanceCents, sharePct: 1, valueCents: a.balanceCents, costCents: null, valueDate: a.observedAt.slice(0, 10), source: 'connected', counted: true, excludedReason: null, holdingId: null, positionId: null });
+      grossValueCents: a.balanceCents, sharePct: 1, valueCents: a.balanceCents, costCents: null, valueDate: a.observedAt.slice(0, 10), source: 'connected', counted: true, excludedReason: null, holdingId: null, positionId: null, observationId: null, holderEntityId: null, representsEntityId: null });
   }
   return { lines, issues, shares };
 }
@@ -240,7 +242,7 @@ export function investmentPerformance(input: { key: string; name: string; curren
     const r = timeWeightedReturn(subperiods);
     twr = { status: r.status, bps: r.bps, detail: r.detail };
   } else if (values.length) warnings.push(`Time-weighted return needs at least ${MIN_TWR_VALUES} dated values; ${values.length} recorded.`);
-  return { key: input.key, name: input.name, currency: input.currency, periodStart: flows[0]?.date ?? values[0]?.date ?? null, periodEnd: input.asOf, paidInCents: paidIn, distributionsCents: dist, valueCents: latest?.valueCents ?? null, valueDate: latest?.date ?? null, irr, tvpi: paidIn > 0 && latest ? m.tvpi : null, dpi: paidIn > 0 ? m.dpi : null, rvpi: paidIn > 0 && latest ? m.rvpi : null, twr, warnings };
+  return { key: input.key, name: input.name, currency: input.currency, periodStart: flows[0]?.date ?? values[0]?.date ?? null, periodEnd: latest && latest.date >= (flows[flows.length - 1]?.date ?? '') ? latest.date : input.asOf, paidInCents: paidIn, distributionsCents: dist, valueCents: latest?.valueCents ?? null, valueDate: latest?.date ?? null, irr, tvpi: paidIn > 0 && latest ? m.tvpi : null, dpi: paidIn > 0 ? m.dpi : null, rvpi: paidIn > 0 && latest ? m.rvpi : null, twr, warnings };
 }
 
 /** Combined private-investment XIRR per currency, from every investment with flows and a value. */
@@ -249,7 +251,7 @@ export function combinedPerformance(items: { currency: string; flows: { id: stri
     const set = items.filter(i => i.currency === currency && i.flows.length);
     const missing = set.filter(i => !i.latest).length;
     const flows: DatedCashFlow[] = set.flatMap(i => i.flows.filter(f => f.date <= asOf).map(f => f.kind === 'contribution' ? contributionFlow(f.date, f.amountCents, f.source, f.id) : distributionFlow(f.date, f.amountCents, f.source, f.id)));
-    const terminal = set.filter(i => i.latest).map(i => terminalFlow(asOf, i.latest!.valueCents, 'latest_value'));
+    const terminal = set.filter(i => i.latest).map(i => { const last = i.flows.filter(f => f.date <= asOf).reduce((d, f) => f.date > d ? f.date : d, ''); return terminalFlow(i.latest!.date >= last ? i.latest!.date : asOf, i.latest!.valueCents, 'latest_value'); });
     const r = flows.length && !missing ? xirr([...flows, ...terminal]) : null;
     return { currency, investments: set.length, irr: r ? { status: r.status, bps: r.bps, detail: r.detail } : { status: 'insufficient_data', bps: null, detail: missing ? `${missing} investment(s) have no value recorded.` : 'No dated cash flows recorded.' } };
   });
@@ -493,11 +495,38 @@ export function portfolioReportCsv(view: PortfolioView, periodLabel: string) {
   const out: string[][] = [['Harmonious portfolio report', periodLabel, `As of ${view.asOf}`], [], ['Holdings'], ['Name', 'Held by', 'Asset class', 'Sector', 'Region', 'Currency', 'Your share %', 'Value', 'Value date', 'Source', 'Counted']];
   for (const l of view.lines) out.push([l.name, l.holder, ASSET_CLASS_LABELS[l.assetClass] ?? l.assetClass, l.sector, l.geography, l.currency, (l.sharePct * 100).toFixed(2), dollars(l.valueCents), l.valueDate ?? '', SOURCE_LABELS[l.source], l.counted ? 'Yes' : `No: ${l.excludedReason ?? ''}`]);
   out.push([], ['Performance'], ['Investment', 'Currency', 'Period start', 'Period end', 'Paid in', 'Distributions', 'Value', 'Value date', 'XIRR %', 'XIRR status', 'TVPI', 'DPI', 'TWR %', 'Warnings']);
-  for (const p of view.performance) out.push([p.name, p.currency, p.periodStart ?? '', p.periodEnd, dollars(p.paidInCents), dollars(p.distributionsCents), dollars(p.valueCents), p.valueDate ?? '', p.irr.bps === null ? '' : (p.irr.bps / 100).toFixed(2), p.irr.status, p.tvpi ?? '', p.dpi ?? '', p.twr?.bps == null ? '' : (p.twr.bps / 100).toFixed(2), p.warnings.join(' ')]);
+  for (const p of view.performance) out.push([p.name, p.currency, p.periodStart ?? '', p.periodEnd, dollars(p.paidInCents), dollars(p.distributionsCents), dollars(p.valueCents), p.valueDate ?? '', p.irr.bps === null ? '' : (p.irr.bps / 100).toFixed(2), p.irr.status, p.tvpi === null ? '' : String(p.tvpi), p.dpi === null ? '' : String(p.dpi), p.twr?.bps == null ? '' : (p.twr.bps / 100).toFixed(2), p.warnings.join(' ')]);
   out.push([], ['Cash activity (actual)'], ['Date', 'Description', 'Currency', 'Direction', 'Amount', 'Source']);
   for (const c of view.cash) out.push([c.date, c.name, c.currency, c.direction, dollars(c.amountCents), c.source === 'personal_record' ? 'Personal record' : SOURCE_LABELS[c.source]]);
   out.push([], ['Upcoming (projected, not actual)'], ['Date', 'Description', 'Type', 'Currency', 'Amount']);
   for (const l of view.liquidity) for (const u of l.upcoming) out.push([u.date ?? 'Not set', u.name, u.kind === 'capital_call' ? 'Capital call' : 'Distribution', u.currency, u.amountCents === null ? 'Not recorded' : dollars(u.amountCents)]);
   out.push([], ['Assumptions'], ...view.assumptions.map(a => [a]));
   return out.map(r => r.map(csvCell).join(',')).join('\r\n');
+}
+
+const money = (c: number | null | undefined, currency = 'USD') => c === null || c === undefined ? 'Not recorded' : new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(c / 100);
+const pctText = (bps: number | null | undefined) => bps === null || bps === undefined ? 'Not calculated' : `${(bps / 100).toFixed(2)}%`;
+/** Branded quarterly report for the shared PDF renderer. Only recorded figures; gaps print as "Not recorded". */
+export function portfolioReportPdf(view: PortfolioView, periodLabel: string, ownerLabel: string, version: number | null): PdfDocSpec {
+  const short = (t: string, n = 48) => t.length > n ? `${t.slice(0, n - 1)}…` : t;
+  const x = (m: number | null) => m === null ? 'n/a' : `${m.toFixed(2)}x`;
+  const excluded = view.lines.filter(l => !l.counted);
+  const notes = [...excluded.map(l => `${l.name}: not counted. ${l.excludedReason ?? ''}`), ...view.issues.filter(i => i.severity === 'warning').map(i => i.message), ...view.performance.flatMap(p => p.warnings.map(w => `${p.name}: ${w}`))];
+  return {
+    kicker: 'Quarterly portfolio report', title: periodLabel, subtitle: ownerLabel, badge: version ? `Version ${version}` : 'Draft preview',
+    meta: [{ label: 'Period', value: `${view.periodStart} to ${view.asOf}` }, ...view.totals.map(t => ({ label: `Total value (${t.currency})`, value: money(t.valueCents, t.currency) + (t.missingValues ? ` · ${t.missingValues} without value` : '') }))],
+    sections: [
+      { heading: 'Holdings (your share, value date)', rows: view.lines.filter(l => l.counted).map(l => ({ label: short(l.name), value: `${money(l.valueCents, l.currency)} · ${l.valueDate ?? 'no date'}` })) },
+      { heading: 'Held through entities', rows: view.lines.filter(l => l.counted && l.sharePct < 1).map(l => ({ label: short(`${l.name}, via ${l.holder}`, 60), value: `${(l.sharePct * 100).toFixed(1)}% of ${money(l.grossValueCents, l.currency)}` })) },
+      { heading: 'Returns: XIRR, TVPI, DPI', rows: view.performance.map(p => ({ label: short(p.name), value: `${p.irr.status === 'solved' ? pctText(p.irr.bps) : 'n/a'} · ${x(p.tvpi)} · ${x(p.dpi)}` })) },
+      { heading: 'Time-weighted return (3 or more values)', rows: view.performance.filter(p => p.twr).map(p => ({ label: short(p.name), value: p.twr!.status === 'solved' ? pctText(p.twr!.bps) : 'n/a' })) },
+      ...view.allocation.map(a => ({ heading: `Allocation by type (${a.currency})`, rows: a.assetClass.map(g => ({ label: g.label, value: `${money(g.valueCents, a.currency)} · ${g.pct ?? 0}%` })) })),
+      { heading: 'Cash activity (actual)', rows: view.cash.length ? view.cash.map(c => ({ label: short(`${c.date} · ${c.name}`, 60), value: `${c.direction === 'inflow' ? '+' : '-'}${money(c.amountCents, c.currency)}` })) : [{ label: 'No cash activity recorded in this period', value: '' }] },
+      { heading: 'Cash needs', rows: view.liquidity.flatMap(l => [{ label: `Available cash (${l.currency})`, value: money(l.availableCashCents, l.currency) }, { label: `Still to pay on commitments (${l.currency})`, value: money(l.unfundedCents, l.currency) }]) },
+      { heading: 'Upcoming (projected, not actual)', rows: view.liquidity.flatMap(l => l.upcoming.map(u => ({ label: short(`${u.kind === 'capital_call' ? 'Call' : 'Distribution'} · ${u.name}`, 60), value: `${u.amountCents === null ? 'not set' : money(u.amountCents, u.currency)} · ${u.date ?? 'no date'}` }))) },
+      ...(notes.length ? [{ heading: 'Data notes', text: notes.slice(0, 40).join('\n') }] : []),
+    ].filter(s => !('rows' in s) || (s.rows?.length ?? 0) > 0),
+    notes: [...view.assumptions, 'Figures come only from records entered, imported or published on this platform. This report is not an audited statement and includes no benchmarks.'],
+    fileName: `portfolio-report-${periodLabel.replace(/\s+/g, '-').toLowerCase()}${version ? `-v${version}` : ''}.pdf`,
+  };
 }

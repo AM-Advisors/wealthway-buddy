@@ -20,13 +20,21 @@ import {
   QA_WIRE_REQUIRED_FIELDS,
   type QaPerson,
 } from "./fictional-data";
+/** Seroval escapes control and HTML-sensitive characters inside strings (\\n, \\x3C, \\u2028…). */
+function unescapeSeroval(text: string): string {
+  return text.replace(/\\(?:x([0-9a-fA-F]{2})|u([0-9a-fA-F]{4})|(.))/g, (_m, hex: string | undefined, uni: string | undefined, ch: string | undefined) => {
+    if (hex) return String.fromCharCode(parseInt(hex, 16));
+    if (uni) return String.fromCharCode(parseInt(uni, 16));
+    return ({ n: "\n", r: "\r", t: "\t", b: "\b", f: "\f", v: "\v", "0": "\0" } as Record<string, string>)[ch ?? ""] ?? ch ?? "";
+  });
+}
 /** Minimal seroval cross-JSON decoder for plain data (objects, arrays, strings, numbers, booleans, null). */
 function decodeCrossJson(node: any): any {
   if (node === null || typeof node !== "object") return node;
   if (Array.isArray(node)) return node.map(decodeCrossJson);
   if (typeof node.t !== "number") return node;
   if (node.t === 0) return node.s; // number
-  if (node.t === 1) return node.s; // string
+  if (node.t === 1) return unescapeSeroval(String(node.s)); // string
   if (node.t === 2) return [null, undefined, true, false, -0, Infinity, -Infinity, NaN][node.s as number]; // constant
   if (node.p && Array.isArray(node.p.k) && Array.isArray(node.p.v)) {
     const out: Record<string, unknown> = {};
@@ -45,6 +53,7 @@ import { generatedDocumentReviewError } from "@/lib/fund-document-generation-pol
 import { IRS_FORM_REVISIONS } from "@/lib/onboarding-compliance-model";
 import { taxReviewDetails } from "@/lib/investor-step-prefill";
 import { amlFields, evaluateAml } from "@/lib/onboarding-intake-model";
+import { createQaPortfolio, handleQaPortfolioCall, QA_PORTFOLIO_FNS, type QaPortfolio } from "./portfolio-fixture";
 
 export type QaRole = "staff" | "manager";
 
@@ -62,6 +71,7 @@ export type QaState = {
   taxSigned?: boolean;
   financialAnswers?: Record<string, string>;
   financialReview?: string;
+  portfolio?: QaPortfolio;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -83,6 +93,7 @@ const KNOWN_FNS = [
   "uploadOnboardingDocForFn", "managerUploadReviewsFn", "managerReviewUploadFn", "managerUploadUrlFn",
   "getFundSetupOverview", "saveFundSetupFieldsFn",
   "investorComplianceFn", "previewTaxFormFn", "certifyTaxFormFn", "myTaxDocumentUrlFn", "submitAmlFn",
+  ...QA_PORTFOLIO_FNS,
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -93,6 +104,8 @@ function resolveFnName(url: string): string | null {
   try {
     const segment = url.split("/").pop() ?? "";
     const decoded = atob(segment.replace(/-/g, "+").replace(/_/g, "/"));
+    // Ids are either JSON { file, export } or "file#export".
+    if (decoded.includes("#")) return KNOWN_FNS.find((name) => decoded.split("#").pop() === name || decoded.endsWith(`#${name}`)) ?? match(decoded.split("#").pop() ?? "");
     const parsed = JSON.parse(decoded);
     if (typeof parsed?.export === "string") return match(parsed.export);
   } catch {
@@ -105,6 +118,7 @@ export class QaBlockedError extends Error {}
 
 /** Pure handler for one mocked server-function call. Throws Error with a user-facing message on failure. */
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
+  if ((QA_PORTFOLIO_FNS as readonly string[]).includes(fnName)) return handleQaPortfolioCall(fnName, data, (state.portfolio ??= createQaPortfolio()));
   switch (fnName) {
     case "investorComplianceFn": {
       if (data?.onboardingId === "qa-financial-investment") return {

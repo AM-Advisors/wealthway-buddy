@@ -14,8 +14,10 @@ import { InvestorFinancialsPanel } from "@/components/investor-financials-panel"
 import { InvestorPerformancePanel } from "@/components/investor-performance-panel";
 import { InvestorStatementsPanel } from "@/components/investor-statements-panel";
 import { LoadError } from "@/components/load-error";
+import { Suspense } from "react";
+import { WealthReportsPanel } from "@/components/wealth-portfolio-reports";
 
-export const REPORTING_SECTIONS = ["investments", "performance", "distributions", "statements", "financials", "reports", "documents"] as const;
+export const REPORTING_SECTIONS = ["investments", "performance", "distributions", "statements", "financials", "reports", "portfolio", "documents"] as const;
 import {
   getInvestorDashboardSummary,
   getInvestorDocumentLibrary,
@@ -146,6 +148,7 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
           <TabsTrigger value="statements">Statements</TabsTrigger>
           <TabsTrigger value="financials">Fund reports</TabsTrigger>
           <TabsTrigger value="reports">Reporting periods</TabsTrigger>
+          <TabsTrigger value="portfolio">Portfolio reports</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
@@ -287,6 +290,17 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
               </CardContent>
             </Card>
           ))}
+        </TabsContent>
+
+        <TabsContent value="portfolio" className="space-y-4 pt-4">
+          {activeSection === "portfolio" ? (
+            <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+              <WealthReportsPanel ownerLabel="Your consolidated portfolio" canPublish={false} />
+              <p className="mt-3 text-base text-muted-foreground">
+                Quarterly reports of everything you hold, published from your <Link to="/wealth" className="underline">Wealth</Link> page.
+              </p>
+            </Suspense>
+          ) : null}
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4 pt-4">
