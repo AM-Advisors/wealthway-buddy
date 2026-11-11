@@ -116,19 +116,20 @@ export function lookThroughLines(input: { entities: PortfolioEntity[]; links: Ow
   const { shares, issues } = ownershipShares(input.entities, input.links);
   const entityName = (id: string | null) => id ? input.entities.find(e => e.recordId === id)?.name ?? 'Unknown entity' : 'You directly';
   const shareOf = (id: string | null) => id === null ? 1 : (shares.get(id) ?? 0);
-  const entityHasContent = (id: string) => input.holdings.some(h => h.holderEntityId === id) || input.funds.some(f => profileEntity(input.entities, f.investmentProfileId) === id);
+  /** The represented entity's own holdings are counted only when it is reachable from you and has holdings or fund positions. */
+  const entityCounted = (id: string) => shareOf(id) > 0 && (input.holdings.some(h => h.holderEntityId === id) || input.funds.some(f => profileEntity(input.entities, f.investmentProfileId) === id));
   const lines: PortfolioLine[] = [];
   for (const h of input.holdings) {
     const known = h.holderEntityId === null || input.entities.some(e => e.recordId === h.holderEntityId);
     const share = known ? shareOf(h.holderEntityId) : 0;
     let excluded: string | null = null;
     if (!known) excluded = 'Held by an entity that is no longer on file.';
-    else if (h.representsEntityId && entityHasContent(h.representsEntityId)) excluded = `Already counted through ${entityName(h.representsEntityId)}'s own holdings.`;
+    else if (h.representsEntityId && entityCounted(h.representsEntityId)) excluded = `Already counted through ${entityName(h.representsEntityId)}'s own holdings.`;
     else if (share === 0) excluded = 'Ownership incomplete, so this is not counted.';
     lines.push({ key: `holding:${h.holdingId}`, kind: 'holding', name: h.name, holder: entityName(h.holderEntityId), assetClass: h.assetClass, sector: h.sector?.trim() || NOT_RECORDED, geography: h.geography?.trim() || NOT_RECORDED, currency: h.currency,
       grossValueCents: h.valueCents, sharePct: share, valueCents: excluded || h.valueCents === null ? null : Math.round(h.valueCents * share), costCents: h.costCents === null ? null : Math.round(h.costCents * share),
       valueDate: h.asOf, source: h.source, counted: !excluded, excludedReason: excluded, holdingId: h.holdingId, positionId: null, observationId: h.observationId ?? null, holderEntityId: h.holderEntityId, representsEntityId: h.representsEntityId });
-    if (h.representsEntityId && !entityHasContent(h.representsEntityId)) issues.push({ code: 'represents_empty_entity', severity: 'info', message: `${h.name} is marked as your interest in ${entityName(h.representsEntityId)}, which has no holdings recorded, so the interest itself is counted.`, ref: h.holdingId });
+    if (h.representsEntityId && !excluded) issues.push({ code: 'represents_uncounted_entity', severity: 'info', message: `${h.name} is marked as your interest in ${entityName(h.representsEntityId)}. That entity's own holdings are not counted (none recorded, or it is not linked to you), so the interest itself is counted.`, ref: h.holdingId });
   }
   const seenPositions = new Set<string>();
   for (const f of input.funds) {
@@ -189,6 +190,14 @@ export function dataQualityIssues(lines: PortfolioLine[], asOf: string, staleDay
     else if (daysBetween(l.valueDate, asOf) > staleDays) out.push({ code: 'stale_value', severity: 'warning', message: `${l.name} was last valued ${l.valueDate}, more than ${staleDays} days ago.`, ref: l.key });
     if (l.kind === 'holding' && l.assetClass !== 'cash' && (l.sector === NOT_RECORDED || l.geography === NOT_RECORDED)) out.push({ code: 'missing_classification', severity: 'info', message: `${l.name} has no ${l.sector === NOT_RECORDED ? 'sector' : 'region'} recorded, so it shows as "${NOT_RECORDED}" in allocation.`, ref: l.key });
   }
+  const seen = new Map<string, string>();
+  for (const l of lines) {
+    if (l.kind !== 'holding' || !l.counted) continue;
+    const k = `${norm(l.name)}|${l.currency}|${l.holderEntityId ?? SELF}`;
+    const first = seen.get(k);
+    if (first && first !== l.holdingId) out.push({ code: 'possible_duplicate_holding', severity: 'warning', message: `${l.name} is recorded more than once for the same owner and currency. If they are the same holding, remove one so it is not counted twice.`, ref: l.key });
+    else seen.set(k, l.holdingId ?? l.key);
+  }
   const funds = lines.filter(l => l.kind === 'fund').map(l => norm(l.name));
   for (const l of lines) if (l.kind === 'holding' && l.counted && l.assetClass === 'private_fund' && funds.includes(norm(l.name))) out.push({ code: 'possible_duplicate_fund', severity: 'warning', message: `${l.name} looks like a fund already shown from fund records. If it is the same investment, archive the manual entry so it is not counted twice.`, ref: l.key });
   return out;
@@ -202,56 +211,77 @@ export type InvestmentPerformance = {
   irr: { status: string; bps: number | null; detail: string };
   tvpi: number | null; dpi: number | null; rvpi: number | null;
   twr: { status: string; bps: number | null; detail: string } | null;
+  /** Cash flows used for XIRR and multiples: through the latest value date only. */
+  measuredFlows: PerfFlow[];
   warnings: string[];
 };
+type PerfFlow = { id: string; date: string; kind: 'contribution' | 'distribution'; amountCents: number; source: string };
+type PerfValue = { date: string; valueCents: number };
 export const PERFORMANCE_ASSUMPTIONS = [
-  'Money-weighted return (XIRR) uses the actual dated contributions and distributions, plus the latest recorded value as a final amount on the valuation date.',
-  'Multiples: TVPI = (distributions + value) / paid in; DPI = distributions / paid in; RVPI = value / paid in.',
-  `Time-weighted return is shown only when at least ${MIN_TWR_VALUES} dated values exist; cash flows between two values are treated as occurring at the start of that period.`,
+  'Money-weighted return (XIRR) uses the actual dated contributions and distributions up to the latest recorded value, plus that value as a final amount on its date. Cash that moved after the latest value is left out until a newer value is recorded.',
+  'Multiples use the same period: TVPI = (distributions + value) / paid in; DPI = distributions / paid in; RVPI = value / paid in.',
+  'A recorded value is the end-of-day value, after any cash that moved that day.',
+  `Time-weighted return is shown only when at least ${MIN_TWR_VALUES} dated values exist from the first value above zero, and every contribution or distribution in that span falls on a day with a recorded value. Otherwise growth cannot be separated from the cash flow, and the reason is shown.`,
+  'Holdings held through trusts, companies or partnerships use your effective ownership share for values, cash flows and returns.',
   'Projected capital calls and distributions are never included. No benchmarks are shown.',
-  'Values in different currencies are never added together.',
+  'Fund investments on this platform are recorded in US dollars. Values and returns in different currencies are never added together; no exchange rates are applied.',
 ];
 
-export function investmentPerformance(input: { key: string; name: string; currency: string; asOf: string; flows: { id: string; date: string; kind: 'contribution' | 'distribution'; amountCents: number; source: string }[]; valuations: { date: string; valueCents: number | null }[] }): InvestmentPerformance {
-  const flows = input.flows.filter(f => f.date <= input.asOf).sort((a, b) => a.date.localeCompare(b.date));
-  const values = input.valuations.filter(v => v.date <= input.asOf && v.valueCents !== null).sort((a, b) => a.date.localeCompare(b.date)) as { date: string; valueCents: number }[];
+/** Time-weighted return only when valuations bracket every external cash flow. */
+export function twrForValues(values: PerfValue[], flows: PerfFlow[]): { status: string; bps: number | null; detail: string } {
+  const first = values.findIndex(v => v.valueCents > 0);
+  if (first < 0) return { status: 'not_eligible', bps: null, detail: 'Time-weighted return not shown: no value above zero to start from.' };
+  const span = values.slice(first);
+  if (span.length < MIN_TWR_VALUES) return { status: 'not_eligible', bps: null, detail: `Time-weighted return not shown: needs at least ${MIN_TWR_VALUES} dated values; ${span.length} recorded from ${span[0]!.date}.` };
+  const startDate = span[0]!.date, endDate = span[span.length - 1]!.date;
+  const valueDates = new Set(span.map(v => v.date));
+  const inside = flows.filter(f => f.date > startDate && f.date <= endDate);
+  const offDate = [...new Set(inside.filter(f => !valueDates.has(f.date)).map(f => f.date))];
+  if (offDate.length) return { status: 'not_eligible', bps: null, detail: `Time-weighted return not shown: cash moved on ${offDate.slice(0, 3).join(', ')}${offDate.length > 3 ? ` and ${offDate.length - 3} other date(s)` : ''} with no value recorded that day.` };
+  const subperiods: Subperiod[] = [];
+  for (let i = 1; i < span.length; i++) {
+    const a = span[i - 1]!, b = span[i]!;
+    const net = inside.filter(f => f.date === b.date).reduce((n, f) => n + (f.kind === 'contribution' ? Math.abs(f.amountCents) : -Math.abs(f.amountCents)), 0);
+    const preFlow = b.valueCents - net;
+    if (preFlow < 0) return { status: 'not_eligible', bps: null, detail: `Time-weighted return not shown: the value on ${b.date} is less than the cash paid in that day.` };
+    subperiods.push({ start: a.date, end: b.date, beginningValueCents: a.valueCents, externalFlowCents: 0, endingValueCents: preFlow });
+  }
+  const r = timeWeightedReturn(subperiods);
+  return { status: r.status, bps: r.bps, detail: r.detail };
+}
+
+export function investmentPerformance(input: { key: string; name: string; currency: string; asOf: string; flows: PerfFlow[]; valuations: { date: string; valueCents: number | null }[] }): InvestmentPerformance {
+  const all = input.flows.filter(f => f.date <= input.asOf).sort((a, b) => a.date.localeCompare(b.date));
+  const byDate = new Map<string, number>();
+  for (const v of input.valuations) if (v.date <= input.asOf && v.valueCents !== null) byDate.set(v.date, v.valueCents);
+  const values: PerfValue[] = [...byDate.entries()].map(([date, valueCents]) => ({ date, valueCents })).sort((a, b) => a.date.localeCompare(b.date));
   const latest = values[values.length - 1] ?? null;
+  const flows = latest ? all.filter(f => f.date <= latest.date) : all;
+  const later = latest ? all.filter(f => f.date > latest.date) : [];
   const paidIn = flows.filter(f => f.kind === 'contribution').reduce((n, f) => n + Math.abs(f.amountCents), 0);
   const dist = flows.filter(f => f.kind === 'distribution').reduce((n, f) => n + Math.abs(f.amountCents), 0);
   const warnings: string[] = [];
-  if (!flows.length) warnings.push('No dated contributions or distributions are recorded, so returns cannot be calculated.');
+  if (!all.length) warnings.push('No dated contributions or distributions are recorded, so returns cannot be calculated.');
   if (!latest) warnings.push('No dated value is recorded, so the final amount is unknown.');
   else if (daysBetween(latest.date, input.asOf) > STALE_VALUE_DAYS) warnings.push(`The latest value is from ${latest.date}, more than ${STALE_VALUE_DAYS} days before the report date.`);
+  if (latest && later.length) warnings.push(`${later.length} cash flow(s) after the latest value on ${latest.date} are left out of returns until a newer value is recorded.`);
   const dated: DatedCashFlow[] = flows.map(f => f.kind === 'contribution' ? contributionFlow(f.date, f.amountCents, f.source, f.id) : distributionFlow(f.date, f.amountCents, f.source, f.id));
   let irr: InvestmentPerformance['irr'];
-  if (!flows.length || !latest) irr = { status: 'insufficient_data', bps: null, detail: 'Not enough dated data.' };
-  else {
-    const r = xirr([...dated, terminalFlow(latest.date >= (flows[flows.length - 1]?.date ?? '') ? latest.date : input.asOf, latest.valueCents, 'latest_value')]);
-    irr = { status: r.status, bps: r.bps, detail: r.detail };
-    if (latest.date < (flows[flows.length - 1]?.date ?? '')) warnings.push('Cash moved after the latest value date; the value may not reflect that activity.');
-  }
+  if (!flows.length || !latest) irr = { status: 'insufficient_data', bps: null, detail: !latest ? 'No dated value recorded.' : 'No cash flows on or before the latest value date.' };
+  else { const r = xirr([...dated, terminalFlow(latest.date, latest.valueCents, 'latest_value')]); irr = { status: r.status, bps: r.bps, detail: r.detail }; }
   const m = privateMarketMultiples({ paidInCapitalCents: paidIn, distributionsCents: dist, residualValueCents: latest?.valueCents ?? 0 });
   let twr: InvestmentPerformance['twr'] = null;
-  if (values.length >= MIN_TWR_VALUES) {
-    const subperiods: Subperiod[] = [];
-    for (let i = 1; i < values.length; i++) {
-      const a = values[i - 1]!, b = values[i]!;
-      const external = flows.filter(f => f.date > a.date && f.date <= b.date).reduce((n, f) => n + (f.kind === 'contribution' ? Math.abs(f.amountCents) : -Math.abs(f.amountCents)), 0);
-      subperiods.push({ start: a.date, end: b.date, beginningValueCents: a.valueCents, externalFlowCents: external, endingValueCents: b.valueCents });
-    }
-    const r = timeWeightedReturn(subperiods);
-    twr = { status: r.status, bps: r.bps, detail: r.detail };
-  } else if (values.length) warnings.push(`Time-weighted return needs at least ${MIN_TWR_VALUES} dated values; ${values.length} recorded.`);
-  return { key: input.key, name: input.name, currency: input.currency, periodStart: flows[0]?.date ?? values[0]?.date ?? null, periodEnd: latest && latest.date >= (flows[flows.length - 1]?.date ?? '') ? latest.date : input.asOf, paidInCents: paidIn, distributionsCents: dist, valueCents: latest?.valueCents ?? null, valueDate: latest?.date ?? null, irr, tvpi: paidIn > 0 && latest ? m.tvpi : null, dpi: paidIn > 0 ? m.dpi : null, rvpi: paidIn > 0 && latest ? m.rvpi : null, twr, warnings };
+  if (values.length) { twr = twrForValues(values, flows); if (twr.status === 'not_eligible') warnings.push(twr.detail); }
+  return { key: input.key, name: input.name, currency: input.currency, periodStart: flows[0]?.date ?? values[0]?.date ?? null, periodEnd: latest?.date ?? input.asOf, paidInCents: paidIn, distributionsCents: dist, valueCents: latest?.valueCents ?? null, valueDate: latest?.date ?? null, irr, tvpi: paidIn > 0 && latest ? m.tvpi : null, dpi: paidIn > 0 && latest ? m.dpi : null, rvpi: paidIn > 0 && latest ? m.rvpi : null, twr, measuredFlows: flows, warnings };
 }
 
-/** Combined private-investment XIRR per currency, from every investment with flows and a value. */
-export function combinedPerformance(items: { currency: string; flows: { id: string; date: string; kind: 'contribution' | 'distribution'; amountCents: number; source: string }[]; latest: { date: string; valueCents: number } | null }[], asOf: string) {
+/** Combined private-investment XIRR per currency, each investment measured through its own latest value. */
+export function combinedPerformance(items: { currency: string; flows: PerfFlow[]; latest: PerfValue | null }[], asOf: string) {
   return [...new Set(items.map(i => i.currency))].sort().map(currency => {
     const set = items.filter(i => i.currency === currency && i.flows.length);
     const missing = set.filter(i => !i.latest).length;
-    const flows: DatedCashFlow[] = set.flatMap(i => i.flows.filter(f => f.date <= asOf).map(f => f.kind === 'contribution' ? contributionFlow(f.date, f.amountCents, f.source, f.id) : distributionFlow(f.date, f.amountCents, f.source, f.id)));
-    const terminal = set.filter(i => i.latest).map(i => { const last = i.flows.filter(f => f.date <= asOf).reduce((d, f) => f.date > d ? f.date : d, ''); return terminalFlow(i.latest!.date >= last ? i.latest!.date : asOf, i.latest!.valueCents, 'latest_value'); });
+    const flows: DatedCashFlow[] = set.flatMap(i => i.flows.filter(f => f.date <= asOf && (!i.latest || f.date <= i.latest.date)).map(f => f.kind === 'contribution' ? contributionFlow(f.date, f.amountCents, f.source, f.id) : distributionFlow(f.date, f.amountCents, f.source, f.id)));
+    const terminal = set.filter(i => i.latest).map(i => terminalFlow(i.latest!.date, i.latest!.valueCents, 'latest_value'));
     const r = flows.length && !missing ? xirr([...flows, ...terminal]) : null;
     return { currency, investments: set.length, irr: r ? { status: r.status, bps: r.bps, detail: r.detail } : { status: 'insufficient_data', bps: null, detail: missing ? `${missing} investment(s) have no value recorded.` : 'No dated cash flows recorded.' } };
   });
