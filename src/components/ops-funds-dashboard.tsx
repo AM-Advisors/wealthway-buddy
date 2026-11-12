@@ -1,4 +1,5 @@
 import { LoadError } from "@/components/load-error";
+import { setupDisplay } from "@/lib/fund-launch-summary";
 import { setFundDemoFn } from "@/lib/staff-funds.functions";
 import { DeleteFundDialog } from "@/components/delete-fund-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -107,6 +108,24 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
           <button type="button" key={l} onClick={() => setFilter(filter === fk ? "all" : fk)} aria-pressed={filter === fk} className={cn("bg-card p-4 text-left transition-colors hover:bg-muted/50 last:col-span-2 sm:last:col-span-1", filter === fk && "bg-muted")}><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className={cn("font-heading text-2xl font-semibold", warn && v ? "text-destructive" : "")}>{v}</p></button>
         ))}
       </div>
+      {(() => {
+        const list = rows.filter((r: any) => !r.isDemo && r.receivedUnrecorded > 0);
+        if (!list.length) return null;
+        return (
+          <section className="rounded-xl border bg-card p-4">
+            <h2 className="font-heading text-base font-semibold">Received, amount not recorded</h2>
+            <p className="text-sm text-muted-foreground">These investors are marked as having sent money, but no received amount is recorded, so they don't count as funded. Record each amount through the fund's funding review.</p>
+            <ul className="mt-3 divide-y text-sm">
+              {list.map((r: any) => (
+                <li key={r.id} className="flex items-center justify-between gap-3 py-2">
+                  <Link to="/ops/fund/$fundId" params={{ fundId: r.id }} search={{ tab: "investors" }} className="min-w-0 truncate font-medium hover:underline">{r.name}</Link>
+                  <span className="shrink-0 text-muted-foreground">{r.receivedUnrecorded} investor{r.receivedUnrecorded === 1 ? "" : "s"}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
       <div className="space-y-3">
         <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {FILTERS.map(([k, l]) => (
@@ -133,8 +152,9 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
           {!shown.length ? <p className="px-4 py-6 text-sm text-muted-foreground">No funds match these filters.</p> : shown.map((f) => {
             const lines = attentionLines(f.metrics).filter((l) => !l.includes("ready"));
             const pct = f.setupCompletion;
-            const stage = !f.isOpen ? "Closed" : pct != null && pct < 100 ? "In setup" : "Live";
-            const next = lines[0] ?? (pct != null && pct < 100 ? "Finish fund setup" : " · ");
+            const sd = setupDisplay(pct, f.metrics.operating ?? 0);
+            const stage = !f.isOpen ? "Closed" : pct != null && pct < 100 && !sd.operating ? "In setup" : "Live";
+            const next = lines[0] ?? (pct != null && pct < 100 ? (sd.operating ? "Tidy setup items" : "Finish fund setup") : " · ");
             return (
               <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-muted/30 lg:grid-cols-[2fr_1.2fr_1fr_0.9fr_1.6fr_1fr_6rem] lg:items-center">
                 <div className="col-span-2 min-w-0 lg:col-span-1">
@@ -145,7 +165,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
                 <span className="text-muted-foreground">{f.clientName ?? "-"}</span>
                 <span className="flex items-center gap-2 text-right lg:text-left">
                   <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted lg:inline-block"><span className="block h-full bg-primary" style={{ width: `${pct ?? 0}%` }} /></span>
-                  {pct == null ? "-" : `${pct}%`}
+                  {sd.text}
                 </span>
                 <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.ready}/{f.metrics.investors} ready</span>
                 <span className={cn("text-right text-xs lg:text-left", f.metrics.blocked ? "text-destructive" : f.metrics.needsAttention ? "font-medium" : "text-muted-foreground")}>{next}</span>

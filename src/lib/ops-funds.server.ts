@@ -1,6 +1,7 @@
 /** Operations → Funds dashboard. Staff only; read-only; built from canonical records. */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isLiveInvestment } from "@/lib/investment-amounts";
+import { isPendingReconciliation } from "@/lib/funding-status";
 import { assertStaff } from "@/lib/investor-onboarding.server";
 import { fundMetrics, totals, type FundOnboardingFact } from "@/lib/ops-funds-model";
 
@@ -97,6 +98,9 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
     const sm = saved.get(row.id);
     facts.push({ offeringId: row.offering_id, stage: row.stage, closeReady: !!sm?.close_ready, terminal: sm?.terminal ?? null, blocked: !!sm?.blocked, nextOwner: sm?.next_owner ?? null, fundingStatus: row.funding_status ?? null });
   }
+  // Staff follow-up: money marked received but no amount recorded (matched through the existing funding review; nothing posts here).
+  const unrecorded = new Map<string, number>();
+  for (const r of onbRows) if (isPendingReconciliation(r.funding_status) && !Number(r.funded_amount_cents ?? 0)) unrecorded.set(r.offering_id, (unrecorded.get(r.offering_id) ?? 0) + 1);
   const rows = offerings.map((o) => {
     const mgrs = ((managers ?? []) as any[]).filter((m) => m.offering_id === o.id).map((m) => ({ id: m.user_id as string, name: (name.get(m.user_id) ?? "Unnamed") as string }));
     const s = setup.get(o.id);
@@ -112,6 +116,7 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
       targetClose: (s?.target_close ?? s?.final_close ?? null) as string | null,
       hasActiveLink: activeLink.has(o.id),
       setupCompletion: completion.get(o.id) ?? null,
+      receivedUnrecorded: unrecorded.get(o.id) ?? 0,
       metrics: fundMetrics(o.id, facts, openTasks),
       // Harmonious commercial agreement: a follow-up signal only, never a fund blocker.
       agreement: (o.client_id && agreements.get(o.client_id)?.overall) || "needs_review",

@@ -14,9 +14,9 @@ export type FundOnboardingFact = {
 };
 export type OpenTask = { offeringId: string | null; owner: string | null };
 
-export type FundMetrics = { investors: number; onboarding: number; ready: number; needsHarmonious: number; blocked: number; funded: number; needsAttention: number; waitingInvestor: number; waitingManager: number };
+export type FundMetrics = { investors: number; onboarding: number; ready: number; needsHarmonious: number; blocked: number; funded: number; operating?: number; needsAttention: number; waitingInvestor: number; waitingManager: number };
 
-const empty = (): FundMetrics => ({ investors: 0, onboarding: 0, ready: 0, needsHarmonious: 0, blocked: 0, funded: 0, needsAttention: 0, waitingInvestor: 0, waitingManager: 0 });
+const empty = (): FundMetrics => ({ investors: 0, onboarding: 0, ready: 0, needsHarmonious: 0, blocked: 0, funded: 0, operating: 0, needsAttention: 0, waitingInvestor: 0, waitingManager: 0 });
 
 export function fundMetrics(offeringId: string, facts: FundOnboardingFact[], tasks: OpenTask[]): FundMetrics {
   const m = empty();
@@ -24,7 +24,8 @@ export function fundMetrics(offeringId: string, facts: FundOnboardingFact[], tas
     if (f.offeringId !== offeringId) continue;
     m.investors++;
     if (isReconciledFunding(f.fundingStatus)) m.funded++;
-    if (f.terminal === "closed" || f.stage === "closed") continue;
+    if (f.terminal === "closed" || f.stage === "closed") { m.operating = (m.operating ?? 0) + 1; continue; }
+    if (isReconciledFunding(f.fundingStatus)) { m.operating = (m.operating ?? 0) + 1; }
     if (f.closeReady) { m.ready++; continue; }
     m.onboarding++;
     if (f.blocked) m.blocked++;

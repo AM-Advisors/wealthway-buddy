@@ -1,3 +1,13 @@
+/**
+ * Setup wording for a fund. A fund that already has closed or funded investors is
+ * operating, so a low setup % would mislead; open items stay listed separately.
+ */
+export function setupDisplay(percent: number | null | undefined, operatingInvestors: number): { text: string; operating: boolean } {
+  if (percent == null) return { text: "-", operating: operatingInvestors > 0 };
+  if (percent < 100 && operatingInvestors > 0) return { text: "Already operating · setup items to tidy", operating: true };
+  return { text: `${percent}%`, operating: operatingInvestors > 0 };
+}
+
 /** One fund-level setup % and launch label, shared by Fund Setup and Readiness. */
 export function fundSetupSummary(d: {
   hasSetup?: boolean;

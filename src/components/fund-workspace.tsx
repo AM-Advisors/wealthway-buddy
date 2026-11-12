@@ -1,4 +1,5 @@
 import { ForecastWorkspace, useForecastAccess } from "@/components/forecast-workspace";
+import { setupDisplay } from "@/lib/fund-launch-summary";
 import { fundOriginLabel, migrationApplies } from "@/lib/fund-origin";
 import { ReadinessQueue } from "@/components/investment-readiness";
 import { FundMigrationStatus } from "@/components/fund-migration-status";
@@ -210,7 +211,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
         <TabsContent value="overview" className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { l: "Setup complete", t: "setup", v: setup.percent == null ? "-" : `${setup.percent}%` },
+          { l: "Setup complete", t: "setup", v: setupDisplay(setup.percent, cap && cap.totals.fundedCents > 0 ? 1 : 0).text },
           { l: "Investors", t: "investors", v: cap ? String(cap.totals.investors) : "-" },
           { l: "Committed", t: "investors", v: cap ? usd(cap.totals.commitCents) : "-" },
           { l: "Funded (reconciled)", t: "investors", v: cap ? usd(cap.totals.fundedCents) : "-" },

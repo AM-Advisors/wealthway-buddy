@@ -52,7 +52,8 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("id, offering_id, status, funding_status, commitment_cents, wire_fee_cents")
       .in("offering_id", offeringIds);
-    const appRows = (appsRaw ?? []) as any[];
+    // Same exclusions as the cap table: withdrawn, declined, rejected or cancelled applications never count.
+    const appRows = ((appsRaw ?? []) as any[]).filter((a) => !["withdrawn", "declined", "rejected", "cancelled"].includes(String(a.status)));
     const appIds = appRows.map((a) => a.id as string);
 
     let subRows: any[] = [];

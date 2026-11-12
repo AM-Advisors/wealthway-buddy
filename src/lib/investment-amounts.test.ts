@@ -19,3 +19,12 @@ describe("investment amounts", () => {
     expect(isLiveInvestment({ merged_into_onboarding_id: "x" })).toBe(false);
   });
 });
+
+import { setupDisplay } from "./fund-launch-summary";
+describe("setup wording", () => {
+  it("shows 'Already operating' instead of a low % when investors are closed or funded", () => {
+    expect(setupDisplay(26, 3).text).toBe("Already operating · setup items to tidy");
+    expect(setupDisplay(26, 0).text).toBe("26%");
+    expect(setupDisplay(100, 3).text).toBe("100%");
+  });
+});
