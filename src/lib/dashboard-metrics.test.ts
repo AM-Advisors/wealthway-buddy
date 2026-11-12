@@ -6,14 +6,14 @@ import {
 
 const f = (p: Partial<InvestmentFact> & { r?: any }): InvestmentFact => ({
   onboardingId: p.onboardingId ?? Math.random().toString(36), offeringId: p.offeringId ?? "A", fundingStatus: p.fundingStatus ?? "not_funded",
-  stage: p.stage ?? "in_progress", intendedCents: p.intendedCents ?? 1000, approved: p.approved ?? false, readiness: p.r ?? { currentStage: "identity", items: [], nextAction: { label: "x", owner: "investor" } },
+  stage: p.stage ?? "in_progress", intendedCents: p.intendedCents ?? 1000, fundedCents: p.fundedCents ?? null, approved: p.approved ?? false, readiness: p.r ?? { currentStage: "identity", items: [], nextAction: { label: "x", owner: "investor" } },
 });
 
 describe("dashboard metrics", () => {
   it("funded requires reconciliation; reported wire is not funded", () => {
     expect(isFunded(f({ fundingStatus: "investor_reports_sent" }))).toBe(false);
     expect(isFunded(f({ fundingStatus: "funded" }))).toBe(true);
-    const c = capital([f({ fundingStatus: "investor_reports_sent", approved: true }), f({ fundingStatus: "funded", intendedCents: 500 })]);
+    const c = capital([f({ fundingStatus: "investor_reports_sent", approved: true }), f({ fundingStatus: "funded", intendedCents: 900, fundedCents: 500 })]);
     expect(c).toEqual({ intendedCents: 1000, awaitingFundingCents: 1000, fundedCents: 500 });
     expect(fundingStateOf(f({ fundingStatus: "investor_reports_sent", approved: true }))).toBe("funding_pending");
     expect(fundingStateOf(f({ approved: false }))).toBe("not_ready");
@@ -75,10 +75,10 @@ describe("dashboard metrics", () => {
 
 import { fundedSummary as __fs } from "./dashboard-metrics";
 describe("fundedSummary", () => {
-  it("counts funded/closed as closed, other active as pending, skips declined", () => {
+  it("counts funded money (not the intended amount), closed, pending, skips declined", () => {
     const base = { offeringId: "o", readiness: null } as any;
     const r = __fs([
-      { ...base, onboardingId: "a", fundingStatus: "funded", intendedCents: 10000 },
+      { ...base, onboardingId: "a", fundingStatus: "funded", intendedCents: 12000, fundedCents: 10000 },
       { ...base, onboardingId: "b", fundingStatus: null, stage: "closed", intendedCents: 5000 },
       { ...base, onboardingId: "c", fundingStatus: null, intendedCents: 2500 },
       { ...base, onboardingId: "d", fundingStatus: null, intendedCents: 900, readiness: { terminal: "declined" } },

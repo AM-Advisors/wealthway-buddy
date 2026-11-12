@@ -1,5 +1,6 @@
 /** Operations → Funds dashboard. Staff only; read-only; built from canonical records. */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { isLiveInvestment } from "@/lib/investment-amounts";
 import { assertStaff } from "@/lib/investor-onboarding.server";
 import { fundMetrics, totals, type FundOnboardingFact } from "@/lib/ops-funds-model";
 
@@ -53,7 +54,8 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
   // investor made thousands of database calls and the page timed out. Only missing or
   // stale summaries (older than SUMMARY_TTL, oldest first) are refreshed, up to
   // REFRESH_LIMIT per load, so the page always stays within the server's limits.
-  const onbRows = (onbs ?? []) as any[];
+  // Removed or merged duplicates never count (same rule as the fund cap table).
+  const onbRows = ((onbs ?? []) as any[]).filter(isLiveInvestment);
   const ids = onbRows.map((r) => r.id);
   const saved = new Map<string, any>();
   for (let i = 0; i < ids.length; i += 300) {
@@ -63,7 +65,11 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
   const cutoff = Date.now() - SUMMARY_TTL;
   const stale = onbRows
     .filter((r) => { const s = saved.get(r.id); return !s || new Date(s.computed_at).getTime() < cutoff || (r.updated_at && new Date(r.updated_at) > new Date(s.computed_at)); })
-    .sort((a, b) => (saved.has(a.id) ? 1 : 0) - (saved.has(b.id) ? 1 : 0))
+    .sort((a, b) => {
+      const sa = saved.get(a.id), sb = saved.get(b.id);
+      if (!sa || !sb) return (sa ? 1 : 0) - (sb ? 1 : 0); // missing first
+      return new Date(sa.computed_at).getTime() - new Date(sb.computed_at).getTime(); // then oldest
+    })
     .slice(0, REFRESH_LIMIT);
   const factsDone = (async () => {
     const { saveReadinessSummary, readinessForMany } = await import("@/lib/investor-onboarding.server");

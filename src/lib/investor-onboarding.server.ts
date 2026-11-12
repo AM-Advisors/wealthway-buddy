@@ -1,4 +1,5 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
+import { investmentAmountCents, isLiveInvestment } from "@/lib/investment-amounts";
 import { closingLedgerEntries } from "@/lib/closing-ledger";
 import { currentFundMinimum } from "@/lib/fund-minimum";
 import { questionnaireCompletion } from "@/lib/questionnaire-completion";
@@ -2916,7 +2917,7 @@ export async function investmentReadiness(userId: string, onboardingId: string) 
     onboardingId,
     fundName: offering?.name ?? "Fund",
     profileLabel: facts.profile?.display_label ?? null,
-    amountCents: access.row.accepted_amount_cents ?? access.row.requested_amount_cents ?? null,
+    amountCents: investmentAmountCents(access.row),
     viewer: access.role,
     readiness: readinessView(result, access.role),
   };
@@ -2929,7 +2930,7 @@ export async function fundReadiness(userId: string, offeringId: string, viewerOv
   // Staff may render the narrower manager view (View As preview); never the reverse.
   const viewer = viewerOverride === "manager" || !actor.isStaff ? "manager" : "staff";
   const { data } = await db().from("investor_onboardings").select("*").eq("offering_id", offeringId).not("stage", "in", "(declined,cancelled)");
-  const rows = (data ?? []) as any[];
+  const rows = ((data ?? []) as any[]).filter(isLiveInvestment);
   const ids = [...new Set(rows.map((r) => r.investor_user_id))];
   const { data: people } = ids.length ? await db().from("profiles").select("user_id, legal_name").in("user_id", ids) : { data: [] as any[] };
   const names = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p.legal_name]));
@@ -2944,7 +2945,7 @@ export async function fundReadiness(userId: string, offeringId: string, viewerOv
       investorName: names.get(row.investor_user_id) ?? "Investor",
       profileLabel: facts.profile?.display_label ?? null,
       profileType: facts.profile?.profile_type ?? null,
-      amountCents: row.accepted_amount_cents ?? row.requested_amount_cents ?? null,
+      amountCents: investmentAmountCents(row),
       percentComplete: v.percentComplete,
       nextAction: v.nextAction,
       closeReady: v.closeReady,

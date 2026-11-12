@@ -3,6 +3,7 @@
 // These figures come from the fund's own records. They are an administrative
 // record, not a valuation, audit, tax return or investment advice.
 import { createServerFn } from "@tanstack/react-start";
+import { investmentAmountCents } from "@/lib/investment-amounts";
 
 // Money, banking and account changes need a fully cleared identity check (not "limited" review access).
 import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
@@ -250,7 +251,7 @@ export function currentOnlyOnboardings(onboardings: any[], activeApps: any[]): a
 }
 
 export function currentFund(o: any, offering: any = {}): InvestorCapitalFund {
-  const commitmentCents = Number(o.commitment_amount_cents ?? o.requested_amount_cents ?? 0);
+  const commitmentCents = Number(investmentAmountCents(o) ?? 0);
   const contributedCents = Number(o.funded_amount_cents ?? 0);
   return {
     applicationId: String(o.id), offeringId: String(o.offering_id), fundName: String(offering?.name ?? "Fund"),

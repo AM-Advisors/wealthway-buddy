@@ -1,4 +1,5 @@
 import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
+import { investmentAmountCents, isLiveInvestment } from "@/lib/investment-amounts";
 /**
  * Role dashboards - server aggregation. Every number is built here, from
  * records the caller is authorized to see, using the shared definitions in
@@ -15,8 +16,10 @@ import {
 const db = () => supabaseAdmin as any;
 const forbid = (m: string) => { throw new Error(`Forbidden: ${m}`); };
 
-async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; result: any }[]> {
+async function factsFor(input: any[]): Promise<{ fact: InvestmentFact; row: any; result: any }[]> {
   const out = [] as { fact: InvestmentFact; row: any; result: any }[];
+  // Removed or merged duplicates never count (same rule as the fund cap table).
+  const rows = input.filter(isLiveInvestment);
   // One batched read for all rows (same code path as single readiness).
   const all = await readinessForMany(rows);
   const canonFunding = await canonicalizeOnboardingFunding(db(), rows);
@@ -27,7 +30,7 @@ async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; 
       row, result,
       fact: {
         onboardingId: row.id, offeringId: row.offering_id, fundingStatus: (canonFunding[i]?.funding_status ?? row.funding_status) ?? null, stage: row.stage ?? null,
-        intendedCents: row.accepted_amount_cents ?? row.requested_amount_cents ?? null, approved: !!row.approved_to_fund_at,
+        intendedCents: investmentAmountCents(row), fundedCents: row.funded_amount_cents ?? null, approved: !!row.approved_to_fund_at,
         createdAt: row.created_at ?? null, readiness: result,
       },
     });

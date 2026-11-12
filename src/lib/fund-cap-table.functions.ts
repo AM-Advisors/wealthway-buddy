@@ -1,4 +1,5 @@
 import { canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
+import { investmentAmountCents } from "@/lib/investment-amounts";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -70,7 +71,7 @@ export const getFundCapTable = createServerFn({ method: "GET" })
           classKey: o.offering_class_key,
           stage: o.stage,
           fundingStatus: o.funding_status,
-          commitmentCents: o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents,
+          commitmentCents: investmentAmountCents(o),
           acceptedCents: o.accepted_amount_cents,
           fundedCents: o.funded_amount_cents,
           units: o.unit_count == null ? null : Number(o.unit_count),

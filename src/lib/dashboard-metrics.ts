@@ -54,6 +54,8 @@ export type InvestmentFact = {
   fundingStatus: string | null;
   stage?: string | null;
   intendedCents: number | null;
+  /** Reconciled money recorded on the investment; intended amounts never count as funded. */
+  fundedCents?: number | null;
   approved?: boolean;
   createdAt?: string | null;
   readiness: ReadinessLike | null;
@@ -142,7 +144,7 @@ export function capital(facts: InvestmentFact[]): Capital {
   for (const f of facts) {
     if (isTerminal(f)) continue;
     const amt = Number(f.intendedCents ?? 0);
-    if (isFunded(f)) { out.fundedCents += amt; continue; }
+    if (isFunded(f)) { out.fundedCents += Number(f.fundedCents ?? 0); continue; }
     if (isClosed(f)) continue;
     out.intendedCents += amt;
     if (f.approved) out.awaitingFundingCents += amt;
@@ -157,7 +159,8 @@ export function fundedSummary(facts: InvestmentFact[]): FundedSummary {
   for (const f of facts) {
     if (isTerminal(f)) continue;
     const amt = Number(f.intendedCents ?? 0);
-    if (isFunded(f) || isClosed(f)) { out.closedCount++; out.closedCents += amt; }
+    if (isFunded(f)) { out.closedCount++; out.closedCents += Number(f.fundedCents ?? 0); }
+    else if (isClosed(f)) { out.closedCount++; out.closedCents += amt; }
     else { out.pendingCount++; out.pendingCents += amt; }
   }
   return out;

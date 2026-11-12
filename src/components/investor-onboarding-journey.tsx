@@ -195,7 +195,7 @@ export function InvestorOnboardingJourney({
       {complete ? (
         <Card>
           <CardHeader>
-            <CardTitle>{money(d.fundedAmountCents || amount)} Received</CardTitle>
+            <CardTitle>{d.fundedAmountCents ? `${money(d.fundedAmountCents)} received` : "Investment received"}</CardTitle>
             <CardDescription>Your investment is complete.</CardDescription>
           </CardHeader>
           <CardContent>
