@@ -182,7 +182,7 @@ export async function investorDashboard(userId: string) {
   const investments = built.map(({ fact, row, result }) => {
     const investorAction = result.nextAction?.owner === "investor" ? String(result.nextAction.label) : null;
     return {
-      id: fact.onboardingId, fundName: off.get(row.offering_id) ?? "Fund", profileLabel: prof.get(row.investment_profile_id) ?? null,
+      id: fact.onboardingId, offeringId: row.offering_id as string, fundName: off.get(row.offering_id) ?? "Fund", profileLabel: prof.get(row.investment_profile_id) ?? null,
       amountCents: fact.intendedCents, step: clientStepIndex(fact), funded: isFunded(fact), fundingState: fundingStateOf(fact),
       nextAction: investorAction, waitingOn: investorAction ? null : (result.nextAction?.owner ?? null), complete: funnelStageOf(fact) === "complete",
     };

@@ -214,13 +214,16 @@ export async function myInvitedFunds(userId: string) {
   const ids = [...new Set(list.map((i) => i.offering_id))];
   const [{ data: funds }, { data: obs }] = await Promise.all([
     db.from("offerings").select("id, name, is_open").in("id", ids),
-    db.from("investor_onboardings").select("id, offering_id, stage").eq("investor_user_id", userId).in("offering_id", ids).is("removed_at", null),
+    db.from("investor_onboardings").select("id, offering_id, stage, closed_at, updated_at").eq("investor_user_id", userId).in("offering_id", ids).is("removed_at", null),
   ]);
-  return ids.map((id) => {
+  const { invitedFundState } = await import("@/lib/legacy-application-supersede");
+  return ids.flatMap((id) => {
     const inv = list.find((i) => i.offering_id === id);
     const f = ((funds ?? []) as any[]).find((x) => x.id === id);
-    const ob = ((obs ?? []) as any[]).find((o) => o.offering_id === id && !["closed", "declined", "cancelled"].includes(o.stage));
-    return { invitationId: inv.id as string, offeringId: id as string, fundName: (f?.name as string) ?? "Fund", open: Boolean(f?.is_open), intendedAmountCents: (inv.intended_amount_cents ?? null) as number | null, onboardingId: (ob?.id ?? null) as string | null };
+    // A closed investment already used this invitation: no "Start investing" again.
+    const state = invitedFundState(((obs ?? []) as any[]).filter((o) => o.offering_id === id));
+    if (!state.show) return [];
+    return [{ invitationId: inv.id as string, offeringId: id as string, fundName: (f?.name as string) ?? "Fund", open: Boolean(f?.is_open), intendedAmountCents: (inv.intended_amount_cents ?? null) as number | null, onboardingId: state.onboardingId }];
   });
 }
 

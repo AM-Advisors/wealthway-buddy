@@ -22,3 +22,27 @@ describe("older applications vs current investment records", () => {
     ])?.id).toBe("b");
   });
 });
+
+import { investmentSubscriptionBadges, invitedFundState } from "@/lib/legacy-application-supersede";
+
+describe("home page cards follow the current investment record", () => {
+  it("hides the invitation card once the investment in that fund is closed", () => {
+    expect(invitedFundState([{ id: "ob1", stage: "closed", closed_at: "2026-11-09" }])).toEqual({ show: false, onboardingId: null });
+  });
+  it("continues an open investment and still offers a start after a declined one", () => {
+    expect(invitedFundState([{ id: "ob1", stage: "awaiting_funds" }])).toEqual({ show: true, onboardingId: "ob1" });
+    expect(invitedFundState([{ id: "ob1", stage: "declined" }])).toEqual({ show: true, onboardingId: null });
+    expect(invitedFundState([])).toEqual({ show: true, onboardingId: null });
+  });
+  it("shows a closed, funded investment as complete and funded, never accreditation not started", () => {
+    const badges = investmentSubscriptionBadges({ step: 4, complete: true, fundingState: "funded" });
+    expect(badges).toEqual([{ label: "Investment", status: "complete" }, { label: "Funding", status: "funded" }]);
+    expect(badges.some((b) => b.label === "Accreditation")).toBe(false);
+  });
+  it("shows the current step for an investment still in progress", () => {
+    expect(investmentSubscriptionBadges({ step: 2, complete: false, fundingState: "not_ready" })).toEqual([
+      { label: "Current step", status: "sign" },
+      { label: "Funding", status: "not_ready_to_fund" },
+    ]);
+  });
+});

@@ -2,19 +2,20 @@ import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { investmentSubscriptionBadges, liveLegacyApplications, type SubscriptionBadge } from "@/lib/legacy-application-supersede";
 
 export type InvestorFundLine = {
-  applicationId: string;
+  /** Stable row key. */
+  key: string;
+  /** "investment" = current investment record (what Operations shows); "application" = older application with no investment record yet. */
+  kind: "investment" | "application";
+  onboardingId: string | null;
+  applicationId: string | null;
   offeringId: string;
   fundName: string;
-  status: string;
   currentStep: string | null;
   commitmentCents: number | null;
-  kyc: string | null;
-  aml: string | null;
-  accreditation: string | null;
-  documents: string | null;
-  funding: string | null;
+  badges: SubscriptionBadge[];
 };
 
 export type ReviewerFundLine = {
@@ -50,15 +51,35 @@ export const getRoleOverview = createServerFn({ method: "GET" })
     const name = facts.name || email || "there";
 
     // ---------- Investor ----------
-    const { data: myApps } = await supabase
-      .from("investor_applications")
-      .select(
-        "id, offering_id, status, current_step, commitment_cents, kyc_status, aml_status, accreditation_status, documents_status, funding_status",
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    const [{ data: myApps }, { data: myOnboardings }] = await Promise.all([
+      supabase
+        .from("investor_applications")
+        .select(
+          "id, offering_id, status, current_step, commitment_cents, kyc_status, aml_status, accreditation_status, documents_status, funding_status",
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
+      supabase.from("investor_onboardings").select("id, offering_id").eq("investor_user_id", userId).limit(500),
+    ]);
 
-    const myAppRows = await canonicalizeApplications(supabase, (myApps ?? []) as any[], userId);
+    // A fund with a current investment record (any stage) is owned by that
+    // record; its older application row is frozen history and never shows
+    // its own "not started" statuses here.
+    const myAppRows = await canonicalizeApplications(
+      supabase,
+      liveLegacyApplications((myApps ?? []) as any[], (myOnboardings ?? []) as any[]),
+      userId,
+    );
+    type Investment = Awaited<ReturnType<typeof import("@/lib/dashboards.server").investorDashboard>>["investments"][number];
+    let investments: Investment[] = [];
+    if ((myOnboardings ?? []).length > 0) {
+      try {
+        const { investorDashboard } = await import("@/lib/dashboards.server");
+        investments = (await investorDashboard(userId)).investments;
+      } catch (e) {
+        console.error("[role-overview] investment progress unavailable", (e as Error).message);
+      }
+    }
     const myOfferingIds = [...new Set(myAppRows.map((a) => a.offering_id as string))];
 
     // ---------- Reviewer scope ----------
@@ -77,31 +98,50 @@ export const getRoleOverview = createServerFn({ method: "GET" })
     }
 
     const investor = {
-      applications: myAppRows.map<InvestorFundLine>((a) => ({
-        applicationId: a.id,
-        offeringId: a.offering_id,
-        fundName: offerings.get(a.offering_id)?.name ?? "Your fund",
-        status: a.status ?? "draft",
-        currentStep: a.current_step ?? null,
-        commitmentCents: a.commitment_cents ?? null,
-        kyc: a.kyc_status ?? null,
-        aml: a.aml_status ?? null,
-        accreditation: a.accreditation_status ?? null,
-        documents: a.documents_status ?? null,
-        funding: a.funding_status ?? null,
-      })),
-      committedCents: myAppRows.reduce((sum, a) => sum + (a.commitment_cents ?? 0), 0),
+      applications: [
+        ...investments.map<InvestorFundLine>((i) => ({
+          key: `investment:${i.id}`,
+          kind: "investment",
+          onboardingId: i.id,
+          applicationId: null,
+          offeringId: i.offeringId,
+          fundName: i.profileLabel ? `${i.fundName} · ${i.profileLabel}` : i.fundName,
+          currentStep: null,
+          commitmentCents: i.amountCents ?? null,
+          badges: investmentSubscriptionBadges(i),
+        })),
+        ...myAppRows.map<InvestorFundLine>((a) => ({
+          key: `application:${a.id}`,
+          kind: "application",
+          onboardingId: null,
+          applicationId: a.id,
+          offeringId: a.offering_id,
+          fundName: offerings.get(a.offering_id)?.name ?? "Your fund",
+          currentStep: a.current_step ?? null,
+          commitmentCents: a.commitment_cents ?? null,
+          badges: [
+            { label: "Identity", status: a.kyc_status ?? "not_started" },
+            { label: "Screening", status: a.aml_status ?? "not_started" },
+            { label: "Accreditation", status: a.accreditation_status ?? "not_started" },
+            { label: "Documents", status: a.documents_status ?? "not_started" },
+            { label: "Funding", status: a.funding_status ?? "not_started" },
+          ],
+        })),
+      ],
+      committedCents:
+        investments.reduce((sum, i) => sum + (i.amountCents ?? 0), 0) +
+        myAppRows.reduce((sum, a) => sum + (a.commitment_cents ?? 0), 0),
       unreadMessages: 0,
     };
 
-    if (myAppRows.length > 0) {
+    // Unread messages count every thread of this person's, including one
+    // filed under an older application that an investment record now owns.
+    const messageAppIds = ((myApps ?? []) as any[]).map((a) => a.id as string);
+    if (messageAppIds.length > 0) {
       const { count } = await supabase
         .from("portal_messages")
         .select("id", { count: "exact", head: true })
-        .in(
-          "application_id",
-          myAppRows.map((a) => a.id),
-        )
+        .in("application_id", messageAppIds)
         .neq("sender_id", userId)
         .is("read_at", null);
       investor.unreadMessages = count ?? 0;
@@ -244,7 +284,7 @@ export const getRoleOverview = createServerFn({ method: "GET" })
       name,
       email,
       roles: {
-        investor: myAppRows.length > 0 || (!isReviewer && !isOperations),
+        investor: myAppRows.length > 0 || investments.length > 0 || (!isReviewer && !isOperations),
         manager: isManager,
         admin: isAdmin,
         operations: roles.includes("operations"),

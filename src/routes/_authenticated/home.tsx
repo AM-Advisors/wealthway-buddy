@@ -26,6 +26,11 @@ import { SetupCard } from "@/components/setup-card";
 
 import { money, prettyStatus, statusTone } from "@/lib/status";
 
+/** Finished investments read as done; everything else keeps the shared tones. */
+function subscriptionTone(status: string) {
+  return status === "complete" || status === "funded" ? ("default" as const) : statusTone(status);
+}
+
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
@@ -99,13 +104,13 @@ function RoleHome() {
         </CardTitle>
         <CardDescription>
           {data.investor.applications.length === 0
-            ? "You have not started an application yet."
-            : "Where each of your fund applications stands."}
+            ? "You have not started an investment yet."
+            : "Where each of your investments stands."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-3">
-          <Stat label="Applications" value={data.investor.applications.length} />
+          <Stat label="Investments" value={data.investor.applications.length} />
           <Stat label="Committed" value={money(data.investor.committedCents)} />
           <Stat label="Unread messages" value={data.investor.unreadMessages} />
         </div>
@@ -113,10 +118,7 @@ function RoleHome() {
         {data.investor.applications.length > 0 && (
           <div className="divide-y rounded-lg border">
             {data.investor.applications.map((app) => (
-              <div
-                key={app.applicationId}
-                className="flex flex-wrap items-center justify-between gap-3 p-3"
-              >
+              <div key={app.key} className="flex flex-wrap items-center justify-between gap-3 p-3">
                 <div>
                   <p className="font-medium">{app.fundName}</p>
                   <p className="text-xs text-muted-foreground">
@@ -125,20 +127,18 @@ function RoleHome() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {[
-                    ["Identity", app.kyc],
-                    ["Screening", app.aml],
-                    ["Accreditation", app.accreditation],
-                    ["Documents", app.documents],
-                    ["Funding", app.funding],
-                  ].map(([label, value]) => (
-                    <Badge
-                      key={label as string}
-                      variant={statusTone(String(value ?? "not_started"))}
-                    >
-                      {label}: {prettyStatus(String(value ?? "not_started"))}
+                  {app.badges.map((b) => (
+                    <Badge key={b.label} variant={subscriptionTone(b.status)}>
+                      {b.label}: {prettyStatus(b.status)}
                     </Badge>
                   ))}
+                  {app.onboardingId && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/investment/$onboardingId" params={{ onboardingId: app.onboardingId }}>
+                        Open
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
