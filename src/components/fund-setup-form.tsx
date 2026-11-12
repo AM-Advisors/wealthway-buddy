@@ -190,7 +190,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       </SetupSection>
 
       <BankBox offeringId={offeringId} isStaff={isStaff} onChanged={refresh} />
-      {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />}
+      {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} viewerId={d.viewerId} onChange={refresh} />}
 
       <SetupSection open={open} setOpen={setOpen} id="questions" title="Investor questions" status={check ? <Chip tone={check.questions.next ? "miss" : "done"}>{questionsLabel(check.questions)}</Chip> : null}>
         <p className="text-sm text-muted-foreground">Extra questions investors answer during onboarding, beyond the standard questionnaire.</p>
@@ -199,7 +199,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
 
       <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
         {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : workspace ? <Button asChild variant="outline"><Link to="/manager/fund/$fundId/documents" params={{ fundId: offeringId }}>Manage fund documents</Link></Button> : <FundDocumentsHub fundId={offeringId} staff={false} />}
-        <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
+        <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} viewerId={d.viewerId} onChange={refresh} />
       </SetupSection>
 
       {!allDone && <SetupSection open={open} setOpen={setOpen} id="launch" title="Review & Launch" status={<Chip tone={d.launchPercent >= 100 ? "done" : "miss"}>{d.launchPercent}%</Chip>}>

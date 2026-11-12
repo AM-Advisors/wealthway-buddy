@@ -1,6 +1,6 @@
 /**
- * Fictional fund manager setup submissions for /qa-sandbox, used to show the existing fund/SPV review
- * workflow through the shared administration presentation. Handlers mirror the real review rules in
+ * Fictional fund manager setup submissions for /qa-sandbox, answering the live fund review list (which now
+ * uses the shared administration presentation). Handlers mirror the real review rules in
  * fund-manager-submissions.server.ts (staff only, never the submitter, one decision, note to send back)
  * and never reach the backend. Names and values are invented.
  */
@@ -31,7 +31,7 @@ export function handleQaFundSubmissionCall(fnName: string, data: any, s: QaFundS
   switch (fnName) {
     case "listFundSubmissionsFn":
       if (data?.offeringId !== QA_SUBMISSION_FUND) throw new Error("Forbidden: you do not manage that fund.");
-      return { isStaff: true, directSetupEdits: false, items: s.items.map((i) => ({ ...i })), onFile: { fund_details: { displayName: "Ridgeview Sample Fund I" }, fees_team: {}, bank: {}, bankOnFile: false, documents: [] } };
+      return { isStaff: true, viewerId: QA_REVIEWER, directSetupEdits: false, items: s.items.map((i) => ({ ...i })), onFile: { fund_details: { displayName: "Ridgeview Sample Fund I" }, fees_team: {}, bank: {}, bankOnFile: false, documents: [] } };
     case "reviewFundSubmissionFn": {
       const i = s.items.find((x) => x.id === data?.id);
       if (!i) throw new Error("Submission not found.");

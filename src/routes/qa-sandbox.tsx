@@ -26,8 +26,7 @@ import { FoundationWorkspace } from "@/components/foundation-workspace";
 import { FoundationClientOnboarding } from "@/components/foundation-client-onboarding";
 import { FoundationConfigurator } from "@/components/sales/foundation-configurator";
 import { QA_FOUNDATION_CLIENT } from "@/lib/qa-sandbox/foundation-fixture";
-import { QA_REVIEWER, QA_SUBMISSION_FUND } from "@/lib/qa-sandbox/fund-submission-fixture";
-import { FundSubmissionSharedReview } from "@/components/fund-submission-shared-review";
+import { QA_SUBMISSION_FUND } from "@/lib/qa-sandbox/fund-submission-fixture";
 import { History as FundSubmissionHistory } from "@/components/fund-manager-setup-loader";
 import { useServerFn } from "@tanstack/react-start";
 import { listFundSubmissionsFn } from "@/lib/fund-manager-submissions.functions";
@@ -272,25 +271,24 @@ function QaSignInCheck() {
   );
 }
 
-/** Fictional Foundation Administration: the Ops workspace plus the quote configurator, answered by the in-memory fixture. */
-/** The existing fund manager submission screen beside the shared presentation, over the same fictional records. */
+/**
+ * The live fund manager submission review component (now on the shared review presentation), answered by
+ * fictional records. There is no second fund implementation to compare against any more.
+ */
 function QaSharedFundReview() {
   const list = useServerFn(listFundSubmissionsFn);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["fund-submissions", QA_SUBMISSION_FUND], queryFn: () => list({ data: { offeringId: QA_SUBMISSION_FUND } }) });
   return (
-    <section aria-label="Shared review compatibility" className="space-y-4">
-      <p className="text-sm text-muted-foreground">Fictional fund Ridgeview Sample Fund I. Both panels read and decide the same fictional submissions through the same fund review action. Nothing reaches the real backend.</p>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div aria-label="Current fund screen" className="space-y-2 rounded-md border p-3"><h3 className="font-semibold">Current fund screen (unchanged)</h3>
-          {q.data ? <FundSubmissionHistory items={(q.data as any).items} isStaff={!!(q.data as any).isStaff} onChange={() => qc.invalidateQueries({ queryKey: ["fund-submissions", QA_SUBMISSION_FUND] })} /> : <p className="text-sm">Loading…</p>}</div>
-        <div aria-label="Shared framework" className="space-y-2 rounded-md border p-3"><h3 className="font-semibold">Shared administration framework</h3>
-          <FundSubmissionSharedReview offeringId={QA_SUBMISSION_FUND} viewerId={QA_REVIEWER} /></div>
-      </div>
+    <section aria-label="Shared review: fund" className="space-y-4">
+      <p className="text-sm text-muted-foreground">Fictional fund Ridgeview Sample Fund I, shown with the same review list the fund Setup tab uses. Decisions go to the fund review action modeled in memory. Nothing reaches the real backend.</p>
+      <div aria-label="Fund submission review" className="space-y-2 rounded-md border p-3"><h3 className="font-semibold">Fund manager submissions</h3>
+        {q.data ? <FundSubmissionHistory items={(q.data as any).items} isStaff={!!(q.data as any).isStaff} viewerId={(q.data as any).viewerId} onChange={() => qc.invalidateQueries({ queryKey: ["fund-submissions", QA_SUBMISSION_FUND] })} /> : <p className="text-sm">Loading…</p>}</div>
     </section>
   );
 }
 
+/** Fictional Foundation Administration: the Ops workspace plus the quote configurator, answered by the in-memory fixture. */
 function QaFoundationArea() {
   const [added, setAdded] = useState<{ label: string; unitCents: number; billing: string }[]>([]);
   const [view, setView] = useState<"staff" | "client">("staff");

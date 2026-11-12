@@ -147,11 +147,17 @@ export function verificationSummary(reqs: readonly Requirement[]) {
   return { complete: unresolved.length === 0, unresolved: unresolved.length, exceptions: reqs.filter((r) => r.status === "exception").length };
 }
 
-/** What a client member may see: plain status only. Screening details and decision notes stay with Harmonious. */
-export function clientVerificationView(reqs: readonly Requirement[]) {
+/**
+ * What a client member may see: plain status only. Screening details and decision notes stay with Harmonious.
+ * Screening is run by Harmonious, so anything short of a clear result reads "in review" (a match is never
+ * revealed). Any other unresolved exception reads "follow_up", never "in review" or done, so the client knows
+ * something is still needed without seeing why.
+ */
+export type ClientReqStatus = Exclude<ReqStatus, "exception"> | "follow_up";
+export function clientVerificationView(reqs: readonly Requirement[]): { key: string; label: string; status: ClientReqStatus; items: string[] }[] {
   return reqs.map((r) => ({
     key: r.key, label: r.label,
-    status: r.area === "screening" ? (r.status === "satisfied" ? "satisfied" : "in_review") as ReqStatus : r.status === "exception" ? "in_review" as ReqStatus : r.status,
+    status: r.area === "screening" ? (r.status === "satisfied" ? "satisfied" : "in_review") : r.status === "exception" ? "follow_up" : r.status,
     items: r.area === "screening" || r.status === "exception" ? [] : r.items.filter((i) => !i.startsWith("Declined") && !i.startsWith("More information requested")),
   }));
 }

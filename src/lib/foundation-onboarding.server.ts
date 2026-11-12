@@ -16,6 +16,8 @@ import {
 } from "@/lib/foundation-release-model";
 import { actor, admin, foundationFlags, logEvent, must, profileFor, storeFoundationDocument, type FoundationUpload } from "@/lib/foundation-admin.server";
 
+import { withDecisionLock } from "@/lib/decision-lock.server";
+
 const nowIso = () => new Date().toISOString();
 
 // ------------------------------------------------------------ Shared reads
@@ -284,6 +286,11 @@ export async function reviewFoundationSubmission(userId: string, d: { submission
   await staff(db, userId, "clients:review");
   const problem = reviewProblem({ reviewerId: userId, submitterId: s.submitted_by, decision: d.decision, note: d.note ?? null, status: s.status });
   if (problem) throw new Error(problem);
+  // One decision per submission: a second attempt while one is saving is refused, and after it the
+  // submission reads as decided, so facts, people and contacts are applied once.
+  return withDecisionLock(db, "foundation_submission", s.id, async () => {
+  const cur = must(await db.from("foundation_submissions").select("status").eq("id", s.id).maybeSingle(), "Couldn't read that submission.") as any;
+  if (cur?.status !== "submitted") throw new Error("This submission was already decided.");
   let resolution: Record<string, unknown> | null = null;
 
   if (d.decision === "accepted" && s.kind === "profile_facts") {
@@ -305,6 +312,7 @@ export async function reviewFoundationSubmission(userId: string, d: { submission
   if (!done?.length) throw new Error("This submission was already decided.");
   await logEvent(db, p.id, userId, d.decision === "accepted" ? "submission_accepted" : "submission_correction_requested", { submissionId: s.id, kind: s.kind });
   return { ok: true };
+  });
 }
 
 /** New people go through canonical Person resolution: an explicit choice whenever a possible match exists; never a silent reuse or merge. */
@@ -344,9 +352,14 @@ export async function reviewFoundationDocument(userId: string, d: { documentId: 
   if (doc.superseded_by) throw new Error("Only the current version can be reviewed.");
   if (doc.uploaded_by === userId) throw new Error("Someone other than the uploader must review a document.");
   if (d.decision === "correction_requested" && (d.note ?? "").trim().length < 3) throw new Error("Say what needs to be corrected.");
-  must(await db.from("foundation_document_reviews").insert({ document_id: doc.id, decision: d.decision, note: d.note?.trim() || null, reviewed_by: userId }), "Couldn't record the review.");
-  await logEvent(db, p.id, userId, d.decision === "accepted" ? "document_accepted" : "document_correction_requested", { documentId: doc.id, title: doc.title });
-  return { ok: true };
+  // One review per uploaded version: a decided review is never replaced; a corrected upload is a new version with its own review.
+  return withDecisionLock(db, "foundation_document", doc.id, async () => {
+    const prior = must(await db.from("foundation_document_reviews").select("id").eq("document_id", doc.id).limit(1), "Couldn't read document reviews.") as any[];
+    if (prior?.length) throw new Error("This document was already reviewed. A replacement upload gets its own review.");
+    must(await db.from("foundation_document_reviews").insert({ document_id: doc.id, decision: d.decision, note: d.note?.trim() || null, reviewed_by: userId }), "Couldn't record the review.");
+    await logEvent(db, p.id, userId, d.decision === "accepted" ? "document_accepted" : "document_correction_requested", { documentId: doc.id, title: doc.title });
+    return { ok: true };
+  });
 }
 
 // ------------------------------------------------------------ Verification

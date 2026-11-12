@@ -112,7 +112,7 @@ export async function guidedState(userId: string, offeringId: string) {
     return { step, status, statusLabel: STEP_STATUS_LABEL[status], owner, missing: miss, remindedToday: reminded };
   });
   return {
-    isStaff: a.isStaff, directSetupEdits, fundOrigin: o?.fund_origin ?? null, fundName: o?.name ?? "Fund", launchPercent: pct.get(offeringId) ?? 0,
+    isStaff: a.isStaff, viewerId: userId, directSetupEdits, fundOrigin: o?.fund_origin ?? null, fundName: o?.name ?? "Fund", launchPercent: pct.get(offeringId) ?? 0,
     hasDriveFolder: !!o?.drive_folder_url, saasOnly: !!client?.saas_only,
     administrator: client?.saas_only ? "Client (SaaS-only contract)" : "Harmonious",
     team: ((team?.team ?? []) as any[]).map((m) => ({ role: m.role, name: m.userId ? names.get(m.userId)?.name ?? "Staff member" : null })),

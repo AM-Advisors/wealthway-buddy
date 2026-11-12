@@ -8,6 +8,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
 import { fundEditWindow } from "@/lib/manager-edit-window.server";
+import { withDecisionLock } from "@/lib/decision-lock.server";
 
 const db = () => supabaseAdmin as any;
 const BUCKET = "fund-formation";
@@ -28,7 +29,7 @@ export async function listSubmissions(userId: string, offeringId: string) {
     db().from("fund_manager_submissions").select("*").eq("offering_id", offeringId).order("submitted_at", { ascending: false }).limit(100),
     setupOnFile(offeringId).catch(() => null),
   ]);
-  return { isStaff: a.isStaff, directSetupEdits: a.isStaff || await fundEditWindow(offeringId), items: (data ?? []) as any[], onFile };
+  return { isStaff: a.isStaff, viewerId: userId, directSetupEdits: a.isStaff || await fundEditWindow(offeringId), items: (data ?? []) as any[], onFile };
 }
 
 /** Allow-listed snapshot of what is already on the fund record (no tax IDs or bank numbers). */
@@ -132,11 +133,35 @@ export async function review(sb: any, userId: string, input: { id: string; decis
   if (s.submitted_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "manager_submission", [s.id]))) forbid("someone other than the submitter must review it.");
   if (s.status !== "submitted") throw new Error("This submission was already handled.");
   if (input.decision === "return" && !input.note?.trim()) throw new Error("Tell the fund manager what to fix.");
-  if (input.decision === "approve") await apply(sb, userId, s);
-  await db().from("fund_manager_submissions").update({ status: input.decision === "approve" ? "approved" : "returned", reviewed_by: userId, reviewed_at: new Date().toISOString(), review_note: input.note?.trim() || null }).eq("id", s.id);
-  await db().from("staff_tasks").update({ status: "done" } as any).eq("offering_id", s.offering_id).eq("title", `Review fund manager submission: ${label(s.section, s.doc_kind)}`).neq("status", "done");
+  // One decision per submission: a double click, retry or second reviewer is refused while one is
+  // saving and then finds the submission already handled, so values, versions and tasks apply once.
+  await withDecisionLock(db(), "fund_manager_submission", s.id, async () => {
+    const { data: cur } = await db().from("fund_manager_submissions").select("status").eq("id", s.id).maybeSingle();
+    if (cur?.status !== "submitted") throw new Error("This submission was already handled.");
+    if (input.decision === "approve") await apply(sb, userId, s);
+    // An approval was applied even if the manager sent a newer version meanwhile (which then waits for its own review).
+    const from = input.decision === "approve" ? ["submitted", "withdrawn"] : ["submitted"];
+    const { data: saved, error } = await db().from("fund_manager_submissions").update({ status: input.decision === "approve" ? "approved" : "returned", reviewed_by: userId, reviewed_at: new Date().toISOString(), review_note: input.note?.trim() || null }).eq("id", s.id).in("status", from).select("id");
+    if (error) throw new Error(error.message);
+    if (!saved?.length) throw new Error("This submission was already handled.");
+  });
+  await closeReviewTasks(s);
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: s.offering_id }).catch(() => null);
   return { ok: true };
+}
+
+/**
+ * Close the review tasks for this submission and for earlier versions of the same item that were
+ * already handled or replaced. A newer pending version keeps its own open task.
+ */
+async function closeReviewTasks(s: any) {
+  let q = db().from("fund_manager_submissions").select("id").eq("offering_id", s.offering_id).eq("section", s.section).neq("status", "submitted");
+  q = s.doc_kind ? q.eq("doc_kind", s.doc_kind) : q.is("doc_kind", null);
+  const { data: handled } = await q.limit(200);
+  const ids = [...new Set([s.id, ...((handled ?? []) as any[]).map((r) => r.id)])];
+  await db().from("staff_tasks").update({ status: "done" } as any).eq("related_workflow_type", "fund_manager_submission").in("related_workflow_id", ids).neq("status", "done");
+  // Tasks recorded before submissions were linked by id are matched by their title, as before.
+  await db().from("staff_tasks").update({ status: "done" } as any).eq("offering_id", s.offering_id).eq("title", `Review fund manager submission: ${label(s.section, s.doc_kind)}`).is("related_workflow_id", null).neq("status", "done");
 }
 
 const num = (v: unknown) => (v === "" || v == null || Number.isNaN(Number(v)) ? null : Number(v));

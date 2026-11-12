@@ -134,7 +134,7 @@ function StepBody({ offeringId, d, s, onChange }: { offeringId: string; d: any; 
           ) : (
             (s.status !== "waiting_harmonious" || (d.directSetupEdits && ["fund_details", "fees_team"].includes(s.step))) && <Button size="sm" variant={s.status === "done" ? "outline" : "default"} onClick={() => setEditing(true)}>{s.status === "done" ? "Edit" : "Complete this step"}</Button>
           )}
-          <History items={sectionItems} isStaff={isStaff} onChange={onChange} />
+          <History items={sectionItems} isStaff={isStaff} viewerId={d.viewerId} onChange={onChange} />
         </>
       )}
       {remindable && <RemindButton offeringId={offeringId} step={s.step} done={s.remindedToday} isStaff={isStaff} onDone={onChange} />}

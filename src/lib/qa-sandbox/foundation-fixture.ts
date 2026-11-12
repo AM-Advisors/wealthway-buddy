@@ -114,6 +114,7 @@ export function handleQaFoundationCall(fn: string, data: any, s: QaFoundation): 
       const d = s.documents.find((y) => y.id === data.documentId && !y.superseded_by && y.source === "client");
       if (!d) throw new Error("Only the current version of a client upload can be reviewed.");
       if (data.decision === "correction_requested" && String(data.note ?? "").trim().length < 3) throw new Error("Say what needs to be corrected.");
+      if (s.docReviews.some((r) => r.document_id === d.id)) throw new Error("This document was already reviewed. A replacement upload gets its own review.");
       s.docReviews.push({ document_id: d.id, decision: data.decision, note: data.note ?? null, created_at: nowIso() });
       log(s, d.foundation_profile_id, data.decision === "accepted" ? "document_accepted" : "document_correction_requested");
       return { ok: true };

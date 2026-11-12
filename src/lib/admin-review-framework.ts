@@ -55,27 +55,33 @@ export function foundationDocumentState(d: { source?: string | null; review?: st
 
 // ------------------------------------------------------------ Requirement rows
 
-export type RequirementState = "done" | "in_review" | "needed" | "needs_changes" | "exception";
+export type RequirementState = "done" | "in_review" | "needed" | "needs_changes" | "exception" | "follow_up";
 export type Audience = "staff" | "client";
 
 export const REQUIREMENT_LABEL: Record<RequirementState, string> = {
-  done: "Done", in_review: "In review", needed: "Needed", needs_changes: "Needs changes", exception: "Exception",
+  done: "Done", in_review: "In review", needed: "Needed", needs_changes: "Needs changes", exception: "Exception", follow_up: "Harmonious will follow up",
 };
 export const REQUIREMENT_TONE: Record<RequirementState, Tone> = {
-  done: "default", in_review: "secondary", needed: "outline", needs_changes: "destructive", exception: "destructive",
+  done: "default", in_review: "secondary", needed: "outline", needs_changes: "destructive", exception: "destructive", follow_up: "destructive",
 };
 
 export type RequirementRow = { key: string; label: string; state: RequirementState; note?: string | null; source?: string | null; items?: string[] };
 
-/** Clients and fund managers never see that a check has an exception: it reads as in review. */
+/**
+ * Clients and fund managers never see the word "exception" or its details, but an unresolved exception
+ * is never shown as cleared or as routine review: it reads "Harmonious will follow up" with a note that
+ * something is still needed, so a required action isn't hidden.
+ */
 export function requirementBadge(state: RequirementState, audience: Audience): { label: string; tone: Tone } {
-  const s = audience === "client" && state === "exception" ? "in_review" : state;
+  const s = audience === "client" && state === "exception" ? "follow_up" : state;
   return { label: REQUIREMENT_LABEL[s], tone: REQUIREMENT_TONE[s] };
 }
 
+export const FOLLOW_UP_NOTE = "Not resolved yet. Harmonious will contact you about what's needed.";
+
 /** Foundation verification requirement statuses. */
 export const fromFoundationRequirement = (s: string): RequirementState =>
-  s === "satisfied" ? "done" : s === "in_review" ? "in_review" : s === "exception" ? "exception" : "needed";
+  s === "satisfied" ? "done" : s === "in_review" ? "in_review" : s === "exception" ? "exception" : s === "follow_up" ? "follow_up" : "needed";
 
 /** Foundation client checklist statuses. */
 export const fromFoundationChecklist = (s: string): RequirementState =>

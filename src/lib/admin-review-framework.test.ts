@@ -32,8 +32,9 @@ describe("shared review states keep the existing fund labels", () => {
 });
 
 describe("requirement rows", () => {
-  it("clients never see an exception", () => {
-    expect(requirementBadge("exception", "client").label).toBe("In review");
+  it("clients never see the word exception, and an unresolved exception never reads as in review or done", () => {
+    expect(requirementBadge("exception", "client").label).toBe("Harmonious will follow up");
+    expect(requirementBadge("follow_up", "client").label).toBe("Harmonious will follow up");
     expect(requirementBadge("exception", "staff").label).toBe("Exception");
   });
   it("maps each engine's statuses", () => {

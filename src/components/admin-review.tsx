@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ApprovalButton } from "@/components/approval-button";
 import {
-  REVIEW_ACTIONS, REVIEW_STATE_LABEL, REVIEW_STATE_TONE, requirementBadge, reviewState,
+  FOLLOW_UP_NOTE, REVIEW_ACTIONS, REVIEW_STATE_LABEL, REVIEW_STATE_TONE, requirementBadge, reviewState,
   type Audience, type RequirementRow, type ReviewEngine, type ReviewState,
 } from "@/lib/admin-review-framework";
 
@@ -32,6 +32,7 @@ export function RequirementList({ rows, audience, empty = "Nothing needed.", ren
         <li key={r.key} className="rounded-md border p-3 text-base">
           <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{r.label}</span><Badge variant={b.tone}>{b.label}</Badge></div>
           {(r.note || r.source) && <p className="text-sm text-muted-foreground">{[r.note, r.source ? `Source: ${r.source}` : null].filter(Boolean).join(" · ")}</p>}
+          {audience === "client" && (r.state === "exception" || r.state === "follow_up") && <p className="text-sm">{FOLLOW_UP_NOTE}</p>}
           {r.items && r.items.length > 0 && <ul className="mt-1 list-disc pl-5 text-sm">{r.items.map((i) => <li key={i}>{i}</li>)}</ul>}
           {renderExtra?.(r)}
         </li>);

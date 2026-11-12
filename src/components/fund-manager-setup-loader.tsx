@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { ReviewDecisionBar, ReviewStateBadge } from "@/components/admin-review";
+import { REVIEW_STATE_LABEL, reviewState } from "@/lib/admin-review-framework";
 import { Progress } from "@/components/ui/progress";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -65,7 +67,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
   const firstOpen = order.find((s) => !isApproved(s)) ?? null;
   const [expanded, setExpanded] = useState<Section | null | undefined>(undefined);
   const current = expanded === undefined ? firstOpen : expanded;
-  const waitingOn = (st?: string, s?: Section) => (st === "submitted" ? "Waiting for Harmonious review" : st === "returned" ? "Needs changes" : st === "approved" ? "Approved" : s && onRecord(s) ? "On file" : "Waiting on fund manager");
+  const waitingOn = (st?: string, s?: Section) => { const r = reviewState("fund_manager_submission", st); return r && r !== "replaced" ? REVIEW_STATE_LABEL[r] : s && onRecord(s) ? REVIEW_STATE_LABEL.on_file : "Waiting on fund manager"; };
   if (q.isPending) return <Card><CardContent className="p-4 text-sm text-muted-foreground">Loading fund setup…</CardContent></Card>;
   if (compact && done === order.length) return <p className="rounded-lg border bg-card px-4 py-3 text-sm"><Check className="mr-2 inline h-4 w-4 text-primary" />Fund setup complete.</p>;
 
@@ -99,7 +101,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
                     <span className="block font-medium">{s === "document" ? "Documents" : SECTION_LABEL[s]}</span>
                     <span className="block text-xs text-muted-foreground">{!l && missing(s).length && Object.values(known(s)).some(Boolean) ? "Missing info" : waitingOn(l?.status, s)}</span>
                   </span>
-                  {l ? <StatusBadge status={l.status} /> : <Badge variant="outline">{Object.values(known(s)).some(Boolean) ? "Missing info" : "Not started"}</Badge>}
+                  {l ? <ReviewStateBadge engine="fund_manager_submission" status={l.status} /> : <Badge variant="outline">{Object.values(known(s)).some(Boolean) ? "Missing info" : "Not started"}</Badge>}
                   <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
                 </button>
                 {isOpen && (
@@ -110,7 +112,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
                     {!reviewNow && (open === s
                       ? <SubmitForm offeringId={offeringId} section={s} directSave={!!q.data?.directSetupEdits} prior={known(s)} onDone={() => { setOpen(null); refresh(); }} />
                       : <Button size="sm" variant={isDone ? "outline" : "default"} onClick={() => setOpen(s)}>{isDone || Object.values(known(s)).some(Boolean) && !missing(s).length ? "Edit" : "Complete this step"}</Button>)}
-                    <History items={sectionItems} isStaff={isStaff} onChange={refresh} />
+                    <History items={sectionItems} isStaff={isStaff} viewerId={q.data?.viewerId} onChange={refresh} />
                   </div>
                 )}
               </li>
@@ -133,12 +135,6 @@ export function OnFile({ section, values, docs }: { section: Section; values: Re
       <dl className="mt-1 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">{rows.map(([k, l]) => <div key={k} className="min-w-0"><dt className="text-xs text-muted-foreground">{l}</dt><dd className="truncate">{values[k]}</dd></div>)}</dl>
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, [string, "default" | "secondary" | "destructive" | "outline"]> = { submitted: ["Waiting for Harmonious review", "secondary"], approved: ["Approved", "default"], returned: ["Needs changes", "destructive"], withdrawn: ["Replaced", "outline"] };
-  const [t, v] = map[status] ?? [status, "outline"];
-  return <Badge variant={v}>{t}</Badge>;
 }
 
 export function SubmitForm({ offeringId, section, prior, onDone, directSave = false }: { offeringId: string; section: Section; prior?: Record<string, any>; onDone: () => void; directSave?: boolean }) {
@@ -197,15 +193,25 @@ export function SubmitForm({ offeringId, section, prior, onDone, directSave = fa
   );
 }
 
-export function History({ items, isStaff, onChange }: { items: any[]; isStaff: boolean; onChange: () => void }) {
+/**
+ * Fund manager submissions in the shared review presentation (admin-review): the same badges as every
+ * entity type, Approve & apply with one confirmation and a 5-second undo before anything is sent, and
+ * Send back with a required note. Decisions still go only to reviewFundSubmissionFn, which enforces
+ * staff-only review, never the submitter (except the recorded Super Admin reason), one decision per
+ * submission and a note to send back.
+ */
+export function History({ items, isStaff, viewerId, onChange }: { items: any[]; isStaff: boolean; viewerId?: string | null | undefined; onChange: () => void }) {
   const fileLink = useServerFn(submissionFileFn);
   const review = useServerFn(reviewFundSubmissionFn);
-  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
   const shown = items.filter((i) => i.status !== "withdrawn");
   if (!shown.length) return null;
-  async function act(id: string, decision: "approve" | "return") {
-    try { await review({ data: { id, decision, note: notes[id] ?? null } }); toast.success(decision === "approve" ? "Approved and applied to the fund" : "Sent back to the fund manager"); onChange(); }
+  async function act(id: string, decision: "approve" | "return", note?: string) {
+    if (busy) return;
+    setBusy(id);
+    try { await review({ data: { id, decision, note: note ?? null } }); toast.success(decision === "approve" ? "Approved and applied to the fund" : "Sent back to the fund manager"); }
     catch (e: any) { toast.error(e?.message ?? "Could not save"); }
+    finally { setBusy(null); onChange(); }
   }
   return (
     <div className="space-y-2 pt-2">
@@ -214,7 +220,7 @@ export function History({ items, isStaff, onChange }: { items: any[]; isStaff: b
         <div key={i.id} className="rounded-md border p-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-medium">{SECTION_LABEL[i.section as Section]}{i.doc_kind ? ` · ${DOC_KINDS.find((d) => d[0] === i.doc_kind)?.[1]}` : ""}</span>
-            <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{new Date(i.submitted_at).toLocaleDateString()}</span><StatusBadge status={i.status} /></div>
+            <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{new Date(i.submitted_at).toLocaleDateString()}</span><ReviewStateBadge engine="fund_manager_submission" status={i.status} /></div>
           </div>
           <dl className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">
             {Object.entries(i.payload ?? {}).map(([k, v]) => <div key={k} className="flex gap-2"><dt className="text-muted-foreground">{k}:</dt><dd className="whitespace-pre-wrap">{String(v)}</dd></div>)}
@@ -222,8 +228,11 @@ export function History({ items, isStaff, onChange }: { items: any[]; isStaff: b
           {i.file_path && <Button size="sm" variant="link" className="px-0" onClick={async () => { const { url } = await fileLink({ data: { id: i.id } }); window.open(url, "_blank"); }}>Open {i.file_name}</Button>}
           {isStaff && i.status === "submitted" && (
             <div className="mt-2 space-y-2">
-              <Textarea placeholder="Note to the fund manager (required to send back)" value={notes[i.id] ?? ""} onChange={(e) => setNotes({ ...notes, [i.id]: e.target.value })} />
-              <div className="flex gap-2"><Button size="sm" onClick={() => act(i.id, "approve")}>Approve & apply</Button><Button size="sm" variant="outline" onClick={() => act(i.id, "return")}>Send back</Button></div>
+              {viewerId && i.submitted_by === viewerId && <p className="text-sm text-muted-foreground">You sent this, so someone else must review it. A Super Admin can approve their own with a written reason.</p>}
+              <ReviewDecisionBar pending={busy === i.id} recipient="the fund manager"
+                approveTitle="Approve and apply this submission?"
+                approveDescription="The values are applied to the fund through the same setup services staff use, with the usual history."
+                onApprove={() => act(i.id, "approve")} onSendBack={(note) => act(i.id, "return", note)} />
               {i.section === "bank" && <p className="text-xs text-muted-foreground">Approving keeps the letter on file; enter and verify the account in Banking.</p>}
               {i.section === "fees_team" && <p className="text-xs text-muted-foreground">Approving applies fees; add listed signers on the Team step.</p>}
             </div>

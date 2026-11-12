@@ -75,4 +75,20 @@ describe("client view", () => {
     expect(JSON.stringify(v)).not.toMatch(/Sanctions|declined|unresolved result/i);
     expect(v.find((r) => r.key === "person_screening:p1")?.status).toBe("in_review");
   });
+
+  it("a declined identity shows the client a follow-up, never in review or done, and without the reason", () => {
+    const i = { ...base, persons: { p1: { name: "Quinn Rivera", kyc_status: "declined", aml_status: "approved" } } };
+    const v = clientVerificationView(foundationRequirements(i));
+    const id = v.find((r) => r.key === "person_identity:p1");
+    expect(id?.status).toBe("follow_up");
+    expect(id?.items).toEqual([]);
+    expect(JSON.stringify(v)).not.toMatch(/exception|declined/i);
+  });
+
+  it("clear screening never satisfies the same person's identity check", () => {
+    const i = { ...base, persons: { p1: { name: "Quinn Rivera", kyc_status: null, aml_status: "clear" } } };
+    const reqs = foundationRequirements(i);
+    expect(reqs.find((r) => r.key === "person_screening:p1")?.status).toBe("satisfied");
+    expect(reqs.find((r) => r.key === "person_identity:p1")?.status).toBe("missing");
+  });
 });
