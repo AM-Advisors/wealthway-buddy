@@ -860,8 +860,8 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
     row.investment_profile_id ? db().from("investor_tax_profiles").select("*").eq("investment_profile_id", row.investment_profile_id).order("created_at", { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
   ]) as any[];
   // One identity result per person: approved investment check, else the approved login check.
-  const { approvedPersonVerification } = await import("@/lib/person-identity.server");
-  const pv = await approvedPersonVerification(person?.id ?? null);
+  const { personPrefillFacts } = await import("@/lib/person-identity.server");
+  const pv = await personPrefillFacts(person?.id ?? null);
   let k: { verified_full_name: string | null; document_issuing_country: string | null } | null = pv ? { verified_full_name: pv.fullName, document_issuing_country: pv.documentCountry } : null;
   // Login checks not yet linked to the person: fall back to the account's approved check.
   if (!k && row.investor_user_id) {

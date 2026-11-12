@@ -364,8 +364,8 @@ async function loadFacts(d: any, ob: any, userId: string) {
     d.from("persons").select("id, legal_first_name, legal_last_name, tax_residency_country, residence_country, citizenship_country, country, address_line1, address_line2, city, region, postal_code, date_of_birth").eq(ob.person_id ? "id" : "user_id", ob.person_id ?? userId).maybeSingle(),
   ]);
   if (person?.id && !person.citizenship_country) {
-    const { approvedPersonVerification } = await import("@/lib/person-identity.server");
-    (person as any).verified_document_country = (await approvedPersonVerification(person.id))?.documentCountry ?? null;
+    const { personPrefillFacts } = await import("@/lib/person-identity.server");
+    (person as any).verified_document_country = (await personPrefillFacts(person.id))?.documentCountry ?? null;
   }
   return { tax, person };
 }

@@ -41,7 +41,7 @@ import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { InvestmentChecklist } from "@/components/investment-readiness";
 import { OnboardingProofReview } from "@/components/onboarding-proof-review";
 import { ACCREDITATION_QUESTION_KEY } from "@/lib/accreditation-step";
-import { setAccreditationStatusFn } from "@/lib/accreditation-step.functions";
+import { accreditationFileUrlFn, setAccreditationStatusFn } from "@/lib/accreditation-step.functions";
 import standardQuestions from "@/lib/standard-investor-questionnaire.json";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
@@ -487,7 +487,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
                 {a.attestedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Confirmed by investor</dt><dd>{fmtDate(a.attestedAt)}</dd></div>}
                 {a.verifiedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Verified</dt><dd>{fmtDate(a.verifiedAt)}</dd></div>}
                 {a.expiresAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Expires</dt><dd>{fmtDate(a.expiresAt)}</dd></div>}
-                {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string; reviewable?: boolean }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p>{"reviewable" in doc && <OnboardingProofReview documentId={doc.id} reviewable={!!doc.reviewable} onDone={() => q.refetch()} />}</div>)}
+                {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string; reviewable?: boolean }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p>{"reviewable" in doc ? null : <AccreditationFileOpen documentId={doc.id} />}{"reviewable" in doc && <OnboardingProofReview documentId={doc.id} reviewable={!!doc.reviewable} onDone={() => q.refetch()} />}</div>)}
               </dl>; })() : <p className="text-muted-foreground">Accreditation has not been completed.</p>}
               {d.canVerifyAccreditation && id ? <SetAccreditationStatus onboardingId={id} onChanged={() => void q.refetch()} /> : null}
             </section>
@@ -525,6 +525,23 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
         </DialogContent>
       </Dialog>}
     </div>
+  );
+}
+
+/** Opens an uploaded accreditation file through the manager-checked signed link. */
+function AccreditationFileOpen({ documentId }: { documentId: string }) {
+  const urlFn = useServerFn(accreditationFileUrlFn);
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button size="sm" variant="outline" className="mt-1" disabled={busy} onClick={async () => {
+      const w = window.open("", "_blank");
+      setBusy(true);
+      try {
+        const { url } = await urlFn({ data: { documentId } });
+        if (w) w.location.href = url; else window.location.href = url;
+      } catch (e: any) { w?.close(); toast.error(e?.message ?? "Couldn't open the file."); }
+      finally { setBusy(false); }
+    }}>{busy ? "Opening…" : "Open file"}</Button>
   );
 }
 

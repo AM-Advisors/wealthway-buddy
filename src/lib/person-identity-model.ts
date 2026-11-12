@@ -54,3 +54,28 @@ export function samePersonCandidate(a: CheckFingerprint, b: CheckFingerprint): b
   const ok = (c: CheckFingerprint) => c.livenessStatus === "pass" && c.faceMatchStatus === "pass" && !!c.dateOfBirth && !!c.idLast4;
   return ok(a) && ok(b) && a.dateOfBirth === b.dateOfBirth && a.idLast4 === b.idLast4;
 }
+
+export interface PrefillSession {
+  status: string | null;
+  provider_decision: string | null;
+  completed_at: string | null;
+  verified_full_name: string | null;
+  document_issuing_country: string | null;
+}
+
+/**
+ * Verified facts for questionnaire prefill and tax-form routing only (never an approval):
+ * an approved, completed investment check wins; otherwise, when the person record is already
+ * identity-approved, the provider-approved check that produced it supplies the ID name and country.
+ * Declined, sent-back or expired checks never supply facts. Sessions are newest first.
+ */
+export function prefillFactsFrom(personKycStatus: string | null, sessions: PrefillSession[]): null | { fullName: string | null; documentCountry: string | null } {
+  const pick = (s: PrefillSession) => ({ fullName: s.verified_full_name ?? null, documentCountry: s.document_issuing_country ?? null });
+  const done = sessions.find((s) => s.status === "approved" && !!s.completed_at);
+  if (done) return pick(done);
+  if (personKycStatus !== "approved") return null;
+  const held = sessions.find((s) =>
+    !["declined", "sent_back", "expired"].includes(String(s.status ?? "")) &&
+    String(s.provider_decision ?? "").trim().toLowerCase() === "approved" && !!s.verified_full_name);
+  return held ? pick(held) : null;
+}

@@ -1,7 +1,7 @@
 // Server-only: one identity check per person. The login (account) check is the person's
 // identity check; investments made as that person reuse it and never start a second session.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { personIdentityAction, type PersonCheckState } from "@/lib/person-identity-model";
+import { personIdentityAction, prefillFactsFrom, type PersonCheckState } from "@/lib/person-identity-model";
 
 const db = () => supabaseAdmin as any;
 
@@ -32,6 +32,23 @@ export async function approvedPersonVerification(personId: string | null): Promi
   if (!ac) return null;
   const doc = ac.review_details?.idDocument ?? {};
   return { fullName: doc.fullName ?? null, documentCountry: ac.decision_summary?.document?.country ?? doc.country ?? null };
+}
+
+/**
+ * Questionnaire prefill / tax-form routing facts. Same as approvedPersonVerification, plus: when the
+ * person is already identity-approved, the provider-approved check held only on Harmonious' side still
+ * supplies the ID name and country. Never used for approvals, distributions or money paths.
+ */
+export async function personPrefillFacts(personId: string | null): Promise<null | { fullName: string | null; documentCountry: string | null }> {
+  if (!personId) return null;
+  const strict = await approvedPersonVerification(personId);
+  if (strict) return strict;
+  const [{ data: person }, { data: rows }] = await Promise.all([
+    db().from("persons").select("kyc_status").eq("id", personId).maybeSingle(),
+    db().from("kyc_verifications").select("status, provider_decision, completed_at, verified_full_name, document_issuing_country")
+      .eq("person_id", personId).order("updated_at", { ascending: false }).limit(5),
+  ]);
+  return prefillFactsFrom((person as any)?.kyc_status ?? null, (rows ?? []) as any[]);
 }
 
 /** What an investment's Verification step should do given the person's single check. */

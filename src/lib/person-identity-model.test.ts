@@ -18,3 +18,24 @@ describe("one identity check per person", () => {
     expect(personIdentityAction({ status: "declined", sessionUrl: null }).kind).toBe("blocked");
   });
 });
+
+import { prefillFactsFrom } from "@/lib/person-identity-model";
+
+describe("questionnaire prefill facts from identity checks", () => {
+  const held = { status: "review", provider_decision: "Approved", completed_at: null, verified_full_name: "Jordan Q Example", document_issuing_country: "USA" };
+  it("an approved person reuses the provider-approved check held for Harmonious review", () => {
+    expect(prefillFactsFrom("approved", [held])).toEqual({ fullName: "Jordan Q Example", documentCountry: "USA" });
+  });
+  it("a person not yet approved gets nothing from a held check", () => {
+    expect(prefillFactsFrom("review", [held])).toBeNull();
+    expect(prefillFactsFrom(null, [held])).toBeNull();
+  });
+  it("declined or provider-unapproved checks never supply facts", () => {
+    expect(prefillFactsFrom("approved", [{ ...held, status: "declined" }])).toBeNull();
+    expect(prefillFactsFrom("approved", [{ ...held, provider_decision: "In Review" }])).toBeNull();
+  });
+  it("a completed approved check wins regardless of person status", () => {
+    const done = { ...held, status: "approved", completed_at: "2026-10-27", verified_full_name: "Done Name" };
+    expect(prefillFactsFrom("pending", [held, done])?.fullName).toBe("Done Name");
+  });
+});
