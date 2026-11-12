@@ -189,10 +189,22 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
                   <Figure title="Commitment" value={money(item.commitmentCents)} />
                   <Figure title="Contributed" value={money(item.contributedCents)} />
                   <Figure title="Unfunded" value={money(item.unfundedCommitmentCents)} />
-                  <Figure title="Current value" value={money(item.currentValueCents)} />
+                  <Figure
+                    title="Current value"
+                    value={item.awaitingFirstStatement ? "Awaiting first statement" : money(item.currentValueCents)}
+                  />
                   <Figure title="Distributions" value={money(item.distributionsCents)} />
-                  <Figure title="Total value" value={money(item.totalValueCents)} />
+                  <Figure
+                    title="Total value"
+                    value={item.awaitingFirstStatement ? "Awaiting first statement" : money(item.totalValueCents)}
+                  />
                 </div>
+                {item.awaitingFirstStatement ? (
+                  <p className="text-sm text-muted-foreground">
+                    Your commitment and contributions are shown from your closed investment. The fund
+                    shows a value after it publishes your first quarter-end statement.
+                  </p>
+                ) : null}
 
                 {item.latestPerformance ? (
                   <p className="text-xs text-muted-foreground">

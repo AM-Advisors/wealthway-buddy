@@ -91,8 +91,22 @@ export const getMyIdentity = createServerFn({ method: "GET" })
         : { data: [] as any[] },
     ]);
 
+    const ownIndividual = ((profiles ?? []) as any[]).filter((p) => p.profile_type === "individual").map((p) => p.id);
+    const [{ data: taxProfiles }, { data: taxForms }] = await Promise.all([
+      ownIndividual.length
+        ? db.from("investor_tax_profiles").select("investment_profile_id, tax_residency_country, tin_on_file").in("investment_profile_id", ownIndividual)
+        : { data: [] as any[] },
+      ownIndividual.length
+        ? db.from("investor_documents").select("investment_profile_id, review_status, uploaded_at").eq("user_id", userId).eq("doc_kind", "tax_form").in("investment_profile_id", ownIndividual)
+        : { data: [] as any[] },
+    ]);
+    const safePerson = redactPerson((fresh as any) ?? person);
+    const { profileTaxSummary } = await import("@/lib/profile-tax-summary");
+    const tax = profileTaxSummary({ person: safePerson as any, profiles: (profiles ?? []) as any[], taxProfiles: (taxProfiles ?? []) as any[], taxForms: (taxForms ?? []) as any[] });
+
     return {
-      person: redactPerson((fresh as any) ?? person),
+      tax,
+      person: safePerson,
       onboarding: { state: gate.state, allowed: gate.allowed, nextStep: gate.nextStep, staff: gate.bypass === "staff" },
       history: history ?? [],
       profiles: profiles ?? [],
@@ -113,26 +127,19 @@ export const saveMyPersonalInfo = createServerFn({ method: "POST" })
 
     const person = await ensurePerson(userId);
     const taxId = blank(data.tax_id);
+    const { submittedFields } = await import("@/lib/profile-tax-summary");
+    // Only fields this form actually sent are saved; omitted fields keep their recorded values.
+    const fields = submittedFields(data, [
+      "legal_middle_name", "preferred_name", "date_of_birth", "citizenship_country", "residence_country",
+      "address_line1", "address_line2", "city", "region", "postal_code", "country", "phone", "email", "tax_residency_country",
+    ] as const);
 
     const { error } = await (supabaseAdmin as any)
       .from("persons")
       .update({
         legal_first_name: data.legal_first_name.trim(),
-        legal_middle_name: blank(data.legal_middle_name),
         legal_last_name: data.legal_last_name.trim(),
-        preferred_name: blank(data.preferred_name),
-        date_of_birth: blank(data.date_of_birth),
-        citizenship_country: blank(data.citizenship_country),
-        residence_country: blank(data.residence_country),
-        address_line1: blank(data.address_line1),
-        address_line2: blank(data.address_line2),
-        city: blank(data.city),
-        region: blank(data.region),
-        postal_code: blank(data.postal_code),
-        country: blank(data.country),
-        phone: blank(data.phone),
-        email: blank(data.email),
-        tax_residency_country: blank(data.tax_residency_country),
+        ...fields,
         ...(taxId ? { tax_id_reference: taxId, tax_id_last4: taxId.slice(-4) } : {}),
         updated_at: new Date().toISOString(),
       })

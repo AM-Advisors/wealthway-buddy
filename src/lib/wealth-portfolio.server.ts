@@ -5,6 +5,7 @@
  * session (RLS) and appends an audit event. Fund figures are read from
  * published investor records only; nothing here writes fund books.
  */
+import { ledgerFigures } from '@/lib/closing-ledger';
 import {
   buildPortfolio,
   portfolioAccess,
@@ -144,7 +145,8 @@ async function loadFunds(db: any, ownerId: string, asOf: string) {
   ]);
   const names = new Map((checked<any[]>(offerings, 'Fund records') ?? []).map(o => [o.id, o.name]));
   const st = currentStatements(checked<any[]>(statements, 'Fund statements') ?? []);
-  const ev = (checked<any[]>(events, 'Fund cash flows') ?? []).filter(e => CONTRIBUTION_EVENTS.has(e.event_type) || DISTRIBUTION_EVENTS.has(e.event_type));
+  const allEvents = checked<any[]>(events, 'Fund cash flows') ?? [];
+  const ev = allEvents.filter(e => CONTRIBUTION_EVENTS.has(e.event_type) || DISTRIBUTION_EVENTS.has(e.event_type));
   const funds: FundPosition[] = positions.map(p => {
     const mine = st.filter(s => s.position_id === p.id);
     const latest = mine[mine.length - 1];
@@ -152,12 +154,14 @@ async function loadFunds(db: any, ownerId: string, asOf: string) {
     const flows = ev.filter(e => e.position_id === p.id).map(e => ({ id: e.id, date: String(e.effective_date), kind: CONTRIBUTION_EVENTS.has(e.event_type) ? 'contribution' as const : 'distribution' as const, amountCents: Math.abs(num(e.amount_cents)) }));
     const contributed = flows.filter(f => f.kind === 'contribution').reduce((n, f) => n + f.amountCents, 0);
     const distributed = flows.filter(f => f.kind === 'distribution').reduce((n, f) => n + f.amountCents, 0);
-    const commitment = num(snap['commitmentCents']);
+    // Before the first published statement, commitment and unfunded come from the commitment ledger.
+    const ledger = latest ? null : ledgerFigures(allEvents.filter(e => e.position_id === p.id), asOf);
+    const commitment = latest ? num(snap['commitmentCents']) : ledger!.commitmentCents;
     return {
       positionId: p.id, offeringId: p.offering_id, fundName: names.get(p.offering_id) ?? 'Fund', investmentProfileId: p.investment_profile_id ?? null, profileLabel: p.display_name ?? null,
       commitmentCents: commitment, contributedCents: latest ? num(snap['contributedToDateCents'] ?? snap['contributionsCents']) : contributed,
       distributionsCents: latest ? num(snap['distributionsToDateCents'] ?? snap['distributionsCents']) : distributed,
-      unfundedCents: latest ? num(snap['unfundedCommitmentCents']) : 0,
+      unfundedCents: latest ? num(snap['unfundedCommitmentCents']) : Math.max(0, commitment - contributed),
       valueCents: latest && snap['endingCapitalCents'] !== undefined ? num(snap['endingCapitalCents']) : null, valueDate: latest?.period_end ?? null,
       valuations: mine.filter(s => (s.snapshot as any)?.endingCapitalCents !== undefined).map(s => ({ date: String(s.period_end), valueCents: num((s.snapshot as any).endingCapitalCents) })),
       flows,

@@ -27,6 +27,12 @@ import { ScopeNotice } from "@/components/fund-scope-section";
 import { LoadError } from "@/components/load-error";
 import { signingRefreshInterval } from "@/components/signing-refresh";
 import {
+  CLOSED_STATUS_BADGE,
+  closedDocumentDetail,
+  closedDocumentStatus,
+} from "@/lib/closed-investment-documents";
+import { outsideSignedLabel } from "@/lib/outside-subscription-document";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -123,6 +129,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
 
   const signedByDoc = new Map((data?.signatures ?? []).map((s) => [s.offering_document_id, s]));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
+  const closed = Boolean(data?.investment?.closed);
 
   // Authoritative signing state, straight from the Box signature records.
   const loadSigning = useServerFn(getSigningStates);
@@ -136,6 +143,13 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
   const boxSigning = signingData?.provider === "box_sign";
   const signingByDoc = new Map(
     ((signingData?.documents ?? []) as any[]).map((d) => [d.documentId as string, d]),
+  );
+  const needsSigning = (data?.documents ?? []).some(
+    (d) =>
+      d.requires_signature &&
+      !signedByDoc.get(d.id) &&
+      d.outsideSignedOn == null &&
+      signingByDoc.get(d.id)?.state !== "executed",
   );
 
   async function onSaveSubscription(e: React.FormEvent) {
@@ -214,14 +228,81 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
       </p>
       <h1 className="mt-2 text-3xl">Fund documents</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Read each document in full, complete your subscription particulars, then sign
-        electronically. Signed copies are stored with a tamper-evident hash and audit trail.
+        {closed
+          ? "Your investment in this fund is closed. These are the documents on file for it. Nothing here needs your signature."
+          : "Read each document in full, complete your subscription particulars, then sign electronically. Signed copies are stored with a tamper-evident hash and audit trail."}
       </p>
 
       {isLoading ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading documents…</p>
       ) : error || !data ? (
         <LoadError audience="account" error={error} what="Your documents" onRetry={() => void refetch()} />
+      ) : closed ? (
+        <div className="mt-8 space-y-6">
+          {(data.documents ?? []).map((doc) => {
+            const signature = signedByDoc.get(doc.id);
+            const executed = signingByDoc.get(doc.id)?.state === "executed";
+            const status = closedDocumentStatus({
+              requiresSignature: Boolean(doc.requires_signature),
+              platformSignedAt: signature?.signed_at ?? null,
+              executed,
+              outsideSignedOn: doc.outsideSignedOn ?? null,
+            });
+            const isOpen = activeDoc === doc.id;
+            return (
+              <Card key={doc.id}>
+                <CardHeader>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <CardTitle>{doc.title}</CardTitle>
+                      <Badge variant={status === "no_signature_on_file" ? "secondary" : "outline"} className="mt-2">
+                        {CLOSED_STATUS_BADGE[status]}
+                      </Badge>
+                      <CardDescription className="mt-2">
+                        {closedDocumentDetail(status, {
+                          platformSignedAt: signature?.signed_at ?? null,
+                          outsideSignedOn: doc.outsideSignedOn ?? null,
+                        })}
+                      </CardDescription>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {signature ? (
+                        <Button variant="outline" size="sm" onClick={() => onDownload(signature.id)}>
+                          Download signed PDF
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={pdfBusy === doc.id}
+                        onClick={() => downloadPdf(doc.id)}
+                      >
+                        {pdfBusy === doc.id ? "Preparing…" : signature ? "Download fund copy" : "Download document"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setActiveDoc(isOpen ? null : doc.id)}
+                      >
+                        {isOpen ? "Collapse" : "Read document"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                {isOpen ? (
+                  <CardContent>
+                    <OfferingDocumentReader documentId={doc.id} title={doc.title} onReachedEnd={() => undefined} />
+                  </CardContent>
+                ) : null}
+              </Card>
+            );
+          })}
+          {(data.documents ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">No documents have been published for this fund yet.</p>
+          ) : null}
+        </div>
       ) : (
         <div className="mt-8 space-y-6">
           {signingQuery.isError ? <LoadError audience="account" error={signingQuery.error} what="Signature status" onRetry={() => void signingQuery.refetch()} /> : null}
@@ -315,6 +396,34 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
           {(data?.documents ?? []).map((doc) => {
             const signature = signedByDoc.get(doc.id);
             const isOpen = activeDoc === doc.id;
+
+            // Subscription Agreement already signed outside the platform: recorded, not re-signed.
+            if (!signature && doc.outsideSignedOn != null) {
+              return (
+                <Card key={doc.id}>
+                  <CardHeader>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <CardTitle>{doc.title}</CardTitle>
+                        <Badge variant="outline" className="mt-2">Signed</Badge>
+                        <CardDescription className="mt-2">
+                          {outsideSignedLabel(doc.outsideSignedOn)}. Your signed copy is on file with the fund.
+                        </CardDescription>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={pdfBusy === doc.id}
+                        onClick={() => downloadPdf(doc.id)}
+                      >
+                        {pdfBusy === doc.id ? "Preparing…" : "Download document"}
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+              );
+            }
 
             // Box-connected signing: the agreement is reviewed and signed in
             // Box's own ceremony, in a pop-out, with no download-and-return.
@@ -417,7 +526,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
             );
           })}
 
-          {!hasSubscription && (
+          {!hasSubscription && needsSigning && (
             <p className="text-sm text-destructive">
               Save your subscription particulars before signing.
             </p>

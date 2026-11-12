@@ -18,6 +18,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { canAct } from "@/lib/delegated-access.server";
+import { ledgerFigures } from "@/lib/closing-ledger";
 import { reviewerScope, assertScopeAllows, type ReviewerScope } from "@/lib/reviewer-authz.server";
 import {
   SECTION_CAPABILITY,
@@ -1223,7 +1224,8 @@ export async function investorDashboardSummary(userId: string, options: ViewerOp
   if (rows.length === 0) return { investments: [] };
 
   const offeringIds = [...new Set(rows.map((r) => String(r.offering_id)))];
-  const [{ data: offerings }, { data: statements }, { data: packages }, { data: lines }] =
+  const positionIds = rows.map((r) => String(r.id));
+  const [{ data: offerings }, { data: statements }, { data: packages }, { data: lines }, { data: ledger }] =
     await Promise.all([
       db().from("offerings").select("id, name").in("id", offeringIds),
       db()
@@ -1243,6 +1245,10 @@ export async function investorDashboardSummary(userId: string, options: ViewerOp
         .select("*")
         .eq("investor_user_id", subject)
         .order("created_at", { ascending: false }),
+      db()
+        .from("commitment_events")
+        .select("position_id, event_type, amount_cents, effective_date")
+        .in("position_id", positionIds),
     ]);
 
   const fundName = new Map(((offerings ?? []) as any[]).map((o) => [String(o.id), o.name]));
@@ -1282,14 +1288,27 @@ export async function investorDashboardSummary(userId: string, options: ViewerOp
       investmentProfileId: position.investment_profile_id,
       profileLabel: position.display_name,
       capacity: position.capacity,
-      commitmentCents: num(snapshot["commitmentCents"]),
-      contributedCents: num(snapshot["contributedToDateCents"] ?? snapshot["contributionsCents"]),
-      unfundedCommitmentCents: num(snapshot["unfundedCommitmentCents"]),
-      currentValueCents: num(snapshot["endingCapitalCents"]),
-      distributionsCents: num(snapshot["distributionsToDateCents"] ?? snapshot["distributionsCents"]),
-      totalValueCents:
-        num(snapshot["endingCapitalCents"]) +
-        num(snapshot["distributionsToDateCents"] ?? snapshot["distributionsCents"]),
+      // Before the first published statement, commitment and capital come from
+      // the commitment ledger; value is not shown until a statement exists.
+      ...(statement
+        ? {
+            commitmentCents: num(snapshot["commitmentCents"]),
+            contributedCents: num(snapshot["contributedToDateCents"] ?? snapshot["contributionsCents"]),
+            unfundedCommitmentCents: num(snapshot["unfundedCommitmentCents"]),
+            currentValueCents: num(snapshot["endingCapitalCents"]) as number | null,
+            distributionsCents: num(snapshot["distributionsToDateCents"] ?? snapshot["distributionsCents"]),
+            totalValueCents: (num(snapshot["endingCapitalCents"]) +
+              num(snapshot["distributionsToDateCents"] ?? snapshot["distributionsCents"])) as number | null,
+            awaitingFirstStatement: false,
+          }
+        : {
+            ...ledgerFigures(
+              ((ledger ?? []) as any[]).filter((e) => String(e.position_id) === String(position.id)),
+            ),
+            currentValueCents: null as number | null,
+            totalValueCents: null as number | null,
+            awaitingFirstStatement: true,
+          }),
       latestCapitalStatement: statement
         ? { id: statement.id, periodEnd: statement.period_end, version: statement.version }
         : null,

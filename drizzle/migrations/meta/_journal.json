@@ -2738,6 +2738,13 @@
       "when": 1794432762120,
       "tag": "0390_foundation_onboarding_verification_release",
       "breakpoints": true
+    },
+    {
+      "idx": 391,
+      "version": "7",
+      "when": 1794514371776,
+      "tag": "0391_backfill_closed_onboarding_commitments",
+      "breakpoints": true
     }
   ]
 }

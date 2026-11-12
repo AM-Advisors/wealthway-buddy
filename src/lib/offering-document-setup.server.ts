@@ -462,8 +462,11 @@ export async function investorDocuments(userId: string, onboardingId: string) {
   if (!row || row.investor_user_id !== userId) forbid("that investment isn't yours.");
   const { data: profile, error: profileError } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null, error: null };
   if (profileError) throw new Error("Your investing profile could not be loaded. Please try again.");
-  const { data: docs, error: docsError } = await db().from("offering_documents").select("id, title, usage, applicability, active_version, requires_signature").eq("offering_id", row.offering_id).is("removed_at", null);
+  const { data: docs, error: docsError } = await db().from("offering_documents").select("id, title, usage, applicability, active_version, requires_signature, document_category, doc_type").eq("offering_id", row.offering_id).is("removed_at", null);
   if (docsError) throw new Error("Your documents could not be loaded. Please try again.");
+  const { outsideSubscriptionStates } = await import("./prior-signed-documents.server");
+  const { outsideSignedOn, outsideSignedLabel } = await import("./outside-subscription-document");
+  const outside = (await outsideSubscriptionStates(db(), [row.id])).get(row.id) ?? null;
   const applicable = ((docs ?? []) as any[]).filter((d) => documentApplies(d.applicability, { profileType: profile?.profile_type ?? null, classKey: row.offering_class_key ?? null }));
   const { data: acks, error: acksError } = await db().from("investment_document_acknowledgments").select("offering_document_id, version").eq("onboarding_id", row.id);
   if (acksError) throw new Error("Document acknowledgments could not be loaded. Please try again.");
@@ -485,6 +488,10 @@ export async function investorDocuments(userId: string, onboardingId: string) {
     const rs = ((resign ?? []) as any[]).find((x) => x.offering_document_id === d.id);
     const versionLabel = rs ? `Re-sign needed: v${rs.from_version ?? "?"} → v${rs.to_version}` : applied.reason === "individual" ? `Individual version v${applied.version}` : applied.version != null ? `Fund template v${applied.version}` : null;
     const acknowledged = ((acks ?? []) as any[]).some((a) => a.offering_document_id === d.id && a.version === d.active_version);
+    const signedOutside = (inv[i]?.execution ?? "not_sent") === "not_sent" ? outsideSignedOn(d, outside) : null;
+    if (signedOutside != null) {
+      return { id: d.id, title: d.title, approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval", canRead: publication.get(d.id)?.ready === true, action: "Completed", versionLabel: outsideSignedLabel(signedOutside), signedOutside: true };
+    }
     return {
       id: d.id,
       title: d.title,
@@ -494,6 +501,7 @@ export async function investorDocuments(userId: string, onboardingId: string) {
         ? "Not yet available"
         : investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
       versionLabel,
+      signedOutside: false,
     };
   });
 }

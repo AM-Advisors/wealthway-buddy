@@ -1,4 +1,5 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
+import { closingLedgerEntries } from "@/lib/closing-ledger";
 import { currentFundMinimum } from "@/lib/fund-minimum";
 import { questionnaireCompletion } from "@/lib/questionnaire-completion";
 import { outsideSignedRequirements, subscriptionReadyForReview } from "./subscription-review-readiness";
@@ -2188,37 +2189,30 @@ export async function closeInvestment(userId: string, input: { onboardingId: str
     positionId = position.id as string;
   }
 
-  const dedupe = `onboarding:${row.id}:commitment`;
-  const { data: already } = await db()
+  // The commitment ledger is the canonical record of what was committed and
+  // contributed. Record both before the onboarding is marked closed, and stop
+  // if the ledger refuses them, so a close can never leave the investor with
+  // no recorded commitment. Re-running is safe: dedupe keys and existing
+  // entries on the position prevent a second commitment or contribution.
+  const { data: ledger, error: ledgerError } = await db()
     .from("commitment_events")
-    .select("id")
-    .eq("dedupe_key", dedupe)
-    .maybeSingle();
-  if (!already) {
-    await db().from("commitment_events").insert([
-      {
-        position_id: positionId,
-        offering_id: row.offering_id,
-        event_type: "commitment",
-        amount_cents: amount,
-        effective_date: closingDate,
-        source: "investor_onboarding",
-        source_ref: row.id,
-        dedupe_key: dedupe,
-        recorded_by: actor.userId,
-      },
-      {
-        position_id: positionId,
-        offering_id: row.offering_id,
-        event_type: "contribution",
-        amount_cents: Number(row.funded_amount_cents),
-        effective_date: closingDate,
-        source: "investor_onboarding",
-        source_ref: row.id,
-        dedupe_key: `onboarding:${row.id}:contribution`,
-        recorded_by: actor.userId,
-      },
-    ]);
+    .select("event_type, dedupe_key")
+    .eq("position_id", positionId);
+  if (ledgerError) fail(ledgerError.message);
+  const existingEvents = (ledger ?? []) as Array<{ event_type: string; dedupe_key: string | null }>;
+  const entries = closingLedgerEntries({
+    onboardingId: String(row.id),
+    positionId,
+    offeringId: String(row.offering_id),
+    commitmentCents: amount,
+    fundedCents: Number(row.funded_amount_cents ?? 0),
+    closingDate,
+    recordedBy: actor.userId,
+    existing: existingEvents,
+  });
+  if (entries.length) {
+    const { error: insertError } = await db().from("commitment_events").insert(entries);
+    if (insertError) fail(`The investment could not be closed: its commitment was not recorded (${insertError.message}).`);
   }
 
   await touch(row.id, {

@@ -70,11 +70,11 @@ function PortfolioBody({ ownerUserId, ownerLabel, asOf, start }: { ownerUserId?:
       {v.completeness.excluded.length || v.completeness.notCounted.length || v.completeness.withoutValue.length ? <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
         {v.completeness.excluded.map(e => <li key={`x:${e.name}`}>{e.name}: {e.reason}</li>)}
         {v.completeness.notCounted.map(e => <li key={`n:${e.name}`}>{e.name}: {e.reason}</li>)}
-        {v.completeness.withoutValue.map(n => <li key={`v:${n}`}>{n}: no value recorded</li>)}
+        {v.completeness.withoutValue.map(n => <li key={`v:${n}`}>{n}: {v.funds.some(f => f.fundName === n && !f.valueDate) ? "no value yet, the fund hasn't published your first quarter-end statement" : 'no value recorded'}</li>)}
       </ul> : null}
     </div> : null}
     {canEdit ? <div className="flex flex-wrap gap-2"><Button size="lg" onClick={() => { setHoldingEdit(null); setDialog('holding'); }}><Plus className="mr-2 size-4" />Add holding</Button><Button size="lg" variant="outline" onClick={() => setDialog('import')}><Upload className="mr-2 size-4" />Import spreadsheet</Button></div> : null}
-    <p className="text-sm text-muted-foreground">Values are added up only within the same currency. Fund figures come from the fund's published statements. {v.connectedLive ? '' : 'Linked bank and brokerage accounts are not included yet.'}</p>
+    <p className="text-sm text-muted-foreground">Values are added up only within the same currency. Fund values come from the fund's published statements. {v.connectedLive ? '' : 'Linked bank and brokerage accounts are not included yet.'}</p>
 
     <Tabs defaultValue="holdings">
       <TabsList className="h-auto flex-wrap">
@@ -88,7 +88,7 @@ function PortfolioBody({ ownerUserId, ownerLabel, asOf, start }: { ownerUserId?:
               <td className="py-3 pr-3 font-medium">{l.name}{!l.counted ? <p className="text-sm font-normal">Not counted: {l.excludedReason}</p> : null}</td>
               <td className="pr-3">{l.holder}{l.sharePct < 1 && l.counted ? <span className="block text-sm text-muted-foreground">{(l.sharePct * 100).toFixed(1)}% of {money(l.grossValueCents, l.currency)}</span> : null}</td>
               <td className="pr-3">{ASSET_CLASS_LABELS[l.assetClass] ?? l.assetClass}</td>
-              <td className="pr-3 text-right tabular-nums">{l.counted ? money(l.valueCents, l.currency) : 'Not counted'}</td>
+              <td className="pr-3 text-right tabular-nums">{!l.counted ? 'Not counted' : l.valueCents === null && l.positionId ? <>Awaiting first statement{(() => { const f = v.funds.find(x => x.positionId === l.positionId); return f && f.contributedCents > 0 ? <span className="block text-sm text-muted-foreground">Contributed {money(f.contributedCents, l.currency)}, not counted in totals</span> : null; })()}</> : money(l.valueCents, l.currency)}</td>
               <td className="pr-3">{l.valueDate ?? 'No date'}</td>
               <td className="pr-3"><SourceBadge source={l.source} /></td>
               <td>{canEdit && l.observationId ? <Button size="icon" variant="ghost" aria-label={`Update ${l.name}`} onClick={() => { setHoldingEdit({ observationId: l.observationId!, name: l.name, assetClass: l.assetClass, currency: l.currency, valueCents: l.grossValueCents, costCents: l.costCents, sector: l.sector, geography: l.geography, holderEntityId: l.holderEntityId, representsEntityId: l.representsEntityId }); setDialog('holding'); }}><Pencil className="size-4" /></Button> : null}</td>

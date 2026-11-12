@@ -59,7 +59,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
     const [application] = rawApplication ? await syncInvestorApplications(supabase, [rawApplication as any], userId) : [null];
 
     if (!application) {
-      return { application: null, offering: null, documents: [], signatures: [], subscription: null, profile: null };
+      return { application: null, offering: null, investment: null, documents: [], signatures: [], subscription: null, profile: null };
     }
 
     const [{ data: offering }, { data: documents }, { data: signatures }, { data: subscription }, { data: profile }] =
@@ -88,13 +88,19 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { documentPublicationFor } = await import("./investor-document-publication.server");
-    const { data: onboarding, error: onboardingError } = await supabase.from("investor_onboardings").select("id").eq("application_id", application.id).eq("investor_user_id", userId).maybeSingle();
-    if (onboardingError) throw new Error("Document approval status could not be loaded. Please try again.");
-    const publication = await documentPublicationFor(supabaseAdmin, documents ?? [], onboarding?.id ?? null, signatures ?? [], application.offering_id);
+    const { closedInvestmentFor } = await import("@/lib/closed-investment.server");
+    const { outsideSignedOn } = await import("@/lib/outside-subscription-document");
+    const investment = await closedInvestmentFor(supabaseAdmin, userId, { offeringId: application.offering_id, applicationId: application.id });
+    const publication = await documentPublicationFor(supabaseAdmin, documents ?? [], investment.onboardingId, signatures ?? [], application.offering_id);
     return {
       application,
       offering,
-      documents: (documents ?? []).map((d) => ({ ...d, approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval" })),
+      investment: { closed: investment.closed, closedOn: investment.closedOn },
+      documents: (documents ?? []).map((d) => ({
+        ...d,
+        approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval",
+        outsideSignedOn: outsideSignedOn({ doc_type: d.doc_type }, investment.outside),
+      })),
       signatures: signatures ?? [],
       subscription,
       profile,

@@ -341,6 +341,7 @@ export interface InvestorDocumentRow {
   provider: string | null;
   provider_status: string | null;
   downloadable: boolean;
+  signed_outside?: boolean;
 }
 
 /**
@@ -360,7 +361,7 @@ export const getInvestorDocuments = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (!application) {
-      return { application: null, offering: null, documents: [] as InvestorDocumentRow[] };
+      return { application: null, offering: null, documents: [] as InvestorDocumentRow[], investment: { closed: false, closedOn: null as string | null } };
     }
 
     const [{ data: offering }, { data: offeringDocs }, { data: signatures }] = await Promise.all([
@@ -414,5 +415,27 @@ export const getInvestorDocuments = createServerFn({ method: "GET" })
       };
     });
 
-    return { application, offering, documents };
+    // Subscription Agreements signed outside the platform are recorded on the investor's
+    // canonical investment. Only the caller's own investment in this fund is read: the one
+    // explicitly linked to this application, otherwise their single unlinked investment in the fund.
+    let investment = { closed: false, closedOn: null as string | null };
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { closedInvestmentFor } = await import("@/lib/closed-investment.server");
+      const { outsideSignedOn } = await import("@/lib/outside-subscription-document");
+      const found = await closedInvestmentFor(supabaseAdmin as any, userId, { offeringId: application.offering_id, applicationId: application.id });
+      investment = { closed: found.closed, closedOn: found.closedOn };
+      for (const d of documents) {
+        if (d.status === "completed" || d.signature_id) continue;
+        const on = outsideSignedOn({ doc_type: d.doc_type }, found.outside);
+        if (on == null) continue;
+        d.status = "completed";
+        d.completed_at = on ? `${on}T12:00:00Z` : null;
+        d.signed_outside = true;
+      }
+    } catch (e) {
+      console.error("[documents] outside subscription read failed", (e as Error).message);
+    }
+
+    return { application, offering, documents, investment };
   });

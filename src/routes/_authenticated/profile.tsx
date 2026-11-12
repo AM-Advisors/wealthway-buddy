@@ -30,6 +30,7 @@ import {
   INVESTMENT_PROFILE_TYPES,
   type InvestmentProfileType,
 } from "@/lib/identity-model";
+import { TAX_FORM_LABEL, type ProfileTaxSummary } from "@/lib/profile-tax-summary";
 
 const STATE_LABEL: Record<string, string> = {
   account_created: "Account created",
@@ -102,6 +103,10 @@ function ProfilePage() {
   }
 
   const person: any = data.person ?? {};
+  const tax = (data as any).tax as ProfileTaxSummary | undefined;
+  const fromProfile = "From your individual investment profile";
+  const idType = tax?.identifierType ? `${tax.identifierType.toUpperCase()} ` : "";
+  const identifier = tax?.identifierOnFile ? `On file (${idType}ending ${tax.identifierLast4 ?? "••••"})` : "Not provided";
   const kybByProfile = new Map((data.entityVerifications as any[]).map((k) => [k.profile_id, k]));
 
   return (
@@ -189,7 +194,7 @@ function ProfilePage() {
           </div>
           <div>
             <dt className="text-muted-foreground">Tax identifier</dt>
-            <dd>{person.tax_id_on_file ? `On file (ending ${person.tax_id_last4 ?? "••••"})` : "Not provided"}</dd>
+            <dd>{identifier}</dd>
           </div>
         </dl>
       </Section>
@@ -268,11 +273,17 @@ function ProfilePage() {
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-muted-foreground">Tax residency</dt>
-            <dd>{person.tax_residency_country ?? "Not provided"}</dd>
+            <dd>{tax?.residency ?? "Not provided"}</dd>
+            {tax?.residencySource === "individual_profile" ? <p className="text-xs text-muted-foreground">{fromProfile}</p> : null}
           </div>
           <div>
             <dt className="text-muted-foreground">Identifier</dt>
-            <dd>{person.tax_id_on_file ? "On file" : "Not provided"}</dd>
+            <dd>{identifier}</dd>
+            {tax?.identifierSource === "individual_profile" ? <p className="text-xs text-muted-foreground">{fromProfile}</p> : null}
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-muted-foreground">Tax form</dt>
+            <dd>{tax?.taxForm ? TAX_FORM_LABEL[tax.taxForm] : "Not provided"}</dd>
           </div>
         </dl>
       </Section>

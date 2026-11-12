@@ -154,6 +154,7 @@ function DocumentsPage() {
   const reference = documents.filter((d) => !d.requires_signature);
   const pct = required.length === 0 ? 0 : Math.round((complete.length / required.length) * 100);
   const allDone = required.length > 0 && pending.length === 0;
+  const closed = Boolean(data.investment?.closed);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
@@ -162,9 +163,11 @@ function DocumentsPage() {
         <p className="text-sm text-muted-foreground">{data.offering?.name ?? "Your fund"}</p>
         <h1 className="text-2xl md:text-3xl">Your fund documents</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Everything required for your subscription, and where each one stands.
+          {closed
+            ? "Your investment in this fund is closed. These are the documents on file for it. Nothing here needs your signature."
+            : "Everything required for your subscription, and where each one stands."}
         </p>
-        {required.length > 0 ? (
+        {required.length > 0 && !closed ? (
           <div className="mt-6">
             <div className="flex items-center justify-between text-sm">
               <span>
@@ -188,7 +191,7 @@ function DocumentsPage() {
         </Card>
       ) : null}
 
-      {pending.length > 0 ? (
+      {pending.length > 0 && !closed ? (
         <Section
           title="Action needed"
           description="These require your signature before funding."
@@ -197,6 +200,18 @@ function DocumentsPage() {
           onSigned={openSigned}
           onCopy={openCopy}
           primaryTo="/onboarding/documents"
+        />
+      ) : null}
+
+      {pending.length > 0 && closed ? (
+        <Section
+          title="No signature on file"
+          description="Your investment is already closed, so there is nothing to sign here. The fund will contact you if it needs anything else."
+          rows={pending}
+          busy={busy}
+          onSigned={openSigned}
+          onCopy={openCopy}
+          closed
         />
       ) : null}
 
@@ -222,7 +237,7 @@ function DocumentsPage() {
         />
       ) : null}
 
-      {allDone ? (
+      {allDone && !closed ? (
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Documents complete</CardTitle>
@@ -276,6 +291,7 @@ function Section({
   onSigned,
   onCopy,
   primaryTo,
+  closed,
 }: {
   title: string;
   description: string;
@@ -284,6 +300,7 @@ function Section({
   onSigned: (id: string) => void;
   onCopy: (id: string) => void;
   primaryTo?: string;
+  closed?: boolean;
 }) {
   return (
     <section className="mt-8">
@@ -308,11 +325,14 @@ function Section({
                       {doc.status === "completed" && doc.signer_name
                         ? ` · Signed by ${doc.signer_name}`
                         : ""}
-                      {stamp ? ` · ${when(stamp)}` : ""}
+                      {doc.signed_outside ? " · Signed outside the platform" : ""}
+                      {stamp
+                        ? ` · ${doc.signed_outside ? new Date(stamp).toLocaleDateString("en-US", { dateStyle: "medium", timeZone: "UTC" }) : when(stamp)}`
+                        : ""}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant={tone(doc.status)}>{STATUS_LABEL[doc.status]}</Badge>
+                    <Badge variant={tone(doc.status)}>{closed ? "No signature on file" : STATUS_LABEL[doc.status]}</Badge>
                     {doc.status === "completed" && doc.downloadable && doc.signature_id ? (
                       <Button
                         variant="outline"
