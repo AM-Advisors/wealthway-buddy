@@ -147,6 +147,20 @@ export const getOnboarding = createServerFn({ method: "GET" })
       .eq("id", offeringId)
       .maybeSingle();
 
+    // The fund's investment record may already hold an application created
+    // for this exact investment (before the person picked an investing
+    // account). Adopt that exact link instead of starting a second one.
+    if (!application && offering && personaId) {
+      const { data: claimedId } = await supabase.rpc("claim_exact_investment_application", {
+        p_offering_id: offering.id,
+        p_persona_id: personaId,
+      });
+      if (typeof claimedId === "string") {
+        const claimed = await supabase.from("investor_applications").select("*").eq("id", claimedId).maybeSingle();
+        application = claimed.data;
+      }
+    }
+
     if (!application && offering) {
       const created = await supabase
         .from("investor_applications")

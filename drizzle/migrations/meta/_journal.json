@@ -2745,6 +2745,13 @@
       "when": 1794514371776,
       "tag": "0391_backfill_closed_onboarding_commitments",
       "breakpoints": true
+    },
+    {
+      "idx": 392,
+      "version": "7",
+      "when": 1794518939172,
+      "tag": "0392_claim_exact_investment_application",
+      "breakpoints": true
     }
   ]
 }
