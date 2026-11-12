@@ -1157,4 +1157,7 @@
 - [x] Move foundation screens onto shared presentation (review states, requirement rows, person picker, task words, canonical ID/screening reading) without new registries or broader authority
 - [x] Show fund manager submissions through the same shared presentation in the fictional sandbox beside the unchanged screen
 - [x] Report shared vs still-to-consolidate, plus a short staff walkthrough (Files)
-- [ ] Live fund screens onto the shared pieces: waits on approval after the sandbox demo; QA-database run of foundation screens still needs a fresh isolated draft
+- [x] Live fund manager submission review onto the shared pieces (approved 2026-11-12); old badges/buttons removed, sandbox shows the live component
+- [x] Verify undo, server checks, display-only badges, canonical screening reading, client wording and person-picker scope; fix one-decision-per-record and client follow-up wording
+- [ ] Isolated QA database run of the actual fund and foundation screens: needs a fresh isolated test copy created after this change is saved
+- [ ] Next consolidation candidate (proposal only): fund document approvals in Documents
