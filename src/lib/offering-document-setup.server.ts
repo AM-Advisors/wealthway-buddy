@@ -210,12 +210,23 @@ async function versionRow(documentId: string, version: number) {
   return data;
 }
 
+async function assertNoLeftoverBlanks(d: { document_category?: string | null }, v: { file_path?: string | null }) {
+  if (!v.file_path) return;
+  const { data: blob } = await db().storage.from("offering-files").download(v.file_path);
+  if (!blob) return;
+  const { docxText, leftoverBlanks, leftoverBlanksError } = await import("./document-blanks");
+  const text = await docxText(new Uint8Array(await blob.arrayBuffer()));
+  const err = text == null ? null : leftoverBlanksError(leftoverBlanks(text, d.document_category));
+  if (err) throw new Error(err);
+}
+
 export async function approveDocumentVersion(userId: string, input: { documentId: string; version: number }) {
   const d = await docRow(input.documentId);
   await assertStaff(userId, d.offering_id);
   const v = await versionRow(d.id, input.version);
   if (v.self_serve_review_state) return reviewGeneratedDocument(userId, { ...input, decision: "approve" });
   if (v.approval_status !== "uploaded_review_required") throw new Error("Only a version awaiting review can be approved.");
+  await assertNoLeftoverBlanks(d, v);
   await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
   const { data: saved, error } = await db().from("offering_document_versions").update({ approval_status: "approved", approved_by: userId, approved_at: now() }).eq("id", v.id).eq("approval_status", "uploaded_review_required").select("id").maybeSingle();
   if (error || !saved) throw new Error("Document approval could not be saved. Please refresh and try again.");
@@ -231,6 +242,7 @@ export async function reviewGeneratedDocument(userId: string, input: { documentI
   const validation = generatedDocumentReviewError({ ...v, generation_issues: input.decision === "return" ? [] : v.generation_issues }, userId, d.current_version);
   if (validation) throw new Error(validation);
   if (input.decision === "return" && !input.note?.trim()) throw new Error("Give a reason for returning this draft.");
+  if (input.decision === "approve") await assertNoLeftoverBlanks(d, v);
   if (input.decision === "approve") await (await import("./legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
   const { data: saved, error } = await db().from("offering_document_versions").update({ self_serve_review_state: input.decision === "approve" ? "approved" : "returned", self_serve_review_note: input.note?.trim() || null, approval_status: input.decision === "approve" ? "approved" : "uploaded_review_required", approved_by: userId, approved_at: now() }).eq("id", v.id).eq("self_serve_review_state", "pending").select("id").maybeSingle();
   if (error || !saved) throw new Error(error?.message || "The draft changed. Refresh before reviewing.");
@@ -318,6 +330,7 @@ export async function activateDocumentVersion(
   if (v.self_serve_review_state && v.self_serve_review_state !== "approved") throw new Error("Approve this draft before making it available.");
   if (v.approval_status === "uploaded_review_required" && !templates.has(`${d.id}:${v.version}`)) {
     // Self-serve: putting a version in use is the approval; recorded with who did it.
+    await assertNoLeftoverBlanks(d, v);
     await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
     await db().from("offering_document_versions").update({ approval_status: "approved", approved_by: userId, approved_at: now() }).eq("id", v.id);
     await event(d.offering_id, d.id, v.version, "version_approved", userId, { selfServe: true });
