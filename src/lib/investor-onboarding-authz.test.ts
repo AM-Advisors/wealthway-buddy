@@ -102,6 +102,14 @@ const tables: Record<string, any[]> = {
       stage: "closed",
       closed_at: "2026-03-02T00:00:00Z",
     }),
+    onboarding({
+      id: "investor-three-closed",
+      offering_id: FUND_B,
+      investor_user_id: "investor-three",
+      stage: "closed",
+      invitation_id: "inv-used",
+      closed_at: "2026-03-02T00:00:00Z",
+    }),
   ],
   investor_onboarding_exceptions: [],
   investor_onboarding_events: [{ id: "ev-used", event: "bank_transaction_matched", subject_id: TXN_USED }],
@@ -111,6 +119,15 @@ const tables: Record<string, any[]> = {
     { id: "txn-outgoing", offering_id: FUND_A, amount_cents: -250_000, description: "wire out", posted_on: "2026-03-06" },
   ],
   fund_invitations: [
+    {
+      id: "inv-used",
+      offering_id: FUND_B,
+      token: "used-token",
+      status: "accepted",
+      email: "three@example.com",
+      intended_amount_cents: 5_000_000,
+      expires_at: "2099-01-01T00:00:00Z",
+    },
     {
       id: "inv-expired",
       offering_id: FUND_A,
@@ -181,6 +198,7 @@ function builder(table: string) {
 
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: {
+    auth: { admin: { getUserById: (id: string) => Promise.resolve({ data: { user: { id, email: id === "investor-three" ? "three@example.com" : `${id}@example.com` } }, error: null }) } },
     from: (table: string) => builder(table),
     rpc: () => Promise.resolve({ data: [{ details: { account: "****1234" } }], error: null }),
   },
@@ -402,6 +420,12 @@ describe("invitations and launch gate", () => {
     await expect(
       server.startOnboarding(INV1, { slugOrId: FUND_A, invitationToken: "expired-token" }),
     ).rejects.toThrow();
+    expect(inserts("investor_onboardings")).toHaveLength(0);
+  });
+
+  it("reopens the closed investment instead of starting a second one from the same invitation", async () => {
+    const res = await server.startOnboarding("investor-three", { slugOrId: FUND_B, invitationToken: "used-token" });
+    expect(res).toMatchObject({ onboardingId: "investor-three-closed", resumed: true, completed: true });
     expect(inserts("investor_onboardings")).toHaveLength(0);
   });
 

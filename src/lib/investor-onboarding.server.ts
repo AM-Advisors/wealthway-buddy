@@ -651,6 +651,23 @@ export async function startOnboarding(
     console.error("[onboard] prepared-record claim skipped", (e as Error).message);
   }
 
+  // An invitation that already produced this person's closed investment opens
+  // that investment again; it never starts a second one in the same Fund.
+  if (invitation) {
+    const { data: done } = await db()
+      .from("investor_onboardings")
+      .select("id")
+      .eq("offering_id", offering.id)
+      .eq("investor_user_id", actor.userId)
+      .eq("invitation_id", invitation.id)
+      .eq("stage", "closed")
+      .is("removed_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const closed = ((done ?? []) as any[])[0];
+    if (closed) return { onboardingId: closed.id as string, resumed: true, pendingReview: false, completed: true };
+  }
+
   const { data: existing } = await db()
     .from("investor_onboardings")
     .select("*")

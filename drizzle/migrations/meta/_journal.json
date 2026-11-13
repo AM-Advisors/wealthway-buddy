@@ -2752,6 +2752,13 @@
       "when": 1794518939172,
       "tag": "0392_claim_exact_investment_application",
       "breakpoints": true
+    },
+    {
+      "idx": 393,
+      "version": "7",
+      "when": 1794589110612,
+      "tag": "0393_cancel_doug_duplicate_roas_onboarding",
+      "breakpoints": true
     }
   ]
 }
