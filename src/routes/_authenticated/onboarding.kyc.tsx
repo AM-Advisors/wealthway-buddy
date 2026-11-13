@@ -91,6 +91,11 @@ function KycPage() {
   const load = useServerFn(getOnboarding);
   const save = useServerFn(submitKyc);
   const { data, isLoading } = useQuery({ queryKey: ["onboarding"], queryFn: () => load() });
+  // A current investment owns this step: open it there instead of this older form.
+  const currentInvestmentId = (data as { currentInvestmentId?: string | null } | undefined)?.currentInvestmentId ?? null;
+  useEffect(() => {
+    if (currentInvestmentId) navigate({ to: "/investment/$onboardingId", params: { onboardingId: currentInvestmentId }, search: { step: "verify" }, replace: true });
+  }, [currentInvestmentId, navigate]);
 
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -164,7 +169,7 @@ function KycPage() {
 
   const isEntity = ["entity", "trust", "ira"].includes(form.investor_type);
 
-  if (!isLoading && data && data.invited === false) {
+  if (!isLoading && data && data.invited === false && !currentInvestmentId) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-16">
         <Card>
@@ -218,8 +223,8 @@ function KycPage() {
         )}
       </div>
 
-      {isLoading ? (
-        <p className="mt-10 text-sm text-muted-foreground">Loading your application…</p>
+      {isLoading || currentInvestmentId ? (
+        <p className="mt-10 text-sm text-muted-foreground">{currentInvestmentId ? "Opening your investment…" : "Loading your application…"}</p>
       ) : (
         <form onSubmit={onSubmit} className="mt-8 space-y-6">
           <Card>

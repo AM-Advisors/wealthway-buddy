@@ -5,6 +5,8 @@
  * the account they are currently acting as.
  */
 
+import { currentFundApplication } from "@/lib/investment-record-mapping";
+
 /** Used when nothing matches, so a filter never receives null. */
 export const NO_APPLICATION = "00000000-0000-0000-0000-000000000000";
 
@@ -64,6 +66,26 @@ export async function applicationIdForOffering(
   if (!offeringId) return activeApplicationId(supabase, userId);
 
   const personaId = await activePersonaId(supabase, userId);
+
+  // A current investment in this fund owns it: use the application linked to
+  // that exact investment, never an older, unconnected one.
+  const [{ data: investments }, { data: apps }] = await Promise.all([
+    supabase
+      .from("investor_onboardings")
+      .select("id, offering_id, investor_user_id, application_id, stage, closed_at, updated_at, removed_at, merged_into_onboarding_id")
+      .eq("investor_user_id", userId)
+      .eq("offering_id", offeringId)
+      .limit(50),
+    supabase
+      .from("investor_applications")
+      .select("id, user_id, offering_id, persona_id")
+      .eq("user_id", userId)
+      .eq("offering_id", offeringId)
+      .limit(50),
+  ]);
+  const choice = currentFundApplication((investments ?? []) as any[], (apps ?? []) as any[], personaId);
+  if (choice.kind === "linked") return choice.applicationId;
+
   const base = supabase
     .from("investor_applications")
     .select("id")

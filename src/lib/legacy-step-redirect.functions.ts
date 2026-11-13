@@ -1,5 +1,5 @@
 /**
- * The older investor funding page (/fund/$offeringId/funding)
+ * The older investor funding and signing pages (/fund/$offeringId/funding, /documents)
  * reads the older application row. When the investor already has a current
  * investment record for that fund, the page sends them to it instead, so they
  * see the same status Operations sees. Read-only; scoped to the caller's own rows.

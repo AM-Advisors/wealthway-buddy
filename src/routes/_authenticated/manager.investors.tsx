@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { FundOperations } from "@/components/fund-operations";
 import { InvestorReviewBoard } from "@/components/investor-review-board";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { STEP_STATE_LABELS, type StepStatus } from "@/lib/investor-step-status";
 
 
 
@@ -48,7 +49,10 @@ const STAGES = [
 
 type Stage = (typeof STAGES)[number]["key"];
 
-function stageOf(app: any): Exclude<Stage, "all"> {
+function stageOf(app: any): Exclude<Stage, "all"> | null {
+  // Current investments carry their stage from the four canonical steps.
+  if (app.stage_key) return app.stage_key;
+  if (app.replaced) return null;
   if (isReconciledFunding(app.funding_status)) return "complete";
   if (app.kyc_status !== "approved" || app.aml_status !== "approved") return "identity";
   if (app.accreditation_status !== "approved") return "accreditation";
@@ -206,13 +210,29 @@ function ManagerInvestorsPage() {
                         </CardDescription>
                       </div>
                       <Button asChild size="sm" variant="outline">
-                        <Link to="/manager/$applicationId" params={{ applicationId: inv.id }}>
-                          Review
-                        </Link>
+                        {inv.onboarding_id && offeringId ? (
+                          <Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId: offeringId, onboardingId: inv.onboarding_id }}>
+                            Open
+                          </Link>
+                        ) : (
+                          <Link to="/manager/$applicationId" params={{ applicationId: inv.id }}>
+                            Review
+                          </Link>
+                        )}
                       </Button>
                     </div>
                   </CardHeader>
+                  {inv.steps ? (
+                    <CardContent className="flex flex-wrap gap-1.5 pt-0">
+                      {(inv.steps as StepStatus[]).map((st) => (
+                        <Badge key={st.key} variant={st.state === "complete" ? "default" : st.state === "blocked" ? "destructive" : "secondary"} title={st.detail}>
+                          {st.label}: {STEP_STATE_LABELS[st.state]}
+                        </Badge>
+                      ))}
+                    </CardContent>
+                  ) : (
                   <CardContent className="flex flex-wrap gap-1.5 pt-0">
+                    {inv.replaced ? <Badge variant="outline">Earlier application · replaced by current investment</Badge> : null}
                     <Badge variant={statusTone(inv.kyc_status)}>Identity {verificationLabel(inv.kyc_status, (inv as any).kyc_status_detail)}</Badge>
                     <Badge variant={statusTone(inv.aml_status)}>Screening {verificationLabel(inv.aml_status, (inv as any).aml_status_detail)}</Badge>
                     <Badge variant={statusTone(inv.accreditation_status)}>
@@ -225,6 +245,7 @@ function ManagerInvestorsPage() {
                       Funding {prettyStatus(inv.funding_status)}
                     </Badge>
                   </CardContent>
+                  )}
                 </Card>
               ))
             )}

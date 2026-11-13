@@ -15,6 +15,7 @@ import { investorDashboardFn } from "@/lib/dashboards.functions";
 import { viewAsInvestorHomeFn } from "@/lib/view-as.functions";
 import { CLIENT_STEPS, FUNDING_STATE_LABELS, type FundingState } from "@/lib/dashboard-metrics";
 import { money } from "@/lib/status";
+import { showStartFundPromo } from "@/lib/attention-model";
 import { LoadError } from "@/components/load-error";
 
 const WAITING: Record<string, string> = { harmonious: "Harmonious is reviewing: nothing needed from you right now.", fund_manager: "Waiting on the fund manager: nothing needed from you right now." };
@@ -111,7 +112,7 @@ export function InvestorDashboard({ viewAs = false }: { viewAs?: boolean } = {})
           </CardContent>
         </Card>
       ) : null}
-      <StartFundCard />
+      {showStartFundPromo(d.investments) ? <StartFundCard /> : null}
     </section>
   );
 }

@@ -258,3 +258,37 @@ export const DUE_DATE_SOURCES: Record<string, string> = {
   "accounting.period": "accounting_periods.period_end",
   "reports.period": "financial_reports.period_end",
 };
+
+/* ------------------------------------------------------- investor home view */
+
+/** Pulls the investment id out of an `/investment/<id>?step=...` link, or null. */
+export function investmentIdFromHref(href: string): string | null {
+  const m = /^\/investment\/([^/?#]+)/.exec(href);
+  return m ? decodeURIComponent(m[1]!) : null;
+}
+
+/**
+ * On the investor home the investment card already shows the one next step for
+ * each investment, so "Needs you" drops rows pointing at those same investments
+ * instead of repeating (or contradicting) them. Other groups and every other
+ * item are untouched. Presentation only: nothing about the records changes.
+ */
+export function withoutCoveredInvestments(
+  groups: Record<AttentionGroup, AttentionItem[]>,
+  coveredInvestmentIds: readonly string[],
+): Record<AttentionGroup, AttentionItem[]> {
+  if (!coveredInvestmentIds.length) return groups;
+  const covered = new Set(coveredInvestmentIds);
+  return {
+    ...groups,
+    needs_you: (groups.needs_you ?? []).filter((item) => {
+      const id = investmentIdFromHref(item.href);
+      return !(id && covered.has(id));
+    }),
+  };
+}
+
+/** The "Start your own fund" promo stays out of the way while any investment is still in progress. */
+export function showStartFundPromo(investments: readonly { complete?: boolean | null }[]): boolean {
+  return investments.every((i) => Boolean(i.complete));
+}

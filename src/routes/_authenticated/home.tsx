@@ -320,6 +320,7 @@ function RoleHome() {
       <AttentionCenter
         {...(activeKind && activeKind !== "operations" ? { workspace: activeKind } : {})}
         coveredInvestmentIds={coveredInvestmentIds}
+        hideEmptyNeedsYou={coveredInvestmentIds.length > 0}
       />
 
 

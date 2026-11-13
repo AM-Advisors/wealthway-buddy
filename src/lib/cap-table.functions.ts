@@ -6,7 +6,10 @@ import { aggregateOnboardingHoldings, type PortfolioOffering } from "./my-portfo
 
 /** One investor's position in a fund, derived from live commitments. */
 export interface CapTableHolder {
+  /** Older application id, or the investment id for investments with no older record. */
   application_id: string;
+  /** Set when this holder is a current investment record with no older application. */
+  onboarding_id: string | null;
   name: string;
   is_you: boolean;
   investor_type: string | null;
@@ -137,19 +140,78 @@ async function buildCapTable(
   const posByApp = new Map<string, any>();
   for (const p of (positions ?? []) as any[]) posByApp.set(p.application_id, p);
 
-  const base = apps
-    .map((a) => {
-      const commitment = subByApp.get(a.id) ?? Number(a.commitment_cents ?? 0);
-      const pos = posByApp.get(a.id);
+  // Current investment records join in, so modern investors are never left
+  // out and an earlier, empty application is not counted as a second holder.
+  const { data: investmentsRaw, error: investmentsError } = await supabaseAdmin
+    .from("investor_onboardings")
+    .select("id, investor_user_id, application_id, stage, funding_status, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, offering_class_key, removed_at, merged_into_onboarding_id, created_at, updated_at, person_id, investment_profile_id")
+    .eq("offering_id", offeringId);
+  if (investmentsError) throw new Error("The cap table could not be loaded. Please try again.");
+  const investments = ((investmentsRaw ?? []) as any[]).filter((o) => !EXCLUDED_STATUSES.has(String(o.stage)));
+  const { joinFundRecords, applicationHoldsValue } = await import("@/lib/investment-record-mapping");
+  const joined = joinFundRecords(apps, investments, (a) =>
+    (fundedByApp.get(a.id) ?? 0) > 0 || Number(posByApp.get(a.id)?.shares ?? 0) > 0 || applicationHoldsValue(a),
+  );
+  const replacedIds = new Set(joined.replaced.map((a) => a.id));
+  const onlyInvestments = joined.investmentsOnly;
+  const personIds = [...new Set(onlyInvestments.map((o) => o.person_id).filter(Boolean))] as string[];
+  const profileIds = [...new Set(onlyInvestments.map((o) => o.investment_profile_id).filter(Boolean))] as string[];
+  const [{ data: invPeople }, { data: invProfiles }] = await Promise.all([
+    personIds.length
+      ? supabaseAdmin.from("persons").select("id, legal_first_name, legal_last_name, preferred_name").in("id", personIds)
+      : Promise.resolve({ data: [] as any[] }),
+    profileIds.length
+      ? supabaseAdmin.from("investment_profiles").select("id, legal_name, profile_type").in("id", profileIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const personById = new Map(((invPeople ?? []) as any[]).map((x) => [x.id, x]));
+  const invProfileById = new Map(((invProfiles ?? []) as any[]).map((x) => [x.id, x]));
+  const { investmentAmountCents, reconciledFundedCents } = await import("@/lib/investment-amounts");
+  const human = (v: string | null | undefined) => (v ? v.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null);
+
+  const base = [
+    ...apps
+      .filter((a) => !replacedIds.has(a.id))
+      .map((a) => {
+        const commitment = subByApp.get(a.id) ?? Number(a.commitment_cents ?? 0);
+        const pos = posByApp.get(a.id);
+        return {
+          app: a,
+          commitment,
+          funded: fundedByApp.get(a.id) ?? 0,
+          shares: pos?.shares != null ? Number(pos.shares) : null,
+          share_class: (pos?.share_class as string) ?? "LP interest",
+          override: pos?.ownership_pct_override != null ? Number(pos.ownership_pct_override) : null,
+          display: null as { name: string; investor_type: string | null; entity_name: string | null } | null,
+          onboarding_id: null as string | null,
+        };
+      }),
+    ...onlyInvestments.map((o) => {
+      const person = personById.get(o.person_id);
+      const prof = invProfileById.get(o.investment_profile_id);
+      const personName = person ? person.preferred_name || [person.legal_first_name, person.legal_last_name].filter(Boolean).join(" ") : "";
+      const entity = prof?.profile_type && prof.profile_type !== "individual" ? (prof.legal_name as string | null) ?? null : null;
       return {
-        app: a,
-        commitment,
-        funded: fundedByApp.get(a.id) ?? 0,
-        shares: pos?.shares != null ? Number(pos.shares) : null,
-        share_class: (pos?.share_class as string) ?? "LP interest",
-        override: pos?.ownership_pct_override != null ? Number(pos.ownership_pct_override) : null,
+        app: {
+          id: o.id as string,
+          user_id: (o.investor_user_id as string | null) ?? "",
+          offering_id: offeringId,
+          status: String(o.stage ?? ""),
+          funding_status: (o.funding_status as string | null) ?? null,
+          commitment_cents: null,
+          created_at: String(o.created_at),
+          updated_at: (o.updated_at as string | null) ?? null,
+        } as AppRow,
+        commitment: investmentAmountCents(o) ?? 0,
+        funded: reconciledFundedCents(o),
+        shares: o.unit_count != null ? Number(o.unit_count) : null,
+        share_class: human(o.offering_class_key) ?? "LP interest",
+        override: null as number | null,
+        display: { name: entity || prof?.legal_name || personName || "Investor", investor_type: prof?.profile_type ?? null, entity_name: entity },
+        onboarding_id: o.id as string,
       };
-    })
+    }),
+  ]
     .filter((r) => r.commitment > 0 || r.funded > 0 || (r.shares ?? 0) > 0)
     .sort((a, b) => b.commitment - a.commitment || a.app.created_at.localeCompare(b.app.created_at));
 
@@ -160,12 +222,13 @@ async function buildCapTable(
 
   const holders: CapTableHolder[] = base.map((r, i) => {
     const isYou = r.app.user_id === viewerId;
-    const profile = profileByUser.get(r.app.user_id);
-    const realName = profile?.entity_name || profile?.legal_name || "Investor";
+    const profile = r.display ?? profileByUser.get(r.app.user_id);
+    const realName = r.display?.name || profile?.entity_name || profile?.legal_name || "Investor";
     const byMoney = pct(r.commitment, totalCommitted);
     const byShares = totalShares > 0 && r.shares != null ? pct(r.shares, totalShares) : 0;
     return {
       application_id: r.app.id,
+      onboarding_id: r.onboarding_id,
       name: isYou ? `${realName} (you)` : canManage || namesVisible ? realName : `Investor ${i + 1}`,
       is_you: isYou,
       investor_type: profile?.investor_type ?? null,
@@ -220,13 +283,23 @@ export const getFundCapTable = createServerFn({ method: "POST" })
     const canManage = Boolean(manageFlag);
 
     if (!canManage) {
-      const { data: mine } = await supabase
-        .from("investor_applications")
-        .select("id")
-        .eq("offering_id", data.offering_id)
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (!mine) throw new Error("You do not have access to this fund's cap table.");
+      const [{ data: mine }, { data: myInvestments }] = await Promise.all([
+        supabase
+          .from("investor_applications")
+          .select("id")
+          .eq("offering_id", data.offering_id)
+          .eq("user_id", userId)
+          .limit(1),
+        // Investors with only a current investment record hold the same access.
+        supabase
+          .from("investor_onboardings")
+          .select("id")
+          .eq("offering_id", data.offering_id)
+          .eq("investor_user_id", userId)
+          .is("removed_at", null)
+          .limit(1),
+      ]);
+      if (!(mine ?? []).length && !(myInvestments ?? []).length) throw new Error("You do not have access to this fund's cap table.");
     }
 
     let namesVisible = false;
@@ -245,17 +318,28 @@ export const getMyOwnership = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: apps } = await supabase
-      .from("investor_applications")
-      .select("offering_id, status")
-      .eq("user_id", userId);
+    const [{ data: apps }, { data: myInvestments }] = await Promise.all([
+      supabase
+        .from("investor_applications")
+        .select("offering_id, status")
+        .eq("user_id", userId),
+      supabase
+        .from("investor_onboardings")
+        .select("offering_id, stage")
+        .eq("investor_user_id", userId)
+        .is("removed_at", null)
+        .is("merged_into_onboarding_id", null),
+    ]);
 
     const offeringIds = Array.from(
-      new Set(
-        ((apps ?? []) as { offering_id: string; status: string }[])
+      new Set([
+        ...((apps ?? []) as { offering_id: string; status: string }[])
           .filter((a) => !EXCLUDED_STATUSES.has(a.status))
           .map((a) => a.offering_id),
-      ),
+        ...((myInvestments ?? []) as { offering_id: string; stage: string }[])
+          .filter((o) => !EXCLUDED_STATUSES.has(String(o.stage)))
+          .map((o) => o.offering_id),
+      ]),
     );
 
     const tables = await Promise.all(

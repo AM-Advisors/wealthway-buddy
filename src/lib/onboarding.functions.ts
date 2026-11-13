@@ -128,8 +128,16 @@ export const getOnboarding = createServerFn({ method: "GET" })
         }
       : profile;
 
+    const { data: myInvestments } = await supabase
+      .from("investor_onboardings")
+      .select("id, offering_id, stage, closed_at, updated_at, removed_at, merged_into_onboarding_id")
+      .eq("investor_user_id", userId)
+      .limit(50);
+    const { investmentToOpen } = await import("@/lib/investment-record-mapping");
+
     if (!offeringId) {
       return {
+        currentInvestmentId: investmentToOpen((myInvestments ?? []) as any[], null, false),
         offering: null,
         profile: profileView,
         persona,
@@ -159,6 +167,13 @@ export const getOnboarding = createServerFn({ method: "GET" })
         const claimed = await supabase.from("investor_applications").select("*").eq("id", claimedId).maybeSingle();
         application = claimed.data;
       }
+    }
+
+    // A current investment record owns verification for its fund. Send the
+    // investor there instead of starting a second, unconnected application.
+    const currentInvestmentId = investmentToOpen((myInvestments ?? []) as any[], offering?.id ?? null, Boolean(application));
+    if (currentInvestmentId) {
+      return { offering, profile: profileView, persona, application, kyc: null, aml: null, invited: true, currentInvestmentId };
     }
 
     if (!application && offering) {
@@ -192,7 +207,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
       : null;
 
     const [canonApp] = application ? await canonicalizeApplications(supabase, [application as any], userId) : [null];
-    return { offering, profile: profileView, persona, application: (canonApp ?? application) as typeof application, kyc, aml, invited: true };
+    return { offering, profile: profileView, persona, application: (canonApp ?? application) as typeof application, kyc, aml, invited: true, currentInvestmentId: null as string | null };
 
   });
 

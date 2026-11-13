@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
 
+import { currentInvestmentForFund } from "@/lib/legacy-step-redirect.functions";
 import { DocumentsStep } from "@/components/steps/documents-step";
 
 export const Route = createFileRoute("/_authenticated/fund/$offeringId/documents")({
@@ -20,6 +21,16 @@ export const Route = createFileRoute("/_authenticated/fund/$offeringId/documents
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  // A current investment record for this fund owns signing: open it instead.
+  loader: async ({ params }) => {
+    try {
+      const { onboardingId } = await currentInvestmentForFund({ data: { offeringId: params.offeringId } });
+      if (onboardingId) throw redirect({ to: "/investment/$onboardingId", params: { onboardingId }, search: { step: "sign" } });
+    } catch (e) {
+      if (isRedirect(e)) throw e;
+    }
+    return null;
+  },
   component: FundDocumentsPage,
 });
 

@@ -18,7 +18,13 @@ export const confirmAccreditationStepFn = createServerFn({ method: "POST" })
     const { data: row } = await db.from("investor_onboardings")
       .select("id, investor_user_id, application_id, offering_id, questionnaire_responses").eq("id", data.onboardingId).maybeSingle();
     if (!row || row.investor_user_id !== userId) throw new Error("That investment isn't yours.");
-    if (!row.application_id) throw new Error("Finish About You first.");
+    if (!row.application_id) {
+      // Identity reused from the login: link this investment's own record now
+      // through the same guarded step the other saving paths use.
+      const { data: linked, error } = await (context.supabase as any).rpc("ensure_exact_investment_application", { p_onboarding_id: row.id });
+      if (error || typeof linked !== "string") throw new Error("We couldn't link this step to your investment. Please contact Harmonious.");
+      row.application_id = linked;
+    }
     const { data: offering } = await db.from("offerings").select("reg_type").eq("id", row.offering_id).maybeSingle();
     if (!selfCertificationAllowed(offering?.reg_type)) throw new Error("This fund requires verified accreditation. Upload proof or a verification letter.");
     const answer = (row.questionnaire_responses ?? {})[ACCREDITATION_QUESTION_KEY];

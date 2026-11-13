@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId, linkedApplicationForInvestment } from "@/lib/active-application";
+import { pickAccreditationInvestment } from "@/lib/accreditation-investment";
 
 const onboardingRef = z.string().uuid().optional();
 
@@ -54,12 +55,39 @@ type AppRow = { id: string; kyc_status: string; aml_status: string };
  * pass `link: true` to create the one record through the same guarded step
  * verification uses; reads never create anything.
  */
-async function resolveApplicationId(
+/**
+ * The investment this step is for. The address wins; without one, the
+ * investor's only open investment is used, and several open investments are
+ * returned as choices so the investor picks one (never a guess).
+ */
+async function resolveOnboardingTarget(
   supabase: any,
   userId: string,
   onboardingId?: string | null,
+): Promise<{ onboardingId: string | null; choices: string[] }> {
+  if (onboardingId) return { onboardingId, choices: [] };
+  const { data } = await supabase
+    .from("investor_onboardings")
+    .select("id, offering_id, stage, removed_at, closed_at, merged_into_onboarding_id")
+    .eq("investor_user_id", userId)
+    .order("created_at", { ascending: true });
+  const pick = pickAccreditationInvestment((data ?? []) as any[]);
+  if (pick.kind === "one") return { onboardingId: pick.onboardingId, choices: [] };
+  if (pick.kind === "many") return { onboardingId: null, choices: pick.onboardingIds };
+  return { onboardingId: null, choices: [] };
+}
+
+async function resolveApplicationId(
+  supabase: any,
+  userId: string,
+  requestedOnboardingId?: string | null,
   opts: { link?: boolean } = {},
 ): Promise<string> {
+  const target = await resolveOnboardingTarget(supabase, userId, requestedOnboardingId);
+  const onboardingId = target.onboardingId;
+  if (!onboardingId && target.choices.length > 1 && opts.link) {
+    throw new Error("Choose which investment this is for. Go to your home page and choose Continue on the investment.");
+  }
   if (onboardingId) {
     const { data: onb } = await supabase
       .from("investor_onboardings")
@@ -94,22 +122,43 @@ export const getAccreditation = createServerFn({ method: "GET" })
   .validator((d: unknown) => z.object({ onboardingId: onboardingRef }).parse(d ?? {}))
   .handler(async ({ data: input, context }) => {
     const { supabase, userId } = context;
+    const target = await resolveOnboardingTarget(supabase, userId, input.onboardingId);
 
+    if (!target.onboardingId && target.choices.length > 1) {
+      // Several open investments and the address didn't say which: let the investor choose.
+      const { data: rows } = await supabase
+        .from("investor_onboardings")
+        .select("id, offering_id")
+        .eq("investor_user_id", userId)
+        .in("id", target.choices);
+      const offeringIds = [...new Set(((rows ?? []) as any[]).map((r) => r.offering_id).filter(Boolean))];
+      const { data: funds } = offeringIds.length
+        ? await supabase.from("offerings").select("id, name").in("id", offeringIds)
+        : { data: [] as any[] };
+      const nameOf = new Map(((funds ?? []) as any[]).map((f) => [f.id, f.name as string]));
+      const choices = target.choices.map((id) => {
+        const r = ((rows ?? []) as any[]).find((x) => x.id === id);
+        return { onboardingId: id, fundName: nameOf.get(r?.offering_id) ?? "Your investment" };
+      });
+      return { application: null, offering: null, record: null, documents: [], onboardingId: null, choices };
+    }
+
+    const onboardingId = target.onboardingId;
     const { data: application } = await supabase
       .from("investor_applications")
       .select("id, kyc_status, aml_status, accreditation_status, current_step, offering_id")
       .eq("user_id", userId)
-      .eq("id", await resolveApplicationId(supabase, userId, input.onboardingId))
+      .eq("id", await resolveApplicationId(supabase, userId, onboardingId))
       .maybeSingle();
 
     if (!application) {
       // Not linked yet: still show the fund's own rules (never a default form).
       let offering: { id: string; name: string; reg_type: string; min_investment_cents: number | null } | null = null;
-      if (input.onboardingId) {
+      if (onboardingId) {
         const { data: onb } = await supabase
           .from("investor_onboardings")
           .select("offering_id")
-          .eq("id", input.onboardingId)
+          .eq("id", onboardingId)
           .eq("investor_user_id", userId)
           .maybeSingle();
         if (onb?.offering_id) {
@@ -121,7 +170,7 @@ export const getAccreditation = createServerFn({ method: "GET" })
           offering = (o as any) ?? null;
         }
       }
-      return { application: null, offering, record: null, documents: [] };
+      return { application: null, offering, record: null, documents: [], onboardingId, choices: [] };
     }
 
     const { data: offering } = await supabase
@@ -142,7 +191,7 @@ export const getAccreditation = createServerFn({ method: "GET" })
       .eq("application_id", application.id)
       .order("uploaded_at", { ascending: false });
 
-    return { application, offering, record, documents: documents ?? [] };
+    return { application, offering, record, documents: documents ?? [], onboardingId, choices: [] as { onboardingId: string; fundName: string }[] };
   });
 
 export const submitSelfCertification = createServerFn({ method: "POST" })

@@ -4,7 +4,7 @@ import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
@@ -89,6 +89,18 @@ function AccreditationPage() {
   const load = useServerFn(getAccreditation);
   const { data, isLoading } = useQuery({ queryKey: ["accreditation"], queryFn: () => load({ data: { onboardingId: currentOnboardingId() } }) });
 
+  // The server found the investor's only open investment: keep it in the
+  // address so every save on this page goes to that exact investment.
+  useEffect(() => {
+    if (data?.onboardingId && !currentOnboardingId()) rememberOnboardingId(data.onboardingId);
+  }, [data?.onboardingId]);
+
+  const choices = data?.choices ?? [];
+  const choose = (onboardingId: string) => {
+    rememberOnboardingId(onboardingId);
+    void queryClient.invalidateQueries({ queryKey: ["accreditation"] });
+  };
+
   // Never guess the fund's rules: without a fund there is no form to show.
   const missing = !isLoading && !data?.offering;
   const regType = data?.offering?.reg_type ?? "506b";
@@ -108,6 +120,20 @@ function AccreditationPage() {
 
       {isLoading ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading…</p>
+      ) : missing && choices.length > 1 ? (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Which investment is this for?</CardTitle>
+            <CardDescription>You have more than one investment in progress. Choose the fund you're completing accreditation for.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {choices.map((c) => (
+              <Button key={c.onboardingId} variant="outline" className="justify-start" onClick={() => choose(c.onboardingId)}>
+                {c.fundName}
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
       ) : missing ? (
         <Card className="mt-8">
           <CardHeader>
@@ -604,6 +630,13 @@ function currentOnboardingId(): string | undefined {
   const back = q.get("return") ?? "";
   const m = /\/(?:onboard\/i|investment)\/([0-9a-f-]{36})/i.exec(back);
   return m?.[1];
+}
+
+/** Records the chosen investment in the address without reloading the page. */
+function rememberOnboardingId(onboardingId: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("onboarding", onboardingId);
+  window.history.replaceState(window.history.state, "", url.toString());
 }
 
 /** Sent here from onboard.harmonious.co: go back to that exact investment. */

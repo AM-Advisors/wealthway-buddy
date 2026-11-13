@@ -145,7 +145,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
 
 
       {investors.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No investors in this fund yet.</p>
+        <p className="text-sm text-muted-foreground">No signed documents or wire requests to review yet.</p>
       ) : (
         investors.map((inv) => (
           <Card key={inv.applicationId}>

@@ -83,6 +83,11 @@ function AmlPage() {
   const load = useServerFn(getOnboarding);
   const save = useServerFn(submitAml);
   const { data, isLoading } = useQuery({ queryKey: ["onboarding"], queryFn: () => load() });
+  // A current investment owns this step: open it there instead of this older form.
+  const currentInvestmentId = (data as { currentInvestmentId?: string | null } | undefined)?.currentInvestmentId ?? null;
+  useEffect(() => {
+    if (currentInvestmentId) navigate({ to: "/investment/$onboardingId", params: { onboardingId: currentInvestmentId }, search: { step: "verify" }, replace: true });
+  }, [currentInvestmentId, navigate]);
 
   const [form, setForm] = useState<State>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -135,8 +140,8 @@ function AmlPage() {
         obligations. Answer for the investing person or entity.
       </p>
 
-      {isLoading ? (
-        <p className="mt-10 text-sm text-muted-foreground">Loading your application…</p>
+      {isLoading || currentInvestmentId ? (
+        <p className="mt-10 text-sm text-muted-foreground">{currentInvestmentId ? "Opening your investment…" : "Loading your application…"}</p>
       ) : !kycDone ? (
         <Card className="mt-8">
           <CardHeader>

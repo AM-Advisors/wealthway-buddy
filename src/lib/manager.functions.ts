@@ -17,6 +17,35 @@ async function assertReviewer(supabase: any, userId: string) {
   return (data as any[]).map((r) => r.role as string);
 }
 
+/**
+ * Older unlinked applications that a current investment in this fund has
+ * replaced, and that hold no signatures, wires, payments, flags or money, are
+ * history: fund reviews do not list them as a second investor. Nothing is
+ * relinked or deleted. Without fund-workspace access the list is unchanged.
+ */
+async function withoutReplacedApplications<A extends { id: string }>(
+  userId: string,
+  offeringId: string,
+  applications: A[],
+  withRecords: Set<string>,
+): Promise<A[]> {
+  try {
+    const tabs = await import("@/lib/fund-tabs.server");
+    await tabs.assertFund(userId, offeringId);
+    const grid = await tabs.investorGrid(offeringId);
+    const { joinFundRecords, applicationHoldsValue } = await import("@/lib/investment-record-mapping");
+    const joined = joinFundRecords(
+      applications as any[],
+      grid.map((g) => ({ id: g.id, application_id: g.applicationId, investor_user_id: g.investorUserId, stage: g.stage })),
+      (app: any) => withRecords.has(app.id) || applicationHoldsValue(app),
+    );
+    const replaced = new Set(joined.replaced.map((a: any) => a.id as string));
+    return applications.filter((a) => !replaced.has(a.id));
+  } catch {
+    return applications;
+  }
+}
+
 /** Funds the signed-in reviewer can work in: assigned funds, or all funds for admins. */
 export const getManagerFunds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -86,8 +115,50 @@ export const getFundOverview = createServerFn({ method: "GET" })
       : { data: [] as any[] };
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
 
+    // Current investment records for this fund, read through the same roster
+    // the fund workspace uses, so both pages list the same investors. Only
+    // people who may open that workspace get the joined list.
+    const tabs = await import("@/lib/fund-tabs.server");
+    let grid: Awaited<ReturnType<typeof tabs.investorGrid>> = [];
+    let canSeeInvestments = true;
+    try {
+      await tabs.assertFund(userId, data.offeringId);
+    } catch {
+      canSeeInvestments = false;
+    }
+    if (canSeeInvestments) {
+      try {
+        grid = await tabs.investorGrid(data.offeringId);
+      } catch {
+        throw new Error("The investor list could not be loaded. Please try again.");
+      }
+    }
+    const { joinFundRecords, overviewStageForSteps, applicationHoldsValue } = await import("@/lib/investment-record-mapping");
+    const gridById = new Map(grid.map((g) => [g.id, g]));
+    const joined = joinFundRecords(
+      applications as any[],
+      grid.map((g) => ({ id: g.id, application_id: g.applicationId, investor_user_id: g.investorUserId, stage: g.stage })),
+      applicationHoldsValue,
+    );
+    const investmentRow = (g: (typeof grid)[number], app: any | null) => ({
+      id: g.id,
+      onboarding_id: g.id,
+      application_id: app?.id ?? g.applicationId ?? null,
+      user_id: g.investorUserId,
+      source: "investment" as const,
+      commitment_cents: g.committedCents ?? 0,
+      received_cents: g.receivedCents ?? 0,
+      stage_key: overviewStageForSteps(g.steps),
+      steps: g.steps,
+      profile: { legal_name: g.profileName ?? g.name, email: g.email, investor_type: g.assetLabel },
+    });
+    const currentRows = [
+      ...joined.linked.map((l) => investmentRow(gridById.get(l.investment.id)!, l.application)),
+      ...joined.investmentsOnly.map((i) => investmentRow(gridById.get(i.id)!, null)),
+    ];
+
     const counts = {
-      total: applications.length,
+      total: currentRows.length + joined.applicationsOnly.length,
       identity: 0,
       accreditation: 0,
       documents: 0,
@@ -97,7 +168,13 @@ export const getFundOverview = createServerFn({ method: "GET" })
     let committedCents = 0;
     let settledCents = 0;
 
-    for (const app of applications as any[]) {
+    for (const row of currentRows) {
+      committedCents += row.commitment_cents;
+      counts[row.stage_key] += 1;
+      if (row.stage_key === "complete") settledCents += row.received_cents || row.commitment_cents;
+    }
+
+    for (const app of joined.applicationsOnly as any[]) {
       committedCents += app.commitment_cents ?? 0;
       if (isReconciledFunding(app.funding_status)) {
         counts.complete += 1;
@@ -115,10 +192,12 @@ export const getFundOverview = createServerFn({ method: "GET" })
       counts,
       committedCents,
       settledCents,
-      investors: (applications as any[]).map((app) => ({
-        ...app,
-        profile: profileMap.get(app.user_id) ?? null,
-      })),
+      investors: [
+        ...currentRows,
+        ...(joined.applicationsOnly as any[]).map((app) => ({ ...app, source: "application" as const, profile: profileMap.get(app.user_id) ?? null })),
+        // Earlier applications replaced by a current investment: kept for history, left out of totals.
+        ...(joined.replaced as any[]).map((app) => ({ ...app, source: "application" as const, replaced: true, profile: profileMap.get(app.user_id) ?? null })),
+      ] as any[],
     };
   });
 
@@ -221,7 +300,7 @@ export const getFundOperations = createServerFn({ method: "GET" })
       .limit(500);
     if (appsError) throw new Error(appsError.message);
     const reviewPersons = await loadPersonStatuses(supabase, [...new Set(((apps ?? []) as any[]).map((a) => a.user_id as string))]);
-    const applications = await canonicalizeApplicationFunding(supabase, ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons)));
+    let applications = await canonicalizeApplicationFunding(supabase, ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons)));
     const appIds = applications.map((a) => a.id as string);
 
     const { data: docs, error: docsError } = await supabase
@@ -271,6 +350,10 @@ export const getFundOperations = createServerFn({ method: "GET" })
           .order("created_at", { ascending: false }),
       ]);
 
+    const withRecords = new Set(
+      [...(sigs ?? []), ...(wires ?? []), ...(payments ?? []), ...(flags ?? [])].map((r: any) => r.application_id as string),
+    );
+    applications = await withoutReplacedApplications(userId, data.offeringId, applications as any[], withRecords);
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
     const investorOf = (applicationId: string) => {
       const app = applications.find((a) => a.id === applicationId);
@@ -486,7 +569,14 @@ export const getFundInvestorReview = createServerFn({ method: "GET" })
     const signatures = (sigs ?? []) as any[];
     const wireRows = (wires ?? []) as any[];
 
-    const investors = applications.map((app) => {
+    const reviewable = await withoutReplacedApplications(
+      userId,
+      data.offeringId,
+      applications as any[],
+      new Set([...signatures, ...wireRows].map((r) => r.application_id as string)),
+    );
+
+    const investors = reviewable.map((app) => {
       const signed = signatures.filter((s) => s.application_id === app.id);
       const signedIds = new Set(signed.map((s) => s.offering_document_id));
       const profile = profileMap.get(app.user_id);
