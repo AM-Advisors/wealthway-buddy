@@ -160,14 +160,21 @@ export function InvestorRecordDocuments({ offeringId, onboardingId }: { offering
   );
 }
 
-/** Investor: the funds they've been invited to, with a button to start or continue. */
-export function InvitedFunds() {
+/**
+ * Investor: the funds they've been invited to, with a button to start or continue.
+ * Investments already shown on the home page (hideOnboardingIds) are left out so
+ * each fund has one button, not two that lead to the same place.
+ */
+export function InvitedFunds({ hideOnboardingIds }: { hideOnboardingIds?: readonly string[] } = {}) {
   const load = useServerFn(myInvitedFundsFn);
   const start = useServerFn(startInvitedFundFn);
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
-  const { data } = useQuery({ queryKey: ["invited-funds"], queryFn: () => load() });
-  if (!data?.length) return null;
+  const { data: all } = useQuery({ queryKey: ["invited-funds"], queryFn: () => load() });
+  const hidden = new Set(hideOnboardingIds ?? []);
+  const data = (all ?? []).filter((f) => !(f.onboardingId && hidden.has(f.onboardingId)));
+  const others = hidden.size > 0;
+  if (!data.length) return null;
   const go = async (f: (typeof data)[number]) => {
     if (f.onboardingId) return navigate({ to: "/investment/$onboardingId", params: { onboardingId: f.onboardingId } });
     setBusy(f.invitationId);
@@ -180,8 +187,8 @@ export function InvitedFunds() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Funds you're invited to</CardTitle>
-        <CardDescription>Choose a fund to start or continue your investment.</CardDescription>
+        <CardTitle className="text-lg">{others ? "Other funds you're invited to" : "Funds you're invited to"}</CardTitle>
+        <CardDescription>{others ? "You can start one of these whenever you're ready. It won't change the investment above." : "Choose a fund to start or continue your investment."}</CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="divide-y">

@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { CapitalByFundChart, Kpi } from "@/components/dashboard-charts";
 import { InvitedFunds } from "@/components/investor-document-review";
 import { InvestorUpdatesCard } from "@/components/investor-onboarding-extras";
+import { SetupCard } from "@/components/setup-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,32 +35,46 @@ function Steps({ step }: { step: number }) {
   );
 }
 
-/** Investor home: next action first. Renders nothing when the person has no investments. */
-export function InvestorDashboard({ viewAs = false }: { viewAs?: boolean } = {}) {
+/** The investor home read, shared so other home cards can skip investments shown here. */
+export function useInvestorDashboard(viewAs = false, enabled = true) {
   const loadOwn = useServerFn(investorDashboardFn);
   const loadAs = useServerFn(viewAsInvestorHomeFn);
   // Client View: the server renders the investor's own dashboard; links are inert (read-only).
-  const q = useQuery({ queryKey: viewAs ? ["view-as", "investor-home"] : ["investor-dashboard"], queryFn: () => (viewAs ? loadAs() : loadOwn()), retry: false });
+  return useQuery({ queryKey: viewAs ? ["view-as", "investor-home"] : ["investor-dashboard"], queryFn: () => (viewAs ? loadAs() : loadOwn()), retry: false, enabled });
+}
+
+/**
+ * Investor home: one next step first, with one Continue button. Funds already
+ * started are not offered again in the invitations card, and account setup is
+ * done inside the investment's own steps.
+ */
+export function InvestorDashboard({ viewAs = false }: { viewAs?: boolean } = {}) {
+  const q = useInvestorDashboard(viewAs);
   if (q.isPending) return <Skeleton className="h-40 rounded-xl" />;
   const d = q.data;
   if (q.isError || !d) return <LoadError audience="account" error={q.error} what="Your investments" onRetry={() => void q.refetch()} />;
-  const empty = viewAs ? <StartFundCard /> : <><InvitedFunds /><StartFundCard /></>;
+  const empty = viewAs ? <StartFundCard /> : <><InvitedFunds /><SetupCard /><StartFundCard /></>;
   if (!d.investments.length) return empty;
   const p = d.primary ?? d.investments[0];
   if (!p) return empty;
 
   return (
     <section className={viewAs ? "pointer-events-none space-y-4" : "space-y-4"} aria-label="Your investments" aria-readonly={viewAs || undefined}>
-      {viewAs ? null : <><InvitedFunds /><InvestorUpdatesCard /></>}
       <Card className="border-primary/50">
-        <CardHeader className="pb-2"><CardDescription>Next action · {p.fundName}</CardDescription>
+        <CardHeader className="pb-2"><CardDescription>{p.nextAction ? "Start here" : "Next action"} · {p.fundName}</CardDescription>
           <CardTitle className="text-xl">{p.nextAction ?? (p.complete ? "You're all set" : "You're caught up")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {!p.nextAction && !p.complete && p.waitingOn ? <p className="text-sm text-muted-foreground">{WAITING[p.waitingOn] ?? ""}</p> : null}
-          {p.nextAction ? <Button asChild size="lg"><Link to="/investment/$onboardingId" params={{ onboardingId: p.id }}>Continue</Link></Button> : null}
+          {p.nextAction ? (
+            <>
+              <p className="text-sm text-muted-foreground">Continue takes you to this step. The steps go in order, and each one opens the next when it's done. You can come back here any time.</p>
+              <Button asChild size="lg"><Link to="/investment/$onboardingId" params={{ onboardingId: p.id }}>Continue</Link></Button>
+            </>
+          ) : null}
         </CardContent>
       </Card>
+      {viewAs ? null : <><InvitedFunds hideOnboardingIds={d.investments.map((i: any) => String(i.id))} /><InvestorUpdatesCard /></>}
 
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-base">Your Investment</CardTitle></CardHeader>

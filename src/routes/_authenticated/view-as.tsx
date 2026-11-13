@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InvestorDashboard } from "@/components/investor-dashboard";
+import { InvestorDashboard, useInvestorDashboard } from "@/components/investor-dashboard";
 import { FundReadiness } from "@/components/investment-readiness";
 import { NoActiveViewAs, ViewAsBanner, useActiveViewAs } from "@/components/view-as";
 import { clientNavigation } from "@/lib/client-navigation";
@@ -69,12 +69,15 @@ function ViewAsPage() {
 function ViewAsInvestorAttention() {
   const load = useServerFn(viewAsInvestorAttentionFn);
   const q = useQuery({ queryKey: ["view-as", "investor-attention"], queryFn: () => load(), retry: false });
+  // Same as the investor's own Home: investments shown above are not repeated here.
+  const home = useInvestorDashboard(true);
+  const covered = ((home.data?.investments ?? []) as { id: string }[]).map((i) => String(i.id));
   if (q.isPending) return <Skeleton className="h-32" />;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
   return (
     <div className="pointer-events-none space-y-4" aria-readonly="true">
-      <SetupCard outstandingOverride={q.data.outstandingRequirements} readOnly />
-      <AttentionCenter preloaded={q.data.attention} />
+      {covered.length ? null : <SetupCard outstandingOverride={q.data.outstandingRequirements} readOnly />}
+      <AttentionCenter preloaded={q.data.attention} coveredInvestmentIds={covered} />
     </div>
   );
 }

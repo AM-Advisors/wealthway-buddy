@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stat } from "@/components/dashboard-primitives";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { AttentionCenter } from "@/components/attention-center";
-import { InvestorDashboard } from "@/components/investor-dashboard";
+import { InvestorDashboard, useInvestorDashboard } from "@/components/investor-dashboard";
 import { SetupCard } from "@/components/setup-card";
 
 import { money, prettyStatus, statusTone } from "@/lib/status";
@@ -81,6 +81,12 @@ function QuickLinks({ links }: { links: QuickLinkDef[] }) {
 
 function RoleHome() {
   const { activeKind } = useClientWorkspace();
+  // Investments the investor dashboard already shows with their own Continue
+  // button; the attention list leaves those rows out so there is one way in.
+  const investorHome = useInvestorDashboard(false, activeKind === "investor");
+  const coveredInvestmentIds = activeKind === "investor"
+    ? ((investorHome.data?.investments ?? []) as { id: string }[]).map((i) => String(i.id))
+    : [];
   const load = useServerFn(getRoleOverview);
   const { data, isLoading } = useQuery({
     queryKey: ["role-overview"],
@@ -308,9 +314,13 @@ function RoleHome() {
 
       {activeKind === "investor" ? <InvestorDashboard /> : null}
 
-      <SetupCard />
+      {/* Investors finish account setup inside their investment's steps (or on the investor dashboard when they have none). */}
+      {activeKind === "investor" ? null : <SetupCard />}
 
-      <AttentionCenter {...(activeKind && activeKind !== "operations" ? { workspace: activeKind } : {})} />
+      <AttentionCenter
+        {...(activeKind && activeKind !== "operations" ? { workspace: activeKind } : {})}
+        coveredInvestmentIds={coveredInvestmentIds}
+      />
 
 
       {sections.length <= 1 ? (

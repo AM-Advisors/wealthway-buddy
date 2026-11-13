@@ -64,7 +64,12 @@ function ItemRow({ item }: { item: AttentionItem }) {
  * what is waiting on someone else, and what finished recently. Every row opens
  * the record where the work actually happens; nothing is decided here.
  */
-export function AttentionCenter({ workspace, preloaded }: { workspace?: WorkspaceKind; preloaded?: any }) {
+export function AttentionCenter({ workspace, preloaded, coveredInvestmentIds }: {
+  workspace?: WorkspaceKind;
+  preloaded?: any;
+  /** Investments the page already shows with their own Continue button; their rows are left out here. */
+  coveredInvestmentIds?: readonly string[];
+}) {
   const load = useServerFn(getAttention);
   const q = useQuery({
     queryKey: ["attention", workspace ?? "auto"],
@@ -106,7 +111,13 @@ export function AttentionCenter({ workspace, preloaded }: { workspace?: Workspac
 
   if (!data?.groups) return null;
 
-  const groups = data.groups as Record<AttentionGroup, AttentionItem[]>;
+  const covered = new Set(coveredInvestmentIds ?? []);
+  const groups = Object.fromEntries(
+    Object.entries(data.groups as Record<AttentionGroup, AttentionItem[]>).map(([g, items]) => [
+      g,
+      (items ?? []).filter((i) => !(i.sourceTable === "investor_onboardings" && covered.has(i.sourceId))),
+    ]),
+  ) as Record<AttentionGroup, AttentionItem[]>;
   const gaps = (data.gaps ?? []) as { area: string; message: string }[];
 
   return (
@@ -114,7 +125,9 @@ export function AttentionCenter({ workspace, preloaded }: { workspace?: Workspac
       {ATTENTION_GROUPS.map((group) => {
         const items = groups[group] ?? [];
         // Completed and waiting sections stay out of the way when empty.
-        if (!items.length && group !== "needs_you") return null;
+        // When the page already shows the investor's next step, an empty
+        // "nothing needs you" card would contradict it, so it is left out too.
+        if (!items.length && (group !== "needs_you" || covered.size > 0)) return null;
         const Icon = GROUP_ICON[group];
         return (
           <Card key={group}>
