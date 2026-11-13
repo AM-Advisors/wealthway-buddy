@@ -298,3 +298,21 @@ export function publicSigner(row: any): PublicSigner {
     declinedAt: row?.declined_at ?? null,
   };
 }
+
+/**
+ * What the investor's own card should ask of them. Uses only recorded signer
+ * rows: "awaiting_others" means this person's own row is signed and the
+ * document is not yet fully executed (e.g. waiting on a countersignature).
+ */
+export type InvestorSignCardStatus = "executed" | "awaiting_others" | "your_signature" | "review";
+
+export function investorSignCardStatus(input: {
+  requiresSignature: boolean;
+  state: ExecutionState | undefined;
+  yourStatus: string | undefined;
+}): InvestorSignCardStatus {
+  if (input.state === "executed") return "executed";
+  if (!input.requiresSignature) return "review";
+  if (input.yourStatus === "signed") return "awaiting_others";
+  return "your_signature";
+}

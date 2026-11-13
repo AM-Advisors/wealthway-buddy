@@ -12,7 +12,12 @@ import {
   refreshSigningState,
   startSigningSession,
 } from "@/lib/document-signing.functions";
-import { EXECUTION_LABELS, type ExecutionState, type PublicSigner } from "@/lib/document-signing";
+import {
+  EXECUTION_LABELS,
+  investorSignCardStatus,
+  type ExecutionState,
+  type PublicSigner,
+} from "@/lib/document-signing";
 
 export interface DocumentSigningState {
   documentId: string;
@@ -76,6 +81,13 @@ export function DocumentSignCard({
 
   const state: ExecutionState = signing?.state ?? "not_sent";
   const executed = state === "executed";
+  const cardStatus = investorSignCardStatus({
+    requiresSignature,
+    state: signing?.state,
+    yourStatus: signing?.yourStatus,
+  });
+  // This person already signed; the agreement is waiting on someone else.
+  const awaitingOthers = cardStatus === "awaiting_others";
   const scope = offeringId ? { offering_id: offeringId } : {};
 
   async function openSession() {
@@ -118,7 +130,7 @@ export function DocumentSignCard({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-md bg-muted p-2 text-muted-foreground">
-                {executed ? (
+                {executed || awaitingOthers ? (
                   <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
                 ) : (
                   <FileText className="h-4 w-4" aria-hidden />
@@ -136,6 +148,8 @@ export function DocumentSignCard({
                         ? ` (${signing.signerCapacityLabel})`
                         : ""}
                     </>
+                  ) : awaitingOthers ? (
+                    "You signed this. Waiting for the remaining signatures, usually the fund manager's countersignature. Nothing more is needed from you."
                   ) : requiresSignature ? (
                     (signing?.stateLabel ?? EXECUTION_LABELS.not_sent)
                   ) : (
@@ -146,13 +160,19 @@ export function DocumentSignCard({
               </div>
             </div>
             <Badge variant={executed ? "default" : requiresSignature ? "secondary" : "outline"}>
-              {executed ? "Signed" : requiresSignature ? "Signature required" : "Review"}
+              {executed
+                ? "Signed"
+                : awaitingOthers
+                  ? "Signed by you · awaiting countersignature"
+                  : requiresSignature
+                    ? "Signature required"
+                    : "Review"}
             </Badge>
           </div>
         </CardHeader>
 
         <CardContent className="flex flex-wrap items-center gap-2">
-          {requiresSignature && !executed && (
+          {requiresSignature && !executed && !awaitingOthers && (
             <Button type="button" onClick={openSession} disabled={opening || checking}>
               {opening ? (
                 <>

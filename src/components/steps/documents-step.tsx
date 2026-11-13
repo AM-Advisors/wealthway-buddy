@@ -149,7 +149,8 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
       d.requires_signature &&
       !signedByDoc.get(d.id) &&
       d.outsideSignedOn == null &&
-      signingByDoc.get(d.id)?.state !== "executed",
+      signingByDoc.get(d.id)?.state !== "executed" &&
+      signingByDoc.get(d.id)?.yourStatus !== "signed",
   );
 
   async function onSaveSubscription(e: React.FormEvent) {

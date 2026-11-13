@@ -59,7 +59,12 @@ export const getSigningStates = createServerFn({ method: "POST" })
     const byDoc = new Map<string, any>();
     for (const signature of (signatures ?? []) as any[]) {
       const rows = ((signers ?? []) as any[]).filter((s) => s.signature_id === signature.id);
-      const mine = rows.find((s) => s.signer_user_id === userId) ?? rows[0] ?? null;
+      // Only this person's own row counts as "you"; never another signer's.
+      const email = String((context.claims as any)?.email ?? "").toLowerCase();
+      const mine =
+        rows.find((s) => s.signer_user_id === userId) ??
+        (email ? rows.find((s) => String(s.signer_email ?? "").toLowerCase() === email) : undefined) ??
+        null;
       const state = rows.length ? executionState(rows) : "not_sent";
       byDoc.set(signature.offering_document_id, {
         documentId: signature.offering_document_id,
