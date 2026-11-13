@@ -21,6 +21,7 @@ import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn, fundDocu
 import { FundTypeDocumentsCard } from "./fund-type-documents-card";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
+import { PortfolioCompanyDdqCard } from "./portfolio-company-ddq-card";
 import { ArchivedDocuments } from "./archived-documents";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn, designateFundReplacementFn } from "@/lib/fund-file-signing.functions";
@@ -176,6 +177,8 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       <TemplateDocumentsCard fundId={fundId} />
 
       <StandardFormsCard fundId={fundId} onGenerated={refresh} />
+
+      <PortfolioCompanyDdqCard />
 
       {replacement && <Dialog open onOpenChange={(open) => !open && setReplacement(null)}>
         <DialogContent className="max-w-md">
