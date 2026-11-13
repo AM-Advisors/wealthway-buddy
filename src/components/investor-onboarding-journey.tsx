@@ -750,8 +750,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
           <div className="space-y-3">
             <ol className="space-y-2">
               {docs.map((doc) => {
-                const status = doc.signed ? "Signed" : doc.requiresSignature ? "To sign" : doc.requiresAcknowledgment ? (doc.acknowledged ? "Acknowledged" : "To acknowledge") : "To review";
-                const complete = doc.signed || (doc.requiresAcknowledgment && doc.acknowledged);
+                const status = doc.signed ? "Signed" : doc.investorSigned ? "Signed by you · awaiting countersignature" : doc.requiresSignature ? "To sign" : doc.requiresAcknowledgment ? (doc.acknowledged ? "Acknowledged" : "To acknowledge") : "To review";
+                const complete = doc.signed || doc.investorSigned || (doc.requiresAcknowledgment && doc.acknowledged);
                 return (
                   <li key={doc.id} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
                     <span>{doc.title}</span>
@@ -782,7 +782,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                 )
               ) : null}
             </ol>
-            {!signed && docs.some((x) => x.requiresSignature && !x.signed) ? (
+            {!signed && docs.some((x) => x.requiresSignature && !x.signed && !x.investorSigned) ? (
               <Button disabled={prepare.isPending} onClick={() => prepare.mutate()}>
                 {prepare.isPending ? "Opening documents…" : "Review & Sign Documents"}
               </Button>

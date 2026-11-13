@@ -1383,6 +1383,26 @@ export async function investorFundStatus(userId: string, offeringId: string) {
   };
 }
 
+/** Documents whose investor-side signers have all signed on the current request (display only). */
+async function investorSideSignedDocuments(row: any): Promise<Set<string>> {
+  const out = new Set<string>();
+  if (!row.application_id) return out;
+  const { investorSideSigned } = await import("@/lib/document-signing");
+  const [{ data: sigs }, { data: signers }, { data: snaps }] = await Promise.all([
+    db().from("document_signatures").select("id, offering_document_id, provider_status, snapshot_id").eq("application_id", row.application_id),
+    db().from("document_signature_signers").select("signature_id, role_key, required, status").eq("application_id", row.application_id),
+    db().from("investor_document_snapshots").select("id, status").eq("onboarding_id", row.id),
+  ]);
+  const dead = new Set(((snaps ?? []) as any[]).filter((x) => x.status === "stale" || x.status === "superseded").map((x) => String(x.id)));
+  for (const sig of (sigs ?? []) as any[]) {
+    if (sig.snapshot_id && dead.has(String(sig.snapshot_id))) continue;
+    const rows = ((signers ?? []) as any[]).filter((s) => s.signature_id === sig.id)
+      .map((s) => ({ roleKey: s.role_key, required: s.required, status: s.status }));
+    if (investorSideSigned({ providerStatus: sig.provider_status, signers: rows })) out.add(String(sig.offering_document_id));
+  }
+  return out;
+}
+
 export async function onboardingDetail(userId: string, onboardingId: string): Promise<any> {
   const { actor, row, role } = await assertOnboardingAccess(userId, onboardingId);
   const facts = await gatherFacts(row);
@@ -1412,6 +1432,8 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     fundingStatus: row.funding_status,
     investorReportsSent: Boolean(row.investor_reports_sent_at),
   });
+
+  const investorSignedDocIds = await investorSideSignedDocuments(row);
 
   const base = {
     id: row.id as string,
@@ -1454,7 +1476,8 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     acceptedAt: row.accepted_at as string | null,
     closedAt: row.closed_at as string | null,
     exemption: (facts.offering as any).exemption ?? null,
-    documents: facts.documents,
+    // Display only: investor-side signature recorded while a countersignature is pending.
+    documents: facts.documents.map((d: any) => ({ ...d, investorSigned: !d.signed && investorSignedDocIds.has(String(d.id)) })),
     verification: verificationSummary(facts.requirements),
     journey,
     nextStep: nextJourneyStep(journey),

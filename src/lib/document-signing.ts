@@ -316,3 +316,18 @@ export function investorSignCardStatus(input: {
   if (input.yourStatus === "signed") return "awaiting_others";
   return "your_signature";
 }
+
+/**
+ * True when every required signer on the investor's side of one document has
+ * a recorded signature (only the fund's countersignature may remain). Display
+ * only: it never marks the document executed or unlocks later steps.
+ */
+export function investorSideSigned(input: {
+  providerStatus: string | null | undefined;
+  signers: { roleKey: string | null | undefined; required?: boolean | null; status: string | null | undefined }[];
+}): boolean {
+  const p = String(input.providerStatus ?? "").toLowerCase();
+  if (!p || ["cancelled", "replaced", "declined", "expired"].includes(p)) return false;
+  const mine = input.signers.filter((s) => s.roleKey !== "fund_manager" && s.required !== false);
+  return mine.length > 0 && mine.every((s) => s.status === "signed");
+}
