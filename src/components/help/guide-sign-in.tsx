@@ -16,7 +16,8 @@ const field = "rounded-md border border-border bg-background px-3 py-2 text-mute
 const primary = "block w-full rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground";
 const outline = "block w-full rounded-md border border-border bg-background px-4 py-2 text-center text-sm font-medium text-foreground";
 
-function Screen({ children }: { children: ReactNode }) {
+/** Illustrated example screen shared by the step-by-step guides. */
+export function GuideScreen({ children }: { children: ReactNode }) {
   return (
     <figure className="space-y-2">
       <div aria-hidden className="rounded-lg border border-border bg-muted/40 p-4 md:p-6">
@@ -29,7 +30,7 @@ function Screen({ children }: { children: ReactNode }) {
 
 function SignInForm({ title, button }: { title: string; button: string }) {
   return (
-    <Screen>
+    <GuideScreen>
       <p className="font-heading text-lg font-semibold">{title}</p>
       <span className={outline}>Continue with Google</span>
       <p className="text-center text-xs text-muted-foreground">or use your email</p>
@@ -37,7 +38,7 @@ function SignInForm({ title, button }: { title: string; button: string }) {
       <div className="flex justify-between text-xs text-muted-foreground"><span>Password</span><span>Forgot your password?</span></div>
       <div className={field}>••••••••</div>
       <span className={primary}>{button}</span>
-    </Screen>
+    </GuideScreen>
   );
 }
 
@@ -46,43 +47,43 @@ function MockScreen({ mock }: { mock: GuideMock }) {
     case "client-invite-email":
     case "investor-invite-email":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="text-xs text-muted-foreground">From: Harmonious</p>
           <p className="font-heading font-semibold">{mock === "client-invite-email" ? "You're invited to your Harmonious portal" : "You're invited to invest"}</p>
           <p className="text-muted-foreground">{mock === "client-invite-email" ? "Choose your password to open your portal." : "Open your investment to get started."}</p>
           <span className={primary}>{mock === "client-invite-email" ? "Set your password" : "Begin onboarding"}</span>
-        </Screen>
+        </GuideScreen>
       );
     case "invite-page":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading text-lg font-semibold">Welcome</p>
           <p className="text-muted-foreground">You've been invited to Harmonious. Choose your password and we'll take you straight to your next step.</p>
           <span className={primary}>Set up my account</span>
           <p className="text-center text-xs text-muted-foreground">This personal link works once and expires 7 days after it was sent.</p>
-        </Screen>
+        </GuideScreen>
       );
     case "create-account":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading text-lg font-semibold">Create your account</p>
           <p className="text-xs text-muted-foreground">Use the email address your fund invitation was sent to.</p>
           <div className={field}>you@example.com</div>
           <div className={field}>Choose a password</div>
           <span className={primary}>Create account</span>
-        </Screen>
+        </GuideScreen>
       );
     case "confirm-email":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading font-semibold">Confirm your email</p>
           <p className="text-muted-foreground">Please confirm your email address to finish setting up your account.</p>
           <span className={primary}>Confirm email</span>
-        </Screen>
+        </GuideScreen>
       );
     case "protect":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading text-lg font-semibold">Protect your account</p>
           <p className="text-xs text-muted-foreground">Harmonious requires a second step at every sign-in.</p>
           <span className={outline}>Use an authenticator app</span>
@@ -91,30 +92,30 @@ function MockScreen({ mock }: { mock: GuideMock }) {
           </div>
           <div className={field}>6-digit code</div>
           <span className={primary}>Confirm</span>
-        </Screen>
+        </GuideScreen>
       );
     case "recovery-codes":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading font-semibold">Save your recovery codes</p>
           <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-3 font-mono text-xs text-muted-foreground">
             {["xxxx-xxxx", "xxxx-xxxx", "xxxx-xxxx", "xxxx-xxxx"].map((c, i) => <span key={i}>{c}</span>)}
           </div>
           <span className={primary}>I've saved them</span>
-        </Screen>
+        </GuideScreen>
       );
     case "platform-documents":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading font-semibold">Before you continue</p>
           {["Privacy Policy", "Terms of Service", "Fee schedule"].map((d) => <div key={d} className={field}>{d}</div>)}
           <p className="text-xs text-muted-foreground">☑ I have read and accept the documents above</p>
           <span className={primary}>I agree</span>
-        </Screen>
+        </GuideScreen>
       );
     case "journey":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading font-semibold">Your investment</p>
           <ol className="space-y-1.5">
             {["About You", "Verification", "Sign", "Fund"].map((s, i) => (
@@ -122,7 +123,7 @@ function MockScreen({ mock }: { mock: GuideMock }) {
             ))}
           </ol>
           <span className={primary}>Continue</span>
-        </Screen>
+        </GuideScreen>
       );
     case "client-sign-in":
       return <SignInForm title="Client sign in" button="Sign in to my portal" />;
@@ -130,33 +131,38 @@ function MockScreen({ mock }: { mock: GuideMock }) {
       return <SignInForm title="Investor sign in" button="Sign in to my investments" />;
     case "confirm-its-you":
       return (
-        <Screen>
+        <GuideScreen>
           <p className="font-heading text-lg font-semibold">Confirm it's you</p>
           <p className="text-xs text-muted-foreground">Complete your second sign-in step to continue.</p>
           <div className={field}>6-digit code from your app</div>
           <span className={primary}>Verify code</span>
           <p className="text-center text-xs text-muted-foreground">Lost access? Use a recovery code</p>
-        </Screen>
+        </GuideScreen>
       );
   }
 }
 
-function Step({ n, step }: { n: number; step: GuideStep }) {
+/** One numbered guide step: plain instructions, the exact on-screen labels and an optional example screen. */
+export function GuideStepSection({ n, title, paragraphs, labels, visual }: { n: number; title: string; paragraphs: string[]; labels: string[]; visual?: ReactNode }) {
   return (
     <section className="grid gap-5 border-t border-border pt-8 md:grid-cols-[1fr_minmax(0,20rem)]">
       <div className="space-y-3">
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground">{n}</span>
-          <h3 className="text-xl font-semibold text-foreground">{step.title}</h3>
+          <h3 className="text-xl font-semibold text-foreground">{title}</h3>
         </div>
-        {step.paragraphs.map((p, i) => <p key={i} className="text-base leading-relaxed text-muted-foreground">{p}</p>)}
+        {paragraphs.map((p, i) => <p key={i} className="text-base leading-relaxed text-muted-foreground">{p}</p>)}
         <p className="flex flex-wrap gap-2 pt-1">
-          {step.labels.map((l) => <span key={l} className="rounded-md border border-border bg-muted px-2 py-1 text-xs font-medium text-foreground">{l}</span>)}
+          {labels.map((l) => <span key={l} className="rounded-md border border-border bg-muted px-2 py-1 text-xs font-medium text-foreground">{l}</span>)}
         </p>
       </div>
-      {step.mock ? <MockScreen mock={step.mock} /> : null}
+      {visual ?? null}
     </section>
   );
+}
+
+function Step({ n, step }: { n: number; step: GuideStep }) {
+  return <GuideStepSection n={n} title={step.title} paragraphs={step.paragraphs} labels={step.labels} visual={step.mock ? <MockScreen mock={step.mock} /> : undefined} />;
 }
 
 /** Sign-in guide for clients or investors. Used by the public guide page and the help center. */

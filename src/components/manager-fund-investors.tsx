@@ -8,7 +8,8 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Link as LinkIcon, Plus, X } from "lucide-react";
+import { Download, Link as LinkIcon, Plus, X } from "lucide-react";
+import { ADD_INVESTOR_GUIDE_DOWNLOAD } from "@/lib/add-investor-guide-content";
 import { InvestorActionsMenu } from "@/components/investor-actions-menu";
 import { linkedInvestorRecords } from "@/lib/linked-investor-navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -201,6 +202,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
               <p className="font-medium">Share the fund link</p><p className="text-sm text-muted-foreground">Copy the onboarding link so investors can sign up themselves.</p>
             </button>
           </div>
+          <a href={ADD_INVESTOR_GUIDE_DOWNLOAD.href} download={ADD_INVESTOR_GUIDE_DOWNLOAD.filename} className="inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"><Download className="h-4 w-4" />Step-by-step guide (PDF)</a>
         </DialogContent>
       </Dialog>
 

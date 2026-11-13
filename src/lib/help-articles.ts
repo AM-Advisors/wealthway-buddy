@@ -51,7 +51,7 @@ export type HelpArticle = {
   updated: string;
   sections: HelpSection[];
   /** Rich guide component rendered instead of sections. */
-  guide?: "fund-manager-first-login" | "sign-operating-agreement" | "client-sign-in" | "investor-sign-in";
+  guide?: "fund-manager-first-login" | "sign-operating-agreement" | "client-sign-in" | "investor-sign-in" | "manager-add-investor";
   download?: { href: string; filename: string };
 };
 

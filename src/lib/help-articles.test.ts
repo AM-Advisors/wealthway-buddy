@@ -75,4 +75,11 @@ describe("self-service help articles", () => {
     expect(manager).toEqual(["client-sign-in"]);
     expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["investor"] }, new Map())).toHaveLength(0);
   });
+  it("shows the add-an-investor guide to fund managers only, and only once its new version is approved", () => {
+    const slug = "manager-invite-investors";
+    const manager = (approved: Map<string, number>) => articlesFor(HELP_CATALOG, { audience: "client", roles: ["fund_manager"] }, approved).map((a) => a.slug);
+    expect(manager(new Map([[slug, 2]]))).not.toContain(slug);
+    expect(manager(new Map([[slug, 3]]))).toContain(slug);
+    expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["investor"] }, new Map([[slug, 3]])).map((a) => a.slug)).not.toContain(slug);
+  });
 });

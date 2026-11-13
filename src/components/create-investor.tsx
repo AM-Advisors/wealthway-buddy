@@ -37,6 +37,8 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const [contactOn, setContactOn] = useState(false);
   const [mismatchPrompt, setMismatchPrompt] = useState<string | null>(null);
   const [mismatchConfirmed, setMismatchConfirmed] = useState(false);
+  // Set when saving was stopped by a possible existing match, so the "different person" choice is always offered.
+  const [matchBlocked, setMatchBlocked] = useState(false);
 
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) || null : null);
   const runSearch = async () => {
@@ -86,6 +88,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
     } catch (e) {
       const msg = (e as Error).message;
       if (msg.includes("Confirm who is investing")) { setMismatchPrompt(msg); setMismatchConfirmed(false); }
+      else if (msg.includes("confirm you are creating a separate person")) { setMatchBlocked(true); toast.error(msg); void runSearch(); }
       else toast.error(msg);
     } finally { setBusy(false); }
   };
@@ -131,10 +134,10 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         ) : null}
         <Button variant="outline" size="sm" onClick={runSearch}>Search existing investors</Button>
 
-        {matches ? (
+        {matches || matchBlocked ? (
           <div className="space-y-2 rounded-md border p-3">
-            {matches.length === 0 ? <p className="text-sm text-muted-foreground">No existing investor matches. Continue to create a new record.</p> : <p className="text-sm font-medium">Possible existing investors</p>}
-            {matches.map((m) => (
+            {!matches?.length ? <p className="text-sm text-muted-foreground">{matchBlocked ? "This may be someone already on Harmonious. If you're sure it's a different person, tick the box below and save again." : "No existing investor matches. Continue to create a new record."}</p> : <p className="text-sm font-medium">Possible existing investors</p>}
+            {(matches ?? []).map((m) => (
               <div key={m.personId} className="flex flex-wrap items-start justify-between gap-2 border-t pt-2 first:border-0 first:pt-0">
                 <div><p className="text-sm font-medium">{m.displayName}</p><p className="text-xs text-muted-foreground">{m.maskedEmail} · matched on {m.strength}{m.alreadyInFund ? " · already in this Fund" : ""}</p>
                   <div className="mt-1 flex flex-wrap gap-1">{m.profiles.map((p) => <Badge key={p.id} variant="secondary">{p.label}</Badge>)}</div></div>
@@ -144,8 +147,8 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
                 </div>
               </div>
             ))}
-            {matches.some((m) => m.strength === "email") ? (
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={confirmedNew} onChange={(e) => { setConfirmedNew(e.target.checked); if (e.target.checked) setChosen(null); }} />Create New - this is a different person</label>
+            {(matches?.length ?? 0) > 0 || matchBlocked ? (
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={confirmedNew} onChange={(e) => { setConfirmedNew(e.target.checked); if (e.target.checked) setChosen(null); }} />Create new: this is a different person</label>
             ) : null}
           </div>
         ) : null}
