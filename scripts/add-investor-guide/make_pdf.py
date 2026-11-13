@@ -9,22 +9,21 @@ F = "/tmp/ddq/fonts/"
 for n, f in [("RubikB", "Rubik-Bold.ttf"), ("RubikM", "Rubik-Medium.ttf"), ("Pop", "Poppins-Regular.ttf"), ("PopM", "Poppins-Medium.ttf"), ("PopL", "Poppins-Light.ttf")]:
     pdfmetrics.registerFont(TTFont(n, F + f))
 NAVY, TEAL, INK, SLATE, LINE, FILL, TEALBG = [HexColor(x) for x in ("#142647", "#5DC6D1", "#221F20", "#415B81", "#D5DCE6", "#F6F8FB", "#E8F6F8")]
-D = json.load(open("/tmp/aig/content.json")); G = D["guide"]; SUPPORT = D["support"]
+D = json.load(open("/tmp/aig/content.json")); SUPPORT = D["support"]; G = None
 W, H = letter; M = 54; CW = W - 2 * M; TOP = H - 72; BOTTOM = 56
 BODY, LEAD = 10.5, 15
-NAME = "Harmonious-Add-an-Investor-Guide.pdf"
 
-def build(path, total):
+def build(path, total, short):
     c = canvas.Canvas(path, pagesize=letter); st = {"page": 0, "y": 0}
     c.setTitle(G["title"]); c.setAuthor("Harmonious"); c.setSubject("Fund manager guide")
     def chrome():
         st["page"] += 1
         c.setFont("Pop", 7.5); c.setFillColor(SLATE)
-        c.drawString(M, 32, f"Harmonious · Adding an investor · Help: {SUPPORT}")
+        c.drawString(M, 32, f"Harmonious · {short} · Help: {SUPPORT}")
         c.drawRightString(W - M, 32, f"Page {st['page']} of {total}")
         if st["page"] > 1:
             c.drawImage(ImageReader("/tmp/ddq/logo-navy.png"), M, H - 46, width=90, height=90 * 449 / 1917, mask="auto")
-            c.setFont("Pop", 8); c.drawRightString(W - M, H - 40, "Fund manager guide · Adding an investor")
+            c.setFont("Pop", 8); c.drawRightString(W - M, H - 40, f"Fund manager guide · {short}")
             c.setStrokeColor(TEAL); c.setLineWidth(1.2); c.line(M, H - 54, W - M, H - 54)
         st["y"] = TOP
     def new(): c.showPage(); chrome()
@@ -34,13 +33,14 @@ def build(path, total):
         c.setFont(font, size); c.setFillColor(color)
         for l in lines: c.drawString(x, st["y"], l); st["y"] -= lead
     chrome()
-    bh = 228; c.setFillColor(NAVY); c.rect(0, H - bh, W, bh, stroke=0, fill=1)
+    intro = simpleSplit(G["intro"], "PopL", 11, CW)
+    bh = max(228, int(176 + len(intro) * 15.5 + 14)); c.setFillColor(NAVY); c.rect(0, H - bh, W, bh, stroke=0, fill=1)
     c.setFillColor(TEAL); c.rect(0, H - bh - 4, W, 4, stroke=0, fill=1)
     c.drawImage(ImageReader("/tmp/ddq/logo-white.png"), M, H - 78, width=140, height=140 * 449 / 1917, mask="auto")
     c.setFillColor(TEAL); c.setFont("PopM", 10); c.drawString(M, H - 118, G["eyebrow"].upper())
     c.setFillColor(white); c.setFont("RubikB", 28); c.drawString(M, H - 152, G["title"])
     st["y"] = H - 176
-    text(simpleSplit(G["intro"], "PopL", 11, CW), M, "PopL", 11, 15.5, HexColor("#D3DEEB"))
+    text(intro, M, "PopL", 11, 15.5, HexColor("#D3DEEB"))
     st["y"] = H - bh - 28
     c.setFillColor(TEALBG); c.roundRect(M, st["y"] - 30, CW, 44, 8, stroke=0, fill=1)
     c.setFillColor(SLATE); c.setFont("PopM", 8.5); c.drawString(M + 16, st["y"] - 1, "WHERE TO FIND IT")
@@ -91,16 +91,15 @@ def build(path, total):
         text(l, M + 32, "Pop", BODY, LEAD, INK); st["y"] -= 3
     st["y"] -= 18
 
-    heading("Add one investor", step_h(G["steps"][0]))
-    for i, s in enumerate(G["steps"], 1): step(i, s)
-    heading("What happens next", step_h(G["after"][0]))
-    for i, s in enumerate(G["after"], 1): step(i, s)
+    for grp in G["groups"]:
+        heading(grp["heading"], step_h(grp["steps"][0]))
+        for i, s in enumerate(grp["steps"], 1): step(i, s)
 
     def opt_h(o):
         return 22 + len(simpleSplit(o["body"], "Pop", BODY, CW - 28)) * LEAD + 12 + chip_rows(o["labels"], CW - 28) * 20 + 10
-    heading("Other ways to add investors", 30 + opt_h(G["otherWays"][0]))
-    text(["All of these are in the same Add investors window."], M, "Pop", BODY, LEAD, SLATE); st["y"] -= 8
-    for o in G["otherWays"]:
+    heading(G["cards"]["heading"], 30 + opt_h(G["cards"]["items"][0]))
+    text([G["cards"]["intro"]], M, "Pop", BODY, LEAD, SLATE); st["y"] -= 8
+    for o in G["cards"]["items"]:
         h = opt_h(o); need(h + 8)
         c.setFillColor(white); c.setStrokeColor(LINE); c.setLineWidth(0.8); c.roundRect(M, st["y"] - h, CW, h, 8, stroke=1, fill=1)
         top = st["y"]; st["y"] -= 18
@@ -128,4 +127,6 @@ def build(path, total):
     c.setFillColor(TEAL); c.setFont("PopM", 11); c.drawString(M + 16, st["y"] - 2, SUPPORT)
     c.showPage(); c.save(); return st["page"]
 
-n = build("/tmp/aig/count.pdf", 0); build(f"/tmp/aig/{NAME}", n); print(NAME, n)
+for key, name, short in [("individual", "Harmonious-Add-an-Investor-Guide.pdf", "Adding an investor"), ("entity", "Harmonious-Add-a-Fund-or-Family-Office-Guide.pdf", "Adding a fund or family office")]:
+    G = D["guides"][key]
+    n = build("/tmp/aig/count.pdf", 0, short); build(f"/tmp/aig/{name}", n, short); print(name, n)

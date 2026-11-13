@@ -151,7 +151,7 @@ export function HelpArticlePage({ ops, slug }: { ops: boolean; slug: string }) {
           </div>
         ) : null}
       </div>
-      {a.guide === "fund-manager-first-login" ? <FundManagerFirstLoginGuide /> : a.guide === "sign-operating-agreement" ? <SignOperatingAgreementGuide /> : a.guide === "client-sign-in" ? <SignInGuide audience="client" /> : a.guide === "investor-sign-in" ? <SignInGuide audience="investor" /> : a.guide === "manager-add-investor" ? <AddInvestorGuide /> : (
+      {a.guide === "fund-manager-first-login" ? <FundManagerFirstLoginGuide /> : a.guide === "sign-operating-agreement" ? <SignOperatingAgreementGuide /> : a.guide === "client-sign-in" ? <SignInGuide audience="client" /> : a.guide === "investor-sign-in" ? <SignInGuide audience="investor" /> : a.guide === "manager-add-investor" ? <AddInvestorGuide /> : a.guide === "manager-add-entity-investor" ? <AddInvestorGuide variant="entity" /> : (
         <article className="mx-auto max-w-3xl space-y-6 px-4 pb-10 md:px-8">
           <h1 className="text-2xl font-semibold text-foreground">{a.title}</h1>
           <p className="text-muted-foreground">{a.summary}</p>

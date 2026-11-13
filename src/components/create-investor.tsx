@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { createInvestorFn, searchInvestorsFn } from "@/lib/investor-record.functions";
-import { ENTITY_TYPES, PROFILE_TYPES, PROFILE_TYPE_LABELS, PAPERWORK_CONTACT_RELATIONSHIPS, PAPERWORK_CONTACT_LABELS, validateQuickAdd, type SafeMatch } from "@/lib/investor-record-model";
+import { ENTITY_TYPES, ENTITY_TYPE_LABELS, PROFILE_TYPES, PROFILE_TYPE_LABELS, PAPERWORK_CONTACT_RELATIONSHIPS, PAPERWORK_CONTACT_LABELS, validateQuickAdd, type SafeMatch } from "@/lib/investor-record-model";
 import { prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -172,7 +172,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
               {field("mailing", "Mailing address (if different)")}
             </div> : null}
             {section === "Investment Profile" ? <div className="grid gap-3 sm:grid-cols-2">
-              {type === "entity" ? <div className="space-y-1"><Label>Entity type</Label><Select value={f['entityType'] ?? ""} onValueChange={set("entityType")}><SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger><SelectContent>{ENTITY_TYPES.map((t) => <SelectItem key={t} value={t}>{prettyStatus(t)}</SelectItem>)}</SelectContent></Select></div> : null}
+              {type === "entity" ? <div className="space-y-1"><Label>Entity type</Label><Select value={f['entityType'] ?? ""} onValueChange={set("entityType")}><SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger><SelectContent>{ENTITY_TYPES.map((t) => <SelectItem key={t} value={t}>{ENTITY_TYPE_LABELS[t]}</SelectItem>)}</SelectContent></Select></div> : null}
               {type === "entity" || type === "trust" ? field("jurisdiction", "Jurisdiction") : null}
               {type === "trust" ? field("trustType", "Trust type") : null}
               {type === "ira" ? <>{field("custodianName", "Custodian")}{field("custodianAccountRef", "Custodian account reference (last 4 only)", { maxLength: 4 })}</> : null}

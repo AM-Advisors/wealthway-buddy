@@ -23,6 +23,7 @@ export const PROFILE_TYPE_LABELS: Record<ProfileType, string> = {
 };
 export function isProfileType(v: unknown): v is ProfileType { return PROFILE_TYPES.includes(v as ProfileType); }
 export const ENTITY_TYPES = ["llc", "corporation", "partnership", "family_office", "foundation", "other_entity"] as const;
+export const ENTITY_TYPE_LABELS: Record<(typeof ENTITY_TYPES)[number], string> = { llc: "LLC", corporation: "Corporation", partnership: "Partnership", family_office: "Family office", foundation: "Foundation", other_entity: "Other entity" };
 /** Map the entry form's profile group onto the canonical investment_profile_type. */
 export function dbProfileType(type: ProfileType, sub?: string | null): string {
   if (type === "entity") return (ENTITY_TYPES as readonly string[]).includes(String(sub)) ? String(sub) : "other_entity";

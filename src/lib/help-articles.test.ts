@@ -82,4 +82,11 @@ describe("self-service help articles", () => {
     expect(manager(new Map([[slug, 3]]))).toContain(slug);
     expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["investor"] }, new Map([[slug, 3]])).map((a) => a.slug)).not.toContain(slug);
   });
+  it("shows the fund or family office guide to fund managers only, once approved", () => {
+    const slug = "manager-add-entity-investor";
+    const list = (roles: string[], approved: Map<string, number>) => articlesFor(HELP_CATALOG, { audience: "client", roles }, approved).map((a) => a.slug);
+    expect(list(["fund_manager"], new Map())).not.toContain(slug);
+    expect(list(["fund_manager"], new Map([[slug, 1]]))).toContain(slug);
+    expect(list(["investor"], new Map([[slug, 1]]))).not.toContain(slug);
+  });
 });

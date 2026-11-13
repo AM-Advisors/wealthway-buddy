@@ -2,7 +2,7 @@ import { Download, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GuideScreen, GuideStepSection } from "@/components/help/guide-sign-in";
-import { ADD_INVESTOR_GUIDE, ADD_INVESTOR_GUIDE_DOWNLOAD, type AddInvestorMock } from "@/lib/add-investor-guide-content";
+import { ADD_ENTITY_INVESTOR_GUIDE, ADD_ENTITY_INVESTOR_GUIDE_DOWNLOAD, ADD_INVESTOR_GUIDE, ADD_INVESTOR_GUIDE_DOWNLOAD, type AddInvestorMock } from "@/lib/add-investor-guide-content";
 import { SUPPORT_EMAIL } from "@/lib/sign-in-guide-content";
 
 const field = "rounded-md border border-border bg-background px-3 py-2 text-muted-foreground";
@@ -111,12 +111,63 @@ function MockScreen({ mock }: { mock: AddInvestorMock }) {
           </div>
         </GuideScreen>
       );
+    case "entity-form":
+      return (
+        <GuideScreen>
+          <p className="font-heading font-semibold">Create New Investor</p>
+          <div className="flex gap-2"><span className={`${outline} w-auto`}>Individual</span><span className={`${primary} w-auto`}>Business / organization</span></div>
+          <div className="grid grid-cols-2 gap-2"><div className={field}>Contact first name</div><div className={field}>Contact last name</div></div>
+          <div className={field}>Contact email</div>
+          <div className={field}>Sample Family Office LLC</div>
+        </GuideScreen>
+      );
+    case "entity-details":
+      return (
+        <GuideScreen>
+          <p className="text-sm font-medium text-primary">Hide full investor details</p>
+          <div className="flex flex-wrap gap-1 text-xs">{["Contact", "Investment Profile", "Entity / Ownership"].map((t, i) => <span key={t} className={`${chip} ${i === 1 ? "bg-primary text-primary-foreground" : ""}`}>{t}</span>)}</div>
+          <p className="text-xs text-muted-foreground">Entity type</p>
+          <div className={field}>Family office ▾</div>
+          <div className="grid grid-cols-2 gap-2"><div className={field}>Jurisdiction</div><div className={field}>EIN / Tax ID</div></div>
+        </GuideScreen>
+      );
+    case "completed-by":
+      return (
+        <GuideScreen>
+          <p className="font-medium">Completed by</p>
+          <p className="text-xs text-muted-foreground">Prepared by: Alex Analyst · Signs: Pat Principal (Managing Member)</p>
+          <div className="flex gap-2"><span className={`${primary} w-auto`}>Prepares details</span><span className={`${outline} w-auto`}>Signs</span></div>
+          <div className="grid grid-cols-2 gap-2"><div className={field}>Full name</div><div className={field}>Email</div></div>
+          <span className={primary}>Assign and email</span>
+        </GuideScreen>
+      );
+    case "people-panel":
+      return (
+        <GuideScreen>
+          <p className="font-medium">People on this investment</p>
+          <div className="grid grid-cols-2 gap-2"><div className={field}>First name</div><div className={field}>Last name</div></div>
+          <div className="grid grid-cols-2 gap-2"><div className={field}>Email</div><div className={field}>Beneficial owner ▾</div></div>
+          <p className="text-xs">☑ Email them an identity check (ID + selfie)</p>
+          <p className="text-xs text-muted-foreground">☐ Make them the signer and send them the signature page</p>
+          <span className={primary}>Add person</span>
+        </GuideScreen>
+      );
+    case "contacts-panel":
+      return (
+        <GuideScreen>
+          <p className="font-medium">Points of contact</p>
+          <p className="text-xs text-muted-foreground">Sam Sample · sam@example.com · Controller · active</p>
+          <div className="grid grid-cols-2 gap-2"><div className={field}>Full name</div><div className={field}>Email</div></div>
+          <span className={primary}>Add and email view link</span>
+        </GuideScreen>
+      );
   }
 }
 
 /** Fund manager guide to adding an investor. Rendered in the help center; the PDF uses the same content. */
-export function AddInvestorGuide() {
-  const g = ADD_INVESTOR_GUIDE;
+export function AddInvestorGuide({ variant = "individual" }: { variant?: "individual" | "entity" }) {
+  const g = variant === "entity" ? ADD_ENTITY_INVESTOR_GUIDE : ADD_INVESTOR_GUIDE;
+  const pdf = variant === "entity" ? ADD_ENTITY_INVESTOR_GUIDE_DOWNLOAD : ADD_INVESTOR_GUIDE_DOWNLOAD;
   return (
     <main className="bg-background">
       <div className="mx-auto max-w-4xl space-y-10 px-5 py-12">
@@ -125,7 +176,7 @@ export function AddInvestorGuide() {
           <h1 className="text-3xl font-bold text-foreground md:text-4xl">{g.title}</h1>
           <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">{g.intro}</p>
           <p className="text-base text-muted-foreground">Where to find it: <strong className="text-foreground">{g.where}</strong></p>
-          <Button asChild size="lg" variant="outline"><a href={ADD_INVESTOR_GUIDE_DOWNLOAD.href} download={ADD_INVESTOR_GUIDE_DOWNLOAD.filename}><Download className="mr-2 h-4 w-4" />Download printable guide</a></Button>
+          <Button asChild size="lg" variant="outline"><a href={pdf.href} download={pdf.filename}><Download className="mr-2 h-4 w-4" />Download printable guide</a></Button>
         </header>
 
         <section className="space-y-3 rounded-lg border border-border bg-muted/40 p-5">
@@ -133,21 +184,18 @@ export function AddInvestorGuide() {
           <ul className="list-disc space-y-1 pl-5 text-base text-muted-foreground">{g.before.map((b) => <li key={b}>{b}</li>)}</ul>
         </section>
 
-        <div className="space-y-8">
-          <h2 className="text-2xl font-semibold text-foreground">Add one investor</h2>
-          {g.steps.map((s, i) => <GuideStepSection key={s.title} n={i + 1} title={s.title} paragraphs={s.paragraphs} labels={s.labels} visual={s.mock ? <MockScreen mock={s.mock} /> : undefined} />)}
-        </div>
-
-        <div className="space-y-8">
-          <h2 className="text-2xl font-semibold text-foreground">What happens next</h2>
-          {g.after.map((s, i) => <GuideStepSection key={s.title} n={i + 1} title={s.title} paragraphs={s.paragraphs} labels={s.labels} visual={s.mock ? <MockScreen mock={s.mock} /> : undefined} />)}
-        </div>
+        {g.groups.map((grp) => (
+          <div key={grp.heading} className="space-y-8">
+            <h2 className="text-2xl font-semibold text-foreground">{grp.heading}</h2>
+            {grp.steps.map((st, i) => <GuideStepSection key={st.title} n={i + 1} title={st.title} paragraphs={st.paragraphs} labels={st.labels} visual={st.mock ? <MockScreen mock={st.mock} /> : undefined} />)}
+          </div>
+        ))}
 
         <div className="space-y-4 border-t border-border pt-8">
-          <h2 className="text-2xl font-semibold text-foreground">Other ways to add investors</h2>
-          <p className="text-base text-muted-foreground">All of these are in the same Add investors window.</p>
+          <h2 className="text-2xl font-semibold text-foreground">{g.cards.heading}</h2>
+          <p className="text-base text-muted-foreground">{g.cards.intro}</p>
           <div className="grid gap-4 md:grid-cols-2">
-            {g.otherWays.map((o) => (
+            {g.cards.items.map((o) => (
               <div key={o.title} className="space-y-2 rounded-lg border border-border p-4">
                 <h3 className="text-lg font-semibold text-foreground">{o.title}</h3>
                 <p className="text-base leading-relaxed text-muted-foreground">{o.body}</p>
