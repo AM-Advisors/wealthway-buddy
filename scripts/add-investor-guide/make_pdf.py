@@ -1,4 +1,4 @@
-import json
+import json, os, sys
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.colors import HexColor, white
@@ -9,7 +9,8 @@ F = "/tmp/ddq/fonts/"
 for n, f in [("RubikB", "Rubik-Bold.ttf"), ("RubikM", "Rubik-Medium.ttf"), ("Pop", "Poppins-Regular.ttf"), ("PopM", "Poppins-Medium.ttf"), ("PopL", "Poppins-Light.ttf")]:
     pdfmetrics.registerFont(TTFont(n, F + f))
 NAVY, TEAL, INK, SLATE, LINE, FILL, TEALBG = [HexColor(x) for x in ("#142647", "#5DC6D1", "#221F20", "#415B81", "#D5DCE6", "#F6F8FB", "#E8F6F8")]
-D = json.load(open("/tmp/aig/content.json")); SUPPORT = D["support"]; G = None
+SRC = sys.argv[1] if len(sys.argv) > 1 else "/tmp/aig/content.json"; OUT = os.path.dirname(SRC)
+D = json.load(open(SRC)); SUPPORT = D["support"]; G = None
 W, H = letter; M = 54; CW = W - 2 * M; TOP = H - 72; BOTTOM = 56
 BODY, LEAD = 10.5, 15
 
@@ -60,6 +61,7 @@ def build(path, total, short):
             c.setFillColor(NAVY); c.setFont("PopM", 8.5); c.drawString(cx + 8, cy, l); cx += w + 6
         st["y"] = cy - 22
     def chip_rows(labels, maxw):
+        if not labels: return 0
         rows, cx = 1, 0
         for l in labels:
             w = pdfmetrics.stringWidth(l, "PopM", 8.5) + 22
@@ -68,7 +70,7 @@ def build(path, total, short):
         return rows
     def step_h(s):
         tw = CW - 36
-        return 32 + sum(len(simpleSplit(p, "Pop", BODY, tw)) * LEAD + 6 for p in s["paragraphs"]) + 14 + chip_rows(s["labels"], tw) * 20 + 6
+        return 32 + sum(len(simpleSplit(p, "Pop", BODY, tw)) * LEAD + 6 for p in s["paragraphs"]) + (14 + chip_rows(s["labels"], tw) * 20 if s["labels"] else -6) + 6
     def step(n, s):
         tx = M + 36; tw = CW - 36
         paras = [simpleSplit(p, "Pop", BODY, tw) for p in s["paragraphs"]]
@@ -77,8 +79,10 @@ def build(path, total, short):
         c.setFillColor(white); c.setFont("RubikB", 11); c.drawCentredString(M + 12, st["y"] - 12, str(n))
         c.setFillColor(NAVY); c.setFont("RubikM", 13); c.drawString(tx, st["y"] - 13, s["title"]); st["y"] -= 32
         for p in paras: text(p, tx, "Pop", BODY, LEAD, INK); st["y"] -= 6
-        c.setFont("PopM", 7.5); c.setFillColor(SLATE); c.drawString(tx, st["y"], "ON SCREEN"); st["y"] -= 14
-        chips(s["labels"], tx, tw); st["y"] -= 4
+        if s["labels"]:
+            c.setFont("PopM", 7.5); c.setFillColor(SLATE); c.drawString(tx, st["y"], "ON SCREEN"); st["y"] -= 14
+            chips(s["labels"], tx, tw)
+        st["y"] -= 4
 
     # Before you start
     lines = [simpleSplit(b, "Pop", BODY, CW - 50) for b in G["before"]]
@@ -105,7 +109,7 @@ def build(path, total, short):
         top = st["y"]; st["y"] -= 18
         c.setFillColor(NAVY); c.setFont("RubikM", 12); c.drawString(M + 14, st["y"], o["title"]); st["y"] -= 17
         text(simpleSplit(o["body"], "Pop", BODY, CW - 28), M + 14, "Pop", BODY, LEAD, INK); st["y"] -= 6
-        chips(o["labels"], M + 14, CW - 28)
+        if o["labels"]: chips(o["labels"], M + 14, CW - 28)
         st["y"] = top - h - 10
 
     st["y"] -= 6
@@ -127,6 +131,7 @@ def build(path, total, short):
     c.setFillColor(TEAL); c.setFont("PopM", 11); c.drawString(M + 16, st["y"] - 2, SUPPORT)
     c.showPage(); c.save(); return st["page"]
 
-for key, name, short in [("individual", "Harmonious-Add-an-Investor-Guide.pdf", "Adding an investor"), ("entity", "Harmonious-Add-a-Fund-or-Family-Office-Guide.pdf", "Adding a fund or family office")]:
+OUTPUTS = D.get("outputs") or [["individual", "Harmonious-Add-an-Investor-Guide.pdf", "Adding an investor"], ["entity", "Harmonious-Add-a-Fund-or-Family-Office-Guide.pdf", "Adding a fund or family office"]]
+for key, name, short in OUTPUTS:
     G = D["guides"][key]
-    n = build("/tmp/aig/count.pdf", 0, short); build(f"/tmp/aig/{name}", n, short); print(name, n)
+    n = build(f"{OUT}/count.pdf", 0, short); build(f"{OUT}/{name}", n, short); print(name, n)
