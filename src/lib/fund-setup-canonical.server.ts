@@ -101,7 +101,9 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
   const docSetup = await listSetupDocuments(userId, offeringId);
   const seriesMaster = await loadSeriesMaster(o);
   const check = await requestSetupCheck(offeringId, o, setup, current, classes, hasEin, bankRows.length > 0, seriesMaster?.jurisdiction ?? null);
+  const documentNeeds = await (await import("@/lib/document-setup-needs.server")).fundDocumentSetupNeeds(offeringId);
   const statuses = sectionStatuses({
+    documentNeeds: documentNeeds.map((n) => n.label),
     questionsNext: check.questions.next,
     documentsStatus: docSetup.status,
     fundType: o.fund_type,
@@ -150,6 +152,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       formationDate: o.date_formed,
       registeredAgent: o.registered_agent,
       principalAddress: o.principal_address,
+      contactPhone: (o.contact_phone ?? null) as string | null,
       taxClassification: o.tax_classification,
       regType: o.reg_type,
       targetRaiseCents: o.target_raise_cents,
@@ -169,6 +172,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       ? { id: setup.id, fiscalYearEnd: setup.fiscal_year_end, fundTermMonths: setup.fund_term_months, investmentPeriodMonths: setup.investment_period_months }
       : null,
     termApplies: termApplies(o.fund_type),
+    documentNeeds,
     requestCheck: check,
     economics: {
       canApprove: true,
@@ -207,6 +211,7 @@ const OFFERING_FIELDS: Record<string, string> = {
   formationDate: "date_formed",
   registeredAgent: "registered_agent",
   principalAddress: "principal_address",
+  contactPhone: "contact_phone",
   taxClassification: "tax_classification",
   regType: "reg_type",
   targetRaiseCents: "target_raise_cents",

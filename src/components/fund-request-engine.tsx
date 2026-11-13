@@ -368,7 +368,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                 <F label={r.kind === "real_estate" ? "Promote" : "Carried interest / promote"}><Fee value={r.carried_interest} onChange={(v) => set("carried_interest", v)} /></F>
                 <F label="Preferred return"><Pick value={r.preferred_return} onChange={(v) => set("preferred_return", v)} options={CLASS_TERM_OPTIONS.hurdle} /></F>
                 <F label="GP commitment"><Money value={r.gp_commitment} onChange={(v) => set("gp_commitment", v)} /></F>
-                {!spv && <F label="Fund term"><Input value={r.fund_term} onChange={(e) => set("fund_term", e.target.value)} placeholder="e.g. 10 years" /></F>}
+                <F label={spv ? "Fund term (if your documents set one)" : "Fund term"}><Input value={r.fund_term} onChange={(e) => set("fund_term", e.target.value)} placeholder={spv ? "e.g. 7 years" : "e.g. 10 years"} /></F>
                 {!spv && <F label="Investment period"><Input value={r.investment_period} onChange={(e) => set("investment_period", e.target.value)} placeholder="e.g. 3 years" /></F>}
               </Grid>
             )}

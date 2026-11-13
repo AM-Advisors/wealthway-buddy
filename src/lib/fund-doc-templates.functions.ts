@@ -62,6 +62,10 @@ export const removeFundTemplateDocumentFn = createServerFn({ method: "POST" }).m
   .validator((d) => z.object({ offeringId: uuid, documentId: uuid, reason: z.string().max(500).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await eng()).removeFundTemplateDocument(context.userId, data));
 
+export const refillTemplateDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ offeringId: uuid, documentId: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).refillTemplateDocument(context.userId, data));
+
 export const fundTemplateDocumentUrlFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ offeringId: uuid, versionId: uuid }).parse(d))
   .handler(async ({ data, context }) => (await eng()).fundTemplateDocumentUrl(context.userId, data));

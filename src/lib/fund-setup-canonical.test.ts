@@ -36,6 +36,11 @@ describe("fund setup canonical rules", () => {
     const vc = sectionStatuses({ ...base, fundType: "Venture capital", legalName: "A LP", gpName: "GP", signatoryPersonId: "p", signatoryTitle: "MM", fiscalYearEnd: "12-31" });
     expect(vc.fund_details.status).toBe("in_progress");
   });
+  it("asks an SPV for its fund term when one of its documents needs it", () => {
+    const s = sectionStatuses({ ...base, legalName: "A LLC", gpName: "GP", signatoryPersonId: "p", signatoryTitle: "MM", fiscalYearEnd: "12-31", documentNeeds: ["Fund term"] });
+    expect(s.fund_details.status).toBe("in_progress");
+    expect(s.fund_details.next).toBe("Add the fund term: a fund document needs it");
+  });
   it("requires a Fund Signatory for Fund Details to complete", () => {
     const s = sectionStatuses({ ...base, legalName: "A LLC", gpName: "GP", fiscalYearEnd: "12-31" });
     expect(s.fund_details.next).toMatch(/Signatory/);

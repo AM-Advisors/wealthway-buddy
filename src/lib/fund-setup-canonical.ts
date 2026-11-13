@@ -303,6 +303,8 @@ export type SetupFacts = {
   adminConfigured: boolean;
   /** Pending additional investor questions (from questionsStatus); a draft keeps Offering Documents open. */
   questionsNext?: string | null;
+  /** Fund details a fund document still needs (document-setup-needs); each keeps Fund details open. */
+  documentNeeds?: string[];
 };
 
 type Result = { status: SectionStatus; next: string | null };
@@ -324,6 +326,7 @@ export function sectionStatuses(f: SetupFacts): Record<CanonicalSection, Result>
     [!!f.signatoryPersonId && !!f.signatoryTitle, "Choose the Fund Signatory and title"],
     [!!f.fiscalYearEnd, "Set the fiscal year end"],
     ...(term ? ([[f.fundTermMonths != null, "Set the Fund Term"], [f.investmentPeriodMonths != null, "Set the Investment Period"]] as [boolean, string][]) : []),
+    ...(f.documentNeeds ?? []).map((label) => [false, `Add the ${label.toLowerCase()}: a fund document needs it`] as [boolean, string]),
   ]);
   const entity = tally([
     [!!f.entityType, "Choose the entity type"],

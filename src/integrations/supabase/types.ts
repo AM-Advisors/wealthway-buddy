@@ -36582,6 +36582,7 @@ export type Database = {
           consolidated_by: string | null
           consolidated_into: string | null
           consolidation_reason: string | null
+          contact_phone: string | null
           countersign_timing: string
           created_at: string
           date_formed: string | null
@@ -36671,6 +36672,7 @@ export type Database = {
           consolidated_by?: string | null
           consolidated_into?: string | null
           consolidation_reason?: string | null
+          contact_phone?: string | null
           countersign_timing?: string
           created_at?: string
           date_formed?: string | null
@@ -36760,6 +36762,7 @@ export type Database = {
           consolidated_by?: string | null
           consolidated_into?: string | null
           consolidation_reason?: string | null
+          contact_phone?: string | null
           countersign_timing?: string
           created_at?: string
           date_formed?: string | null

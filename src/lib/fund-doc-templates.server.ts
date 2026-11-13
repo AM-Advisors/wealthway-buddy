@@ -262,7 +262,8 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   const manager = o.gp_entity_name || o.signatory_entity_name || c?.legal_name || c?.name || null;
   const signer = fullName(sig);
   const email = sig?.email || c?.primary_contact_email || null;
-  const phone = sig?.phone ? formatPhone(String(sig.phone)) : null;
+  // The fund's own phone number from setup comes first; the signatory's phone is the fallback.
+  const phone = o.contact_phone ? formatPhone(String(o.contact_phone)) : sig?.phone ? formatPhone(String(sig.phone)) : null;
   const { COMPANY } = await import("@/lib/company-details");
   const specialEntities = [...new Set([o.signatory_entity_name, o.gp_entity_name, c?.legal_name].filter((x): x is string => !!x && !!String(x).trim()))].join(", ") || null;
   const v: Record<string, string | null> = {
@@ -279,7 +280,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
     "Management Fee Basis": fee?.management_fee_basis ?? null, "Hurdle Percent": pct(fee?.hurdle_pct), "Preferred Return": pct(fee?.hurdle_pct),
     "address": o.principal_address, "Manager Address": o.principal_address, "Principal Office Address": o.principal_address, "email": email, "Manager Email": email,
-    "phone": phone, "Manager Phone": phone, "Tel": phone, "Telephone": phone,
+    "phone": phone, "Manager Phone": phone, "Fund Phone": phone, "Tel": phone, "Telephone": phone,
     "Address Line 1": ap.addressLine1, "Address Line 2": ap.addressLine2, "Address City": ap.addressCity, "Address State": ap.addressState, "Address ZIP": ap.addressZip,
     "Signatory's Legal Name": signer, "Fund Manager Signatory": signer, "Fund Manager Signatory Name": signer,
     "Signatory's Title": o.signatory_title, "Signatory Title": o.signatory_title, "Fund Manager Signatory Title": o.signatory_title,
@@ -365,6 +366,39 @@ export async function removeFundTemplateDocument(userId: string, input: { offeri
   if (error) throw new Error(error.message);
   await db().from("offering_document_events").insert({ offering_id: input.offeringId, offering_document_id: d.id, version: null, event: "document_removed", actor_user_id: userId, detail: { title: d.title, reason: input.reason || null } });
   return { ok: true };
+}
+
+/**
+ * Fills a template document again from the fund's current setup details, as a NEW version of the same
+ * document. Earlier versions, approvals and signed copies are untouched; the new version goes through the
+ * normal review and is only put into use by an explicit activation.
+ */
+export async function refillTemplateDocument(userId: string, input: { offeringId: string; documentId: string }) {
+  const actor = await (await import("./fund-document-generation-access.server")).assertFundDocumentGeneration(userId, input.offeringId);
+  const { data: d } = await db().from("offering_documents").select("id, offering_id, title, document_category, removed_at").eq("id", input.documentId).maybeSingle();
+  if (!d || d.removed_at || d.offering_id !== input.offeringId) throw new Error("That document was not found on this fund.");
+  const { data: use } = await db().from("document_template_uses").select("template_id, template_version").eq("offering_document_id", d.id).order("used_at", { ascending: false }).limit(1).maybeSingle();
+  if (!use) throw new Error("This document wasn't made from a Harmonious template, so it can't be filled in again. Upload a corrected version instead.");
+  const { data: t } = await db().from("document_templates").select("id, title, category, archived_at").eq("id", use.template_id).maybeSingle();
+  if (!t || t.archived_at) throw new Error("The template for this document is no longer available.");
+  const { data: v } = await db().from("document_template_versions").select("id, version, status, file_path, file_name").eq("template_id", t.id).eq("version", use.template_version).maybeSingle();
+  if (!v || v.status !== "approved") throw new Error("The template version for this document is no longer approved.");
+  if (!/\.docx$/i.test(v.file_name)) throw new Error("Only Word templates can be filled in again.");
+  await (await import("./sealed-records.server")).assertUnsealedVersion(db(), "document_template_versions", v.id);
+  const { data: blob, error: dErr } = await supabaseAdmin.storage.from(BUCKET).download(v.file_path);
+  if (dErr || !blob) throw new Error("Could not read the template.");
+  const { fillDocx } = await import("@/lib/docx-autofill");
+  const r = await fillDocx(new Uint8Array(await blob.arrayBuffer()), await fundTemplateValues(input.offeringId));
+  const dest = `${input.offeringId}/templates/${t.id}-v${v.version}-${Date.now()}-${safe(v.file_name)}`;
+  const { error } = await supabaseAdmin.storage.from(BUCKET).upload(dest, r.bytes, { contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", upsert: false });
+  if (error) throw new Error(`Could not save the filled document: ${error.message}`);
+  const { version } = await uploadDocumentVersion(userId, { documentId: d.id, filePath: dest, fileName: v.file_name, fileSizeBytes: r.bytes.length, selfServeGenerated: !actor.isStaff, generationIssues: r.open });
+  const { error: provenanceError } = await db().from("document_template_uses").insert({ template_id: t.id, template_version: v.version, offering_id: input.offeringId, offering_document_id: d.id, fund_version: version, used_by: userId });
+  if (provenanceError) throw new Error(provenanceError.message);
+  const category = (String(d.document_category ?? t.category) in DOCUMENT_CATEGORY_LABELS ? String(d.document_category ?? t.category) : "other") as DocumentCategory;
+  await autoSigningSetup(userId, { documentId: d.id, version, category, title: String(d.title ?? t.title ?? ""), offeringId: input.offeringId });
+  await db().from("offering_document_events").insert({ offering_id: input.offeringId, offering_document_id: d.id, version, event: "template_refilled", actor_user_id: userId, detail: { template_id: t.id, template_version: v.version, still_open: r.open } });
+  return { version, filled: r.filled, open: r.open };
 }
 
 /** Short-lived link to read a template document on this fund. */

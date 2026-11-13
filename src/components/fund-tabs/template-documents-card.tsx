@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { fundTemplateDocumentUrlFn, listFundTemplateDocumentsFn, removeFundTemplateDocumentFn, reviewGeneratedDocumentFn } from "@/lib/fund-doc-templates.functions";
+import { fundTemplateDocumentUrlFn, listFundTemplateDocumentsFn, refillTemplateDocumentFn, removeFundTemplateDocumentFn, reviewGeneratedDocumentFn } from "@/lib/fund-doc-templates.functions";
 import { fundSigningContextFn, sendTemplateDocToSignatoryFn, templateDocSendStatusFn } from "@/lib/fund-file-signing.functions";
 import { activateDocumentVersionFn } from "@/lib/fund-setup-canonical.functions";
 import { fmtDate } from "./shared";
@@ -31,6 +31,17 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
   const useVersion = useMutation({
     mutationFn: (d: any) => activate({ data: { documentId: d.id, version: d.version, scope: "new_only" } }),
     onSuccess: () => { toast.success("Ready to send"); void invalidateFund(qc, fundId); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const refillFn = useServerFn(refillTemplateDocumentFn);
+  const refill = useMutation({
+    mutationFn: (d: any) => refillFn({ data: { offeringId: fundId, documentId: d.id } }),
+    onSuccess: (r: any) => {
+      if (r.open?.length) toast.warning(`New version made. Still missing: ${r.open.join(", ")}`);
+      else toast.success("New version made with every blank filled in. Review it, then approve.");
+      void qc.invalidateQueries({ queryKey: ["fund-template-docs", fundId] });
+      void invalidateFund(qc, fundId);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
   const q = useQuery({ queryKey: ["fund-template-docs", fundId], queryFn: () => list({ data: { offeringId: fundId } }) as Promise<any[]> });
@@ -63,11 +74,12 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
                   </p>
                   {(() => { const st = sq.data?.[d.title]; return st ? <p className="text-xs font-medium text-primary">{st.status === "signed" ? "Signed" : "Sent"} · {st.signer ?? "Fund manager"}{st.sentAt ? ` · ${fmtDate(st.sentAt)}` : ""}{st.status === "sent" ? " · waiting to sign" : ""}</p> : null; })()}
                   {d.reviewState && <p className="text-xs text-muted-foreground">v{versionLabel(d.version)} · {d.reviewState === "approved" ? `Approved ${fmtDate(d.approvedAt)}` : d.reviewState === "returned" ? "Returned, new version required" : "Awaiting independent review"}</p>}
-                  {d.generationIssues?.length > 0 && <p className="text-xs text-destructive">{d.generationIssues.join(" · ")}</p>}
+                  {d.generationIssues?.length > 0 && <p className="text-xs text-destructive">Missing: {d.generationIssues.join(", ")}. Add these in Setup, Fund details, then choose Fill in again.</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {d.isActive && <Badge variant="outline">In use</Badge>}
                   <Button size="sm" variant="outline" disabled={!d.versionId} onClick={() => setReview(d)}>Review</Button>
+                  {d.generationIssues?.length > 0 && <Button size="sm" disabled={refill.isPending} onClick={() => { if (confirm(`Make a new version of ${d.title} using the fund's current details? The current version stays as it is until the new one is approved.`)) refill.mutate(d); }}>{refill.isPending ? "Filling in…" : "Fill in again"}</Button>}
                   {d.canReview && <><Button size="sm" variant="outline" disabled={decision.isPending || d.generationIssues?.length > 0} onClick={() => { if (confirm(`Approve ${d.title} v${d.version}?`)) decision.mutate({ documentId: d.id, version: d.version, decision: "approve" }); }}>Approve draft</Button><Button size="sm" variant="ghost" disabled={decision.isPending} onClick={() => { const note = window.prompt("Reason for returning this draft"); if (note?.trim()) decision.mutate({ documentId: d.id, version: d.version, decision: "return", note }); }}>Return</Button></>}
                   {d.isActive && d.signers.length > 0 && d.signers.every((r: string) => r === "fund_signatory") && sq.data?.[d.title]?.status !== "signed" && <Button size="sm" onClick={() => setSendFor(d)}>{sq.data?.[d.title] ? "Resend" : "Send for signature"}</Button>}
                   {!d.isActive && d.version && <Button size="sm" disabled={useVersion.isPending || (d.reviewState && d.reviewState !== "approved") || (d.signers.length > 0 && d.signingStatus !== "confirmed")} onClick={() => useVersion.mutate(d)}>Use this version</Button>}

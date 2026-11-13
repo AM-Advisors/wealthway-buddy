@@ -77,6 +77,7 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
           formationDate: z.string().max(20).nullish(),
           registeredAgent: str,
           principalAddress: z.string().max(500).nullish(),
+          contactPhone: z.string().max(40).nullish(),
           taxClassification: str,
           regType: z.enum(["506b", "506c", "regcf", "rega", "regaplus"]),
           targetRaiseCents: z.number().int().min(0).nullish(),

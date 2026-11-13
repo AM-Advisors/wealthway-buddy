@@ -225,7 +225,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
       signatoryEntityName: o.signatoryEntityName ?? "", fiscalYearEnd: d.setup?.fiscalYearEnd ?? "",
       fundTermMonths: d.setup?.fundTermMonths?.toString() ?? "", investmentPeriodMonths: d.setup?.investmentPeriodMonths?.toString() ?? "",
       entityType: o.entityType ?? "", jurisdiction: o.jurisdiction ?? "", formationDate: o.formationDate ?? "",
-      registeredAgent: o.registeredAgent ?? "", principalAddress: o.principalAddress ?? "", taxClassification: o.taxClassification ?? "",
+      registeredAgent: o.registeredAgent ?? "", principalAddress: o.principalAddress ?? "", contactPhone: o.contactPhone ?? "", taxClassification: o.taxClassification ?? "",
       regType: o.regType ?? "506b", targetRaise: fromCents(o.targetRaiseCents), maxOffering: fromCents(o.maxOfferingCents),
       minInvestment: fromCents(o.minInvestmentCents), maxInvestment: fromCents(o.maxInvestmentCents),
       offeringOpenDate: o.offeringOpenDate ?? "", offeringCloseDate: o.offeringCloseDate ?? "",
@@ -254,7 +254,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
             displayName: f.displayName, fundType: f.fundType || null, gpName: f.gpName || null,
             signatoryEntityName: f.signatoryEntityName || null,
             entityType: f.entityType || null, ...(d.seriesMaster?.jurisdiction ? {} : { jurisdiction: f.jurisdiction || null }), formationDate: f.formationDate || null,
-            registeredAgent: f.registeredAgent || null, principalAddress: f.principalAddress || null,
+            registeredAgent: f.registeredAgent || null, principalAddress: f.principalAddress || null, contactPhone: f.contactPhone?.trim() || null,
             taxClassification: f.taxClassification || null, regType: f.regType as any,
             targetRaiseCents: toCents(f.targetRaise ?? ""), maxOfferingCents: toCents(f.maxOffering ?? ""),
             minInvestmentCents: toCents(f.minInvestment ?? "") ?? 0, maxInvestmentCents: toCents(f.maxInvestment ?? ""),
@@ -266,7 +266,8 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           },
           setupFields: {
             fiscalYearEnd: f.fiscalYearEnd || null,
-            ...(d.termApplies ? { fundTermMonths: num(f.fundTermMonths ?? ""), investmentPeriodMonths: num(f.investmentPeriodMonths ?? "") } : {}),
+            fundTermMonths: num(f.fundTermMonths ?? ""),
+            ...(d.termApplies ? { investmentPeriodMonths: num(f.investmentPeriodMonths ?? "") } : {}),
           },
         },
       });
@@ -282,6 +283,11 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
     <Card>
       <CardHeader><CardTitle className="text-base">Fund Details, Entity & Offering</CardTitle></CardHeader>
       <CardContent className="space-y-6">
+        {(d.documentNeeds ?? []).length > 0 && (
+          <p className="rounded-md border border-destructive/40 p-3 text-sm">
+            A fund document is waiting on: <span className="font-medium">{d.documentNeeds.map((n: any) => n.label).join(", ")}</span>. Add {d.documentNeeds.length === 1 ? "it" : "them"} below, then choose Fill in again on the document.
+          </p>
+        )}
         <EditableSection id="basics" title="Fund basics" keys={["displayName","fundType","gpName","signatoryEntityName","fiscalYearEnd","fundTermMonths","investmentPeriodMonths"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Display name"><Input {...bind("displayName")} /></Field>
@@ -289,11 +295,11 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Fund Manager / GP"><Input placeholder="A person or a company" {...bind("gpName")} /></Field>
           <Field label="Signing entity"><Input {...bind("signatoryEntityName")} /></Field>
           <Field label="Fiscal year end (MM-DD)"><Input placeholder="12-31" {...bind("fiscalYearEnd")} /></Field>
-          {d.termApplies && <Field label="Fund term (months)"><Input inputMode="numeric" {...bind("fundTermMonths")} /></Field>}
+          <Field label={d.termApplies ? "Fund term (months)" : "Fund term (months), if your documents set one"}><Input inputMode="numeric" placeholder="e.g. 84 for seven years" {...bind("fundTermMonths")} /></Field>
           {d.termApplies && <Field label="Investment period (months)"><Input inputMode="numeric" {...bind("investmentPeriodMonths")} /></Field>}
         </section>
         </EditableSection>
-        <EditableSection id="entity" title="Entity" keys={["entityType","jurisdiction","formationDate","registeredAgent","principalAddress","taxClassification"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
+        <EditableSection id="entity" title="Entity" keys={["entityType","jurisdiction","formationDate","registeredAgent","principalAddress","contactPhone","taxClassification"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Entity type">{sel("entityType", ["LLC", "LP", "Series LLC", "Master LLC", "Corporation", "Trust", "Other"].map((t) => [t, t]))}</Field>
           <Field label={d.seriesMaster && !d.seriesMaster.jurisdiction ? "Master's jurisdiction of formation" : "Jurisdiction of formation"}>
@@ -304,6 +310,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Formation date"><Input type="date" {...bind("formationDate")} /></Field>
           <Field label="Registered agent"><Input {...bind("registeredAgent")} /></Field>
           <Field label="Principal business address"><Input {...bind("principalAddress")} /></Field>
+          <Field label="Fund phone number (shown in documents)"><Input type="tel" maxLength={40} placeholder="+1 214-555-0100" {...bind("contactPhone")} /></Field>
           <Field label="Tax classification"><Input placeholder="e.g. Partnership" {...bind("taxClassification")} /></Field>
         </section>
         </EditableSection>
@@ -360,7 +367,7 @@ const LABELS: Record<string, string> = {
   displayName: "Display name", fundType: "Fund Type", gpName: "Fund Manager / GP", signatoryEntityName: "Signing entity",
   fiscalYearEnd: "Fiscal year end", fundTermMonths: "Fund term (months)", investmentPeriodMonths: "Investment period (months)",
   entityType: "Entity type", jurisdiction: "Jurisdiction", formationDate: "Formation date", registeredAgent: "Registered agent",
-  principalAddress: "Principal address", taxClassification: "Tax classification", driveFolderUrl: "Google Drive folder",
+  principalAddress: "Principal address", contactPhone: "Fund phone number", taxClassification: "Tax classification", driveFolderUrl: "Google Drive folder",
   regType: "Offering exemption", targetRaise: "Target raise", maxOffering: "Maximum offering", minInvestment: "Minimum investment",
   maxInvestment: "Maximum investment", rollingCloses: "Rolling closes", offeringOpenDate: "Offering opens", offeringCloseDate: "Offering closes",
 };
