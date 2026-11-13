@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FundManagerFirstLoginGuide } from "@/components/help/guide-fund-manager-first-login";
 import { SignOperatingAgreementGuide } from "@/components/help/guide-sign-operating-agreement";
+import { SignInGuide } from "@/components/help/guide-sign-in";
 import { CLIENT_HELP_ROLES, HELP_SERVICES, STAFF_HELP_ROLES, type HelpArticleView, type HelpAudience } from "@/lib/help-articles";
 import { approveHelpArticle, listHelpArticles } from "@/lib/help-center.functions";
 
@@ -149,7 +150,7 @@ export function HelpArticlePage({ ops, slug }: { ops: boolean; slug: string }) {
           </div>
         ) : null}
       </div>
-      {a.guide === "fund-manager-first-login" ? <FundManagerFirstLoginGuide /> : a.guide === "sign-operating-agreement" ? <SignOperatingAgreementGuide /> : (
+      {a.guide === "fund-manager-first-login" ? <FundManagerFirstLoginGuide /> : a.guide === "sign-operating-agreement" ? <SignOperatingAgreementGuide /> : a.guide === "client-sign-in" ? <SignInGuide audience="client" /> : a.guide === "investor-sign-in" ? <SignInGuide audience="investor" /> : (
         <article className="mx-auto max-w-3xl space-y-6 px-4 pb-10 md:px-8">
           <h1 className="text-2xl font-semibold text-foreground">{a.title}</h1>
           <p className="text-muted-foreground">{a.summary}</p>

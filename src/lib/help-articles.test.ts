@@ -67,4 +67,12 @@ describe("self-service help articles", () => {
     expect(a?.roles).toContain(role);
     expect(a.sections.some((s: any) => s.steps?.length)).toBe(true);
   });
+  it("shows each sign-in guide only to its own audience once approved", () => {
+    const approved = new Map([["client-sign-in", 1], ["investor-sign-in", 1]]);
+    const investor = articlesFor(HELP_CATALOG, { audience: "client", roles: ["investor"] }, approved).map((a) => a.slug);
+    const manager = articlesFor(HELP_CATALOG, { audience: "client", roles: ["fund_manager"] }, approved).map((a) => a.slug);
+    expect(investor).toEqual(["investor-sign-in"]);
+    expect(manager).toEqual(["client-sign-in"]);
+    expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["investor"] }, new Map())).toHaveLength(0);
+  });
 });

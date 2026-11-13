@@ -186,6 +186,12 @@ function ClientLoginPage() {
           </Link>
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
+          Trouble signing in?{" "}
+          <Link to="/guides/sign-in" search={{ for: "client" }} className="font-medium text-foreground hover:underline">
+            Read the sign-in guide
+          </Link>
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
           Part of the Harmonious team?{" "}
           <Link to="/auth" className="font-medium text-foreground hover:underline">
             Staff sign in

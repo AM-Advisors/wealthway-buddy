@@ -184,6 +184,12 @@ function InvestorLoginPage() {
             Create your account
           </Link>
         </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Trouble signing in?{" "}
+          <Link to="/guides/sign-in" search={{ for: "investor" }} className="font-medium text-foreground hover:underline">
+            Read the sign-in guide
+          </Link>
+        </p>
 
       </div>
     </AuthShell>
