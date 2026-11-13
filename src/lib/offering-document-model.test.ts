@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   acknowledgmentsComplete,
+  retainedDocumentCompletion,
   documentApplies,
   documentObligations,
   executionState,
@@ -156,5 +157,26 @@ describe("template rollout", () => {
     expect(appliedVersionFor("a", 3, [{ targetOnboardingId: "a", version: 4 }])).toEqual({ version: 4, reason: "individual" });
     expect(appliedVersionFor("b", 3, [{ targetOnboardingId: "a", version: 4 }])).toEqual({ version: 3, reason: "template" });
     expect(appliedVersionFor("b", null, [])).toEqual({ version: null, reason: "none" });
+  });
+
+  describe("new-investors-only replacements keep what an investor already completed", () => {
+    // Calvin-shaped: signed SA v3, acknowledged PPM v1 and OA v2; fund now uses PPM v7 (ack) and OA v7 (signature).
+    const ppm = { id: "ppm", usage: "acknowledgment" as const, legacyRequiresSignature: false, activeVersion: 7 };
+    const oa = { id: "oa", usage: "signature" as const, legacyRequiresSignature: true, activeVersion: 7 };
+    const sa = { id: "sa", usage: "signature" as const, legacyRequiresSignature: true, activeVersion: 4 };
+    const acks = [{ documentId: "ppm", version: 1 }, { documentId: "oa", version: 2 }];
+    const base = { needsAck: [ppm], needsSignature: [oa, sa], acks, signedDocumentIds: new Set(["sa"]), openResignDocumentIds: new Set<string>() };
+    it("an investor who already signed stays complete", () => {
+      expect(retainedDocumentCompletion({ ...base, hasSigned: true })).toMatchObject({ acksDone: true, signaturesDone: true });
+    });
+    it("an investor who has not signed yet must use the current versions", () => {
+      expect(retainedDocumentCompletion({ ...base, hasSigned: false })).toMatchObject({ acksDone: false, signaturesDone: false });
+    });
+    it("an open re-sign item reopens that document", () => {
+      expect(retainedDocumentCompletion({ ...base, hasSigned: true, openResignDocumentIds: new Set(["oa"]) })).toMatchObject({ acksDone: true, signaturesDone: false });
+    });
+    it("a document they never completed is still needed", () => {
+      expect(retainedDocumentCompletion({ ...base, hasSigned: true, acks: [{ documentId: "oa", version: 2 }] }).acksDone).toBe(false);
+    });
   });
 });

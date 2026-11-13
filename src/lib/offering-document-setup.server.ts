@@ -17,6 +17,7 @@ import {
   versionChangeImpact,
   versionState,
   appliedVersionFor,
+  retainedDocumentCompletion,
   resignTargets,
   rolloutCounts,
   requiresDocumentApproval,
@@ -392,7 +393,24 @@ export async function activateDocumentVersion(
   }
   await event(d.offering_id, d.id, v.version, "version_activated", userId, { scope, resign: resignIds.length });
   await reconcile(resignIds, userId);
+  await refreshFundSummaries(d.offering_id);
   return { ok: true, resign: resignIds.length };
+}
+
+/** Re-saves the dashboard status of every live investor in the fund after its documents change (display cache only). */
+export async function refreshFundSummaries(offeringId: string) {
+  try {
+    const { data: rows } = await db().from("investor_onboardings").select("*").eq("offering_id", offeringId).is("removed_at", null);
+    const { readinessForMany, saveReadinessSummary } = await import("@/lib/investor-onboarding.server");
+    const list = (rows ?? []) as any[];
+    for (let i = 0; i < list.length; i += 50) {
+      const chunk = list.slice(i, i + 50);
+      const results = await readinessForMany(chunk);
+      await Promise.all(results.map(({ result }, idx) => saveReadinessSummary(chunk[idx], result)));
+    }
+  } catch {
+    // A stale dashboard summary never undoes the document change; the dashboard refreshes it later.
+  }
 }
 
 async function reconcile(onboardingIds: string[], userId: string) {
@@ -487,7 +505,7 @@ export async function investorDocuments(userId: string, onboardingId: string) {
   const ids = applicable.map((d) => d.id);
   const { documentPublicationFor } = await import("./investor-document-publication.server");
   const { data: retainedSignatures, error: signatureError } = row.application_id
-    ? await db().from("document_signatures").select("offering_document_id, signature_template_version").eq("application_id", row.application_id)
+    ? await db().from("document_signatures").select("offering_document_id, signature_template_version, provider_completed_at, cancelled_at, superseded_by").eq("application_id", row.application_id)
     : { data: [], error: null };
   if (signatureError) throw new Error("Document approval status could not be loaded. Please try again.");
   const publication = await documentPublicationFor(db(), applicable, row.id, retainedSignatures ?? [], row.offering_id);
@@ -496,7 +514,23 @@ export async function investorDocuments(userId: string, onboardingId: string) {
     ids.length ? db().from("offering_document_resign_items").select("offering_document_id, from_version, to_version").eq("onboarding_id", row.id).eq("status", "open") : { data: [] },
   ]);
   if (singlesError || resignError) throw new Error("Your document versions could not be loaded. Please try again.");
+  // Same rule as readiness: "New investors only" never reopens what this investor already completed.
+  const completedSigs = ((retainedSignatures ?? []) as any[]).filter((x) => x.provider_completed_at && !x.cancelled_at && !x.superseded_by);
+  const keptIds = new Set(retainedDocumentCompletion({
+    needsAck: [],
+    needsSignature: applicable.map((d) => ({ id: String(d.id), usage: d.usage ?? null, legacyRequiresSignature: Boolean(d.requires_signature), activeVersion: d.active_version ?? null })),
+    acks: ((acks ?? []) as any[]).map((a) => ({ documentId: String(a.offering_document_id), version: Number(a.version) })),
+    signedDocumentIds: new Set(),
+    hasSigned: completedSigs.length > 0,
+    openResignDocumentIds: new Set(((resign ?? []) as any[]).map((x) => String(x.offering_document_id))),
+  }).retainedIds);
   return applicable.map((d, i) => {
+    const kept = keptIds.has(String(d.id)) && (inv[i]?.execution ?? "not_sent") === "not_sent"
+      && !((acks ?? []) as any[]).some((a) => a.offering_document_id === d.id && a.version === d.active_version);
+    if (kept) {
+      const ackedVersion = Math.max(...((acks ?? []) as any[]).filter((a) => a.offering_document_id === d.id).map((a) => Number(a.version)), 0);
+      return { id: d.id, title: d.title, approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval", canRead: true, action: "Completed", versionLabel: ackedVersion ? `Your version v${ackedVersion}` : null, signedOutside: false };
+    }
     const applied = appliedVersionFor(row.id, d.active_version, ((singles ?? []) as any[]).filter((x) => x.offering_document_id === d.id).map((x) => ({ targetOnboardingId: x.target_onboarding_id, version: x.version })));
     const rs = ((resign ?? []) as any[]).find((x) => x.offering_document_id === d.id);
     const versionLabel = rs ? `Re-sign needed: v${rs.from_version ?? "?"} → v${rs.to_version}` : applied.reason === "individual" ? `Individual version v${applied.version}` : applied.version != null ? `Fund template v${applied.version}` : null;

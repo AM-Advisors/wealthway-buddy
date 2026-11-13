@@ -193,6 +193,32 @@ export function acknowledgmentsComplete(needsAck: InvestmentDocument[], acks: { 
   return needsAck.every((d) => acks.some((a) => a.documentId === d.id && (d.activeVersion == null || a.version === d.activeVersion)));
 }
 
+/**
+ * "New investors only" keeps what an investor already completed for this investment. Once they have
+ * signed, an acknowledgment of an earlier version still counts after a newer version replaces it,
+ * including a document that later became signature-required. An open re-sign item ("All investors")
+ * reopens that document. Signatures of any version already count; nothing carries across investments.
+ */
+export function retainedDocumentCompletion(input: {
+  needsAck: InvestmentDocument[];
+  needsSignature: InvestmentDocument[];
+  acks: { documentId: string; version: number }[];
+  signedDocumentIds: Set<string>;
+  hasSigned: boolean;
+  openResignDocumentIds: Set<string>;
+}): { acksDone: boolean; signaturesDone: boolean; retainedIds: string[] } {
+  const retainedIds: string[] = [];
+  const keeps = (d: InvestmentDocument) => {
+    if (!input.hasSigned || input.openResignDocumentIds.has(d.id)) return false;
+    const ok = input.acks.some((a) => a.documentId === d.id) || input.signedDocumentIds.has(d.id);
+    if (ok) retainedIds.push(d.id);
+    return ok;
+  };
+  const acksDone = input.needsAck.every((d) => input.acks.some((a) => a.documentId === d.id && (d.activeVersion == null || a.version === d.activeVersion)) || keeps(d));
+  const signaturesDone = input.needsSignature.every((d) => input.signedDocumentIds.has(d.id) || keeps(d));
+  return { acksDone, signaturesDone, retainedIds };
+}
+
 /** The investor-facing action for one document. No provider terms. */
 export function investorDocumentAction(input: { usage: DocumentUsage | null; legacyRequiresSignature: boolean; acknowledged: boolean; execution: ExecutionState }): string {
   const usage = input.usage ?? (input.legacyRequiresSignature ? "signature" : "reference");

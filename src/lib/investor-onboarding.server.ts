@@ -295,7 +295,7 @@ export async function loadReadinessInputs(rows: any[]) {
   const profIds = rows.map((r) => r.investment_profile_id);
   const appIds = rows.map((r) => r.application_id);
   const obIds = rows.map((r) => r.id);
-  const [offs, reqs, setups, pById, pByUser, profiles, evs, rels, accs, taxes, sigsA, sigsP, docs, acks, snaps, excs, prov, priors, stage2] = await Promise.all([
+  const [offs, reqs, setups, pById, pByUser, profiles, evs, rels, accs, taxes, sigsA, sigsP, docs, acks, snaps, excs, prov, priors, stage2, resignOpen] = await Promise.all([
     readIn(offIds, (c) => d.from("offerings").select("*").in("id", c)),
     readIn(offIds, (c) => d.from("offering_requirements").select("*").in("offering_id", c)),
     readIn(offIds, (c) => d.from("fund_setups").select("*").in("offering_id", c)),
@@ -315,6 +315,7 @@ export async function loadReadinessInputs(rows: any[]) {
     loadProvenanceMany(d, rows),
     latestPriors([...new Set(obIds)]),
     loadStage2Inputs(rows.filter((r) => r.investment_profile_id)),
+    readIn(obIds, (c) => d.from("offering_document_resign_items").select("onboarding_id, offering_document_id").in("onboarding_id", c).eq("status", "open")),
   ]);
   // Profile accreditations and uploaded profile documents, read once for every row.
   const DOC_COLS = "id, file_name, doc_kind, uploaded_at, review_status, review_note, investment_profile_id, onboarding_id, user_id, prepared_for_person_id";
@@ -347,6 +348,7 @@ export async function loadReadinessInputs(rows: any[]) {
     docs: groupBy(docs, "offering_id"),
     acks: groupBy(acks, "onboarding_id"),
     snaps: groupBy(snaps, "onboarding_id"),
+    resignOpen: groupBy(resignOpen, "onboarding_id"),
     exceptions: groupBy(excs, "onboarding_id"),
     provenance: prov,
     priors,
@@ -429,7 +431,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
     { profileType: profile?.profile_type ?? null, requestedAmountCents: row.requested_amount_cents ?? null, country: person?.residence_country ?? null },
     confirmed,
   );
-  const { documentApplies, documentObligations, acknowledgmentsComplete } = await import("@/lib/offering-document-model");
+  const { documentApplies, documentObligations, retainedDocumentCompletion } = await import("@/lib/offering-document-model");
   // Legacy profile rule plus Fund Setup applicability (profile type and class).
   const applicableDocs = ((offeringDocs ?? []) as any[]).filter(
     (d) =>
@@ -439,11 +441,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
   const obligations = documentObligations(
     applicableDocs.map((d) => ({ id: String(d.id), usage: d.usage ?? null, legacyRequiresSignature: Boolean(d.requires_signature), activeVersion: d.active_version ?? null })),
   );
-  const ackRows = obligations.needsAck.length ? I.strip(I.acks.get(String(row.id)), "onboarding_id") : [];
-  const acksDone = acknowledgmentsComplete(
-    obligations.needsAck,
-    ((ackRows ?? []) as any[]).map((a) => ({ documentId: String(a.offering_document_id), version: Number(a.version) })),
-  );
+  const ackList = (I.strip(I.acks.get(String(row.id)), "onboarding_id") as any[]).map((a) => ({ documentId: String(a.offering_document_id), version: Number(a.version) }));
 
   const profileAccreditations = row.investment_profile_id ? I.strip(I.profileAccreditations.get(String(row.investment_profile_id)), "profile_id") : [];
   const reusableAccreditation = reusableProfileAccreditation(profileAccreditations ?? [], row.offering_id);
@@ -465,11 +463,18 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
   );
   // Reference-only and acknowledgment documents never require a signature.
   const signIds = new Set(obligations.needsSignature.map((d) => d.id));
-  const requiredToSign = applicableDocs.filter((d) => signIds.has(String(d.id)));
   const signedIds = new Set(completedSignatures.map((sig) => sig.offering_document_id).filter(Boolean));
-  const allSigned =
-    completedSignatures.length > 0 &&
-    (requiredToSign.length === 0 || requiredToSign.every((d) => signedIds.has(d.id)));
+  // "New investors only" replacements never reopen what an investor already completed for this investment.
+  const retained = retainedDocumentCompletion({
+    needsAck: obligations.needsAck,
+    needsSignature: obligations.needsSignature,
+    acks: ackList,
+    signedDocumentIds: new Set([...signedIds].map(String)),
+    hasSigned: completedSignatures.length > 0,
+    openResignDocumentIds: new Set(((I as any).resignOpen?.get(String(row.id)) ?? []).map((x: any) => String(x.offering_document_id))),
+  });
+  const acksDone = obligations.needsAck.length === 0 || retained.acksDone;
+  const allSigned = completedSignatures.length > 0 && retained.signaturesDone;
   const signedCount = allSigned ? completedSignatures.length : 0;
 
   const profileType = String(eff.profileType ?? "");
@@ -561,7 +566,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       entityRequirement.reason = `Upload: ${missingEntityDocs.map((r) => r.label).join(", ")}.`;
     }
   }
-  const ackedIds = new Set(((ackRows ?? []) as any[]).map((a) => String(a.offering_document_id)));
+  const ackedIds = new Set((obligations.needsAck.length || retained.retainedIds.length ? ackList : []).map((a) => a.documentId));
   const ackIds = new Set(obligations.needsAck.map((x) => x.id));
   const documents = applicableDocs
     .map((d) => ({
