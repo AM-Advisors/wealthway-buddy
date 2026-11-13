@@ -89,6 +89,8 @@ function AccreditationPage() {
   const load = useServerFn(getAccreditation);
   const { data, isLoading } = useQuery({ queryKey: ["accreditation"], queryFn: () => load({ data: { onboardingId: currentOnboardingId() } }) });
 
+  // Never guess the fund's rules: without a fund there is no form to show.
+  const missing = !isLoading && !data?.offering;
   const regType = data?.offering?.reg_type ?? "506b";
   const locked = data?.application?.kyc_status === "not_started";
 
@@ -106,6 +108,16 @@ function AccreditationPage() {
 
       {isLoading ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading…</p>
+      ) : missing ? (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Open this step from your investment</CardTitle>
+            <CardDescription>We couldn't tell which investment this is for. Go to your home page and choose Continue on the investment.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate({ to: "/home" })}>Go to my investments</Button>
+          </CardContent>
+        </Card>
       ) : locked ? (
         <Card className="mt-8">
           <CardHeader>

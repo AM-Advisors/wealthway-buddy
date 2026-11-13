@@ -2,7 +2,7 @@ import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { activeApplicationId, applicationIdForOffering } from "@/lib/active-application";
+import { activeApplicationId, applicationIdForOffering, NO_APPLICATION } from "@/lib/active-application";
 
 const onboardingRef = z.string().uuid().optional();
 
@@ -49,16 +49,34 @@ type AppRow = { id: string; kyc_status: string; aml_status: string };
 /**
  * The application for the investment the investor came from. The onboarding ID
  * only narrows to a fund the signed-in investor owns; otherwise the active account is used.
+ * The investment's own linked application wins. When the investment has none
+ * yet (for example its identity check was reused from the login), saving paths
+ * pass `link: true` to create the one record through the same guarded step
+ * verification uses; reads never create anything.
  */
-async function resolveApplicationId(supabase: any, userId: string, onboardingId?: string | null): Promise<string> {
+async function resolveApplicationId(
+  supabase: any,
+  userId: string,
+  onboardingId?: string | null,
+  opts: { link?: boolean } = {},
+): Promise<string> {
   if (onboardingId) {
     const { data: onb } = await supabase
       .from("investor_onboardings")
-      .select("offering_id")
+      .select("offering_id, application_id")
       .eq("id", onboardingId)
       .eq("investor_user_id", userId)
       .maybeSingle();
-    if (onb?.offering_id) return applicationIdForOffering(supabase, userId, onb.offering_id as string);
+    if (onb?.application_id) return onb.application_id as string;
+    if (onb?.offering_id) {
+      const existing = await applicationIdForOffering(supabase, userId, onb.offering_id as string);
+      if (existing !== NO_APPLICATION || !opts.link) return existing;
+      const { data: linked, error } = await supabase.rpc("ensure_exact_investment_application", { p_onboarding_id: onboardingId });
+      if (error || typeof linked !== "string") {
+        throw new Error("We couldn't link this step to your investment. Please contact Harmonious.");
+      }
+      return linked;
+    }
   }
   return activeApplicationId(supabase, userId);
 }
@@ -68,7 +86,7 @@ async function loadApplication(supabase: any, userId: string, onboardingId?: str
     .from("investor_applications")
     .select("id, kyc_status, aml_status")
     .eq("user_id", userId)
-    .eq("id", await resolveApplicationId(supabase, userId, onboardingId))
+    .eq("id", await resolveApplicationId(supabase, userId, onboardingId, { link: true }))
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found. Reload and try again.");
@@ -92,7 +110,27 @@ export const getAccreditation = createServerFn({ method: "GET" })
       .eq("id", await resolveApplicationId(supabase, userId, input.onboardingId))
       .maybeSingle();
 
-    if (!application) return { application: null, offering: null, record: null, documents: [] };
+    if (!application) {
+      // Not linked yet: still show the fund's own rules (never a default form).
+      let offering: { id: string; name: string; reg_type: string; min_investment_cents: number | null } | null = null;
+      if (input.onboardingId) {
+        const { data: onb } = await supabase
+          .from("investor_onboardings")
+          .select("offering_id")
+          .eq("id", input.onboardingId)
+          .eq("investor_user_id", userId)
+          .maybeSingle();
+        if (onb?.offering_id) {
+          const { data: o } = await supabase
+            .from("offerings")
+            .select("id, name, reg_type, min_investment_cents")
+            .eq("id", onb.offering_id)
+            .maybeSingle();
+          offering = (o as any) ?? null;
+        }
+      }
+      return { application: null, offering, record: null, documents: [] };
+    }
 
     const { data: offering } = await supabase
       .from("offerings")
