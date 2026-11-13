@@ -458,6 +458,17 @@ export function rosterFilterMatches(filter: RosterFilter, r: (ReadinessRow & { n
   if (st === "ready" || st === "closed") return false;
   return rosterOwner(r) === (filter === "investor" ? "Investor" : "Harmonious");
 }
+/**
+ * The next-step words on a roster row. "No action needed" only when nothing is left;
+ * an unfinished step with no owner is named so a stalled investment never looks done.
+ */
+export function rosterNextLabel(r: (ReadinessRow & { nextAction?: { label?: string | null } | null; readiness?: { stages?: { title: string; status: string }[] } | null }) | undefined): string {
+  if (!r) return "-";
+  if (r.nextAction?.label) return r.nextAction.label;
+  if (r.closeReady || r.readiness?.terminal) return "No action needed";
+  const open = (r.readiness?.stages ?? []).find((s) => s.status !== "complete" && s.status !== "not_applicable");
+  return open ? `Needs follow-up: ${open.title} not finished` : "No action needed";
+}
 /** Done X of Y from the already-loaded readiness items. */
 export function rosterProgress(r: ReadinessRow | undefined): { done: number; total: number } | null {
   const items = r?.readiness?.items ?? [];

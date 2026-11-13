@@ -32,7 +32,7 @@ import { getFundLinkFn } from "@/lib/fund-onboarding-link.functions";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { managerRowFromApplication } from "@/lib/prepared-investor-workflow";
 import {
-  CLAIM_STATE_LABELS, ROSTER_READINESS_LABELS, fundInvestorsSummary, rosterReadiness, rosterOwner, rosterFilterMatches, rosterProgress, type RosterFilter,
+  CLAIM_STATE_LABELS, ROSTER_READINESS_LABELS, fundInvestorsSummary, rosterReadiness, rosterOwner, rosterFilterMatches, rosterProgress, rosterNextLabel, type RosterFilter,
   type ClaimState, type RecordStatus, type RosterReadiness,
 } from "@/lib/investor-record-model";
 import { money, prettyStatus } from "@/lib/status";
@@ -150,7 +150,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   };
   const readinessCell = (id: string) => {
     const rr = readinessById.get(id); const st = rosterReadiness(rr);
-    return { st, label: ROSTER_READINESS_LABELS[st], next: rr?.nextAction?.label ?? (st === "unknown" ? "-" : "No action needed"), owner: rosterOwner(rr) };
+    return { st, label: ROSTER_READINESS_LABELS[st], next: rosterNextLabel(rr), owner: rosterOwner(rr) };
   };
 
   /** One plain status per row: problems with the record win, otherwise investment readiness. */

@@ -531,6 +531,11 @@ export async function removeFromFund(userId: string, input: { onboardingId: stri
   const { error } = await db().from("investor_onboardings").update({ removed_at: nowIso(), removed_by: actor.userId, removal_reason: input.reason ?? null, stage: "cancelled", last_activity_at: nowIso() }).eq("id", row.id);
   if (error) fail(error.message);
   await logChanges([{ offeringId: row.offering_id, onboardingId: row.id, table: "investor_onboardings", id: row.id, field: "removed_from_fund", from: row.stage, to: "removed", source: sourceFor(actor), actor: actor.userId }]);
+  // A removed investor's unused invitation stops working, unless another live investment still uses it.
+  if (row.invitation_id) {
+    const { data: others } = await db().from("investor_onboardings").select("id").eq("invitation_id", row.invitation_id).neq("id", row.id).is("removed_at", null).limit(1);
+    if (!(others ?? []).length) await db().from("fund_invitations").update({ status: "revoked", updated_at: nowIso() }).eq("id", row.invitation_id).eq("status", "pending");
+  }
   await onbEvent(row.id, row.offering_id, "investor_removed_from_fund", actor, { reason: input.reason ?? null });
   await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "removed_from_fund" });
   return { removed: true };

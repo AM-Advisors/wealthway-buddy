@@ -2354,11 +2354,15 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
     .order("created_at", { ascending: false });
   if (allowed) invQuery = invQuery.in("offering_id", allowed);
   const { data: invites } = await invQuery;
+  // An invitation that already has an investment (active or removed) or was accepted is no longer "not started":
+  // the investment row shows it, and removed investors must not reappear with a resend button.
+  const linkedInvites = new Set(rows.map((r) => r.invitation_id).filter(Boolean).map(String));
   const invited = ((invites ?? []) as any[])
-    .filter((i) => !["revoked", "cancelled", "expired"].includes(String(i.status)))
+    .filter((i) => !["revoked", "cancelled", "expired", "accepted"].includes(String(i.status)) && !linkedInvites.has(String(i.id)))
     .map((i) => ({
       id: `invite:${i.id}`,
       offeringId: i.offering_id,
+      email: i.email ?? null,
       investorName: i.invited_name ?? i.email,
       profileLabel: null,
       requestedAmountCents: i.intended_amount_cents,

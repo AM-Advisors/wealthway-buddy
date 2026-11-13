@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rosterFilterMatches, rosterProgress, fundInvestorsSummary } from "@/lib/investor-record-model";
+import { rosterFilterMatches, rosterProgress, fundInvestorsSummary, rosterNextLabel } from "@/lib/investor-record-model";
 
 const row = (owner: string, items: { key: string; status: string }[], closeReady = false) => ({ onboardingId: owner + items.length, closeReady, nextAction: { owner }, readiness: { items, terminal: false } }) as any;
 
@@ -24,5 +24,13 @@ describe("investor roster filter boxes", () => {
   });
   it("progress counts completed steps", () => {
     expect(rosterProgress(waitingInvestor)).toEqual({ done: 1, total: 2 });
+  });
+  it("an unfinished step with nobody assigned is never shown as No action needed", () => {
+    const stalled = { onboardingId: "c", closeReady: false, nextAction: null, readiness: { terminal: null, items: [{ key: "subscription_documents", status: "in_progress" }], stages: [{ title: "Tax", status: "complete" }, { title: "Subscription Documents", status: "in_progress" }] } } as any;
+    expect(rosterNextLabel(stalled)).toBe("Needs follow-up: Subscription Documents not finished");
+  });
+  it("No action needed only when nothing is left", () => {
+    expect(rosterNextLabel({ onboardingId: "r", closeReady: true, nextAction: null, readiness: { items: [] } } as any)).toBe("No action needed");
+    expect(rosterNextLabel({ onboardingId: "n", closeReady: false, nextAction: { label: "Sign subscription documents" }, readiness: { items: [] } } as any)).toBe("Sign subscription documents");
   });
 });
