@@ -36,3 +36,21 @@ export async function docxText(bytes: Uint8Array): Promise<string | null> {
   }
   return parts.join("\n");
 }
+
+/** True when a subscription-agreement blank is filled per investor or at signing, not from fund setup. */
+export function isSigningTimeBlank(name: string, category: string | null | undefined) {
+  return category === "subscription_agreement" && SIGNING_TIME.has(norm(name.replace(/^\{\{|\}\}$/g, "")));
+}
+
+/** Every {{ }} blank a Word template contains; an empty {{}} is named from the label before it (e.g. "Tel:"). */
+export async function templatePlaceholders(bytes: Uint8Array): Promise<string[]> {
+  const text = await docxText(bytes);
+  if (!text) return [];
+  const { unlabeledField } = await import("@/lib/docx-autofill");
+  const found = new Set<string>();
+  for (const m of text.matchAll(/\{\{([^{}]{0,80})\}\}/g)) {
+    const name = (m[1] ?? "").trim();
+    found.add(name || unlabeledField(text.slice(0, m.index ?? 0)));
+  }
+  return [...found];
+}

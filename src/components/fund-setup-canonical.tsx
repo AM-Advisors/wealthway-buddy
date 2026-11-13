@@ -285,7 +285,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
       <CardContent className="space-y-6">
         {(d.documentNeeds ?? []).length > 0 && (
           <p className="rounded-md border border-destructive/40 p-3 text-sm">
-            A fund document is waiting on: <span className="font-medium">{d.documentNeeds.map((n: any) => n.label).join(", ")}</span>. Add {d.documentNeeds.length === 1 ? "it" : "them"} below, then choose Fill in again on the document.
+            Required because this fund uses Harmonious templates: <span className="font-medium">{d.documentNeeds.map((n: any) => n.label).join(", ")}</span>. Add {d.documentNeeds.length === 1 ? "it" : "them"} here, then choose Fill in again on any document that still shows a blank.
           </p>
         )}
         <EditableSection id="basics" title="Fund basics" keys={["displayName","fundType","gpName","signatoryEntityName","fiscalYearEnd","fundTermMonths","investmentPeriodMonths"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
@@ -295,7 +295,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Fund Manager / GP"><Input placeholder="A person or a company" {...bind("gpName")} /></Field>
           <Field label="Signing entity"><Input {...bind("signatoryEntityName")} /></Field>
           <Field label="Fiscal year end (MM-DD)"><Input placeholder="12-31" {...bind("fiscalYearEnd")} /></Field>
-          <Field label={d.termApplies ? "Fund term (months)" : "Fund term (months), if your documents set one"}><Input inputMode="numeric" placeholder="e.g. 84 for seven years" {...bind("fundTermMonths")} /></Field>
+          <Field label={d.termApplies || (d.documentNeeds ?? []).some((n: any) => n.key === "fundTerm") ? "Fund term (months)" : "Fund term (months), if your documents set one"}><Input inputMode="numeric" placeholder="e.g. 84 for seven years" {...bind("fundTermMonths")} /></Field>
           {d.termApplies && <Field label="Investment period (months)"><Input inputMode="numeric" {...bind("investmentPeriodMonths")} /></Field>}
         </section>
         </EditableSection>

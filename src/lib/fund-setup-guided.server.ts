@@ -84,11 +84,11 @@ export async function guidedState(userId: string, offeringId: string) {
     if (s === "fund_details") base["regType"] = o?.reg_type ?? "";
     return base;
   };
-  // Details a fund document is still waiting on join the Fund details step until recorded.
+  // Every fund detail the fund's Harmonious templates fill in is required (document-setup-needs).
   const docNeeds = await (await import("@/lib/document-setup-needs.server")).fundDocumentSetupNeeds(offeringId);
   const missing = (s: "fund_details" | "fees_team") => [
     ...REQUIRED[s].filter((k) => !known(s)[k]?.trim()),
-    ...(s === "fund_details" ? docNeeds.filter((n) => n.key !== "signatoryTitle").map((n) => `${n.label} (a fund document needs it)`) : docNeeds.filter((n) => n.key === "signatoryTitle").map((n) => `${n.label} (a fund document needs it)`)),
+    ...docNeeds.filter((n) => (s === "fund_details") === (n.step === "fund_details")).map((n) => `${n.label} (a fund document needs it)`),
   ];
   const hasProp = (sec: string) => proposals.some((p) => p.section === sec);
   const teamComplete = (team?.team ?? []).every((m: any) => m.userId);

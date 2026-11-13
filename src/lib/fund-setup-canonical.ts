@@ -305,6 +305,8 @@ export type SetupFacts = {
   questionsNext?: string | null;
   /** Fund details a fund document still needs (document-setup-needs); each keeps Fund details open. */
   documentNeeds?: string[];
+  /** Fee and carry details a fund document needs; each keeps Offering & economics open. */
+  economicsDocumentNeeds?: string[];
 };
 
 type Result = { status: SectionStatus; next: string | null };
@@ -341,6 +343,7 @@ export function sectionStatuses(f: SetupFacts): Record<CanonicalSection, Result>
     [f.managementFeeSet, "Enter the management fee"],
     [f.carrySet, "Enter the carry"],
     [f.economicsStatus === "approved", "Approve the saved economics version"],
+    ...(f.economicsDocumentNeeds ?? []).map((label) => [false, `Add the ${label.toLowerCase()}: a fund document needs it`] as [boolean, string]),
   ]);
   if (offering.status === "in_progress" && f.economicsStatus === "draft" && f.managementFeeSet && f.carrySet) {
     offering = { status: "in_progress", next: "Approve the saved economics version" };

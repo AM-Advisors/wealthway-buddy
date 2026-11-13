@@ -103,7 +103,8 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
   const check = await requestSetupCheck(offeringId, o, setup, current, classes, hasEin, bankRows.length > 0, seriesMaster?.jurisdiction ?? null);
   const documentNeeds = await (await import("@/lib/document-setup-needs.server")).fundDocumentSetupNeeds(offeringId);
   const statuses = sectionStatuses({
-    documentNeeds: documentNeeds.map((n) => n.label),
+    documentNeeds: documentNeeds.filter((n) => n.step !== "economics").map((n) => n.label),
+    economicsDocumentNeeds: documentNeeds.filter((n) => n.step === "economics").map((n) => n.label),
     questionsNext: check.questions.next,
     documentsStatus: docSetup.status,
     fundType: o.fund_type,
