@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { applicationIdForOffering } from "@/lib/active-application";
+import { investmentApplicationForFund } from "@/lib/active-application";
 import { requireOperations } from "@/lib/ops-access.functions";
 import {
   CAPACITY_LABELS,
@@ -27,7 +27,7 @@ export const getSigningStates = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const applicationId = await applicationIdForOffering(supabase, userId, data.offering_id);
+    const applicationId = await investmentApplicationForFund(supabase, userId, data.offering_id);
     const { data: application } = await supabase
       .from("investor_applications")
       .select("id, offering_id, user_id")
@@ -96,7 +96,7 @@ export const startSigningSession = createServerFn({ method: "POST" })
   .validator((data: unknown) => docScope.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const applicationId = await applicationIdForOffering(supabase, userId, data.offering_id);
+    const applicationId = await investmentApplicationForFund(supabase, userId, data.offering_id, { link: true });
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { openSigningSession } = await import("@/lib/document-signing.server");
@@ -117,7 +117,7 @@ export const refreshSigningState = createServerFn({ method: "POST" })
   .validator((data: unknown) => docScope.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const applicationId = await applicationIdForOffering(supabase, userId, data.offering_id);
+    const applicationId = await investmentApplicationForFund(supabase, userId, data.offering_id);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { resolveSigning, syncSignersFromBox } = await import("@/lib/document-signing.server");

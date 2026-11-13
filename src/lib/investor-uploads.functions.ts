@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { activeApplicationId } from "@/lib/active-application";
+import { activeApplicationId, investmentApplicationForFund } from "@/lib/active-application";
 
 export const UPLOAD_KINDS = [
   { value: "identification", label: "Government ID" },
@@ -108,7 +108,7 @@ export const recordMyUpload = createServerFn({ method: "POST" })
         .from("investor_applications")
         .select("id, offering_id")
         .eq("user_id", userId)
-        .eq("offering_id", data.offering_id)
+        .eq("id", await investmentApplicationForFund(supabase, userId, data.offering_id, { link: true }))
         .maybeSingle();
       application = (row as any) ?? null;
       if (!application) throw new Error("That fund is not on your account.");

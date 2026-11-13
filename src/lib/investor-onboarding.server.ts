@@ -2651,7 +2651,15 @@ export async function reusePriorVerification(row: any, actorUserId: string | nul
 
 export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string, returnPath?: string | null, authenticatedDb?: any) {
   const { row } = await assertInvestorOwns(userId, onboardingId);
+  // A reused or login-level identity check skips session creation, which is where the
+  // investment's own record used to get linked. Link it here so later steps
+  // (accreditation, uploads, signing) have somewhere to save. Nothing is approved.
+  const linkIfMissing = async () => {
+    if (row.application_id || !authenticatedDb || row.investor_user_id !== userId) return;
+    try { await ensureVerificationApplication(row, authenticatedDb); } catch (e) { console.error("[verify-link]", (e as Error).message); }
+  };
   if (await reusePriorVerification(row, userId)) {
+    await linkIfMissing();
     if (["profile_selected", "verification"].includes(String(row.stage))) await touch(row.id, { stage: "verification" });
     await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_reused", actorUserId: userId, actorRole: "investor" } as any);
     return { url: null as string | null, completed: true };
@@ -2661,6 +2669,7 @@ export async function startInvestmentVerification(userId: string, onboardingId: 
     const { resolvePersonIdentity, supersedeUnstartedInvestmentCheck } = await import("@/lib/person-identity.server");
     const { check, action } = await resolvePersonIdentity(row.investor_user_id ?? null, row.person_id ?? null);
     if (check) {
+      await linkIfMissing();
       if (check.session_id && row.application_id) await supersedeUnstartedInvestmentCheck(row.application_id, check.session_id);
       if (check.session_id && !row.questionnaire_didit_session_id) await touch(row.id, { questionnaire_didit_session_id: check.session_id });
       if (String(row.stage) === "profile_selected") await touch(row.id, { stage: "verification" });

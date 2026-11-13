@@ -130,3 +130,52 @@ export async function ensureActivePersona(
   }
   return personaId;
 }
+
+const ENDED_STAGES = new Set(["closed", "declined", "cancelled"]);
+
+/**
+ * The application behind one investment. An investment only ever uses its own
+ * linked application, never an older same-login/fund one. When it has none yet
+ * (for example its identity check was reused from the login), `link: true`
+ * creates it through ensure_exact_investment_application: caller-authenticated,
+ * audited, and nothing is approved. Reads pass no `link` and get NO_APPLICATION.
+ */
+export async function linkedApplicationForInvestment(
+  supabase: any,
+  investment: { id: string; application_id?: string | null },
+  opts: { link?: boolean } = {},
+): Promise<string> {
+  if (investment.application_id) return investment.application_id;
+  if (!opts.link) return NO_APPLICATION;
+  const { data, error } = await supabase.rpc("ensure_exact_investment_application", { p_onboarding_id: investment.id });
+  if (error || typeof data !== "string") {
+    throw new Error("We couldn't link this step to your investment. Please contact Harmonious.");
+  }
+  return data;
+}
+
+/**
+ * Fund-addressed investor pages (signing, uploads): when the person has exactly
+ * one open investment in the fund, that investment's own application is used
+ * (linked on save when missing). Otherwise the older per-fund lookup is
+ * unchanged, so legacy-only investors keep working.
+ */
+export async function investmentApplicationForFund(
+  supabase: any,
+  userId: string,
+  offeringId?: string | null,
+  opts: { link?: boolean } = {},
+): Promise<string> {
+  if (!offeringId) return activeApplicationId(supabase, userId);
+  const { data: rows } = await supabase
+    .from("investor_onboardings")
+    .select("id, application_id, stage, closed_at")
+    .eq("investor_user_id", userId)
+    .eq("offering_id", offeringId)
+    .is("removed_at", null)
+    .is("merged_into_onboarding_id", null)
+    .limit(20);
+  const open = ((rows ?? []) as any[]).filter((r) => !r.closed_at && !ENDED_STAGES.has(String(r.stage)));
+  if (open.length !== 1) return applicationIdForOffering(supabase, userId, offeringId);
+  return linkedApplicationForInvestment(supabase, open[0], opts);
+}

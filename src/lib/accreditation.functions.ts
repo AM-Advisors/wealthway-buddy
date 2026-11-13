@@ -2,7 +2,7 @@ import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { activeApplicationId, applicationIdForOffering, NO_APPLICATION } from "@/lib/active-application";
+import { activeApplicationId, linkedApplicationForInvestment } from "@/lib/active-application";
 
 const onboardingRef = z.string().uuid().optional();
 
@@ -63,20 +63,12 @@ async function resolveApplicationId(
   if (onboardingId) {
     const { data: onb } = await supabase
       .from("investor_onboardings")
-      .select("offering_id, application_id")
+      .select("application_id")
       .eq("id", onboardingId)
       .eq("investor_user_id", userId)
       .maybeSingle();
-    if (onb?.application_id) return onb.application_id as string;
-    if (onb?.offering_id) {
-      const existing = await applicationIdForOffering(supabase, userId, onb.offering_id as string);
-      if (existing !== NO_APPLICATION || !opts.link) return existing;
-      const { data: linked, error } = await supabase.rpc("ensure_exact_investment_application", { p_onboarding_id: onboardingId });
-      if (error || typeof linked !== "string") {
-        throw new Error("We couldn't link this step to your investment. Please contact Harmonious.");
-      }
-      return linked;
-    }
+    // The investment's own application only; never an older same-fund record.
+    if (onb) return linkedApplicationForInvestment(supabase, { id: onboardingId, application_id: onb.application_id }, opts);
   }
   return activeApplicationId(supabase, userId);
 }

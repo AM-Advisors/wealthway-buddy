@@ -37,10 +37,12 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         .select("id, application_id, investor_user_id")
         .eq("id", data.onboarding_id)
         .maybeSingle();
-      if (!ob || (ob as any).investor_user_id !== userId || !(ob as any).application_id) {
+      if (!ob || (ob as any).investor_user_id !== userId) {
         throw new Error("This investment is not ready for signing yet.");
       }
-      applicationId = (ob as any).application_id as string;
+      // Link the investment's own record when it has none yet (same guarded step as verification).
+      const { linkedApplicationForInvestment } = await import("@/lib/active-application");
+      applicationId = await linkedApplicationForInvestment(supabase, ob as any, { link: true });
       redirectUrl = `https://onboard.harmonious.co/onboard/i/${(ob as any).id}`;
     } else {
       applicationId = await activeApplicationId(supabase, userId);
