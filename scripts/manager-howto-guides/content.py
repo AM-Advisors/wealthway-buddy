@@ -88,8 +88,50 @@ PAPER = {
   "help": ["Email the Harmonious team with the investor and fund name and what you see on screen. Send signed documents only by the method we agreed with you."],
 }
 
+OUTSIDE = {
+  "eyebrow": "Harmonious and fund manager guide",
+  "running": "Staff and fund manager guide",
+  "title": "Signing outside the platform",
+  "intro": "Use these steps when an investor wants to sign their documents on paper or in their own signing tool. The documents you download include the fund's details. The investor's own name, amount and signature lines are left blank for them to fill in by hand.",
+  "where": "Funds  ›  your fund  ›  Investors",
+  "before": [
+    "The investor is already added to the fund.",
+    "The fund's documents are approved and current.",
+    "The investor's investment amount is correct on the platform. The paper copy must match it.",
+  ],
+  "groups": [
+    {"heading": "1. Get the documents", "steps": [
+      {"title": "Harmonious staff: download the packet", "paragraphs": ["In Operations, open Funds, then Public fund pages. Find the fund and select Download packet (PDF). It makes one PDF with all the fund's current documents and, if you choose, the wire instructions.", "Packet page also makes a share link you can email to the investor."], "labels": ["Funds", "Public fund pages", "Download packet (PDF)", "Packet page"]},
+      {"title": "Fund managers: download each document", "paragraphs": ["Go to My Funds, open the fund, then Documents. Select Review, then Download on each document."], "labels": ["My Funds", "Documents", "Review", "Download"]},
+    ]},
+    {"heading": "2. The investor signs and returns them", "steps": [
+      {"title": "Send and collect", "paragraphs": ["Email the documents to the investor. Ask them to sign every signature page and return the W-9 (or W-8 if they are not a U.S. person) with them.", "When they come back, check that every page is signed and that the name and amount match the platform."], "labels": []},
+    ]},
+    {"heading": "3. Record the signed copies", "steps": [
+      {"title": "Open the investor", "paragraphs": ["Open the fund's Investors tab and select the investor. Open the Documents tab in the investor's review panel."], "labels": ["Investors", "Documents"]},
+      {"title": "Mark the Subscription Agreement as signed", "paragraphs": ["Under Subscription Agreement signed outside the platform, select Mark as signed outside the platform, enter the date it was signed and select Confirm."], "labels": ["Mark as signed outside the platform", "Confirm"]},
+      {"title": "Upload each signed file", "paragraphs": ["Under Signed before joining Harmonious, select Load a completed document. Choose the document type, enter the date signed, choose the file and select Save document. Repeat for each file.", "Harmonious staff can also select Load the signed copy on the Subscription Agreement section. Fund managers email the signed Subscription Agreement to Harmonious."], "labels": ["Load a completed document", "Save document", "Load the signed copy"]},
+      {"title": "Record a paper W-9 or W-8", "paragraphs": ["On the investor's page, open Documents. Under Investor documents & tax forms, upload the form, then select Mark completed outside platform and confirm."], "labels": ["Investor documents & tax forms", "Upload", "Mark completed outside platform"]},
+    ]},
+  ],
+  "cards": {"heading": "What still applies", "intro": "Paper signing replaces only the signing itself.", "items": [
+    {"title": "Sign step needs the Harmonious copy", "body": "The Sign step only shows complete once Harmonious has uploaded the signed Subscription Agreement. Until then the investor shows \"Signed outside: copy pending.\"", "labels": ["Signed outside: copy pending"]},
+    {"title": "Details and identity check", "body": "The investor still has to fill in their details and verify their identity on the platform.", "labels": []},
+    {"title": "Approval and funding", "body": "The fund manager still has to approve the investor. Paper signing doesn't count as funding; money is only recorded when it actually arrives.", "labels": ["Approve to send funds"]},
+    {"title": "Investor details are blank on the copies", "body": "The downloaded documents don't include the investor's name, entity, amount, class or a filled-in signature page. The investor writes these in by hand.", "labels": []},
+  ]},
+  "questions": [
+    {"q": "I don't see Mark as signed outside the platform", "a": ["The investor may have already signed on the platform. In that case there's nothing to sign on paper."]},
+    {"q": "I marked it by mistake", "a": ["Select Undo, give a short reason and select Confirm undo. Both entries stay in the investor's history."]},
+    {"q": "The amount on the paper copy is different", "a": ["Don't mark it as signed. Correct the investment amount on the platform first, then ask the investor to sign a copy with the right amount."]},
+    {"q": "The investor signed an older version", "a": ["Ask them to sign the current version. Only the current version can be recorded."]},
+  ],
+  "help": ["Email the Harmonious team with the investor and fund name and what you see on screen."],
+}
+
 os.makedirs("/tmp/mhg", exist_ok=True)
-json.dump({"support": "support@harmonious.co", "guides": {"link": LINK, "paper": PAPER},
+json.dump({"support": "support@harmonious.co", "guides": {"link": LINK, "paper": PAPER, "outside": OUTSIDE},
   "outputs": [["link", "Harmonious-Sharing-Your-Onboarding-Link.pdf", "Sharing your onboarding link"],
-              ["paper", "Harmonious-Investor-Signs-on-Paper.pdf", "When an investor signs on paper"]]},
+              ["paper", "Harmonious-Investor-Signs-on-Paper.pdf", "When an investor signs on paper"],
+              ["outside", "Harmonious-Signing-Outside-the-Platform.pdf", "Signing outside the platform"]]},
   open("/tmp/mhg/content.json", "w"), indent=1)

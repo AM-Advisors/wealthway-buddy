@@ -24,7 +24,7 @@ def build(path, total, short):
         c.drawRightString(W - M, 32, f"Page {st['page']} of {total}")
         if st["page"] > 1:
             c.drawImage(ImageReader("/tmp/ddq/logo-navy.png"), M, H - 46, width=90, height=90 * 449 / 1917, mask="auto")
-            c.setFont("Pop", 8); c.drawRightString(W - M, H - 40, f"Fund manager guide · {short}")
+            c.setFont("Pop", 8); c.drawRightString(W - M, H - 40, f"{G.get('running', 'Fund manager guide')} · {short}")
             c.setStrokeColor(TEAL); c.setLineWidth(1.2); c.line(M, H - 54, W - M, H - 54)
         st["y"] = TOP
     def new(): c.showPage(); chrome()
