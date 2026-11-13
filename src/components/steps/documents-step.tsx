@@ -16,6 +16,7 @@ import { downloadOfferingDocument, readOfferingDocument } from "@/lib/offering-d
 import { OfferingDocumentReader } from "@/components/offering-document-reader";
 import { getSigningStates } from "@/lib/document-signing.functions";
 import { DocumentSignCard } from "@/components/document-sign-card";
+import { InvestmentOfferingDocuments } from "@/components/investment-offering-documents";
 import { savePdf } from "@/lib/download-pdf";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,6 +128,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
     }
   }, [data]);
 
+  const onboardingId = ((data?.investment as any)?.onboardingId as string | null | undefined) ?? null;
   const signedByDoc = new Map((data?.signatures ?? []).map((s) => [s.offering_document_id, s]));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
   const closed = Boolean(data?.investment?.closed);
@@ -198,6 +200,8 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
       toast.success("Document signed.");
       queryClient.invalidateQueries({ queryKey: ["documents-step", offeringId ?? "active"] });
       if (res.allSigned) {
+        // Back to the investment's Sign step, which shows anything left (acknowledgments, submit).
+        if (onboardingId) { navigate({ to: "/investment/$onboardingId", params: { onboardingId }, search: { step: "sign" } }); return; }
         const fund = offeringId ?? data?.offering?.id;
         if (fund) navigate({ to: "/fund/$offeringId/funding", params: { offeringId: fund } });
         else navigate({ to: "/home" });
@@ -394,6 +398,8 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
             </CardContent>
           </Card>
 
+          {onboardingId ? <InvestmentOfferingDocuments onboardingId={onboardingId} acknowledgeOnly /> : null}
+
           {(data?.documents ?? []).map((doc) => {
             const signature = signedByDoc.get(doc.id);
             const isOpen = activeDoc === doc.id;
@@ -537,9 +543,11 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => navigate({ to: "/onboarding/accreditation" })}
+              onClick={() => onboardingId
+                ? navigate({ to: "/investment/$onboardingId", params: { onboardingId }, search: { step: "sign" } })
+                : navigate({ to: "/onboarding/accreditation" })}
             >
-              Back
+              {onboardingId ? "Back to your investment" : "Back"}
             </Button>
             <Button
               type="button"

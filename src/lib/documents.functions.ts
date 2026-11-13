@@ -95,7 +95,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
     return {
       application,
       offering,
-      investment: { closed: investment.closed, closedOn: investment.closedOn },
+      investment: { closed: investment.closed, closedOn: investment.closedOn, onboardingId: (investment.onboardingId as string | null | undefined) ?? null },
       documents: (documents ?? []).map((d) => ({
         ...d,
         approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval",

@@ -204,6 +204,21 @@ export function investorHomeSummary(steps: JourneyStepView[], facts: { waitingOn
   };
 }
 
+/**
+ * The investor home card for one investment. The investor's own steps come first:
+ * a review elsewhere (for example accreditation) never hides something the
+ * investor can already do, such as signing. Same steps as the investment page.
+ */
+export function investorHomeAction(
+  steps: JourneyStepView[],
+  readinessNext: { label: string; owner: string | null } | null,
+): { nextAction: string | null; waitingOn: string | null } {
+  const s = investorHomeSummary(steps);
+  if (s.nextAction) return { nextAction: s.nextAction, waitingOn: null };
+  if (readinessNext?.owner === "investor") return { nextAction: readinessNext.label, waitingOn: null };
+  return { nextAction: null, waitingOn: s.complete ? null : (readinessNext?.owner ?? null) };
+}
+
 // ------------------------------------------------------- offering exemption
 
 /**

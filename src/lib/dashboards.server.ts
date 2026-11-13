@@ -16,8 +16,8 @@ import {
 const db = () => supabaseAdmin as any;
 const forbid = (m: string) => { throw new Error(`Forbidden: ${m}`); };
 
-async function factsFor(input: any[]): Promise<{ fact: InvestmentFact; row: any; result: any }[]> {
-  const out = [] as { fact: InvestmentFact; row: any; result: any }[];
+async function factsFor(input: any[]): Promise<{ fact: InvestmentFact; row: any; result: any; requirements: any[] }[]> {
+  const out = [] as { fact: InvestmentFact; row: any; result: any; requirements: any[] }[];
   // Removed or merged duplicates never count (same rule as the fund cap table).
   const rows = input.filter(isLiveInvestment);
   // One batched read for all rows (same code path as single readiness).
@@ -25,9 +25,9 @@ async function factsFor(input: any[]): Promise<{ fact: InvestmentFact; row: any;
   const canonFunding = await canonicalizeOnboardingFunding(db(), rows);
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const { result } = all[i]!;
+    const { result, facts } = all[i]!;
     out.push({
-      row, result,
+      row, result, requirements: (facts as any)?.requirements ?? [],
       fact: {
         onboardingId: row.id, offeringId: row.offering_id, fundingStatus: (canonFunding[i]?.funding_status ?? row.funding_status) ?? null, stage: row.stage ?? null,
         intendedCents: investmentAmountCents(row), fundedCents: row.funded_amount_cents ?? null, approved: !!row.approved_to_fund_at,
@@ -182,12 +182,19 @@ export async function investorDashboard(userId: string) {
   ]);
   const off = new Map(((offs ?? []) as any[]).map((o) => [o.id, o.name]));
   const prof = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.display_label]));
-  const investments = built.map(({ fact, row, result }) => {
-    const investorAction = result.nextAction?.owner === "investor" ? String(result.nextAction.label) : null;
+  const { journeySteps, investorHomeAction } = await import("@/lib/investor-journey-model");
+  const investments = built.map(({ fact, row, result, requirements }) => {
+    // Same steps as the investment page, so home never says "caught up" while signing is open.
+    const steps = journeySteps(requirements, {
+      stage: String(row.stage ?? ""), approvedToFund: Boolean(row.approved_to_fund_at),
+      fundingStatus: row.funding_status ?? null, investorReportsSent: Boolean(row.investor_reports_sent_at),
+    });
+    const home = investorHomeAction(steps, result.nextAction ? { label: String(result.nextAction.label), owner: result.nextAction.owner ?? null } : null);
+    const investorAction = home.nextAction;
     return {
       id: fact.onboardingId, offeringId: row.offering_id as string, fundName: off.get(row.offering_id) ?? "Fund", profileLabel: prof.get(row.investment_profile_id) ?? null,
       amountCents: fact.intendedCents, step: clientStepIndex(fact), funded: isFunded(fact), fundingState: fundingStateOf(fact),
-      nextAction: investorAction, waitingOn: investorAction ? null : (result.nextAction?.owner ?? null), complete: funnelStageOf(fact) === "complete",
+      nextAction: investorAction, waitingOn: home.waitingOn, complete: funnelStageOf(fact) === "complete",
     };
   });
   return {

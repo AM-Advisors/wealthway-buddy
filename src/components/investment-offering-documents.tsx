@@ -7,34 +7,43 @@ import { acknowledgeDocumentFn, investorDocumentsFn } from "@/lib/fund-setup-can
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadError } from "@/components/load-error";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OfferingDocumentReader } from "@/components/offering-document-reader";
 
-/** Investor Sign-stage list: only documents that apply to this investment, plain actions. */
-export function InvestmentOfferingDocuments({ onboardingId }: { onboardingId: string }) {
+/**
+ * Investor Sign-stage list: only documents that apply to this investment, plain actions.
+ * `acknowledgeOnly` shows just the documents still waiting for "I acknowledge and agree",
+ * so the signing page can finish them without sending the investor elsewhere.
+ */
+export function InvestmentOfferingDocuments({ onboardingId, acknowledgeOnly = false }: { onboardingId: string; acknowledgeOnly?: boolean }) {
   const [reading, setReading] = useState<{ id: string; title: string } | null>(null);
   const qc = useQueryClient();
   const load = useServerFn(investorDocumentsFn);
   const ack = useServerFn(acknowledgeDocumentFn);
   const q = useQuery({ queryKey: ["investment-offering-docs", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
-  if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading documents…</p>;
+  if (q.isLoading) return acknowledgeOnly ? null : <p className="text-sm text-muted-foreground">Loading documents…</p>;
   if (q.error) return <LoadError audience="account" error={q.error} what="Your documents" onRetry={() => void q.refetch()} />;
-  if (!q.data?.length) return <p className="text-sm text-muted-foreground">No documents have been shared for this investment yet.</p>;
+  const rows = acknowledgeOnly ? (q.data ?? []).filter((d) => d.action === "Acknowledge") : (q.data ?? []);
+  if (!rows.length) return acknowledgeOnly ? null : <p className="text-sm text-muted-foreground">No documents have been shared for this investment yet.</p>;
   const acknowledge = async (documentId: string) => {
     try {
       await ack({ data: { onboardingId, documentId } });
       toast.success("Acknowledged");
       qc.invalidateQueries({ queryKey: ["investment-offering-docs", onboardingId] });
+      qc.invalidateQueries({ queryKey: ["onboarding", onboardingId] });
     } catch (e: any) {
       toast.error(e.message);
     }
   };
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Documents</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle className="text-base">{acknowledgeOnly ? "Also needed: acknowledge these documents" : "Documents"}</CardTitle>
+        {acknowledgeOnly ? <CardDescription>These don't need a signature. Read each one, then select I acknowledge and agree.</CardDescription> : null}
+      </CardHeader>
       <CardContent className="space-y-2">
-        {q.data.map((d) => (
+        {rows.map((d) => (
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
             <span className="text-sm">{d.title}{d.action !== "Completed" && d.approvalLabel ? <Badge variant="outline" className="mt-1 block w-fit">{d.approvalLabel}</Badge> : null}</span>
             {d.canRead && <Button size="sm" variant="outline" onClick={() => setReading({ id: d.id, title: d.title })}>Read document</Button>}
