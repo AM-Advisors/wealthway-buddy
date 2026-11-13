@@ -182,7 +182,7 @@ export async function investorDashboard(userId: string) {
   ]);
   const off = new Map(((offs ?? []) as any[]).map((o) => [o.id, o.name]));
   const prof = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.display_label]));
-  const { journeySteps, investorHomeAction } = await import("@/lib/investor-journey-model");
+  const { journeySteps, investorHomeAction, nextJourneyStep } = await import("@/lib/investor-journey-model");
   const investments = built.map(({ fact, row, result, requirements }) => {
     // Same steps as the investment page, so home never says "caught up" while signing is open.
     const steps = journeySteps(requirements, {
@@ -195,6 +195,8 @@ export async function investorDashboard(userId: string) {
       id: fact.onboardingId, offeringId: row.offering_id as string, fundName: off.get(row.offering_id) ?? "Fund", profileLabel: prof.get(row.investment_profile_id) ?? null,
       amountCents: fact.intendedCents, step: clientStepIndex(fact), funded: isFunded(fact), fundingState: fundingStateOf(fact),
       nextAction: investorAction, waitingOn: home.waitingOn, complete: funnelStageOf(fact) === "complete",
+      // The step Continue opens, so other home lists point to the same place.
+      nextStep: nextJourneyStep(steps),
     };
   });
   return {

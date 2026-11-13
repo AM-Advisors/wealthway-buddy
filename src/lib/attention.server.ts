@@ -12,7 +12,7 @@ import { canonicalFundIds, liveLegacyApplications } from "@/lib/legacy-applicati
  * collector that finds no relationship returns nothing at all.
  */
 
-import { investmentAttentionStep } from "@/lib/attention-investment";
+import { canonicalInvestmentAttention, investmentAttentionStep, type CanonicalInvestmentHome } from "@/lib/attention-investment";
 import {
   ATTENTION_GAPS,
   buildAttentionItem,
@@ -87,9 +87,24 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   if (approvedFunds.length) {
     try { release = await (await import("@/lib/wire-release.server")).wireReleaseStates(approvedFunds); } catch { release = null; }
   }
+  // Same next step as the investor home card (and the investment page). The
+  // stage-only rule below is used only if that read is unavailable.
+  let home: Map<string, CanonicalInvestmentHome> | null = null;
+  if ((investments as any[]).length) {
+    try {
+      const { investorDashboard } = await import("@/lib/dashboards.server");
+      const d = await investorDashboard(ctx.userId);
+      home = new Map((d.investments as any[]).map((i) => [String(i.id), i as CanonicalInvestmentHome]));
+    } catch {
+      home = null;
+    }
+  }
   for (const inv of investments as any[]) {
     const rel = release?.get(inv.offering_id);
-    const step = investmentAttentionStep({ ...inv, instructions_available: rel?.available === true });
+    const canon = home?.get(String(inv.id));
+    const step = canon
+      ? canonicalInvestmentAttention(canon)
+      : investmentAttentionStep({ ...inv, instructions_available: rel?.available === true });
     if (!step) continue;
     const fundName = n.funds.get(inv.offering_id) ?? null;
     out.push(
@@ -302,10 +317,14 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         .limit(LIMIT),
     ),
   );
+  // An open investment's own item already leads to its Sign step, so an
+  // outstanding signature for that fund is not listed a second time.
+  const openInvestmentFunds = new Set((investments as any[]).map((i) => String(i.offering_id)));
   for (const sg of signers as any[]) {
     const state = String(sg.status ?? "pending");
     const outstanding = state === "pending" || state === "sent";
     if (!outstanding && state !== "signed") continue;
+    if (outstanding && sg.offering_id && openInvestmentFunds.has(String(sg.offering_id))) continue;
     out.push(
       buildAttentionItem({
         id: `investor-signature:${sg.id}`,
@@ -1104,8 +1123,8 @@ export async function attentionFor(ctx: Ctx, workspace: WorkspaceKind): Promise<
   const n = await names(ctx.supabase);
 
   if (workspace === "investor") {
+    // Investors are not shown internal "not configured yet" notes; they read as a to-do.
     items = await investorItems(ctx, n);
-    gaps.push(ATTENTION_GAPS["tax_operations"]!);
   } else if (workspace === "fund_manager") {
     items = await fundManagerItems(ctx, n);
     gaps.push(ATTENTION_GAPS["tax_operations"]!, ATTENTION_GAPS["regulatory"]!);

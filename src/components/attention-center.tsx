@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, ListTodo, Loader2 } from "lucide-react";
 
 import { getAttention } from "@/lib/attention.functions";
 import {
@@ -16,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import type { WorkspaceKind } from "@/lib/session-resolution";
 
 const GROUP_ICON: Record<AttentionGroup, typeof Clock> = {
-  needs_you: AlertTriangle,
+  // A plain to-do mark, not a warning: urgent items carry their own "Urgent" badge.
+  needs_you: ListTodo,
   harmonious_working: Loader2,
   waiting_third_party: Clock,
   recently_completed: CheckCircle2,

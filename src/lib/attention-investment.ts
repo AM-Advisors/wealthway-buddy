@@ -34,3 +34,29 @@ export function investmentAttentionStep(
   if (["verification", "eligibility", "tax"].includes(stage)) return { step: "verify", status: "Verification to complete", waiting: false };
   return { step: "about", status: "Tell us who is investing", waiting: false };
 }
+
+/** The investor home's own answer for one investment (investorDashboard in dashboards.server.ts). */
+export type CanonicalInvestmentHome = {
+  nextAction: string | null;
+  waitingOn: string | null;
+  complete: boolean;
+  nextStep: "about" | "verify" | "sign" | "fund" | string | null;
+};
+
+const HOME_WAITING: Record<string, string> = {
+  harmonious: "Harmonious is reviewing. Nothing needed from you right now.",
+  fund_manager: "Waiting on the fund manager. Nothing needed from you right now.",
+};
+
+/**
+ * Action Center item for an investment, worded exactly like the investor home's
+ * next-step card so the two never name different steps. Null when finished.
+ */
+export function canonicalInvestmentAttention(
+  home: CanonicalInvestmentHome,
+): { step: "about" | "verify" | "sign" | "fund"; status: string; waiting: boolean } | null {
+  if (home.complete) return null;
+  const step = (["about", "verify", "sign", "fund"] as const).find((k) => k === home.nextStep) ?? "about";
+  if (home.nextAction) return { step, status: home.nextAction, waiting: false };
+  return { step, status: HOME_WAITING[String(home.waitingOn ?? "")] ?? "Harmonious is reviewing your information. Nothing needed from you right now.", waiting: true };
+}

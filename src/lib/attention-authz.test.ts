@@ -129,10 +129,10 @@ describe("investor scope", () => {
     }
   });
 
-  it("says tax work is not configured rather than showing an all-clear", async () => {
+  it("does not show investors internal not-configured-yet notes", async () => {
     const attentionFor = await load();
     const result = await attentionFor(ctx("user-a"), "investor");
-    expect(result.gaps.some((g) => /not been configured/i.test(g.message))).toBe(true);
+    expect(result.gaps.some((g) => /not been configured/i.test(g.message))).toBe(false);
   });
 });
 
