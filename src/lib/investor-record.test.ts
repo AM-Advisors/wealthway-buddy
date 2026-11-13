@@ -400,9 +400,10 @@ describe("model", () => {
     expect(createNewBlocker(m, false)).toMatch(/already exists/);
     expect(createNewBlocker(m, true)).toBeNull();
   });
-  it("quick add needs only name, email, profile type and amount", () => {
+  it("quick add needs only name and email; type and amount are optional", () => {
     expect(validateQuickAdd({ firstName: "A", lastName: "B", email: "a@b.co", profileType: "trust", amountCents: 1 })).toEqual([]);
-    expect(validateQuickAdd({ firstName: "A" })).toHaveLength(4);
+    expect(validateQuickAdd({ firstName: "A" })).toHaveLength(2);
+    expect(validateQuickAdd({ firstName: "A", lastName: "B", email: "a@b.co" })).toEqual([]);
   });
   it("maps entry groups to canonical profile types", () => {
     expect(dbProfileType("entity", "llc")).toBe("llc");

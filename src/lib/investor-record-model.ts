@@ -130,13 +130,15 @@ export function createNewBlocker(matches: SafeMatch[], confirmedNew: boolean): s
 
 /* ---------------- quick add ---------------- */
 
-export type QuickAdd = { firstName: string; lastName: string; email: string; profileType: string; amountCents: number };
+export type QuickAdd = { firstName: string; lastName: string; email: string; profileType: string; amountCents: number | null };
 export function validateQuickAdd(q: { [K in keyof QuickAdd]?: QuickAdd[K] | undefined }): string[] {
   const e: string[] = [];
   if (!String(q.firstName ?? "").trim() || !String(q.lastName ?? "").trim()) e.push("Enter the investor's first and last name.");
   if (!isEmail(String(q.email ?? ""))) e.push("Enter a valid email address.");
-  if (!isProfileType(q.profileType)) e.push("Choose how they are investing.");
-  if (!(Number(q.amountCents) > 0)) e.push("Enter the investment amount.");
+  // Investor type and amount are optional at entry; type defaults to Individual and
+  // the amount is required later, before agreements are prepared.
+  if (q.profileType && !isProfileType(q.profileType)) e.push("Choose how they are investing.");
+  if (q.amountCents != null && Number(q.amountCents) < 0) e.push("The investment amount can't be negative.");
   return e;
 }
 

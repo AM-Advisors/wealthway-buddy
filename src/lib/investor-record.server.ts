@@ -159,7 +159,7 @@ export async function createInvestor(userId: string, input: {
     person = data;
   } else {
     // A paperwork contact's email satisfies the email requirement: the invitation goes to them.
-    const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email || input.contact?.email || undefined, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
+    const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email || input.contact?.email || undefined, profileType: input.profile.type || undefined, amountCents: input.investment.amountCents ?? null });
     const noEmailOk = input.allowMissingEmail && !String(input.person.email ?? "").trim() && !input.contact?.email;
     const blocking = noEmailOk ? errs.filter((e) => e !== "Enter a valid email address.") : errs;
     if (blocking.length) fail(blocking[0]!);
@@ -179,6 +179,7 @@ export async function createInvestor(userId: string, input: {
   }
 
   // 2. Investment Profile - a Person may hold many; reuse only one that is theirs.
+  if (!input.profile.type) input.profile.type = "individual";
   if (!isProfileType(input.profile.type) && !input.profileId) fail("Choose how they are investing.");
   let profileId = input.profileId ?? null;
   if (profileId) {

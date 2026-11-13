@@ -48,11 +48,11 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   };
 
   const save = async (continueToRecord: boolean) => {
-    const amountCents = cents(f['amount']) ?? 0;
+    const amountCents = cents(f['amount']);
     if (!chosen) {
       const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: f['email'] || (contactOn ? f['contactEmail'] : ""), profileType: f['profileType'], amountCents });
       if (errs.length) return void toast.error(errs[0]);
-    } else if (!(amountCents > 0)) return void toast.error("Enter the investment amount.");
+    }
     if (mismatchPrompt && !mismatchConfirmed) return void toast.error("Confirm who is investing before saving.");
     setBusy(true);
     try {
@@ -98,7 +98,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">Create New Investor</CardTitle>
-        <p className="text-sm text-muted-foreground">We search existing Harmonious records first so nobody is entered twice. Only name, email, how they invest and amount are needed to start.</p></CardHeader>
+        <p className="text-sm text-muted-foreground">We search existing Harmonious records first so nobody is entered twice. Only name and email are needed to start. Investor type defaults to Individual; the amount can be added later.</p></CardHeader>
       <CardContent className="space-y-5">
         {!chosen?.profileId ? (
           <div className="flex flex-wrap gap-2" role="group" aria-label="Investor kind">
