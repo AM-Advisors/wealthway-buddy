@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const srv = () => import("@/lib/user-access.server");
 const reason = z.string().trim().min(3, "Add a reason.").max(500);
-const who = { userId: z.string().uuid().nullish(), email: z.string().email().nullish() };
+const who = { userId: z.string().uuid().nullish(), email: z.string().trim().email().nullish() };
 const inviteTable = z.enum(["staff_invitations", "client_invitations", "fund_invitations"]);
 
 export const getPeopleDirectory = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])

@@ -122,7 +122,7 @@ export const deleteGroupMailbox = createServerFn({ method: "POST" })
 export const sendGroupMailboxEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: { mailboxId: string; to: string; subject: string; body: string }) =>
-    z.object({ mailboxId: z.string().uuid(), to: z.string().email(), subject: z.string().min(1), body: z.string().min(1) }).parse(input))
+    z.object({ mailboxId: z.string().uuid(), to: z.string().trim().email(), subject: z.string().min(1), body: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
     await sendFromGroupMailbox(context.userId, data.mailboxId, { to: data.to, subject: data.subject, body: data.body });
     return { ok: true };

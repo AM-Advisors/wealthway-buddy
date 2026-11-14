@@ -173,7 +173,7 @@ const stakeholderInput = z.object({
   clientId: z.string().uuid(),
   id: z.string().uuid().optional().nullable(),
   name: z.string().min(1),
-  email: z.string().email().optional().nullable().or(z.literal("")),
+  email: z.string().trim().email().optional().nullable().or(z.literal("")),
   holder_type: z.string().min(1).default("individual"),
   notes: z.string().optional().nullable(),
 });

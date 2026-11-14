@@ -190,7 +190,7 @@ const detailsSchema = z.object({
   user_id: z.string().uuid(),
   application_id: z.string().uuid().nullable().optional(),
   legal_name: z.string().max(200).nullable().optional(),
-  email: z.string().email().max(200).nullable().optional(),
+  email: z.string().trim().email().max(200).nullable().optional(),
   phone: z.string().max(60).nullable().optional(),
   entity_name: z.string().max(200).nullable().optional(),
   investor_type: z

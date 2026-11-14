@@ -298,7 +298,7 @@ export const inviteInvestorFn = createServerFn({ method: "POST" })
   .validator(
     z.object({
       offeringId: z.string().min(1),
-      email: z.string().email(),
+      email: z.string().trim().email(),
       name: z.string().nullish(),
       intendedAmountCents: z.number().int().nullish(),
       source: z.string().nullish(),

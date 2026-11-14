@@ -16,7 +16,7 @@ export const checkEmailDeliveryFn = createServerFn({ method: "POST" }).middlewar
 export const listParticipantsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(onb.parse)
   .handler(async ({ data, context }) => (await pp()).listParticipants(context.userId, data.onboardingId));
 export const assignParticipantFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(onb.extend({ role: z.enum(["preparer", "signer", "contact"]), fullName: z.string().min(1).max(160), email: z.string().email().max(254), title: str }).parse)
+  .validator(onb.extend({ role: z.enum(["preparer", "signer", "contact"]), fullName: z.string().min(1).max(160), email: z.string().trim().email().max(254), title: str }).parse)
   .handler(async ({ data, context }) => (await pp()).assignParticipant(context.userId, data));
 export const removeParticipantFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(z.object({ participantId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await pp()).removeParticipant(context.userId, data.participantId));
@@ -42,7 +42,7 @@ export const changeInvestingAsFn = createServerFn({ method: "POST" }).middleware
   .handler(async ({ data, context }) => (await pp()).changeInvestingAs(context.userId, data as any));
 export const addPersonForKycFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(onb.extend({
-    firstName: z.string().trim().min(1).max(120), lastName: z.string().trim().min(1).max(120), email: z.string().email().max(254),
+    firstName: z.string().trim().min(1).max(120), lastName: z.string().trim().min(1).max(120), email: z.string().trim().email().max(254),
     role: z.enum(["joint_owner", "authorized_signer", "beneficial_owner", "control_person", "trustee", "officer", "manager", "member"]),
     title: str, ownershipPercent: z.number().min(0).max(100).nullable().optional(), sendKyc: z.boolean(), sendSignature: z.boolean(),
   }).parse)

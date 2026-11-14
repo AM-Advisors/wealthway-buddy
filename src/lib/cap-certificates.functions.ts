@@ -302,7 +302,7 @@ export const inviteShareholder = createServerFn({ method: "POST" })
       .object({
         clientId: z.string().uuid(),
         stakeholderId: z.string().uuid(),
-        email: z.string().email(),
+        email: z.string().trim().email(),
       })
       .parse(d),
   )

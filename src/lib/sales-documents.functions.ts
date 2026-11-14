@@ -14,7 +14,7 @@ export const createSalesDocument = createServerFn({ method: "POST" }).middleware
   .validator((d) => z.object({
     kind: z.enum(["proposal", "rfp", "rfq"]), direction: z.enum(["response", "outbound"]), title: z.string().trim().min(2).max(200),
     dealId: z.string().uuid().nullish(), contactId: z.string().uuid().nullish(), clientId: z.string().uuid().nullish(), quoteId: z.string().uuid().nullish(),
-    recipientName: z.string().max(200).nullish(), recipientEmail: z.string().email().nullish().or(z.literal("")), dueDate: z.string().nullish(),
+    recipientName: z.string().max(200).nullish(), recipientEmail: z.string().trim().email().nullish().or(z.literal("")), dueDate: z.string().nullish(),
   }).parse(d))
   .handler(async ({ data, context }) => (await S()).createDocument(context.userId, { ...data, recipientEmail: data.recipientEmail || null }));
 export const getSalesDocument = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).validator((d) => id.parse(d))
@@ -82,5 +82,5 @@ export const salesDocumentPersonLinks = createServerFn({ method: "POST" }).middl
   .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await S()).personLinks(context.userId, data.id));
 export const logSalesLinkCopy = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator((d) => z.object({ id: z.string().uuid(), email: z.string().email().max(255), kind: z.enum(["sign", "view"]) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), email: z.string().trim().email().max(255), kind: z.enum(["sign", "view"]) }).parse(d))
   .handler(async ({ data, context }) => (await S()).logLinkCopy(context.userId, data.id, data.email, data.kind));

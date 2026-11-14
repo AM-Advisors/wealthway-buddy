@@ -33,7 +33,7 @@ export const removeCampaignAsset = createServerFn({ method: "POST" }).middleware
   .handler(async ({ context, data }) => (await import("@/lib/marketing-drive.server")).removeCampaignAsset(uid(context), data.id));
 
 export const createMarketingShareLink = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ assetId: id, audience: z.enum(["client", "prospect", "investor", "partner", "other"]), recipientName: z.string().max(200).nullish(), recipientEmail: z.string().email().max(200).nullish().or(z.literal("")) }).parse(d))
+  .validator((d: unknown) => z.object({ assetId: id, audience: z.enum(["client", "prospect", "investor", "partner", "other"]), recipientName: z.string().max(200).nullish(), recipientEmail: z.string().trim().email().max(200).nullish().or(z.literal("")) }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/marketing-drive.server")).createShareLink(uid(context), data));
 
 export const getMarketingShareLinks = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])

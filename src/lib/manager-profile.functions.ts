@@ -105,7 +105,7 @@ export const getManagerProfile = createServerFn({ method: "GET" })
 
 const profileSchema = z.object({
   legal_name: z.string().min(1).max(200),
-  email: z.string().email().max(200),
+  email: z.string().trim().email().max(200),
   phone: z.string().max(50).optional().default(""),
   entity_name: z.string().max(200).optional().default(""),
   address_line1: z.string().max(200).optional().default(""),

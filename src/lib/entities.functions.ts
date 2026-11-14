@@ -389,7 +389,7 @@ export const saveClientTerms = createServerFn({ method: "POST" })
         defaultDiscountKind: z.enum(["percent", "fixed"]).nullable().optional(),
         defaultDiscountValue: z.number().nullable().optional(),
         billingContactName: z.string().optional().nullable(),
-        billingContactEmail: z.string().email().optional().nullable().or(z.literal("")),
+        billingContactEmail: z.string().trim().email().optional().nullable().or(z.literal("")),
       })
       .parse(data),
   )

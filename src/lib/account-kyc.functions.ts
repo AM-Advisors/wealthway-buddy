@@ -43,7 +43,7 @@ export const useIdNameForCheckFn = createServerFn({ method: "POST" }).middleware
 
 export const addOutsideIdentityReportFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .inputValidator((d: unknown) => z.object({
-    email: z.string().email().max(320),
+    email: z.string().trim().email().max(320),
     fileName: z.string().min(1).max(255),
     contentType: z.enum(["application/pdf", "image/png", "image/jpeg"]),
     contentBase64: z.string().min(1).max(21_000_000),

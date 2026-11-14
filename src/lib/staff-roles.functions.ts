@@ -35,7 +35,7 @@ export const listStaffRolesFn = createServerFn({ method: "GET" })
 export const changeStaffRoleFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({
-    email: z.string().email().max(255).optional(),
+    email: z.string().trim().email().max(255).optional(),
     userId: z.string().uuid().optional(),
     role: z.enum(MANAGED_ROLES),
     action: z.enum(["grant", "revoke"]),

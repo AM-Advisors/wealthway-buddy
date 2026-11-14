@@ -498,7 +498,7 @@ export const setProviderContact = createServerFn({ method: "POST" })
     z
       .object({
         providerId: z.string().uuid(),
-        email: z.string().email(),
+        email: z.string().trim().email(),
         contactName: z.string().optional().nullable(),
         title: z.string().optional().nullable(),
         active: z.boolean().default(true),
