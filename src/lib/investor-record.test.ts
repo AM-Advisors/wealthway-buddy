@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activityFor, bulkSummary, classifyBulk, committable, createNewBlocker, dbProfileType, entrySourceLabel, maskEmail, parseCsv, planIncoming,
-  isPaperworkContactRole, profileNameMismatch, rankMatches, recordStatus, removalBlocker, sanitizePatch, relatedRoleLabel, validateQuickAdd, validPaperworkContact, type PersonCandidate,
+  isPaperworkContactRole, profileNameMismatch, canSaveWithoutEmail, helperEmailBlocker, rankMatches, recordStatus, removalBlocker, sanitizePatch, relatedRoleLabel, validateQuickAdd, validPaperworkContact, type PersonCandidate,
 } from "@/lib/investor-record-model";
 
 /* ---------------- in-memory fake of the service-role client ---------------- */
@@ -68,11 +68,15 @@ const STAFF = "staff", MGR_A = "mgr-a", JANE = "jane-user";
 const reconciled: string[] = [];
 const createPersonalLink = vi.fn(async () => ({ link: {} }));
 const sendPersonalLink = vi.fn(async () => ({ emailSent: true }));
+const inviteForAddedEmail = vi.fn(async () => ({ emailSent: true }));
+const assignParticipantMock = vi.fn(async () => ({ id: "helper-1", emailSent: true }));
+vi.mock("@/lib/onboarding-participants.server", async (orig) => ({ ...(await orig<any>()), assignParticipant: (...args) => assignParticipantMock(...args) }));
 vi.mock("@/lib/investor-onboarding.server", () => {
   const actor = async (u: string) => ({ userId: u, isStaff: u === STAFF, managedOfferingIds: u === MGR_A ? [FUND_A] : [] });
   return {
     createPersonalLink: (...args) => createPersonalLink(...args),
     sendPersonalLink: (...args) => sendPersonalLink(...args),
+    inviteForAddedEmail: (...args) => inviteForAddedEmail(...args),
     forbid: (m: string) => { throw new Error(`Forbidden: ${m}`); },
     onboardingActor: actor,
     launchedOffering: async (id: string) => ({ offering: { id }, setup: {} }),
@@ -96,7 +100,7 @@ const jane = (over: Record<string, unknown> = {}) => ({
   profile: { type: "individual" }, investment: { amountCents: 10_000_000 }, ...over,
 });
 
-beforeEach(() => { for (const k of Object.keys(tables)) delete tables[k]; reconciled.length = 0; for (const k of Object.keys(authUsers)) delete authUsers[k]; createPersonalLink.mockClear(); sendPersonalLink.mockReset(); sendPersonalLink.mockResolvedValue({ emailSent: true }); });
+beforeEach(() => { for (const k of Object.keys(tables)) delete tables[k]; reconciled.length = 0; for (const k of Object.keys(authUsers)) delete authUsers[k]; createPersonalLink.mockClear(); inviteForAddedEmail.mockClear(); assignParticipantMock.mockClear(); sendPersonalLink.mockReset(); sendPersonalLink.mockResolvedValue({ emailSent: true }); });
 
 describe("interactive manager addition invitations", () => {
   it("creates and sends a personal invitation for the exact saved investment", async () => {
@@ -637,5 +641,75 @@ describe("paperwork contact role labels", () => {
     expect(relatedRoleLabel("paperwork_contact:spouse")).toBe("Paperwork contact · Spouse");
     expect(relatedRoleLabel("paperwork_contact")).toBe("Paperwork contact");
     expect(relatedRoleLabel("beneficial_owner")).toBe("Beneficial owner");
+  });
+});
+
+describe("investor without an email, details filled in by a helper", () => {
+  const noEmail = (over: Record<string, unknown> = {}) => jane({ person: { firstName: "Jane", lastName: "Smith", addressLine1: "1 Main St" }, withoutEmail: true, ...over });
+  const HELPER = "helper-user";
+  const withHelper = (onboardingId: string) => {
+    tables.onboarding_participants = [{ id: "pp-1", onboarding_id: onboardingId, offering_id: FUND_A, role: "preparer", status: "active", email: "helper@example.com", user_id: HELPER }];
+    authUsers[HELPER] = { email: "helper@example.com", email_confirmed_at: "2026-01-01T00:00:00Z" };
+  };
+
+  it("fund managers may save only individuals without an email; Harmonious any record", () => {
+    expect(canSaveWithoutEmail(false, "individual")).toBe(true);
+    expect(canSaveWithoutEmail(false, "entity")).toBe(false);
+    expect(canSaveWithoutEmail(false, "trust")).toBe(false);
+    expect(canSaveWithoutEmail(true, "entity")).toBe(true);
+  });
+  it("a fund manager saves an individual with no email, names a helper, and nothing is sent to the investor", async () => {
+    const r = await (await srv()).createInvestorAndInvite(MGR_A, noEmail({ helper: { fullName: "Pat Assistant", email: "helper@example.com" } }));
+    expect(tables.investor_onboardings).toHaveLength(1);
+    expect(tables.persons[0].email ?? null).toBeNull();
+    expect(r.emailSent).toBeNull();
+    expect(createPersonalLink).not.toHaveBeenCalled();
+    expect(sendPersonalLink).not.toHaveBeenCalled();
+    expect(assignParticipantMock).toHaveBeenCalledExactlyOnceWith(MGR_A, { onboardingId: r.onboardingId, role: "preparer", fullName: "Pat Assistant", email: "helper@example.com" });
+    expect(r.helperInvited).toBe(true);
+  });
+  it("a fund manager still needs an email for a business investor", async () => {
+    await expect((await srv()).createInvestorAndInvite(MGR_A, noEmail({ profile: { type: "entity", legalName: "Acme LLC" } }))).rejects.toThrow(/valid email/);
+  });
+  it("the helper adds the investor's own email and the investor's invitation goes out right away", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(MGR_A, noEmail());
+    withHelper(r.onboardingId);
+    const out = await s.updateInvestorRecord(HELPER, { onboardingId: r.onboardingId, preparerId: "pp-1", person: { email: "Jane@Example.com" } });
+    expect(tables.persons[0].email).toBe("jane@example.com");
+    expect(inviteForAddedEmail).toHaveBeenCalledExactlyOnceWith(r.onboardingId, HELPER, "preparer");
+    expect(out.invitationSent).toBe(true);
+    expect(tables.investor_record_changes.some((c) => c.field === "email" && c.source === "preparer" && c.actor_user_id === HELPER)).toBe(true);
+  });
+  it("a helper cannot enter their own email as the investor's", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(MGR_A, noEmail());
+    withHelper(r.onboardingId);
+    await expect(s.updateInvestorRecord(HELPER, { onboardingId: r.onboardingId, preparerId: "pp-1", person: { email: "helper@example.com" } })).rejects.toThrow(/helper's own email/);
+    expect(tables.persons[0].email ?? null).toBeNull();
+    expect(inviteForAddedEmail).not.toHaveBeenCalled();
+  });
+  it("a helper cannot change an email already on file", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(MGR_A, jane());
+    withHelper(r.onboardingId);
+    await expect(s.updateInvestorRecord(HELPER, { onboardingId: r.onboardingId, preparerId: "pp-1", person: { email: "other@example.com" } })).rejects.toThrow(/already on file/);
+    expect(tables.persons[0].email).toBe("jane@example.com");
+  });
+  it("the fund manager's team adding the first email also sends the invitation; a Harmonious edit does not", async () => {
+    const s = await srv();
+    const a = await s.createInvestor(MGR_A, noEmail());
+    await s.updateInvestorRecord(MGR_A, { onboardingId: a.onboardingId, person: { email: "jane@example.com" } });
+    expect(inviteForAddedEmail).toHaveBeenCalledExactlyOnceWith(a.onboardingId, MGR_A, "manager");
+    inviteForAddedEmail.mockClear();
+    const b = await s.createInvestor(STAFF, jane({ offeringId: FUND_B, person: { firstName: "Sam", lastName: "Lee" }, withoutEmail: true }));
+    await s.updateInvestorRecord(STAFF, { onboardingId: b.onboardingId, person: { email: "sam@example.com" } });
+    expect(inviteForAddedEmail).not.toHaveBeenCalled();
+  });
+  it("helper email rule: blank is ignored, invalid refused, unchanged allowed", () => {
+    expect(helperEmailBlocker({ next: "", current: null, hasAccount: false, helperEmails: [] })).toBeNull();
+    expect(helperEmailBlocker({ next: "not-an-email", current: null, hasAccount: false, helperEmails: [] })).toMatch(/valid email/);
+    expect(helperEmailBlocker({ next: "a@b.co", current: "A@b.co", hasAccount: true, helperEmails: [] })).toBeNull();
+    expect(helperEmailBlocker({ next: "new@b.co", current: null, hasAccount: true, helperEmails: [] })).toMatch(/already on file/);
   });
 });

@@ -424,7 +424,27 @@ export async function sendReminders(uid: string, fundId: string, onboardingIds: 
     if (!r) { results.push({ id, outcome: "skipped", reason: "Not an investor in this fund" }); continue; }
     const step = reminderStep(r.stage, r.docs, r.wiring);
     if (!step) { results.push({ id, outcome: "skipped", reason: "Nothing outstanding" }); continue; }
-    if (!r.email) { results.push({ id, outcome: "skipped", reason: "No email on file" }); continue; }
+    if (!r.email) {
+      // No investor email yet: remind the helper filling in their details instead.
+      const { data: helper } = await d.from("onboarding_participants").select("email, full_name, token").eq("onboarding_id", id).eq("role", "preparer").neq("status", "removed").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (!helper?.email) { results.push({ id, outcome: "skipped", reason: "No email on file" }); continue; }
+      if (!reminderAllowed(last[id] ?? null)) { results.push({ id, outcome: "skipped", reason: "Reminded in the last 3 days" }); continue; }
+      const { ONBOARD_ORIGIN } = await import("@/lib/onboard-portal-model");
+      const hSubject = `Reminder: details needed for ${r.name}'s investment in ${fundRow?.name ?? "the fund"}`;
+      let hNote: string | null = null; let hId: string | null = null;
+      try {
+        const sent = await sendTemplateEmail("investor-message", helper.email, {
+          idempotencyKey: `helper-reminder-${id}-${new Date().toISOString().slice(0, 10)}`,
+          templateData: { investorName: helper.full_name || "there", offeringName: fundRow?.name ?? "Your fund", subject: hSubject, body: `Please finish filling in ${r.name}'s investor details, including their own email address. As soon as their email is saved, they receive their personal invitation to sign in, verify their identity and sign.\n\nOpen: ${ONBOARD_ORIGIN}/onboard/prepare/${helper.token}` },
+        });
+        hId = (sent as any)?.messageId ?? null;
+      } catch (e) { hNote = (e as Error).message.slice(0, 300); }
+      await d.from("investor_reminders").insert({ offering_id: fundId, onboarding_id: id, step, sent_by: uid, recipient_email: helper.email, delivery: hNote ? "failed" : "sent", delivery_note: hNote });
+      const { logInvestorEmail } = await import("@/lib/investor-emails.server");
+      await logInvestorEmail({ onboardingId: id, offeringId: fundId, kind: "reminder", subject: hSubject, recipient: helper.email, messageId: hId, sentBy: uid, outcome: hNote ? "failed" : "sent", note: hNote });
+      results.push(hNote ? { id, outcome: "failed", reason: hNote } : { id, outcome: "sent" });
+      continue;
+    }
     // Never invited (added by the manager, no account): a sign-in reminder can't help them.
     // Send their personal invitation instead, through the same checked invite engine.
     const { data: ob } = await d.from("investor_onboardings").select("invitation_id, investor_user_id").eq("id", id).maybeSingle();

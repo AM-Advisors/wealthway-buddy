@@ -97,6 +97,8 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
     try {
       const r = await update({ data: payload });
       toast.success(r.suggested ? `${r.changed} saved; ${r.suggested} sent to Harmonious for review.` : r.changed ? "Saved" : "No changes");
+      if (r.invitationSent === true) toast.success("Their invitation was emailed to the new address.");
+      else if (r.invitationSent === false) toast.warning("Their invitation could not be sent. Use Send invitation to try again.");
       setEdit({}); refresh();
     } catch (e) { toast.error((e as Error).message); }
   };

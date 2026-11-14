@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { createInvestorFn, searchInvestorsFn } from "@/lib/investor-record.functions";
-import { ENTITY_TYPES, ENTITY_TYPE_LABELS, PROFILE_TYPES, PROFILE_TYPE_LABELS, PAPERWORK_CONTACT_RELATIONSHIPS, PAPERWORK_CONTACT_LABELS, validateQuickAdd, type SafeMatch } from "@/lib/investor-record-model";
+import { ENTITY_TYPES, ENTITY_TYPE_LABELS, PROFILE_TYPES, PROFILE_TYPE_LABELS, PAPERWORK_CONTACT_RELATIONSHIPS, PAPERWORK_CONTACT_LABELS, validateQuickAdd, canSaveWithoutEmail, isEmail, type SafeMatch } from "@/lib/investor-record-model";
 import { prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const [related, setRelated] = useState<Related[]>([]);
   const [busy, setBusy] = useState(false);
   const [contactOn, setContactOn] = useState(false);
+  const [helperOn, setHelperOn] = useState(false);
   const [mismatchPrompt, setMismatchPrompt] = useState<string | null>(null);
   const [mismatchConfirmed, setMismatchConfirmed] = useState(false);
   // Set when saving was stopped by a possible existing match, so the "different person" choice is always offered.
@@ -51,10 +52,14 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
 
   const save = async (continueToRecord: boolean) => {
     const amountCents = cents(f['amount']);
+    const anyEmail = (f['email'] ?? "").trim() || (contactOn ? (f['contactEmail'] ?? "").trim() : "");
+    const withoutEmail = !chosen && !anyEmail && canSaveWithoutEmail(isStaff, f['profileType']);
     if (!chosen) {
-      const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: f['email'] || (contactOn ? f['contactEmail'] : ""), profileType: f['profileType'], amountCents });
+      const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: anyEmail, profileType: f['profileType'], amountCents })
+        .filter((e) => !(withoutEmail && e === "Enter a valid email address."));
       if (errs.length) return void toast.error(errs[0]);
     }
+    if (helperOn && (!(f['helperName'] ?? "").trim() || !isEmail(f['helperEmail'] ?? ""))) return void toast.error("Enter the helper's name and a valid email.");
     if (mismatchPrompt && !mismatchConfirmed) return void toast.error("Confirm who is investing before saving.");
     setBusy(true);
     try {
@@ -78,9 +83,13 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         related: related.filter((r) => r.firstName && r.lastName).map((r) => ({ ...r, email: r.email || null, ownershipPercent: r.ownershipPercent ? Number(r.ownershipPercent) : null })),
         contact: contactOn ? { firstName: f['contactFirstName'], lastName: f['contactLastName'], email: f['contactEmail'], relationship: f['contactRelationship'] } : null,
         confirmedProfileMismatch: mismatchConfirmed,
+        withoutEmail,
+        helper: helperOn ? { fullName: f['helperName']!.trim(), email: f['helperEmail']!.trim() } : null,
       } });
-      if (r.emailSent === false) toast.warning("Investor added, but the invitation was not sent. Open their record to check and resend the invitation.");
-      else toast.success(r.emailSent ? "Investor added and invitation sent." : "Investor added: Incomplete, additional information required.");
+      const helperNote = r.helperInvited === true ? ` We emailed ${f['helperName']?.trim()} a link to fill in the details.` : r.helperInvited === false ? " The helper could not be added. Add them from the investor's record." : "";
+      if (r.emailSent === false) toast.warning(`Investor added, but the invitation was not sent. Open their record to check and resend the invitation.${helperNote}`);
+      else if (withoutEmail) toast.success(`Investor added. Their invitation goes out as soon as their email is added.${helperNote}`);
+      else toast.success(`${r.emailSent ? "Investor added and invitation sent." : "Investor added: Incomplete, additional information required."}${helperNote}`);
       qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] });
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();
@@ -112,7 +121,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         {type === "entity" ? <p className="text-xs text-muted-foreground">For another fund, LLC, corporation, partnership or family office. Enter the contact person below; the invitation is addressed to the business, which completes business verification (entity documents, owners and signers, entity W-9).</p> : null}
         <div className="grid gap-3 sm:grid-cols-2">
           {field("firstName", type === "entity" ? "Contact first name" : "Legal first name")}{field("lastName", type === "entity" ? "Contact last name" : "Last name")}
-          {field("email", type === "entity" ? "Contact email" : "Email", { type: "email" })}{type !== "individual" ? field("entityName", type === "trust" ? "Trust name" : "Legal business / entity name") : null}
+          {field("email", type === "entity" ? "Contact email" : canSaveWithoutEmail(isStaff, type) ? "Email (leave blank if you don't have it yet)" : "Email", { type: "email" })}{type !== "individual" ? field("entityName", type === "trust" ? "Trust name" : "Legal business / entity name") : null}
         </div>
         {type !== "entity" ? (
           <div className="space-y-3 rounded-md border p-3">
@@ -133,6 +142,21 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           </div>
         ) : null}
         <Button variant="outline" size="sm" onClick={runSearch}>Search existing investors</Button>
+
+        {canSaveWithoutEmail(isStaff, type) && !chosen ? (
+          <div className="space-y-3 rounded-md border p-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={helperOn} onChange={(e) => setHelperOn(e.target.checked)} />
+              Someone is helping fill in their details (their assistant or team)
+            </label>
+            {helperOn ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {field("helperName", "Helper's full name")}{field("helperEmail", "Helper's email", { type: "email" })}
+                <p className="text-xs text-muted-foreground sm:col-span-2">We email the helper a link to fill in the investor's details, including the investor's own email. As soon as that email is saved, the investor gets their invitation. Until then, reminders go to the helper. The investor still verifies their identity and signs.</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         {matches || matchBlocked ? (
           <div className="space-y-2 rounded-md border p-3">

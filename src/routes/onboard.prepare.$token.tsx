@@ -46,10 +46,16 @@ function PreparePage() {
   const save = useMutation({
     mutationFn: () => {
       const person: Record<string, string> = {}; for (const [k] of PERSON) if (f[k] !== undefined) person[k] = f[k]!.trim();
+      if ((f['investorEmail'] ?? "").trim()) person['email'] = f['investorEmail']!.trim();
       const tin = (f['taxId'] ?? "").replace(/\D/g, "");
       return saveFn({ data: { onboardingId: w!.onboardingId, preparerId: w!.participantId, ...(Object.keys(person).length ? { person } : {}), ...(f['legalName'] !== undefined ? { profile: { legalName: f['legalName']!.trim() || null } } : {}), ...(tin ? { taxId: tin } : {}) } });
     },
-    onSuccess: (r: any) => { toast.success(r?.suggested ? `Saved. ${r.suggested} item(s) go to Harmonious to confirm.` : "Saved."); setF({}); q.refetch(); },
+    onSuccess: (r: any) => {
+      if (r?.invitationSent === true) toast.success("Saved. The investor's invitation was emailed to them.");
+      else if (r?.invitationSent === false) toast.warning("Saved, but the investor's invitation could not be sent. The fund manager can resend it.");
+      else toast.success(r?.suggested ? `Saved. ${r.suggested} item(s) go to Harmonious to confirm.` : "Saved.");
+      setF({}); q.refetch();
+    },
     onError: (e) => toast.error((e as Error).message),
   });
   const add = useMutation({
@@ -71,6 +77,13 @@ function PreparePage() {
               <Card><CardHeader><CardTitle className="text-base">Investor</CardTitle></CardHeader>
                 <CardContent className="grid gap-3 sm:grid-cols-2">
                   {w.profile && w.profile.type !== "individual" ? <div className="space-y-1 sm:col-span-2"><Label htmlFor="p-legal">Entity / business legal name</Label><Input id="p-legal" value={f['legalName'] ?? w.profile.legalName ?? ""} onChange={(e) => setF({ ...f, legalName: e.target.value })} /></div> : null}
+                  {w.investorEmailNeeded ? (
+                    <div className="space-y-1 sm:col-span-2 rounded-md border border-primary/30 bg-primary/5 p-3">
+                      <Label htmlFor="p-investor-email">Investor's own email</Label>
+                      <Input id="p-investor-email" type="email" autoComplete="off" placeholder="name@example.com" value={f['investorEmail'] ?? ""} onChange={(e) => setF({ ...f, investorEmail: e.target.value })} />
+                      <p className="text-xs text-muted-foreground">Use the investor's own email, not yours. When you save, we email them their invitation right away so they can sign in, verify their identity and sign. Once saved, only the fund manager can change it.</p>
+                    </div>
+                  ) : null}
                   {PERSON.map(([k, label]) => <div key={k} className="space-y-1"><Label htmlFor={`p-${k}`}>{label}</Label><Input id={`p-${k}`} value={val(k)} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></div>)}
                   <div className="space-y-1"><Label htmlFor="p-tin">{w.profile && w.profile.type !== "individual" ? "EIN" : "SSN / Tax ID"}{w.profile?.taxIdLast4 ? ` (on file ••• ${w.profile.taxIdLast4})` : ""}</Label><Input id="p-tin" type="password" inputMode="numeric" autoComplete="off" placeholder="9 digits" value={f['taxId'] ?? ""} onChange={(e) => setF({ ...f, taxId: e.target.value })} /></div>
                   <div className="sm:col-span-2"><Button disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "Saving…" : "Save details"}</Button></div>

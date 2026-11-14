@@ -109,7 +109,7 @@ export async function preparerWorkspace(userId: string, token: string) {
   const { data: p } = await db().from("onboarding_participants").select("id, onboarding_id").eq("token", token).maybeSingle();
   if (!p) fail("This link isn't valid.");
   const { participant } = await activePreparer(userId, p.id);
-  const { data: row } = await db().from("investor_onboardings").select("id, offering_id, investment_profile_id, persons(legal_first_name, legal_middle_name, legal_last_name, phone, address_line1, address_line2, city, region, postal_code, country, citizenship_country), offerings(name)").eq("id", participant.onboarding_id).maybeSingle();
+  const { data: row } = await db().from("investor_onboardings").select("id, offering_id, investment_profile_id, persons(legal_first_name, legal_middle_name, legal_last_name, email, user_id, phone, address_line1, address_line2, city, region, postal_code, country, citizenship_country), offerings(name)").eq("id", participant.onboarding_id).maybeSingle();
   const { data: profile } = row?.investment_profile_id ? await db().from("investment_profiles").select("profile_type, legal_name, details, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
   const { data: rel } = row?.investment_profile_id ? await db().from("investment_profile_relationships").select("id, role, ownership_percent, is_authorized_signer, status, persons(legal_first_name, legal_last_name)").eq("profile_id", row.investment_profile_id).neq("status", "removed") : { data: [] };
   const { investorEditWindow } = await import("@/lib/manager-edit-window.server");
@@ -117,7 +117,10 @@ export async function preparerWorkspace(userId: string, token: string) {
   return {
     participantId: participant.id, onboardingId: participant.onboarding_id, fundName: String((row as any)?.offerings?.name ?? "Fund"),
     editable: Boolean(full && await investorEditWindow(full)),
-    person: (row as any)?.persons ?? {}, profile: profile ? { type: profile.profile_type, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 } : null,
+    // Helpers learn only whether the investor's email still needs adding; the address and account link stay private.
+    person: (({ user_id: _u, email: _e, ...rest }: any) => rest)((row as any)?.persons ?? {}),
+    investorEmailNeeded: !String((row as any)?.persons?.email ?? "").trim() && !(row as any)?.persons?.user_id && !full?.investor_user_id,
+    profile: profile ? { type: profile.profile_type, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 } : null,
     related: ((rel ?? []) as any[]).map((r) => ({ id: r.id, role: r.role, ownershipPercent: r.ownership_percent, isSigner: r.is_authorized_signer, status: r.status, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim() })),
   };
 }

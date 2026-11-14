@@ -132,7 +132,7 @@ export function InvestorQuickEdit({ onboardingId, onSaved }: { onboardingId: str
         ...(amount !== null ? { investment: { amountCents: amount, commitmentCents: amount } } : {}),
       } });
     },
-    onSuccess: (r: any) => { toast.success(r?.suggested ? `Saved ${r.changed} change(s); ${r.suggested} sent to Harmonious to review.` : `Saved ${r?.changed ?? 0} change(s).`); setF({}); setOpen(false); onSaved?.(); },
+    onSuccess: (r: any) => { toast.success(r?.suggested ? `Saved ${r.changed} change(s); ${r.suggested} sent to Harmonious to review.` : `Saved ${r?.changed ?? 0} change(s).`); if (r?.invitationSent === true) toast.success("Their invitation was emailed to the new address."); else if (r?.invitationSent === false) toast.warning("Their invitation could not be sent. Open their record to resend it."); setF({}); setOpen(false); onSaved?.(); },
     onError: (e) => toast.error((e as Error).message),
   });
   if (!open) return <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Edit details</Button>;

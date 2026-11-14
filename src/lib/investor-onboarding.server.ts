@@ -2445,7 +2445,7 @@ export async function inviteInvestor(
  * The one onboarding email. Only the opaque invitation reference travels in
  * the link - never KYC, profile, bank or document identifiers.
  */
-export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string, log?: { onboardingId: string }) {
+export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string, log?: { onboardingId: string; fundNameAsSender?: boolean }) {
   try {
     const { onboardInvitationUrl } = await import("@/lib/onboard-portal-model");
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
@@ -2458,7 +2458,8 @@ export async function sendOnboardInvitationEmail(invitation: any, offering: any,
       templateData: {
         investorName: invitation.invited_name || "",
         fundName: offering?.name ?? "the fund",
-        managerName: (manager as any)?.legal_name ?? offering?.name ?? "Your fund manager",
+        // A helper's name never appears as the inviting manager; the fund name is used instead.
+        managerName: (log?.fundNameAsSender ? null : (manager as any)?.legal_name) ?? offering?.name ?? "Your fund manager",
         amountCents: invitation.intended_amount_cents ?? null,
         ctaUrl: onboardInvitationUrl(String(invitation.token)),
       },
@@ -3115,6 +3116,37 @@ export async function sendPersonalLink(userId: string, onboardingId: string) {
   const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId, { onboardingId });
   await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_emailed", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: sent }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
   return { emailSent: Boolean(sent) };
+}
+/**
+ * The investor's own invitation, sent once a helper or the fund manager's team adds the first
+ * email to an investor saved without one. Callers authorize (updateInvestorRecord); this never
+ * replaces an existing invitation and never runs for Harmonious edits.
+ */
+export async function inviteForAddedEmail(onboardingId: string, actorUserId: string, actorRole: "manager" | "preparer") {
+  const row = await personalLinkRow(onboardingId);
+  if (row.invitation_id) return { emailSent: null as boolean | null };
+  const email = String(row.persons?.email ?? "").trim().toLowerCase();
+  if (!email) return { emailSent: null as boolean | null };
+  const name = `${row.persons?.legal_first_name ?? ""} ${row.persons?.legal_last_name ?? ""}`.trim() || null;
+  const { data: inv, error } = await db().from("fund_invitations").insert({
+    offering_id: row.offering_id, email, invited_name: name, invited_by: actorUserId, token: crypto.randomUUID().replace(/-/g, ""),
+    expires_at: new Date(Date.now() + 30 * 86_400_000).toISOString(), status: "pending", onboarding_status: "invited",
+    intended_amount_cents: row.requested_amount_cents ?? null, invitation_source: `${actorRole}:email_added`, invite_role: "investor", role: "investor",
+  }).select("*").single();
+  if (error) fail(error.message);
+  const { data: linked, error: linkErr } = await db().from("investor_onboardings").update({ invitation_id: inv.id }).eq("id", onboardingId).is("invitation_id", null).select("id");
+  if (linkErr) fail(linkErr.message);
+  if (!(linked ?? []).length) {
+    // Another save attached an invitation first; keep that one.
+    await db().from("fund_invitations").update({ status: "revoked" }).eq("id", inv.id);
+    return { emailSent: null as boolean | null };
+  }
+  await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_created", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: false, reason: "email_added", by: actorRole }, actorUserId, actorRole });
+  await (await import("@/lib/account-connect.server")).connectEmail(email);
+  const { data: offering } = await db().from("offerings").select("*").eq("id", row.offering_id).maybeSingle();
+  const sent = await sendOnboardInvitationEmail(inv, offering, actorUserId, { onboardingId, fundNameAsSender: actorRole === "preparer" });
+  await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_emailed", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: sent, reason: "email_added", by: actorRole }, actorUserId, actorRole });
+  return { emailSent: Boolean(sent) as boolean | null };
 }
 export async function recordPersonalLinkCopy(userId: string, onboardingId: string) {
   const row = await personalLinkRow(onboardingId);

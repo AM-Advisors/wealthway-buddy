@@ -29,6 +29,10 @@ export const createInvestorFn = createServerFn({ method: "POST" }).middleware([r
     offeringId: uuid, personId: uuid.nullable().optional(), profileId: uuid.nullable().optional(), confirmedNew: z.boolean().optional(),
     person, profile: z.object({ type: z.string().max(40), subType: str, legalName: str, details }), investment, related: related.optional(),
     taxId: z.string().regex(/^\d{9}$/, "The SSN / Tax ID must be 9 digits.").nullable().optional(),
+    contact: z.object({ firstName: str, lastName: str, email: z.string().max(254).nullable().optional(), relationship: z.string().max(40).nullable().optional() }).nullable().optional(),
+    confirmedProfileMismatch: z.boolean().optional(),
+    withoutEmail: z.boolean().optional(),
+    helper: z.object({ fullName: z.string().min(1).max(160), email: z.string().email().max(254) }).nullable().optional(),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).createInvestorAndInvite(context.userId, data as any));
 

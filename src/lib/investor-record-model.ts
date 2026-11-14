@@ -143,6 +143,31 @@ export function validateQuickAdd(q: { [K in keyof QuickAdd]?: QuickAdd[K] | unde
   return e;
 }
 
+/**
+ * Who may save a new investor before anyone has their email. Harmonious may for any
+ * record; a fund manager only for an individual, so a helper or the manager's own team
+ * can add the investor's email later (the invitation is sent then).
+ */
+export function canSaveWithoutEmail(isStaff: boolean, profileType: string | null | undefined) {
+  return isStaff || !profileType || profileType === "individual";
+}
+
+/**
+ * A helper may add the investor's own email only while none is on file and no account
+ * is linked, and never a helper's or contact's own address: the email decides who can
+ * sign in as the investor. Returns the reason to refuse, or null when it may be saved.
+ */
+export function helperEmailBlocker(i: { next: string; current: string | null | undefined; hasAccount: boolean; helperEmails: (string | null | undefined)[] }): string | null {
+  const next = normEmail(i.next);
+  if (!next) return null;
+  const current = normEmail(i.current);
+  if (current && current === next) return null;
+  if (current || i.hasAccount) return "The investor's email is already on file. Ask the fund manager to change it.";
+  if (!isEmail(next)) return "Enter a valid email address.";
+  if (i.helperEmails.some((e) => normEmail(e) === next)) return "That is a helper's own email. Enter the investor's own email so the invitation reaches them.";
+  return null;
+}
+
 export function profileLabelFor(type: ProfileType, legalName: string | null, personName: string) {
   if (type === "individual") return personName;
   return legalName?.trim() || `${personName} · ${PROFILE_TYPE_LABELS[type]}`;

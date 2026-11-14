@@ -16,6 +16,7 @@ import {
   dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, claimState, CLAIM_STATE_LABELS, sameValue, isMaterial,
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
   planIncoming, PROFILE_TYPE_LABELS, planClaim, validPaperworkContact, profileNameMismatch, type PaperworkContactInput,
+  canSaveWithoutEmail, helperEmailBlocker,
 } from "@/lib/investor-record-model";
 import { personCreationBlocker } from "@/lib/person-resolution";
 import { findPersonCandidates, resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
@@ -30,14 +31,14 @@ const nowIso = () => new Date().toISOString();
  * details and owners/signers - never amounts, notes, verification, signing or money.
  */
 async function recordAccess(userId: string, onboardingId: string, preparerId?: string | null) {
-  if (!preparerId) return { ...(await assertOnboardingAccess(userId, onboardingId)), preparer: false };
+  if (!preparerId) return { ...(await assertOnboardingAccess(userId, onboardingId)), preparer: false, participant: null };
   const { activePreparer } = await import("@/lib/onboarding-participants.server");
   const p = await activePreparer(userId, preparerId, onboardingId);
   const { data: row } = await db().from("investor_onboardings").select("*").eq("id", onboardingId).maybeSingle();
   if (!row) fail("That investment was not found.");
   if (!(await investorEditWindow(row))) forbid("signing or funding has started; the investor's details can no longer be changed by a preparer.");
   const actor: OnboardingActor = { userId: p.userId, isStaff: false, managedOfferingIds: [row.offering_id] };
-  return { actor, row, role: "manager" as const, preparer: true };
+  return { actor, row, role: "manager" as const, preparer: true, participant: p.participant as { email?: string | null } };
 }
 function fail(m: string): never { throw new Error(m); }
 const TERMINAL = "(closed,declined,cancelled)";
@@ -144,6 +145,10 @@ export async function createInvestor(userId: string, input: {
   confirmedProfileMismatch?: boolean;
   /** Staff-only migration imports: save a record without an email (it cannot be invited until one is added). */
   allowMissingEmail?: boolean;
+  /** Interactive add with no email yet: individuals only for fund managers (canSaveWithoutEmail). */
+  withoutEmail?: boolean;
+  /** Assistant or team member who fills in the details and may add the investor's email (interactive add only). */
+  helper?: { fullName: string; email: string } | null;
 }) {
   const actor = await fundActor(userId, input.offeringId);
   if (input.allowMissingEmail && !actor.isStaff) forbid("only staff can save an investor without an email.");
@@ -160,7 +165,8 @@ export async function createInvestor(userId: string, input: {
   } else {
     // A paperwork contact's email satisfies the email requirement: the invitation goes to them.
     const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email || input.contact?.email || undefined, profileType: input.profile.type || undefined, amountCents: input.investment.amountCents ?? null });
-    const noEmailOk = input.allowMissingEmail && !String(input.person.email ?? "").trim() && !input.contact?.email;
+    const noEmailOk = !String(input.person.email ?? "").trim() && !input.contact?.email
+      && (Boolean(input.allowMissingEmail) || (Boolean(input.withoutEmail) && canSaveWithoutEmail(actor.isStaff, input.profile.type)));
     const blocking = noEmailOk ? errs.filter((e) => e !== "Enter a valid email address.") : errs;
     if (blocking.length) fail(blocking[0]!);
     // Canonical Person Resolution: email is a signal, not identity. Re-checked
@@ -296,25 +302,41 @@ export async function createInvestor(userId: string, input: {
 export async function createInvestorAndInvite(userId: string, input: Parameters<typeof createInvestor>[1]) {
   const actor = await fundActor(userId, input.offeringId);
   const saved = await createInvestor(userId, input);
-  if (actor.isStaff) return { ...saved, emailSent: null };
+  // A helper is invited by their own email to fill in details, including the investor's email.
+  let helperInvited: boolean | null = null;
+  if (input.helper?.email?.trim()) {
+    try {
+      const pp = await import("@/lib/onboarding-participants.server");
+      helperInvited = (await pp.assignParticipant(userId, { onboardingId: saved.onboardingId, role: "preparer", fullName: input.helper.fullName, email: input.helper.email })).emailSent;
+    } catch (e) {
+      console.error("[investor-record] helper not assigned", (e as Error).message);
+      helperInvited = false;
+    }
+  }
+  if (actor.isStaff) return { ...saved, emailSent: null, helperInvited };
 
   // The investor record is already saved. A failed send must not encourage another creation.
   try {
     const engine = await import("@/lib/investor-onboarding.server");
     const { data: row, error } = await db().from("investor_onboardings")
-      .select("invitation_id").eq("id", saved.onboardingId).maybeSingle();
-    if (error || !row) return { ...saved, emailSent: false };
+      .select("invitation_id, person_id").eq("id", saved.onboardingId).maybeSingle();
+    if (error || !row) return { ...saved, emailSent: false, helperInvited };
+    if (!row.invitation_id) {
+      const { data: who } = row.person_id ? await db().from("persons").select("email").eq("id", row.person_id).maybeSingle() : { data: null };
+      // No email yet: nothing to send. The invitation goes out when the email is added.
+      if (!String(who?.email ?? "").trim()) return { ...saved, emailSent: null, helperInvited };
+    }
     if (!row.invitation_id) await engine.createPersonalLink(userId, saved.onboardingId);
     else {
       const { data: inv } = await db().from("fund_invitations").select("status, expires_at, offering_id")
         .eq("id", row.invitation_id).maybeSingle();
       if (!inv || inv.offering_id !== input.offeringId || !["pending", "accepted"].includes(inv.status)
-        || (inv.expires_at && inv.expires_at < nowIso())) return { ...saved, emailSent: false };
+        || (inv.expires_at && inv.expires_at < nowIso())) return { ...saved, emailSent: false, helperInvited };
     }
     const result = await engine.sendPersonalLink(userId, saved.onboardingId);
-    return { ...saved, emailSent: result.emailSent };
+    return { ...saved, emailSent: result.emailSent, helperInvited };
   } catch {
-    return { ...saved, emailSent: false };
+    return { ...saved, emailSent: false, helperInvited };
   }
 }
 
@@ -330,16 +352,25 @@ export async function updateInvestorRecord(userId: string, input: {
   onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null;
   preparerId?: string | null;
 }) {
-  const { actor, row, role, preparer } = await recordAccess(userId, input.onboardingId, input.preparerId);
+  const { actor, row, role, preparer, participant } = await recordAccess(userId, input.onboardingId, input.preparerId);
   if (role === "investor") forbid("use Confirm Your Information to update your own details.");
   if (row.removed_at) fail("This investor has been removed from the Fund.");
   if (preparer) {
-    // Preparers supply details only: never amounts or notes, and never the sign-in email.
+    // Preparers supply details only: never amounts or notes. They may add the investor's
+    // own email only while none is on file (helperEmailBlocker); they never change one.
     delete (input as any).investment;
-    if (input.person) delete (input.person as any).email;
+    if (input.person && input.person.email !== undefined) {
+      if (!String(input.person.email ?? "").trim()) delete (input.person as any).email;
+      else {
+        const { data: who } = row.person_id ? await db().from("persons").select("email, user_id").eq("id", row.person_id).maybeSingle() : { data: null };
+        const { data: helpers } = await db().from("onboarding_participants").select("email").eq("onboarding_id", row.id).neq("status", "removed");
+        const blocker = helperEmailBlocker({ next: String(input.person.email), current: who?.email ?? null, hasAccount: Boolean(who?.user_id || row.investor_user_id), helperEmails: [participant?.email, ...((helpers ?? []) as any[]).map((h) => h.email)] });
+        if (blocker) fail(blocker);
+      }
+    }
   }
   const source: EntrySource = preparer ? "preparer" : sourceFor(actor);
-  const changes: Change[] = []; let suggested = 0;
+  const changes: Change[] = []; let suggested = 0; let firstEmailAdded = false;
   const direct = actor.isStaff || await investorEditWindow(row);
   const personDirect = actor.isStaff || (direct && await exclusiveRecord(row, "person_id"));
   const profileDirect = actor.isStaff || (direct && await exclusiveRecord(row, "investment_profile_id"));
@@ -362,10 +393,14 @@ export async function updateInvestorRecord(userId: string, input: {
       apply[f] = v;
       changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "persons", id: row.person_id, field: f, from: cur?.[f] ?? null, to: v, source, actor: actor.userId });
     }
+    const hadEmail = Boolean(String(cur?.email ?? "").trim()) || Boolean(cur?.user_id);
     if (Object.keys(apply).length) {
       const { error } = await db().from("persons").update({ ...apply, updated_at: nowIso() }).eq("id", row.person_id);
       if (error) fail(error.message);
       if (apply["email"] && !cur?.user_id) await (await import("@/lib/account-connect.server")).connectEmail(String(apply["email"]));
+      // First email on an investor nobody could invite yet: a helper or the fund manager's team
+      // added it, so the investor's own invitation goes out right away (Harmonious sends manually).
+      firstEmailAdded = Boolean(apply["email"]) && !hadEmail && !row.investor_user_id && !row.invitation_id && !actor.isStaff;
     }
   }
 
@@ -441,7 +476,17 @@ export async function updateInvestorRecord(userId: string, input: {
     await ensureMinimumSideLetter(row.id, actor.userId).catch((e) => console.error("[investor-record] side letter", (e as Error).message));
   }
   if (changes.length) await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "investor_record_updated" });
-  return { changed: changes.length, suggested };
+  let invitationSent: boolean | null = null;
+  if (firstEmailAdded) {
+    try {
+      const { inviteForAddedEmail } = await import("@/lib/investor-onboarding.server");
+      invitationSent = (await inviteForAddedEmail(row.id, actor.userId, preparer ? "preparer" : "manager")).emailSent;
+    } catch (e) {
+      console.error("[investor-record] invitation after email added", (e as Error).message);
+      invitationSent = false;
+    }
+  }
+  return { changed: changes.length, suggested, invitationSent };
 }
 
 /* ------------------------------------------------- owners and signers */

@@ -26,7 +26,7 @@ export const preparerWorkspaceFn = createServerFn({ method: "POST" }).middleware
 export const preparerSaveFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(onb.extend({
     preparerId: z.string().uuid(),
-    person: z.object({ firstName: z.string().max(120).optional(), middleName: str, lastName: z.string().max(120).optional(), phone: str, citizenship: str, addressLine1: str, addressLine2: str, city: str, region: str, postalCode: str, country: str }).optional(),
+    person: z.object({ firstName: z.string().max(120).optional(), middleName: str, lastName: z.string().max(120).optional(), email: z.string().max(254).optional(), phone: str, citizenship: str, addressLine1: str, addressLine2: str, city: str, region: str, postalCode: str, country: str }).optional(),
     profile: z.object({ legalName: str, details: z.record(z.string(), z.union([z.string().max(500), z.null()])).optional() }).optional(),
     taxId: z.string().regex(/^\d{9}$/, "The tax ID must be 9 digits.").nullable().optional(),
   }).parse)
