@@ -164,7 +164,8 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   // Foundation Administration: approved rate when one exists, otherwise an explicit negotiated price
   // that always needs executive approval; never $0, never auto-approved, never sent while unreleased.
   if (d.lines.some((l) => isFoundationKey(l.serviceKey) || l.foundation)) {
-    const { verifyFoundationQuoteLine } = await import("@/lib/foundation-admin.server");
+    const { verifyFoundationQuoteLine, foundationRates } = await import("@/lib/foundation-admin.server");
+    const approvedRates = await foundationRates(db);
     const exclude = [d.id, d.supersedingQuoteId].filter((x): x is string => !!x);
     const seen: { component: any; clientEntityId: string; serviceStartOn: string; serviceEndOn: string | null }[] = [];
     for (const [i, l] of d.lines.entries()) {
@@ -172,7 +173,8 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
       if (!isFoundationKey(l.serviceKey) || !l.foundation) throw new Error("Configure the Foundation Administration component first.");
       if (l.serviceKey !== `FOUNDATION_ADMIN:${l.foundation.component}`) throw new Error("That Foundation Administration line doesn't match its component.");
       const c: any = card.get(l.serviceKey);
-      const r = await verifyFoundationQuoteLine(db, { clientId: d.clientId ?? null, rateCents: c && Number(c.baselineCents) > 0 ? Number(c.baselineCents) : null, excludeQuoteIds: exclude, siblings: seen }, l.foundation);
+      const rateCents = approvedRates.get(l.serviceKey) ?? (c && Number(c.baselineCents) > 0 ? Number(c.baselineCents) : null);
+      const r = await verifyFoundationQuoteLine(db, { clientId: d.clientId ?? null, rateCents, excludeQuoteIds: exclude, siblings: seen }, l.foundation);
       seen.push({ component: r.input.component, clientEntityId: r.input.clientEntityId, serviceStartOn: r.input.serviceStartOn, serviceEndOn: r.input.serviceEndOn });
       foundationSnaps.set(i, { snapshot: r.snapshot, line: r.line });
       if (r.needsExecutiveApproval) foundationNeedsExec = true;

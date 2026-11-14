@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getQuoteFoundationOptions } from "@/lib/foundation-admin.functions";
 import {
-  FOUNDATION_COMPONENTS, FOUNDATION_ROLE_DISCLAIMER, componentByKey, foundationLineLabel, foundationServiceKey, priceFoundationLine,
+  FOUNDATION_COMPONENTS, FOUNDATION_ROLE_DISCLAIMER, FOUNDATION_SOW_TERMS, componentByKey, foundationLineLabel, foundationServiceKey, priceFoundationLine,
   type ComponentKey, type FoundationLineInput,
 } from "@/lib/foundation-admin-model";
 import type { QuoteLineInput } from "@/lib/sales-model";
@@ -44,11 +44,11 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
 
   const chooseComponent = (k: ComponentKey) => {
     const c = componentByKey(k)!;
-    setComponent(k); setBilling(c.cadence === "one_time" ? "one_time" : "annual");
+    setComponent(k); setBilling(c.cadence === "one_time" ? "one_time" : c.billingOnly ?? "annual");
     setDeliverables(c.deliverables.join("\n")); setIncluded(c.included.join("\n")); setExcluded(c.excluded.join("\n"));
   };
   const foundation = opts.data?.foundations.find((f) => f.profileId === profileId) ?? null;
-  const rate = rateCents(foundationServiceKey(component));
+  const rate = opts.data?.rates?.[foundationServiceKey(component)] ?? rateCents(foundationServiceKey(component));
   const input: FoundationLineInput | null = foundation ? {
     component, foundationProfileId: foundation.profileId, clientEntityId: foundation.clientEntityId, billing,
     negotiatedUnitCents: price.trim() === "" ? null : Math.round(Number(price) * 100), negotiatedReason: reason.trim() || null, optional,
@@ -75,7 +75,7 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
             <SelectContent>{opts.data.foundations.map((f) => <SelectItem key={f.profileId} value={f.profileId}>{f.name}</SelectItem>)}</SelectContent></Select></div>
         <div className="space-y-1"><Label>Service component</Label>
           <Select value={component} onValueChange={(v) => chooseComponent(v as ComponentKey)}><SelectTrigger aria-label="Service component"><SelectValue /></SelectTrigger>
-            <SelectContent>{FOUNDATION_COMPONENTS.map((c) => <SelectItem key={c.key} value={c.key}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+            <SelectContent>{FOUNDATION_COMPONENTS.map((c) => <SelectItem key={c.key} value={c.key}>{c.group === "formation" ? `New nonprofit · ${c.name}` : c.name}</SelectItem>)}</SelectContent></Select></div>
       </div>
       <div className="rounded-md bg-muted/40 p-3 text-sm">
         <p className="font-medium">{def.name} · {CAPABILITY_LABEL[def.readiness.capability]}</p>
@@ -85,7 +85,7 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="space-y-1"><Label>Billed</Label>
           <Select value={billing} onValueChange={(v) => setBilling(v as FoundationLineInput["billing"])}><SelectTrigger aria-label="Billing cadence"><SelectValue /></SelectTrigger>
-            <SelectContent>{(def.cadence === "one_time" ? ["one_time"] : ["monthly", "quarterly", "annual"]).map((b) => <SelectItem key={b} value={b}>{b === "one_time" ? "Once" : b[0]!.toUpperCase() + b.slice(1)}</SelectItem>)}</SelectContent></Select></div>
+            <SelectContent>{(def.cadence === "one_time" ? ["one_time"] : def.billingOnly ? [def.billingOnly] : ["monthly", "quarterly", "annual"]).map((b) => <SelectItem key={b} value={b}>{b === "one_time" ? "Once" : b[0]!.toUpperCase() + b.slice(1)}</SelectItem>)}</SelectContent></Select></div>
         <div className="space-y-1"><Label htmlFor="fa-price">Price per bill ($)</Label><Input id="fa-price" inputMode="decimal" value={price} placeholder={rate ? String(rate / 100) : "Required"} onChange={(e) => setPrice(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="fa-start">Service starts</Label><Input id="fa-start" type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="fa-bill">Billing starts</Label><Input id="fa-bill" type="date" value={billStart} onChange={(e) => setBillStart(e.target.value)} /></div>
@@ -112,6 +112,10 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
         ))}
         {limits.length < 10 && <Button variant="outline" size="sm" onClick={() => setLimits([...limits, { label: "", quantity: "", unit: "per year" }])}>Add a limit</Button>}
       </div>
+      <details className="text-sm">
+        <summary className="cursor-pointer font-medium">SOW terms that go with every foundation service</summary>
+        <ul className="mt-2 space-y-1 text-muted-foreground">{FOUNDATION_SOW_TERMS.map((t) => <li key={t.title}><span className="font-medium text-foreground">{t.title}.</span> {t.body}</li>)}</ul>
+      </details>
       <p className="text-xs text-muted-foreground">{FOUNDATION_ROLE_DISCLAIMER}</p>
       {priced && !priced.ok && <p className="text-sm text-destructive">{priced.problem}</p>}
       <div className="flex gap-2">

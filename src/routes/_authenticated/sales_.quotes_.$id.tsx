@@ -179,6 +179,7 @@ function QuotePage() {
               {(l.foundation_snapshot.terms?.limits ?? []).length > 0 && <p>Limits: {l.foundation_snapshot.terms.limits.map((x: any) => `${x.label} ${x.quantity} ${x.unit}`).join("; ")}</p>}
               <p>Service {l.foundation_snapshot.terms?.serviceStartOn}{l.foundation_snapshot.terms?.serviceEndOn ? ` to ${l.foundation_snapshot.terms.serviceEndOn}` : ""}; billing starts {l.foundation_snapshot.terms?.billingStartOn}{l.foundation_snapshot.terms?.optional ? "; optional component" : ""}</p>
               {l.foundation_snapshot.pricing?.negotiatedReason && <p>Price basis: {l.foundation_snapshot.pricing.negotiatedReason}</p>}
+              {(l.foundation_snapshot.terms?.sowTerms ?? []).map((t: any) => <p key={t.title}><span className="font-medium text-foreground">{t.title}.</span> {t.body}</p>)}
               <p className="text-xs">{l.foundation_snapshot.terms?.disclaimer}</p>
             </div></details>)}
           {d.quote.notes && <p className="mt-2 text-sm text-muted-foreground">Notes: {d.quote.notes}</p>}

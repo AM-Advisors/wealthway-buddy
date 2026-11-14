@@ -2766,6 +2766,13 @@
       "when": 1794601672653,
       "tag": "0394_fund_contact_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 395,
+      "version": "7",
+      "when": 1794687982826,
+      "tag": "0395_foundation_formation_rate_card",
+      "breakpoints": true
     }
   ]
 }

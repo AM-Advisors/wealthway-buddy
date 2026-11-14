@@ -139,3 +139,35 @@ describe("annual return reference date", () => {
     expect(annualReturnReferenceDate(null, "2026-11-11")).toBeNull();
   });
 });
+
+describe("nonprofit formation and operating services (proposal v3 prices)", () => {
+  const setup = { ...base, billing: "one_time" as const, negotiatedUnitCents: null, negotiatedReason: null, limits: [] };
+  it.each([
+    ["formation_planning", 150_000], ["formation_incorporation", 100_000], ["formation_governing_documents", 250_000],
+    ["exemption_application", 350_000], ["state_registrations", 100_000],
+  ] as const)("%s at its approved one-time price needs no approval", (component, rate) => {
+    const r = priceFoundationLine({ ...setup, component }, rate);
+    expect(r.ok && r.pricing).toMatchObject({ unitCents: rate, priceSource: "rate_card", needsExecutiveApproval: false });
+  });
+  it("the retainer is $1,250 billed monthly only", () => {
+    const monthly = priceFoundationLine({ ...setup, component: "operating_reporting", billing: "monthly" }, 125_000);
+    expect(monthly.ok && monthly.pricing).toMatchObject({ unitCents: 125_000, needsExecutiveApproval: false });
+    expect(priceFoundationLine({ ...setup, component: "operating_reporting", billing: "annual" }, 125_000).ok).toBe(false);
+  });
+  it("a retainer price below $1,250 needs CEO or CRO approval", () => {
+    const r = priceFoundationLine({ ...setup, component: "operating_reporting", billing: "monthly", negotiatedUnitCents: 100_000, negotiatedReason: "Founding board discount agreed" }, 125_000);
+    expect(r.ok && r.pricing.needsExecutiveApproval).toBe(true);
+  });
+  it("the retainer can't be quoted alongside bookkeeping for the same foundation and period", () => {
+    const row = { source: "quote" as const, ref: "q1", component: "bookkeeping_reporting" as const, clientEntityId: E, startOn: "2027-01-01", endOn: null };
+    expect(foundationCoverageConflict({ ...base, component: "operating_reporting" }, [row])).toMatch(/overlaps/);
+    expect(foundationCoverageConflict({ ...base, component: "bookkeeping_reporting" }, [{ ...row, component: "operating_reporting" }])).not.toBeNull();
+  });
+  it("SOW terms say Harmonious prepares and the foundation signs and files", () => {
+    const pr = priceFoundationLine({ ...setup, component: "exemption_application" }, 350_000);
+    if (!pr.ok) throw new Error(pr.problem);
+    const snap = foundationSnapshot({ ...setup, component: "exemption_application" }, pr.pricing, { entityName: "Example Foundation", checkedAt: "2026-11-14T00:00:00Z" });
+    expect(snap.terms.sowTerms.find((t) => t.title === "Preparation only")?.body).toMatch(/does not sign or file/);
+    expect(snap.terms.excluded.join(" ")).toMatch(/authorized officer signs and submits/);
+  });
+});

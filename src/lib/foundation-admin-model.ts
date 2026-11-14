@@ -91,12 +91,19 @@ export function holdsAuthority(rows: readonly AuthorityRow[], personId: string, 
 
 // ------------------------------------------------------------ Service components
 
-export type ComponentKey = "onboarding_setup" | "governance_admin" | "bookkeeping_reporting" | "contributions_restrictions" | "grant_administration" | "annual_compliance";
+export type ComponentKey = "onboarding_setup" | "governance_admin" | "bookkeeping_reporting" | "contributions_restrictions" | "grant_administration" | "annual_compliance"
+  | "formation_planning" | "formation_incorporation" | "formation_governing_documents" | "exemption_application" | "state_registrations" | "operating_reporting";
 export type Capability = "partial" | "not_built" | "blocked_by_existing_gate";
 
 export type FoundationComponent = {
   key: ComponentKey; name: string; cadence: "one_time" | "recurring"; summary: string;
   deliverables: string[]; included: string[]; excluded: string[]; harmoniousDuties: string[];
+  /** Recurring components billed on one cadence only (the approved rate is per that bill). */
+  billingOnly?: "monthly" | "quarterly" | "annual";
+  /** Other components this one already covers; quoting both for the same foundation and period is a duplicate. */
+  covers?: ComponentKey[];
+  /** "formation" components set up a new nonprofit; "administration" serves an existing foundation. */
+  group?: "formation" | "administration";
   readiness: { released: false; capability: Capability; available: string[]; missing: string[] };
 };
 
@@ -108,7 +115,7 @@ export const FOUNDATION_COMPONENTS: readonly FoundationComponent[] = [
     summary: "Collect the foundation's records, people and authority, and set up its administration workspace.",
     deliverables: ["Foundation profile on file", "People and authority register", "Document checklist with gaps identified"],
     included: ["Review of governing documents supplied by the foundation", "Recording directors, trustees, officers and signers with their evidence"],
-    excluded: ["Legal advice on formation or exemption", "Preparing or filing Form 1023 or 1024"],
+    excluded: ["Legal advice on formation or exemption", "Forming a new nonprofit or preparing Form 1023 (quoted separately as Foundation formation)"],
     harmoniousDuties: ["Organize and record the documents and authority the foundation provides", "Flag missing or expired records"],
     readiness: { released: false, capability: "partial", available: ["Foundation profile", "People and authority register", "Private document storage", "Operations tasks"], missing: ["Client-facing foundation onboarding screens", "Entity verification (KYB) and AML screening for foundations through the canonical verification engine"] },
   },
@@ -157,6 +164,63 @@ export const FOUNDATION_COMPONENTS: readonly FoundationComponent[] = [
     harmoniousDuties: ["Track deadlines and assemble records for the foundation's tax preparer"],
     readiness: { released: false, capability: "not_built", available: ["Reference filing deadline from the fiscal year end"], missing: ["Compliance calendar", "Tax-preparer workpapers", "Distribution requirement tracking"] },
   },
+  // ---------------------------------------------------------- Nonprofit formation and operations (proposal v3, 2026-11-14)
+  // Harmonious prepares; an authorized officer, director or the foundation's tax preparer signs and files.
+  {
+    key: "formation_planning", group: "formation", name: "Formation planning, governance and board orientation", cadence: "one_time",
+    summary: "Mission and program design workshop, public charity or private foundation analysis, name search, and orientation for the initial board and officers.",
+    deliverables: ["Mission and purpose statement", "Public charity or private foundation analysis for the board's decision", "Name availability search and reservation request, ready to sign", "Initial board and officer roster"],
+    included: ["Discovery workshop with the founders", "Classification analysis based on expected funding sources", "Board orientation on duties, meetings and the governance calendar"],
+    excluded: ["Legal advice, which comes from licensed counsel", "Recruiting directors for the foundation", "Signing or filing anything for the foundation"],
+    harmoniousDuties: ["Lead the planning workshop and prepare the materials the board decides on"],
+    readiness: { released: false, capability: "partial", available: ["Foundation profile", "People and authority register", "Operations tasks"], missing: ["Formation checklist and timeline workflow"] },
+  },
+  {
+    key: "formation_incorporation", group: "formation", name: "Incorporation, EIN and registered agent setup", cadence: "one_time",
+    summary: "Prepare the Articles of Incorporation with the purpose and dissolution clauses the IRS requires, the EIN application and the registered agent designation.",
+    deliverables: ["Articles of Incorporation, ready for the incorporator to sign and file", "EIN application (Form SS-4), ready for the responsible party to sign", "Registered agent designation"],
+    included: ["IRS-required purpose and dissolution clauses", "Coordination with the registered agent the foundation chooses"],
+    excluded: ["Signing or filing the Articles or Form SS-4: the incorporator and responsible party sign and file", "Government filing fees, billed at cost with no markup", "Registered agent annual fees, paid by the foundation"],
+    harmoniousDuties: ["Prepare the formation filings and tell the signer exactly what to sign and where to file"],
+    readiness: { released: false, capability: "partial", available: ["Private document storage", "Operations tasks", "EIN application preparation"], missing: ["Formation checklist and timeline workflow"] },
+  },
+  {
+    key: "formation_governing_documents", group: "formation", name: "Bylaws, policies and organizational minutes", cadence: "one_time",
+    summary: "Bylaws, conflict of interest policy, supporting policies and organizational board minutes, reviewed by independent licensed counsel.",
+    deliverables: ["Bylaws", "Conflict of interest policy", "Whistleblower and document retention policies", "Gift acceptance and donor privacy policies", "Financial controls policy: dual signatures, expense approval, reimbursement", "Grant-making policy (private foundations)", "Donation acknowledgment letter templates", "Organizational board minutes"],
+    included: ["Review of the governing documents by independent licensed counsel arranged by Harmonious"],
+    excluded: ["Legal advice from Harmonious, which is not a law firm", "Adopting the documents: the board adopts them"],
+    harmoniousDuties: ["Draft the documents and coordinate counsel's review"],
+    readiness: { released: false, capability: "partial", available: ["Private document storage", "People and authority register"], missing: ["Policy template library for foundations"] },
+  },
+  {
+    key: "exemption_application", group: "formation", name: "IRS Form 1023 preparation and IRS correspondence", cadence: "one_time",
+    summary: "Prepare the application for 501(c)(3) recognition (Form 1023, or 1023-EZ when eligible) and help the board answer IRS questions until a determination is issued.",
+    deliverables: ["Form 1023 or 1023-EZ with financial projections, ready for an authorized officer to sign and submit", "Draft answers to IRS questions for the board's approval"],
+    included: ["Form 1023-EZ eligibility review", "Monitoring the application and organizing IRS questions"],
+    excluded: ["Signing or submitting Form 1023: an authorized officer signs and submits", "Any promise of IRS approval or timing", "IRS user fee, billed at cost with no markup"],
+    harmoniousDuties: ["Prepare the application and draft responses for the board to approve"],
+    readiness: { released: false, capability: "not_built", available: [], missing: ["Exemption application workflow and IRS correspondence tracking"] },
+  },
+  {
+    key: "state_registrations", group: "formation", name: "State charity, tax exemption and local registrations", cadence: "one_time",
+    summary: "Prepare the state charitable registration, the state sales tax exemption application after the IRS determination, and any local permits.",
+    deliverables: ["State charitable registration (in Illinois, Form CO-1), ready to sign", "State sales tax exemption application (in Illinois, Form STAX-1), ready to sign", "List of local permits with applications prepared"],
+    included: ["Updating the state charity file after the IRS determination"],
+    excluded: ["Signing or filing any registration: an authorized officer signs and files", "State and local fees, billed at cost with no markup"],
+    harmoniousDuties: ["Prepare each registration and track it to completion"],
+    readiness: { released: false, capability: "not_built", available: [], missing: ["State registration checklist and tracking"] },
+  },
+  {
+    key: "operating_reporting", group: "formation", name: "Operating and reporting retainer", cadence: "recurring", billingOnly: "monthly",
+    covers: ["governance_admin", "bookkeeping_reporting", "contributions_restrictions", "annual_compliance"],
+    summary: "Monthly bookkeeping and fund accounting, donor and grant records, board support, budgeting, a compliance calendar, and annual returns and reports prepared for the foundation to sign and file.",
+    deliverables: ["Monthly financial package by the 10th", "Restricted and unrestricted fund accounting", "Gift records and acknowledgment letters for approval", "Quarterly board agendas and draft minutes", "Annual budget and quarterly variance review", "Compliance calendar for every filing and renewal", "Form 990, 990-EZ, 990-N or 990-PF prepared for signature", "State annual report and annual financial report prepared for signature", "Forms 1099 and W-2 coordinated with the payroll provider", "Annual impact report"],
+    included: ["Reconciling accounts from statements the foundation provides", "Insurance coverage review at setup and each year", "Monthly check-in call with the engagement lead"],
+    excluded: ["Signing or filing returns and reports: an authorized officer or the foundation's tax preparer signs and files", "Paying taxes, fees or grants", "Audit or independent review", "Investment advice", "Software, insurance and payment processing costs, paid by the foundation"],
+    harmoniousDuties: ["Keep the books and records current and prepare each return and report before its deadline"],
+    readiness: { released: false, capability: "blocked_by_existing_gate", available: ["Tasks and deadlines", "Documents"], missing: ["Nonprofit chart of accounts and restricted net assets", "Foundation bank account connections and imports", "Compliance calendar", "Existing bookkeeping availability limits stay in place until foundation accounting is validated"] },
+  },
 ];
 
 export const COMPONENT_KEYS = FOUNDATION_COMPONENTS.map((c) => c.key) as [ComponentKey, ...ComponentKey[]];
@@ -166,13 +230,24 @@ export const isFoundationKey = (k: string | null | undefined) => typeof k === "s
 
 export const RETAINED_RESPONSIBILITIES: readonly { party: string; items: string[] }[] = [
   { party: "Board and trustees", items: [RETAINED_ALWAYS, "Approving grants, budgets, investments and payments", "Fiduciary duties to the foundation"] },
-  { party: "Legal counsel", items: ["Legal advice, governing document drafting and exemption applications"] },
+  { party: "Legal counsel", items: ["Legal advice, including review of governing documents and exemption applications"] },
   { party: "Investment adviser", items: ["Investment decisions and discretionary management of foundation assets"] },
-  { party: "Tax preparer", items: ["Preparing, signing and filing the foundation's tax returns"] },
+  { party: "Officers and tax preparer", items: ["Reviewing, signing and filing the foundation's returns, applications and registrations"] },
 ];
 
 export const FOUNDATION_ROLE_DISCLAIMER =
-  "Harmonious provides administrative support only. Harmonious is not a trustee, director or officer of the foundation, does not act as a discretionary investment adviser, does not prepare, sign or file the foundation's tax returns, and is not a signatory on foundation bank accounts or payments. Decisions on grants, investments, filings and payments remain with the foundation's board and trustees and the advisers they appoint.";
+  "Harmonious provides administrative support only. Harmonious is not a trustee, director or officer of the foundation, does not act as a discretionary investment adviser or legal counsel, does not sign or file the foundation's returns, applications or registrations, and is not a signatory on foundation bank accounts or payments. Decisions on grants, investments, filings and payments remain with the foundation's board and trustees and the advisers they appoint.";
+
+/** SOW wording that applies to every Foundation Administration engagement. Frozen on each quote line's terms. */
+export const FOUNDATION_SOW_TERMS: readonly { title: string; body: string }[] = [
+  { title: "Preparation only", body: "Harmonious prepares the foundation's formation documents, applications, registrations, returns and reports. An authorized officer or director, or the foundation's tax preparer, reviews, signs and files each one. Harmonious does not sign or file on the foundation's behalf." },
+  { title: "Legal review", body: "Governing documents are reviewed by independent licensed counsel arranged by Harmonious. Harmonious is not a law firm and does not give legal advice." },
+  { title: "IRS determination", body: "The IRS decides whether to recognize the foundation's exemption and how long its review takes. Harmonious does not promise approval or timing. When Form 1023 is filed within 27 months of incorporation, exemption is generally retroactive to the incorporation date." },
+  { title: "Government fees", body: "Filing, registration and user fees are passed through at cost with no markup and billed separately from Harmonious fees." },
+  { title: "Payment", body: "50% of the setup fees are due at signing and 50% when Form 1023 is submitted. The operating and reporting retainer is billed monthly, beginning the month after incorporation." },
+  { title: "Third-party costs", body: "Accounting software, insurance, payment processing, audits and registered agent fees are paid directly by the foundation and are not included in Harmonious fees." },
+  { title: "Money and decisions", body: "Harmonious does not hold foundation funds, sign on foundation bank accounts, or approve or release grants or payments. Decisions stay with the board." },
+];
 
 // ------------------------------------------------------------ Quote lines
 
@@ -201,6 +276,7 @@ export function priceFoundationLine(input: FoundationLineInput, rateCents: numbe
   if (!c) return { ok: false, problem: "Choose a Foundation Administration component." };
   if (c.cadence === "one_time" && input.billing !== "one_time") return { ok: false, problem: `${c.name} is billed once.` };
   if (c.cadence === "recurring" && input.billing === "one_time") return { ok: false, problem: `${c.name} is a recurring service. Choose monthly, quarterly or annual billing.` };
+  if (c.billingOnly && input.billing !== c.billingOnly) return { ok: false, problem: `${c.name} is billed ${c.billingOnly}.` };
   if (input.billingStartOn < input.serviceStartOn) return { ok: false, problem: "Billing can't start before the service starts." };
   if (input.serviceEndOn && input.serviceEndOn <= input.serviceStartOn) return { ok: false, problem: "The service end date must be after the start date." };
   const rate = rateCents != null && rateCents > 0 ? rateCents : null;
@@ -226,10 +302,11 @@ const overlaps = (a: { s: string; e: string | null }, b: { s: string | null; e: 
 /** Same entity and component already quoted or engaged for an overlapping period. One-time setup conflicts whatever the dates. */
 export function foundationCoverageConflict(input: Pick<FoundationLineInput, "component" | "clientEntityId" | "serviceStartOn" | "serviceEndOn">, rows: readonly FoundationCoverageRow[]): string | null {
   const c = componentByKey(input.component);
-  const hit = rows.find((r) => r.clientEntityId === input.clientEntityId && (r.component === null || r.component === input.component)
+  const same = (k: ComponentKey) => k === input.component || (c?.covers ?? []).includes(k) || (componentByKey(k)?.covers ?? []).includes(input.component);
+  const hit = rows.find((r) => r.clientEntityId === input.clientEntityId && (r.component === null || same(r.component))
     && (c?.cadence === "one_time" || overlaps({ s: input.serviceStartOn, e: input.serviceEndOn }, { s: r.startOn, e: r.endOn })));
   if (!hit) return null;
-  const what = c?.name ?? "This component";
+  const what = hit.component && hit.component !== input.component ? `${c?.name ?? "This component"} overlaps ${componentByKey(hit.component)?.name ?? "another service"}, which` : c?.name ?? "This component";
   return hit.source === "engagement"
     ? `${what} is already part of an engagement for this foundation for that period. Change the dates or amend the existing engagement.`
     : `${what} is already on another open quote for this foundation for that period. Update that quote or replace it with a new version.`;
@@ -265,6 +342,7 @@ export function foundationLineTerms(input: FoundationLineInput) {
     harmoniousDuties: c.harmoniousDuties,
     retainedResponsibilities: RETAINED_RESPONSIBILITIES,
     disclaimer: FOUNDATION_ROLE_DISCLAIMER,
+    sowTerms: FOUNDATION_SOW_TERMS,
     limits: input.limits,
     optional: input.optional,
     serviceStartOn: input.serviceStartOn, serviceEndOn: input.serviceEndOn, billingStartOn: input.billingStartOn,

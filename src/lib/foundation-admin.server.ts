@@ -5,7 +5,7 @@
  */
 import { capabilitiesFor, hasOperationsEntry } from "@/lib/ops-capabilities";
 import {
-  FOUNDATION_FLAG, annualReturnReferenceDate, authorityProblem, componentByKey, foundationAccessProblem,
+  FOUNDATION_FLAG, FOUNDATION_KEY_PREFIX, annualReturnReferenceDate, authorityProblem, componentByKey, foundationAccessProblem,
   foundationCoverageConflict, foundationHandoffTasks, foundationLineInputSchema, foundationLineLabel,
   foundationReleaseBlocker, foundationSnapshot, isFoundationKey, priceFoundationLine,
   type ComponentKey, type FoundationActionKind, type FoundationCoverageRow,
@@ -371,11 +371,12 @@ export async function quoteFoundationOptions(userId: string, clientId: string) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   const db = await admin();
-  if (!(await foundationQuotingEnabled(db))) return { enabled: false, foundations: [] as { profileId: string; clientEntityId: string; name: string; classification: string; exemptionStatus: string }[] };
+  if (!(await foundationQuotingEnabled(db))) return { enabled: false, rates: {} as Record<string, number>, foundations: [] as { profileId: string; clientEntityId: string; name: string; classification: string; exemptionStatus: string }[] };
   const profs = must(await db.from("foundation_profiles").select("id, client_entity_id, classification, exemption_status").eq("client_id", clientId).eq("status", "active"), "Couldn't read foundations.") as any[];
   const ids = profs.map((p) => p.client_entity_id);
   const ents = ids.length ? (must(await db.from("client_entities").select("id, legal_name").in("id", ids), "Couldn't read foundations.") as any[]) : [];
-  return { enabled: true, foundations: profs.map((p) => ({ profileId: p.id as string, clientEntityId: p.client_entity_id as string, name: (ents.find((e) => e.id === p.client_entity_id)?.legal_name ?? "Foundation") as string, classification: p.classification as string, exemptionStatus: p.exemption_status as string })) };
+  const rates = Object.fromEntries(await foundationRates(db));
+  return { enabled: true, rates, foundations: profs.map((p) => ({ profileId: p.id as string, clientEntityId: p.client_entity_id as string, name: (ents.find((e) => e.id === p.client_entity_id)?.legal_name ?? "Foundation") as string, classification: p.classification as string, exemptionStatus: p.exemption_status as string })) };
 }
 
 /** Whether the Foundation tab should show: on for staff who can see clients, or a Super Admin who can turn it on. */
@@ -394,4 +395,22 @@ export async function foundationReleaseView(userId: string) {
   const a = await salesActor(userId);
   if (!a.roles.length) throw new Error("Not allowed.");
   return foundationReleasedSets(db);
+}
+
+/**
+ * Approved Foundation Administration list prices from the published rate card (pricing_items keyed FOUNDATION_ADMIN:*).
+ * Every published version is read, newest first, so the rate is found whichever published catalog holds it.
+ */
+export async function foundationRates(db: any): Promise<Map<string, number>> {
+  const versions = must(await db.from("pricing_versions").select("id, effective_date, published_at").eq("status", "published"), "Couldn't read the rate card.") as any[];
+  if (!versions.length) return new Map();
+  const order = [...versions].sort((a, b) => String(b.effective_date ?? "").localeCompare(String(a.effective_date ?? "")) || String(b.published_at ?? "").localeCompare(String(a.published_at ?? ""))).map((v) => v.id as string);
+  const items = must(await db.from("pricing_items").select("version_id, service_key, amount_cents, available_for_new_quotes").in("version_id", order).like("service_key", `${FOUNDATION_KEY_PREFIX}%`), "Couldn't read the rate card.") as any[];
+  const out = new Map<string, number>();
+  for (const vid of order) for (const i of items) {
+    if (i.version_id !== vid || out.has(i.service_key) || i.available_for_new_quotes === false) continue;
+    const cents = Number(i.amount_cents);
+    if (Number.isFinite(cents) && cents > 0) out.set(i.service_key as string, cents);
+  }
+  return out;
 }
