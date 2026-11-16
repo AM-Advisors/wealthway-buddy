@@ -2780,6 +2780,13 @@
       "when": 1794848912474,
       "tag": "0396_withdraw_empty_duplicate_roas_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 397,
+      "version": "7",
+      "when": 1794849809285,
+      "tag": "0397_end_leftover_fund_access_for_removed_investors",
+      "breakpoints": true
     }
   ]
 }

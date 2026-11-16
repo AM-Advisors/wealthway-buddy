@@ -581,9 +581,34 @@ export async function removeFromFund(userId: string, input: { onboardingId: stri
     const { data: others } = await db().from("investor_onboardings").select("id").eq("invitation_id", row.invitation_id).neq("id", row.id).is("removed_at", null).limit(1);
     if (!(others ?? []).length) await db().from("fund_invitations").update({ status: "revoked", updated_at: nowIso() }).eq("id", row.invitation_id).eq("status", "pending");
   }
+  // Their "can see this Fund" access ends too, unless something else still ties them to it.
+  if (row.investor_user_id) await endFundAccessAfterRemoval(row.investor_user_id, row.offering_id, row.id, actor.userId, input.reason ?? null);
   await onbEvent(row.id, row.offering_id, "investor_removed_from_fund", actor, { reason: input.reason ?? null });
   await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "removed_from_fund" });
   return { removed: true };
+}
+
+async function endFundAccessAfterRemoval(investorUserId: string, offeringId: string, onboardingId: string, actorUserId: string, reason: string | null) {
+  const d = db();
+  const [{ data: access }, { data: others }, { data: apps }, { count: sigs }, { count: holdings }] = await Promise.all([
+    d.from("investor_fund_access").select("id, user_id, offering_id, granted_by, created_at").eq("user_id", investorUserId).eq("offering_id", offeringId).maybeSingle(),
+    d.from("investor_onboardings").select("stage, removed_at, merged_into_onboarding_id").eq("investor_user_id", investorUserId).eq("offering_id", offeringId).neq("id", onboardingId),
+    d.from("investor_applications").select("status").eq("user_id", investorUserId).eq("offering_id", offeringId),
+    d.from("fund_file_signatures").select("id", { count: "exact", head: true }).eq("signer_user_id", investorUserId).eq("offering_id", offeringId),
+    d.from("investor_positions").select("id", { count: "exact", head: true }).eq("investor_user_id", investorUserId).eq("offering_id", offeringId),
+  ]);
+  if (!access) return;
+  const { fundAccessShouldEnd } = await import("@/lib/fund-access-end");
+  if (!fundAccessShouldEnd({ otherOnboardings: (others ?? []) as any[], applications: (apps ?? []) as any[], signatureCount: sigs ?? 0, holdingCount: holdings ?? 0 })) return;
+  // Audit first (append-only), then remove the access row.
+  const { error: auditErr } = await d.from("access_audit_events").insert({
+    actor_user_id: actorUserId, target_user_id: investorUserId, action: "investor_fund_access.revoke", outcome: "applied",
+    scope_type: "offering", scope_id: offeringId, previous_state: access, new_state: null,
+    reason: reason ? `Removed from fund: ${reason}` : "Removed from fund", correlation_id: `remove_from_fund:${onboardingId}`,
+  });
+  if (auditErr) { console.error("[removeFromFund] access audit failed; access kept", auditErr.message); return; }
+  const { error } = await d.from("investor_fund_access").delete().eq("id", (access as any).id);
+  if (error) console.error("[removeFromFund] fund access not removed", error.message);
 }
 
 /* ---------------------------------------------------------------- views */
