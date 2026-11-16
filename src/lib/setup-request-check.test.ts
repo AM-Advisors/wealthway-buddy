@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SETUP_PLACES, STEP_DETAIL_KEYS, checkRequestAgainstSetup, checkSummary, questionsStatus, type SetupSnapshot } from "./setup-request-check";
+import { SETUP_PLACES, STEP_DETAIL_KEYS, WIRED_DETAIL_KEYS, checkRequestAgainstSetup, checkSummary, questionsStatus, type SetupSnapshot } from "./setup-request-check";
 import { PROVIDER_FIELDS, SETUP_DETAIL_FIELDS } from "./fund-setup-details";
 import { sectionStatuses, type SetupFacts } from "./fund-setup-canonical";
 import { alignSingleClass, emptyRequest, requestClassFields } from "./fund-request-model";
@@ -37,8 +37,10 @@ describe("fund request answers vs Setup", () => {
     expect(state(rows, "carry")).toBe("changed");
   });
   it("investor eligibility has a Setup home in the Offering step and is matched against it", () => {
-    expect(state(checkRequestAgainstSetup(request, snap()), "investor_eligibility")).toBe("missing");
-    expect(state(checkRequestAgainstSetup(request, snap({ setupDetails: { investor_eligibility: "Accredited only" } })), "investor_eligibility")).toBe("in_setup");
+    const r = { ...request, investor_eligibility: "Accredited investors only" };
+    expect(state(checkRequestAgainstSetup(r, snap()), "investor_eligibility")).toBe("missing");
+    expect(state(checkRequestAgainstSetup(r, snap({ eligibilityKeys: ["accredited_investor"] })), "investor_eligibility")).toBe("in_setup");
+    expect(state(checkRequestAgainstSetup({ ...request, investor_eligibility: "Open to all investors" }, snap()), "investor_eligibility")).toBe("in_setup");
   });
   it("a preferred return answered Not applicable or None is not flagged when Setup has none", () => {
     for (const answer of ["Not applicable", "None", "N/A"]) {
@@ -124,8 +126,16 @@ describe("one-class funds have one set of terms", () => {
   });
   it("each request-only Setup field is edited in exactly one step", () => {
     const all = [...SETUP_DETAIL_FIELDS.map((f) => `d:${f.key}`), ...PROVIDER_FIELDS.map((f) => `p:${f.key}`), "investment_strategy", "services"];
-    const placed = Object.values(STEP_DETAIL_KEYS).flat();
+    const placed = [...Object.values(STEP_DETAIL_KEYS).flat(), ...WIRED_DETAIL_KEYS];
     for (const k of all) expect(placed.filter((x) => x === k)).toHaveLength(1);
     expect(placed.filter((k) => !all.includes(k))).toEqual([]);
+  });
+  it("banking and management company answers are checked against the real Banking and Team records", () => {
+    const r = { ...request, banking_path: "harmonious", management_llc_path: "setup" };
+    expect(state(checkRequestAgainstSetup(r, snap()), "banking_setup_by")).toBe("missing");
+    expect(state(checkRequestAgainstSetup(r, snap({ bankingSetupBy: "harmonious" })), "banking_setup_by")).toBe("in_setup");
+    expect(state(checkRequestAgainstSetup(r, snap({ bankingSetupBy: "fund" })), "banking_setup_by")).toBe("changed");
+    expect(state(checkRequestAgainstSetup(r, snap()), "management_llc_path")).toBe("missing");
+    expect(state(checkRequestAgainstSetup(r, snap({ managementCompanies: ["Acme Management LLC"] })), "management_llc_path")).toBe("in_setup");
   });
 });

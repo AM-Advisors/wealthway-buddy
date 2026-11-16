@@ -422,6 +422,15 @@ async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: a
     db().from("fund_questionnaire_sections").select("status, version, questions").eq("offering_id", offeringId),
   ]);
   const { data: versionFiles } = await db().from("offering_document_versions").select("file_name").eq("offering_id", offeringId).limit(500);
+  // Real Setup records the request's eligibility, banking and management company answers feed.
+  const [{ data: eligRows }, { data: mgmtRows }] = await Promise.all([
+    setup?.id ? db().from("fund_eligibility_configs").select("rules, version").eq("setup_id", setup.id).eq("status", "approved").order("version", { ascending: false }).limit(1) : Promise.resolve({ data: [] }),
+    db().from("client_entities").select("id, legal_name, status").eq("offering_id", offeringId).eq("entity_type", "management_company").order("created_at"),
+  ]);
+  const { effectiveEligibility, parseEligibilityConfig } = await import("@/lib/onboarding-compliance-model");
+  const approvedElig = ((eligRows ?? []) as any[])[0] ?? null;
+  const eligibilityKeys = approvedElig ? effectiveEligibility({ regType: o.reg_type, approved: parseEligibilityConfig(approvedElig.rules?.eligibilityRequirements) }).map((r) => r.key as string) : null;
+  const managementCompanies = ((mgmtRows ?? []) as any[]).map((m) => ({ id: m.id as string, legalName: String(m.legal_name ?? ""), status: String(m.status ?? "") }));
   const signerRows = (signers.data ?? []) as any[];
   const personIds = [...new Set([...signerRows.map((r) => r.person_id), o.fund_signatory_person_id].filter(Boolean))];
   const { data: people } = personIds.length ? await db().from("persons").select("id, legal_first_name, legal_last_name").in("id", personIds) : { data: [] };
@@ -441,9 +450,11 @@ async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: a
     documentCount: docs.count ?? 0, serviceProviders: providers, investmentStrategy: setup?.investment_strategy ?? null,
     setupDetails: (setup?.setup_details && typeof setup.setup_details === "object" ? setup.setup_details : {}) as Record<string, unknown>,
     documentFileNames: ((versionFiles ?? []) as any[]).map((v) => String(v.file_name ?? "")).filter(Boolean),
+    eligibilityKeys, bankingSetupBy: (o.banking_setup_by ?? null) as string | null, managementCompanies: managementCompanies.map((m) => m.legalName).filter(Boolean),
   }) : [];
+  const { requestWiring } = await import("@/lib/request-setup-wiring");
   const questions = questionsStatus((sections.data ?? []) as any[]);
-  return { hasRequest: !!row, submittedAt: (row?.submitted_at ?? null) as string | null, rows, questions, summary: checkSummary(rows, questions) };
+  return { hasRequest: !!row, submittedAt: (row?.submitted_at ?? null) as string | null, rows, questions, summary: checkSummary(rows, questions), wiring: requestWiring(row?.details), clientId: (o.client_id ?? null) as string | null, managementCompanies };
 }
 
 /** Request-only answers, service providers and strategy, edited inside their Setup steps (STEP_DETAIL_KEYS). */

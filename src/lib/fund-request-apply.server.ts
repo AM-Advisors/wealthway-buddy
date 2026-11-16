@@ -41,6 +41,34 @@ export async function applyRequestToFund(input: {
   const { error: setupError } = await db.from("fund_setups").update(patch).eq("id", (setup as any).id);
   if (setupError) issues.push({ title: "Fund details not copied into Setup", description: "Enter the request's strategy, providers, eligibility, GP commitment and notes in the matching Setup steps." });
 
+  // Banking: who opens the account feeds Banking (never overwrites a recorded choice).
+  const { requestWiring } = await import("@/lib/request-setup-wiring");
+  const wiring = requestWiring(r as any);
+  if (wiring.banking?.setupBy) {
+    await db.from("offerings").update({ banking_setup_by: wiring.banking.setupBy }).eq("id", offeringId).is("banking_setup_by", null).then(() => undefined, () => undefined);
+  }
+  // Investor eligibility feeds a draft of the fund's eligibility requirements; a person still approves it.
+  if (wiring.eligibility?.keys.length) {
+    try {
+      const { effectiveEligibility, parseEligibilityConfig } = await import("@/lib/onboarding-compliance-model");
+      const setupId = (setup as any).id as string;
+      const { data: cfgs } = await db.from("fund_eligibility_configs").select("id, version, status, rules").eq("setup_id", setupId);
+      const list = (cfgs ?? []) as any[];
+      const approved = list.find((c) => c.status === "approved");
+      const draft = list.find((c) => c.status === "draft");
+      if (!approved) {
+        const { data: off } = await db.from("offerings").select("reg_type").eq("id", offeringId).maybeSingle();
+        const base = parseEligibilityConfig(draft?.rules?.eligibilityRequirements);
+        const add = wiring.eligibility.keys.filter((k) => !base.some((x) => x.key === k)).map((k) => ({ key: k, category: "regulatory" as const, mandatory: true }));
+        const eligibilityRequirements = effectiveEligibility({ regType: off?.reg_type, approved: [...base, ...add] });
+        if (draft) await db.from("fund_eligibility_configs").update({ rules: { ...(draft.rules ?? {}), eligibilityRequirements, source: "client_request" }, updated_at: new Date().toISOString() }).eq("id", draft.id);
+        else await db.from("fund_eligibility_configs").insert({ setup_id: setupId, version: Math.max(0, ...list.map((c) => Number(c.version ?? 0))) + 1, status: "draft", rules: { eligibilityRequirements, source: "client_request" }, created_by: actorId });
+      }
+    } catch (e: any) {
+      issues.push({ title: "Investor eligibility not copied", description: `Set the investor eligibility requirements in Setup → Offering from the request's answer: ${wiring.eligibility.text}` });
+    }
+  }
+
   // Fees, carry and classes: Setup's Fees & terms (draft for the usual approval) and the Team tab fee row.
   const { economicsFromRequest } = await import("@/lib/request-economics");
   const econ = economicsFromRequest(r);

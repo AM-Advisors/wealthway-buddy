@@ -20,7 +20,6 @@ import { BulkAddInvestors } from "@/components/bulk-add-investors";
 import { BulkInvestorRecords } from "@/components/bulk-investor-records";
 import { CreateInvestor } from "@/components/create-investor";
 import { FundOnboardingSettings } from "@/components/fund-onboarding-settings";
-import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { ManagerAddInvestor } from "@/components/manager-add-investor";
 import { PrepareInvestor } from "@/components/prepare-investor";
 import { copyText, FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
@@ -271,7 +270,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
       <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="rounded-xl border">
         <CollapsibleTrigger className="flex w-full items-center justify-between p-3 text-left font-medium">More for this fund: link, settings and reports<ChevronDown className={`h-4 w-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} /></CollapsibleTrigger>
         <CollapsibleContent className="space-y-5 border-t p-3">
-          {moreOpen && <><FundOnboardingLinkCard fundId={fundId} /><FundOnboardingSettings fundId={fundId} /><FundEligibilitySetup fundId={fundId} />{moreSections}</>}
+          {moreOpen && <><FundOnboardingLinkCard fundId={fundId} /><FundOnboardingSettings fundId={fundId} />{moreSections}</>}
         </CollapsibleContent>
       </Collapsible>
     </section>

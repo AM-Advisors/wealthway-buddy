@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { BankingChoice } from "@/components/banking-choice";
+import { useSetupRequestCheck } from "@/components/setup-request-check";
 import { EinChoice } from "@/components/ein-choice";
 import { SubmitForm } from "@/components/fund-manager-setup-loader";
 import { saveFundEinFn } from "@/lib/fund-entity.functions";
@@ -142,14 +143,17 @@ export function BankBox({ offeringId, isStaff, onChanged, footer }: { offeringId
   const wire = useQuery({ queryKey: ["fund-wire", offeringId], queryFn: () => loadWire({ data: { offering_id: offeringId } }), retry: false });
   const files = useLetters(offeringId);
   const [editing, setEditing] = useState(false);
-  const [showChoice, setShowChoice] = useState(false);
+  const [choiceToggle, setShowChoice] = useState<boolean | null>(null);
+  // The fund request's banking answers feed this section: who opens the account and the preferred bank.
+  const requested = useSetupRequestCheck(offeringId).check?.wiring?.banking ?? null;
+  const showChoice = choiceToggle ?? !!requested?.setupBy;
   const letter = latest(files.data as any[], "bank_letter");
   const det = ((wire.data as any)?.details ?? {}) as Record<string, string>;
   const done = bankComplete({ bankName: det["bank_name"], accountMasked: det["account_number"] });
   const refresh = () => { void invalidateFund(qc, offeringId); onChanged?.(); };
   if (wire.isPending || files.isPending) return <div className="h-24 animate-pulse rounded-2xl bg-muted" />;
   const form = isStaff
-    ? <BankForm offeringId={offeringId} prior={det} letter={letter} onSaved={() => { setEditing(false); refresh(); }} />
+    ? <BankForm offeringId={offeringId} prior={det} letter={letter} preferredBank={requested?.preferredBank ?? null} onSaved={() => { setEditing(false); refresh(); }} />
     : <div className="space-y-3"><p className="text-sm text-muted-foreground">Send your bank name, account name and wire instructions. The bank letter is optional. Harmonious enters and verifies the full numbers.</p><SubmitForm offeringId={offeringId} section="bank" onDone={() => { setEditing(false); refresh(); }} /></div>;
   if (done) return (
     <>
@@ -165,14 +169,14 @@ export function BankBox({ offeringId, isStaff, onChanged, footer }: { offeringId
     <section className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex items-center gap-2"><h3 className="flex-1 font-heading text-base font-semibold text-primary">Banking</h3><span className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">Needed</span></div>
       {form}
-      <button type="button" className="text-sm text-primary underline" onClick={() => setShowChoice((x) => !x)}>{showChoice ? "Hide bank account options" : "Need a bank account?"}</button>
-      {showChoice && <BankingChoice offeringId={offeringId} onChanged={refresh} />}
+      <button type="button" className="text-sm text-primary underline" onClick={() => setShowChoice(!showChoice)}>{showChoice ? "Hide bank account options" : "Need a bank account?"}</button>
+      {showChoice && <BankingChoice offeringId={offeringId} onChanged={refresh} requested={requested} />}
       {footer}
     </section>
   );
 }
 
-function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; prior: Record<string, string>; letter: any; onSaved: () => void }) {
+function BankForm({ offeringId, prior, letter, preferredBank, onSaved }: { offeringId: string; prior: Record<string, string>; letter: any; preferredBank?: string | null; onSaved: () => void }) {
   const save = useServerFn(saveManagedWireInstructions);
   const upload = useServerFn(uploadFundFileFn);
   const [v, setV] = useState({ bankName: prior["bank_name"] ?? "", accountName: prior["account_name"] ?? "", bankAddress: prior["bank_address"] ?? "", beneficiaryAddress: prior["beneficiary_address"] ?? "", account: "", account2: "", routing: "", routing2: "" });
@@ -194,6 +198,10 @@ function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; 
   };
   return (
     <div className="space-y-3">
+      {preferredBank && !v.bankName.trim() && (
+        <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">Preferred bank on the fund request: <span className="text-foreground">{preferredBank}</span>
+          <Button type="button" size="sm" variant="outline" onClick={() => setV({ ...v, bankName: preferredBank })}>Use it</Button></p>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">{f("bankName", "Bank name")}{f("accountName", "Account name")}</div>
       <div className="grid gap-3 sm:grid-cols-2">{f("bankAddress", "Bank address")}{f("beneficiaryAddress", "Beneficiary address")}</div>
       <div className="grid gap-3 sm:grid-cols-2">{f("account", "Account number", true, "password")}{f("account2", "Confirm account number", true)}</div>

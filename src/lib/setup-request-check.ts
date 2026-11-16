@@ -5,6 +5,8 @@
  * writes, never marks anything complete and never shows tax identifiers.
  */
 import { requestDocumentCategory, sameFileName } from "@/lib/offering-document-model";
+import { BANKING_SETUP_LABEL, MANAGEMENT_COMPANY_LABEL, bankingFromRequest, eligibilityCovered, eligibilityFromAnswer } from "@/lib/request-setup-wiring";
+import { ELIGIBILITY_REQUIREMENT_TYPES } from "@/lib/onboarding-compliance-model";
 
 export type SetupSnapshot = {
   legalName: string | null;
@@ -36,6 +38,12 @@ export type SetupSnapshot = {
   setupDetails?: Record<string, unknown> | null;
   /** File names of Setup document versions (to match files uploaded with the request). */
   documentFileNames?: string[];
+  /** Approved investor eligibility requirement keys (with the exemption's own), or null when none approved. */
+  eligibilityKeys?: string[] | null;
+  /** offerings.banking_setup_by: who opens the bank account. */
+  bankingSetupBy?: string | null;
+  /** Management companies recorded for this fund. */
+  managementCompanies?: string[];
 };
 
 /** Where in Setup an answer belongs (matches the setup page section ids). */
@@ -57,15 +65,18 @@ export type SetupPlace = keyof typeof SETUP_PLACES;
  * Request-only fund facts (fund_setups.setup_details, service providers, strategy), each edited
  * inside the Setup step it belongs to, so the request questionnaire reads as part of Setup.
  * Keys: "investment_strategy", "p:<provider>", "d:<detail>", "services" (requested services, read-only).
+ * Investor eligibility, preferred bank and management company are not free-text fields here: they feed
+ * the eligibility requirements, Banking and the fund's management company record (WIRED_DETAIL_KEYS).
  */
+export const WIRED_DETAIL_KEYS = ["d:investor_eligibility", "d:bank_name", "d:management_llc_path"] as const;
 export const STEP_DETAIL_KEYS: Partial<Record<SetupPlace, readonly string[]>> = {
   basic: ["d:client_notes", "services"],
   details: ["investment_strategy"],
   jurisdiction: ["d:series_master"],
-  offering: ["d:investor_eligibility"],
+
   fees: ["d:class_name", "d:gp_commitment"],
-  team: ["p:counsel", "p:auditor", "p:tax_preparer", "d:management_llc_path"],
-  bank: ["d:bank_name", "p:bank_or_custodian"],
+  team: ["p:counsel", "p:auditor", "p:tax_preparer"],
+  bank: ["p:bank_or_custodian"],
   documents: ["d:documents_path"],
 };
 
@@ -139,6 +150,8 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   const hasEin = v2 ? str(details["has_ein"]) : details["has_ein"] === true ? "yes" : details["has_ein"] === false ? "" : "";
   if (hasEin === "yes") add({ key: "ein", question: "Fund already has an EIN", answer: "Yes", place: "ein", setup: (s) => (s.hasEin ? "Recorded" : null), same: () => true });
   const detail = (s: SetupSnapshot, k: string) => { const x = s.setupDetails?.[k]; return typeof x === "string" && x.trim() ? x.trim() : null; };
+  const banking = bankingFromRequest(details);
+  if (banking?.setupBy) add({ key: "banking_setup_by", question: "Who opens the bank account", answer: BANKING_SETUP_LABEL[banking.setupBy], place: "bank", setup: (s) => (s.bankingSetupBy === "fund" || s.bankingSetupBy === "harmonious" ? BANKING_SETUP_LABEL[s.bankingSetupBy] : null) });
   const bankName = str(details["bank_name"]);
   add({ key: "bank", question: "Preferred bank", answer: bankName, place: "bank", setup: (s) => detail(s, "bank_name") });
   const custodian = str(details["bank_or_custodian"]);
@@ -167,9 +180,21 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   }
 
   // Request-only answers, each kept in the Setup step it belongs to.
-  for (const [k, q, dk, place] of [["investor_eligibility", "Investor eligibility", "investor_eligibility", "offering"], ["gp_commitment", "GP commitment", "gp_commitment", "fees"], ["notes", "Notes to Harmonious", "client_notes", "basic"], ["management_llc_path", "Management company", "management_llc_path", "team"]] as [string, string, string, SetupPlace][]) {
-    add({ key: k, question: q, answer: str(details[k]), place, setup: (s) => detail(s, dk), same: (a, s) => norm(a) === norm(s) || (k === "management_llc_path") });
+  for (const [k, q, dk, place] of [["gp_commitment", "GP commitment", "gp_commitment", "fees"], ["notes", "Notes to Harmonious", "client_notes", "basic"]] as [string, string, string, SetupPlace][]) {
+    add({ key: k, question: q, answer: str(details[k]), place, setup: (s) => detail(s, dk), same: (a, s) => norm(a) === norm(s) });
   }
+  // Investor eligibility feeds the investor eligibility requirements investors are asked.
+  const eligText = str(details["investor_eligibility"]);
+  if (eligText) {
+    const sug = eligibilityFromAnswer(eligText);
+    const label = (keys: string[]) => keys.map((k) => (ELIGIBILITY_REQUIREMENT_TYPES as Record<string, { label: string }>)[k]?.label ?? k).join(", ");
+    add({ key: "investor_eligibility", question: "Investor eligibility", answer: eligText, place: "offering", reference: sug.undetermined,
+      setup: (s) => (!sug.keys.length ? "Standard investor questions" : s.eligibilityKeys?.length ? label(s.eligibilityKeys) : null),
+      same: (_a, _s, snap) => eligibilityCovered(sug.keys, snap.eligibilityKeys) });
+  }
+  // Management company feeds the fund's recorded companies on Team & Signatory.
+  const mc = str(details["management_llc_path"]);
+  if (mc === "setup" || mc === "transfer") add({ key: "management_llc_path", question: "Management company", answer: MANAGEMENT_COMPANY_LABEL[mc], place: "team", setup: (s) => (s.managementCompanies?.length ? s.managementCompanies.join(", ") : null), same: () => true });
   if (v2 && str(details["series_home"]) && str(details["vehicle_structure"]) === "Series LLC") {
     add({ key: "series_master", question: "Series master", answer: str(details["series_home"]).replace(/_/g, " "), place: "jurisdiction", setup: (s) => detail(s, "series_master"), same: () => true });
   }

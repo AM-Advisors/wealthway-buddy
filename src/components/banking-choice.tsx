@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { getBankingChoiceFn, requestBankSetup, setBankingChoiceFn } from "@/lib/fund-entity.functions";
+import { BANKING_SETUP_LABEL, type BankingSuggestion } from "@/lib/request-setup-wiring";
 
 const BANKS = [
   { value: "texas_capital", label: "Texas Capital Bank" },
@@ -14,14 +15,15 @@ const BANKS = [
 const BANK_LABEL: Record<string, string> = { texas_capital: "Texas Capital Bank", mercury: "Online business bank", customers: "Customers Bank" };
 
 /** Who opens the fund's bank account; if Harmonious, which bank. */
-export function BankingChoice({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {
+export function BankingChoice({ offeringId, onChanged, requested }: { offeringId: string; onChanged?: () => void; requested?: BankingSuggestion | null | undefined }) {
   const qc = useQueryClient();
   const load = useServerFn(getBankingChoiceFn);
   const setChoice = useServerFn(setBankingChoiceFn);
   const request = useServerFn(requestBankSetup);
   const key = ["banking-choice", offeringId];
   const q = useQuery({ queryKey: key, queryFn: () => load({ data: { offering_id: offeringId } }) });
-  const [bank, setBank] = useState<string>("");
+  // A partner bank named on the fund request is preselected; the request is still sent by a person.
+  const [bank, setBank] = useState<string>(requested?.partnerBank ?? "");
   const [note, setNote] = useState("");
 
   const choose = useMutation({
@@ -45,6 +47,13 @@ export function BankingChoice({ offeringId, onChanged }: { offeringId: string; o
     <div className="space-y-3">
       <p className="flex flex-wrap items-center gap-2 text-sm font-medium">Who is setting up the bank account? <ThirdPartyBadge provider="the bank" /></p>
       <ThirdPartyNote provider="The bank" />
+      {requested?.setupBy && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3 text-sm">
+          <span>From the fund request: <span className="font-medium">{BANKING_SETUP_LABEL[requested.setupBy]}</span>{requested.preferredBank ? ` · preferred bank ${requested.preferredBank}` : ""}</span>
+          {!by ? <Button size="sm" variant="outline" disabled={choose.isPending} onClick={() => choose.mutate(requested.setupBy!)}>Use the request's answer</Button>
+            : by !== requested.setupBy ? <span className="text-xs text-muted-foreground">The fund's current choice differs from the request.</span> : null}
+        </div>
+      )}
       <div className="flex flex-col gap-2 sm:flex-row">
         <button type="button" className={opt(by === "fund")} disabled={choose.isPending} onClick={() => choose.mutate("fund")}>
           The fund manager<span className="block text-xs font-normal text-muted-foreground">You open the account and add wire instructions.</span>

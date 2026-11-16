@@ -3,8 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
 import { STEP_DETAIL_KEYS, type CheckRow, type CheckState, type QuestionsStatus, type SetupPlace } from "@/lib/setup-request-check";
 import { FundSetupMoreDetails } from "@/components/fund-setup-more-details";
+import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
+import { FundManagementCompany } from "@/components/fund-management-company";
+import type { RequestWiring } from "@/lib/request-setup-wiring";
 
-type Check = { hasRequest: boolean; submittedAt: string | null; rows: CheckRow[]; questions: QuestionsStatus; summary: { missing: number; changed: number; inSetup: number; reference: number; toDo: string[] } };
+type Check = { hasRequest: boolean; submittedAt: string | null; rows: CheckRow[]; questions: QuestionsStatus; summary: { missing: number; changed: number; inSetup: number; reference: number; toDo: string[] }; wiring?: RequestWiring; clientId?: string | null; managementCompanies?: { id: string; legalName: string; status: string }[] };
 
 /** Same cached read as Fees & terms; nothing here saves. */
 export function useSetupRequestCheck(offeringId: string) {
@@ -39,14 +42,18 @@ export function requestCheckLabel(c: Check | undefined) {
  * changes the fund except the field editor, which saves through the existing Setup save path.
  */
 export function RequestAnswersHere({ offeringId, places, withFields = true, skipKeys, onSaved }: { offeringId: string; places: SetupPlace[]; withFields?: boolean; skipKeys?: readonly string[] | undefined; onSaved?: (() => void) | undefined }) {
-  const { check } = useSetupRequestCheck(offeringId);
+  const { check, data } = useSetupRequestCheck(offeringId);
   const keys = withFields ? places.flatMap((p) => STEP_DETAIL_KEYS[p] ?? []).filter((k) => !skipKeys?.includes(k)) : [];
   const order: CheckState[] = ["missing", "reference", "changed", "in_setup"];
   const rows = check?.hasRequest ? check.rows.filter((r) => places.includes(r.place)).sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state)) : [];
-  if (!keys.length && !rows.length) return null;
+  const eligibilityHere = places.includes("offering");
+  const companyHere = places.includes("team") && (!!check?.wiring?.managementCompany || !!check?.managementCompanies?.length);
+  if (!keys.length && !rows.length && !eligibilityHere && !companyHere) return null;
   return (
     <div className="space-y-3">
       {keys.length > 0 && <FundSetupMoreDetails offeringId={offeringId} only={keys} onSaved={onSaved} />}
+      {eligibilityHere && <FundEligibilitySetup fundId={offeringId} suggestion={check?.wiring?.eligibility ?? null} />}
+      {companyHere && <FundManagementCompany offeringId={offeringId} clientId={check?.clientId ?? null} suggestion={check?.wiring?.managementCompany ?? null} companies={check?.managementCompanies ?? []} canAdd={!!(data as any)?.isStaff} />}
       {rows.length > 0 && (
         <div className="rounded-xl border bg-background p-4">
           <p className="text-sm font-medium">From the fund request</p>

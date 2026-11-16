@@ -15,6 +15,7 @@ import {
   saveEligibilityDraftFn,
 } from "@/lib/onboarding-compliance.functions";
 import { ELIGIBILITY_REQUIREMENT_TYPES } from "@/lib/onboarding-compliance-model";
+import type { EligibilitySuggestion } from "@/lib/request-setup-wiring";
 
 const CATEGORY_LABEL = { regulatory: "Regulatory", fund: "Fund Requirement", representation: "Investor Representation" } as const;
 type Row = { key: string; mandatory: boolean; params: any };
@@ -24,7 +25,7 @@ type Row = { key: string; mandatory: boolean; params: any };
  * fund's existing eligibility configuration; a different person approves.
  * Renders nothing for anyone without the configure permission.
  */
-export function FundEligibilitySetup({ fundId }: { fundId: string }) {
+export function FundEligibilitySetup({ fundId, suggestion }: { fundId: string; suggestion?: EligibilitySuggestion | null | undefined }) {
   const load = useServerFn(getEligibilitySetupFn);
   const save = useServerFn(saveEligibilityDraftFn);
   const approve = useServerFn(approveEligibilityDraftFn);
@@ -39,7 +40,7 @@ export function FundEligibilitySetup({ fundId }: { fundId: string }) {
   });
   const approveM = useMutation({
     mutationFn: (draftId: string) => approve({ data: { offeringId: fundId, draftId } }),
-    onSuccess: () => { toast.success("Eligibility requirements approved"); setRows(null); qc.invalidateQueries({ queryKey: ["fund-eligibility-setup", fundId] }); },
+    onSuccess: () => { toast.success("Eligibility requirements approved"); setRows(null); qc.invalidateQueries({ queryKey: ["fund-eligibility-setup", fundId] }); qc.invalidateQueries({ queryKey: ["fund-setup-canonical", fundId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -59,6 +60,8 @@ export function FundEligibilitySetup({ fundId }: { fundId: string }) {
     set(on ? [...current, { key, mandatory: true, params: {} }] : current.filter((r) => r.key !== key || locked.has(key)));
   const param = (key: string, p: string, v: any) => set(current.map((r) => (r.key === key ? { ...r, params: { ...r.params, [p]: v } } : r)));
   const list = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
+  const missingFromRequest = (suggestion?.keys ?? []).filter((k) => !current.some((r) => r.key === k) && !locked.has(k));
+  const useRequest = () => set([...current, ...missingFromRequest.map((key) => ({ key, mandatory: true, params: {} }))]);
 
   return (
     <Card>
@@ -70,6 +73,20 @@ export function FundEligibilitySetup({ fundId }: { fundId: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
+        {suggestion && (
+          <div className="rounded-md border border-primary/40 bg-primary/5 p-3 text-sm">
+            <p className="font-medium">From the fund request</p>
+            <p className="mt-1 text-muted-foreground">The client answered: <span className="text-foreground">{suggestion.text}</span></p>
+            {suggestion.undetermined ? <p className="mt-1 text-muted-foreground">The client isn't sure yet. Decide with the client and counsel, then turn on what applies.</p>
+              : missingFromRequest.length ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span>Investors should also be asked: {missingFromRequest.map((k) => (ELIGIBILITY_REQUIREMENT_TYPES as any)[k]?.label ?? k).join(", ")}</span>
+                  <Button size="sm" variant="outline" onClick={useRequest}>Use the request's answer</Button>
+                </div>
+              ) : <p className="mt-1 text-muted-foreground">{suggestion.keys.length ? "These requirements already match the request." : "No extra investor requirements needed for this answer."}</p>}
+            <p className="mt-1 text-xs text-muted-foreground">Nothing changes for investors until a draft is saved and approved.</p>
+          </div>
+        )}
         {Object.entries(ELIGIBILITY_REQUIREMENT_TYPES).map(([key, t]) => {
           const row = current.find((r) => r.key === key);
           const on = Boolean(row) || locked.has(key);
