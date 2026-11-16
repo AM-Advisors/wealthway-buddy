@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { EngagementForm } from "@/components/engagement-form";
+import { EntityDocumentsCard } from "@/components/entity-documents-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,6 +125,8 @@ function EntityPage() {
           {e.notes && <p className="sm:col-span-2 text-muted-foreground">{e.notes}</p>}
         </CardContent>
       </Card>
+
+      {data.access?.isStaff && <EntityDocumentsCard entityId={e.id} />}
 
       {data.children.length > 0 && (
         <Card className="mb-4">

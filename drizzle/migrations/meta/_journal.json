@@ -2822,6 +2822,13 @@
       "when": 1794867553936,
       "tag": "0402_staff_verification_companies_screening",
       "breakpoints": true
+    },
+    {
+      "idx": 403,
+      "version": "7",
+      "when": 1794872426262,
+      "tag": "0403_client_entity_documents",
+      "breakpoints": true
     }
   ]
 }

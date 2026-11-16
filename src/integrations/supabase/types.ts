@@ -6505,6 +6505,80 @@ export type Database = {
           },
         ]
       }
+      client_entity_documents: {
+        Row: {
+          added_at: string
+          added_by: string
+          client_id: string
+          doc_kind: string
+          drive_file_id: string | null
+          drive_md5: string | null
+          effective_date: string | null
+          entity_id: string
+          id: string
+          mime_type: string | null
+          original_filename: string
+          retire_reason: string | null
+          retired_at: string | null
+          retired_by: string | null
+          sha256: string | null
+          size_bytes: number | null
+          source: string
+          storage_path: string
+          title: string
+        }
+        Insert: {
+          added_at?: string
+          added_by: string
+          client_id: string
+          doc_kind: string
+          drive_file_id?: string | null
+          drive_md5?: string | null
+          effective_date?: string | null
+          entity_id: string
+          id?: string
+          mime_type?: string | null
+          original_filename: string
+          retire_reason?: string | null
+          retired_at?: string | null
+          retired_by?: string | null
+          sha256?: string | null
+          size_bytes?: number | null
+          source: string
+          storage_path: string
+          title: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string
+          client_id?: string
+          doc_kind?: string
+          drive_file_id?: string | null
+          drive_md5?: string | null
+          effective_date?: string | null
+          entity_id?: string
+          id?: string
+          mime_type?: string | null
+          original_filename?: string
+          retire_reason?: string | null
+          retired_at?: string | null
+          retired_by?: string | null
+          sha256?: string | null
+          size_bytes?: number | null
+          source?: string
+          storage_path?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_entity_documents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_fund_intakes: {
         Row: {
           client_id: string
