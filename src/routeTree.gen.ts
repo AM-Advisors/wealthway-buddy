@@ -451,6 +451,7 @@ import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from 
 import { Route as AuthenticatedSalesDocumentsIdRouteImport } from './routes/_authenticated/sales_.documents_.$id'
 import { Route as AuthenticatedSalesQuotesIdRouteImport } from './routes/_authenticated/sales_.quotes_.$id'
 import { Route as AuthenticatedSalesRepsIdRouteImport } from './routes/_authenticated/sales_.reps.$id'
+import { Route as ApiPublicBankPacketTokenRouteImport } from './routes/api/public/bank-packet/$token'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
@@ -3025,6 +3026,12 @@ const AuthenticatedSalesRepsIdRoute =
     path: '/sales/reps/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicBankPacketTokenRoute =
+  ApiPublicBankPacketTokenRouteImport.update({
+    id: '/api/public/bank-packet/$token',
+    path: '/api/public/bank-packet/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   id: '/api/public/email/click',
   path: '/api/public/email/click',
@@ -3731,6 +3738,7 @@ export interface FileRoutesByFullPath {
   '/sales/documents/$id': typeof AuthenticatedSalesDocumentsIdRoute
   '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
+  '/api/public/bank-packet/$token': typeof ApiPublicBankPacketTokenRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
@@ -4214,6 +4222,7 @@ export interface FileRoutesByTo {
   '/sales/documents/$id': typeof AuthenticatedSalesDocumentsIdRoute
   '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
+  '/api/public/bank-packet/$token': typeof ApiPublicBankPacketTokenRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
@@ -4707,6 +4716,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/documents_/$id': typeof AuthenticatedSalesDocumentsIdRoute
   '/_authenticated/sales_/quotes_/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/_authenticated/sales_/reps/$id': typeof AuthenticatedSalesRepsIdRoute
+  '/api/public/bank-packet/$token': typeof ApiPublicBankPacketTokenRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
@@ -5200,6 +5210,7 @@ export interface FileRouteTypes {
     | '/sales/documents/$id'
     | '/sales/quotes/$id'
     | '/sales/reps/$id'
+    | '/api/public/bank-packet/$token'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
@@ -5683,6 +5694,7 @@ export interface FileRouteTypes {
     | '/sales/documents/$id'
     | '/sales/quotes/$id'
     | '/sales/reps/$id'
+    | '/api/public/bank-packet/$token'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
@@ -6175,6 +6187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/documents_/$id'
     | '/_authenticated/sales_/quotes_/$id'
     | '/_authenticated/sales_/reps/$id'
+    | '/api/public/bank-packet/$token'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
@@ -6302,6 +6315,7 @@ export interface RootRouteChildren {
   OnboardContactTokenRoute: typeof OnboardContactTokenRoute
   OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
   OnboardPrepareTokenRoute: typeof OnboardPrepareTokenRoute
+  ApiPublicBankPacketTokenRoute: typeof ApiPublicBankPacketTokenRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
@@ -9421,6 +9435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesRepsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/bank-packet/$token': {
+      id: '/api/public/bank-packet/$token'
+      path: '/api/public/bank-packet/$token'
+      fullPath: '/api/public/bank-packet/$token'
+      preLoaderRoute: typeof ApiPublicBankPacketTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/email/click': {
       id: '/api/public/email/click'
       path: '/api/public/email/click'
@@ -10865,6 +10886,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardContactTokenRoute: OnboardContactTokenRoute,
   OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
   OnboardPrepareTokenRoute: OnboardPrepareTokenRoute,
+  ApiPublicBankPacketTokenRoute: ApiPublicBankPacketTokenRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,

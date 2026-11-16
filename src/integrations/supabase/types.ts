@@ -49986,6 +49986,128 @@ export type Database = {
         }
         Relationships: []
       }
+      texas_capital_packet_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          packet_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          packet_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          packet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "texas_capital_packet_events_packet_id_fkey"
+            columns: ["packet_id"]
+            isOneToOne: false
+            referencedRelation: "texas_capital_packets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      texas_capital_packets: {
+        Row: {
+          answers: Json
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          documents: Json
+          entity_kind: string
+          first_opened_at: string | null
+          id: string
+          link_expires_at: string | null
+          link_revoked_at: string | null
+          offering_id: string
+          prepared_by: string | null
+          ready_at: string | null
+          request_id: string | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          storage_path: string | null
+          token_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          documents?: Json
+          entity_kind?: string
+          first_opened_at?: string | null
+          id?: string
+          link_expires_at?: string | null
+          link_revoked_at?: string | null
+          offering_id: string
+          prepared_by?: string | null
+          ready_at?: string | null
+          request_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          storage_path?: string | null
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          documents?: Json
+          entity_kind?: string
+          first_opened_at?: string | null
+          id?: string
+          link_expires_at?: string | null
+          link_revoked_at?: string | null
+          offering_id?: string
+          prepared_by?: string | null
+          ready_at?: string | null
+          request_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          storage_path?: string | null
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "texas_capital_packets_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "texas_capital_packets_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "offering_bank_setup_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       third_party_providers: {
         Row: {
           contract_status: string

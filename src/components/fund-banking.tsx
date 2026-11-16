@@ -31,6 +31,7 @@ import { PaymentMethodsCard } from "@/components/payment-methods-card";
 import { BANK_CHOICES, getFundEntity, requestBankSetup } from "@/lib/fund-entity.functions";
 import { MercuryApplicationCard } from "@/components/mercury-application-card";
 import { FundBankingReview } from "@/components/fund-setup-phase3";
+import { TexasCapitalPacketCard } from "@/components/texas-capital-packet-card";
 
 import { ALL_WIRE_FIELDS, DOMESTIC_WIRE_FIELDS, INTL_WIRE_FIELDS, WIRE_FIELD_LABELS, wireScopeOf } from "@/lib/wire-scope";
 
@@ -144,6 +145,7 @@ export function FundBanking({ fundId, backTo, embedded = false }: { fundId: stri
 
       <div className="mt-6 space-y-6">
         <PaymentMethodsCard fundId={fundId} />
+        <TexasCapitalPacketCard fundId={fundId} />
         <ScopeSection scope={scope} section="banking" offeringId={fundId} label="Bank account">
           <div className="grid gap-6 lg:grid-cols-2">
             {backTo === "manager" ? (
