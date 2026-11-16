@@ -20,6 +20,7 @@ import { FundOriginControl } from "@/components/fund-origin-control";
 import { FormationEvidenceSection } from "@/components/fund-setup-extras";
 import { FundW9Card } from "@/components/fund-w9-card";
 import { FundTeamAccessBox } from "@/components/fund-team-access-box";
+import { FundInitialContact } from "@/components/fund-initial-contact";
 import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { Link } from "@tanstack/react-router";
 import { FundClassSummary } from "@/components/fund-class-summary";
@@ -178,6 +179,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
           <li className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs text-muted-foreground">Administrator</span>{d.administrator}</li>
           {(d.team as any[]).map((m, i) => <li key={i} className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs capitalize text-muted-foreground">{String(m.role).replace(/_/g, " ")}</span>{m.name ?? "Not assigned"}</li>)}
         </ul>
+        {isStaff && <FundInitialContact offeringId={offeringId} />}
         <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} />
         {!isStaff && workspace && <FundTeamAccessBox fundId={offeringId} />}
         <RequestAnswersHere offeringId={offeringId} places={["team"]} onSaved={refresh} />

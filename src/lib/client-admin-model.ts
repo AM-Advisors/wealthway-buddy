@@ -27,6 +27,7 @@ export const CLIENT_RELATIONSHIP_ROLES = [
   { value: "legal", label: "Legal" },
   { value: "billing", label: "Billing" },
   { value: "primary", label: "Primary Contact" },
+  { value: "initial_contact", label: "Initial Contact" },
   { value: "company_admin", label: "Company Administrator" },
   { value: "read_only", label: "Read Only" },
   { value: "other", label: "Other" },
