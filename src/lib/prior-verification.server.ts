@@ -61,10 +61,14 @@ export async function missingInfo(userId: string, onboardingId: string) {
   const { data: p } = row.person_id ? await d.from("persons").select("*").eq("id", row.person_id).maybeSingle() : { data: null };
   const ent = await entityProfile(d, row.investment_profile_id);
   const evOrProfile = { ...(ent?.ev ?? {}), legal_name: ent?.ev?.legal_name ?? ent?.profile?.legal_name };
+  // Same identity rule as the investor's own Verification step: an approved login check counts.
+  const { personIdentityCheck } = await import("@/lib/person-identity.server");
+  const { personKycFromLoginCheck } = await import("@/lib/person-identity-model");
+  const login = row.person_id ? await personIdentityCheck(p?.user_id ?? row.investor_user_id ?? null, row.person_id) : null;
   return {
     person: PERSON_REQUIRED.filter(([k]) => blank(p?.[k])).map(([, l]) => l),
     entity: ent ? ENTITY_REQUIRED.filter(([k]) => blank((evOrProfile as any)[k])).map(([, l]) => l) : null,
-    kyc: p?.kyc_status ?? "not_started", aml: p?.aml_status ?? "not_started",
+    kyc: personKycFromLoginCheck(p?.kyc_status ?? null, login?.status ?? null), aml: p?.aml_status ?? "not_started",
     kyb: ent ? (ent.ev?.kyb_status ?? "not_started") : null, entityAml: ent ? (ent.ev?.entity_aml_status ?? "not_started") : null,
     hasEmail: !blank(p?.email),
   };

@@ -2794,6 +2794,13 @@
       "when": 1794849869285,
       "tag": "0398_move_dinesh_roas_to_awaiting_funds",
       "breakpoints": true
+    },
+    {
+      "idx": 399,
+      "version": "7",
+      "when": 1794853540802,
+      "tag": "0399_sync_person_records_with_approved_identity_checks",
+      "breakpoints": true
     }
   ]
 }
