@@ -66,8 +66,12 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
-  const [edit, setEdit] = useState<Record<string, string>>({});
-  const set = (k: string) => (e: { target: { value: string } }) => setEdit((s) => ({ ...s, [k]: e.target.value }));
+  // Typed values live in a ref, not state: a keystroke must never redraw this long page
+  // (redraws let password managers rescan and move focus or the scroll position).
+  const editRef = useRef<Record<string, string>>({});
+  const edit = editRef.current;
+  const set = (k: string) => (e: { target: { value: string } }) => { editRef.current[k] = e.target.value; };
+  const clearEdits = () => { for (const k of Object.keys(editRef.current)) delete editRef.current[k]; };
   const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); for (const queryKey of [["onboarding"], ["onboarding-profiles"], ["profile-detail"], ["investment-profiles"], ["investment-readiness"], ["investor-prefill", onboardingId]]) qc.invalidateQueries({ queryKey }); };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading investor…</p>;
@@ -99,7 +103,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       toast.success(r.suggested ? `${r.changed} saved; ${r.suggested} sent to Harmonious for review.` : r.changed ? "Saved" : "No changes");
       if (r.invitationSent === true) toast.success("Their invitation was emailed to the new address.");
       else if (r.invitationSent === false) toast.warning("Their invitation could not be sent. Use Send invitation to try again.");
-      setEdit({}); refresh();
+      clearEdits(); refresh();
     } catch (e) { toast.error((e as Error).message); }
   };
   const field = (k: string, label: string, cur: unknown, props: Record<string, unknown> = {}) => (
