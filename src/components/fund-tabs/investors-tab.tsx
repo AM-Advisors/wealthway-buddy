@@ -279,7 +279,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   const d = q.data;
   return (
     <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-xl">
+      <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-[75vw]">
         <div className="border-b bg-muted/40 p-6">
           <SheetHeader className="space-y-1 text-left">
             <SheetTitle className="text-xl">{d?.name ?? "Investor"}</SheetTitle>
