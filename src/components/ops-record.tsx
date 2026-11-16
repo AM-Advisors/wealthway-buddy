@@ -398,7 +398,7 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
           <ClientOverviewActions clientId={id} goTo={(tab) => navigate({ to: ".", search: (prev) => ({ ...(prev as any), tab }), replace: true, resetScroll: false })} />
         ) : null}
         {type === "client" ? <HarmoniousTeamCard clientId={id} /> : null}
-        {type === "fund" ? <HarmoniousTeamCard offeringId={id} /> : null}
+        {type === "fund" && record.clientId ? <HarmoniousTeamCard clientId={record.clientId} /> : null}
         {type === "client" ? <CommercialAgreementCard clientId={id} /> : null}
         {type === "fund" ? <CommercialAgreementCard offeringId={id} /> : null}
         {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}

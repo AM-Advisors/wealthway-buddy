@@ -29,23 +29,20 @@ async function history(filter: { client_id?: string; offering_id?: string }) {
   return (data ?? []) as any[];
 }
 
-/** Internal team view for a Client or a Fund. Staff only. */
+/** Internal team view for a Client. Staff only. Funds inherit the Client team. */
 export const getHarmoniousTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ clientId: uuid.optional(), offeringId: uuid.optional() }).refine((v) => !!v.clientId !== !!v.offeringId).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await requireStaff(context);
     const srv = await import("@/lib/harmonious-team.server");
-    const team = data.clientId
-      ? (await import("@/lib/harmonious-team")).resolveTeam({ hasClient: true, client: await srv.loadClientTeam(data.clientId) })
-      : (await srv.loadFundTeam(data.offeringId!)).team;
-    const events = await history(data.clientId ? { client_id: data.clientId } : { offering_id: data.offeringId! });
-    const sc = await setupScope(data.clientId ? { clientId: data.clientId } : { offeringId: data.offeringId! });
+    const team = (await import("@/lib/harmonious-team")).resolveTeam({ hasClient: true, client: await srv.loadClientTeam(data.clientId) });
+    const events = await history({ client_id: data.clientId });
+    const sc = await setupScope({ clientId: data.clientId });
     const n = await names([...team.map((m) => m.userId), ...events.flatMap((e) => [e.prior_user_id, e.new_user_id, e.changed_by])]);
-    const cid = data.clientId ?? (await (await admin()).from("offerings").select("client_id").eq("id", data.offeringId!).maybeSingle()).data?.client_id ?? null;
-    const showSalesRep = cid ? !!(await (await admin()).from("clients").select("show_sales_rep_to_client").eq("id", cid).maybeSingle()).data?.show_sales_rep_to_client : false;
+    const showSalesRep = !!(await (await admin()).from("clients").select("show_sales_rep_to_client").eq("id", data.clientId).maybeSingle()).data?.show_sales_rep_to_client;
     return {
-      scope: data.clientId ? "client" : "fund", showSalesRep, canToggleSalesRep: !!data.clientId && canManageRole("sales", roles, sc.underway),
+      scope: "client", showSalesRep, canToggleSalesRep: canManageRole("sales", roles, sc.underway),
       followUp: teamFollowUp(team),
       members: team.map((m) => ({ ...m, name: m.userId ? n.get(m.userId) ?? "Staff member" : null, canManage: canManageRole(m.role, roles, sc.underway) })),
       setupUnderway: sc.underway,
@@ -55,19 +52,12 @@ export const getHarmoniousTeam = createServerFn({ method: "GET" })
     };
   });
 
-/** Setup is underway when any fund in scope is below 100% setup (or the client has no funds yet). */
-async function setupScope(scope: { clientId?: string; offeringId?: string }) {
+/** Setup is underway when any of the Client's funds is below 100% setup (or the client has no funds yet). */
+async function setupScope(scope: { clientId: string }) {
   const db = await admin();
-  let clientId = scope.clientId ?? null;
-  let ids: string[] = [];
-  if (scope.offeringId) {
-    ids = [scope.offeringId];
-    const { data } = await db.from("offerings").select("client_id").eq("id", scope.offeringId).maybeSingle();
-    clientId = data?.client_id ?? null;
-  } else if (clientId) {
-    const { data } = await db.from("offerings").select("id").eq("client_id", clientId).is("consolidated_into", null);
-    ids = ((data ?? []) as any[]).map((o) => o.id);
-  }
+  const clientId = scope.clientId;
+  const { data: fundRows } = await db.from("offerings").select("id").eq("client_id", clientId).is("consolidated_into", null);
+  const ids = ((fundRows ?? []) as any[]).map((o) => o.id);
   const { data: c } = clientId ? await db.from("clients").select("saas_only").eq("id", clientId).maybeSingle() : { data: null };
   let underway = !ids.length;
   if (ids.length) {
@@ -78,7 +68,7 @@ async function setupScope(scope: { clientId?: string; offeringId?: string }) {
   return { underway, saasOnly: !!c?.saas_only };
 }
 
-async function assertAssignable(context: any, r: TeamRole, userId: string | null, scope: { clientId?: string; offeringId?: string }) {
+async function assertAssignable(context: any, r: TeamRole, userId: string | null, scope: { clientId: string }) {
   const roles = await requireStaff(context);
   const { underway } = await setupScope(scope);
   if (!canManageRole(r, roles, underway)) throw new Error("You can't change this assignment.");
@@ -120,25 +110,6 @@ export const setShowSalesRep = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Override one assignment for one Fund, or reset it to the Client (userId null). */
-export const setFundTeamOverride = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ offeringId: uuid, role, userId: uuid.nullable() }).parse(d))
-  .handler(async ({ data, context }) => {
-    await assertAssignable(context, data.role, data.userId, { offeringId: data.offeringId });
-    const srv = await import("@/lib/harmonious-team.server");
-    const before = await srv.loadFundTeam(data.offeringId);
-    const b = before.team.find((m) => m.role === data.role)!;
-    const db = await admin();
-    const { error } = data.userId
-      ? await db.from("fund_team_overrides").upsert({ offering_id: data.offeringId, team_role: data.role, user_id: data.userId, assigned_by: context.userId, assigned_at: new Date().toISOString() })
-      : await db.from("fund_team_overrides").delete().eq("offering_id", data.offeringId).eq("team_role", data.role);
-    if (error) throw new Error(error.message);
-    const after = (await srv.loadFundTeam(data.offeringId)).team.find((m) => m.role === data.role)!;
-    await srv.logTeamEvent({ scope: "fund", clientId: before.clientId, offeringId: data.offeringId, role: data.role, priorUserId: b.userId, newUserId: after.userId, priorSource: b.source, newSource: after.source, changedBy: context.userId });
-    return { changed: true };
-  });
-
 /** "Your Harmonious Team" for a Fund the caller can already read. Names only. */
 export const getMyHarmoniousContacts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -154,24 +125,14 @@ export const getMyHarmoniousContacts = createServerFn({ method: "GET" })
     return { contacts: contacts.map((c) => ({ role: c.role, name: n.get(c.userId) ?? "Harmonious" })) };
   });
 
-/** Client/Fund ids for the "My Clients" / "My Funds" filters. */
+/** Client/Fund ids for the "My Clients" / "My Funds" filters. Funds inherit the Client team. */
 export const getMyTeamScope = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await requireStaff(context);
     const db = await admin();
-    const [{ data: c }, { data: o }] = await Promise.all([
-      db.from("client_team_assignments").select("client_id, team_role").eq("user_id", context.userId),
-      db.from("fund_team_overrides").select("offering_id, team_role").eq("user_id", context.userId),
-    ]);
+    const { data: c } = await db.from("client_team_assignments").select("client_id").eq("user_id", context.userId);
     const clientIds = [...new Set(((c ?? []) as any[]).map((r) => r.client_id))];
-    const { data: inherited } = clientIds.length ? await db.from("offerings").select("id, client_id").in("client_id", clientIds) : { data: [] };
-    const { data: overridden } = clientIds.length ? await db.from("fund_team_overrides").select("offering_id, team_role").in("offering_id", ((inherited ?? []) as any[]).map((f) => f.id)) : { data: [] };
-    const mine = new Set<string>(((o ?? []) as any[]).map((r) => r.offering_id));
-    for (const f of (inherited ?? []) as any[]) {
-      const myRoles = ((c ?? []) as any[]).filter((r) => r.client_id === f.client_id).map((r) => r.team_role);
-      const lost = myRoles.every((r) => ((overridden ?? []) as any[]).some((x) => x.offering_id === f.id && x.team_role === r));
-      if (!lost) mine.add(f.id);
-    }
-    return { clientIds, fundIds: [...mine] };
+    const { data: inherited } = clientIds.length ? await db.from("offerings").select("id").in("client_id", clientIds) : { data: [] };
+    return { clientIds, fundIds: ((inherited ?? []) as any[]).map((f) => f.id) };
   });

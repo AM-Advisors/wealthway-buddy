@@ -34,9 +34,8 @@ export async function loadFundTeam(offeringId: string) {
   const db = await admin();
   const { data: fund } = await db.from("offerings").select("id, client_id").eq("id", offeringId).maybeSingle();
   if (!fund) throw new Error("Fund not found.");
-  const { data: ov } = await db.from("fund_team_overrides").select("team_role, user_id").eq("offering_id", offeringId);
   const client = fund.client_id ? await loadClientTeam(fund.client_id) : [];
-  return { clientId: fund.client_id as string | null, team: resolveTeam({ hasClient: !!fund.client_id, client, overrides: (ov ?? []) as Assignment[] }) };
+  return { clientId: fund.client_id as string | null, team: resolveTeam({ hasClient: !!fund.client_id, client }) };
 }
 
 export async function logTeamEvent(e: {

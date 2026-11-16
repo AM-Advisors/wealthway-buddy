@@ -1,7 +1,7 @@
 /**
  * Harmonious Team ownership (Phase 3.10A) - pure model.
- * Client holds three assignments; Funds inherit unless they carry an explicit
- * override. Assignment is ownership/routing only and never grants access.
+ * The Client holds the three assignments; every Fund under the Client inherits
+ * them. Assignment is ownership/routing only and never grants access.
  */
 import { staffProfile } from "@/lib/harmonious-staff";
 
@@ -14,10 +14,9 @@ export const TEAM_ROLE_LABEL: Record<TeamRole, string> = {
   operations: "Operations",
 };
 
-export type TeamSource = "fund_override" | "client" | "none" | "no_client";
+export type TeamSource = "client" | "none" | "no_client";
 export const TEAM_SOURCE_LABEL: Record<TeamSource, string> = {
-  fund_override: "Fund Override",
-  client: "Inherited from Client",
+  client: "Client Team",
   none: "Team Assignment Needed",
   no_client: "No Client Team Available",
 };
@@ -25,15 +24,12 @@ export const TEAM_SOURCE_LABEL: Record<TeamSource, string> = {
 export type Assignment = { team_role: TeamRole; user_id: string };
 export type EffectiveMember = { role: TeamRole; userId: string | null; source: TeamSource };
 
-/** Fund override wins; otherwise the Client assignment; otherwise a follow-up. */
+/** The Client assignment wins; otherwise a follow-up. Funds always inherit. */
 export function resolveTeam(args: {
   hasClient: boolean;
   client: readonly Assignment[];
-  overrides?: readonly Assignment[];
 }): EffectiveMember[] {
   return TEAM_ROLES.map((role) => {
-    const o = args.overrides?.find((a) => a.team_role === role);
-    if (o) return { role, userId: o.user_id, source: "fund_override" as const };
     if (!args.hasClient) return { role, userId: null, source: "no_client" as const };
     const c = args.client.find((a) => a.team_role === role);
     return c ? { role, userId: c.user_id, source: "client" as const } : { role, userId: null, source: "none" as const };
@@ -81,8 +77,8 @@ export function clientFacingContacts(team: readonly EffectiveMember[], showSales
 }
 
 /**
- * Default Operations owner for an existing queue item: fund override, else
- * client assignment. Routing only - the readiness condition never changes.
+ * Default Operations owner for an existing queue item: the Client assignment.
+ * Routing only - the readiness condition never changes.
  */
 export const defaultOperationsOwner = (team: readonly EffectiveMember[]) => team.find((m) => m.role === "operations")?.userId ?? null;
 

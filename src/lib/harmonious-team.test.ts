@@ -26,19 +26,17 @@ describe("Harmonious Team", () => {
     expect(defaultSalesOwner("me", ["sales"], "other")).toBe("other");
   });
   it("new Fund inherits all three", () => {
-    expect(resolveTeam({ hasClient: true, client: all, overrides: [] }).every((m) => m.source === "client")).toBe(true);
+    expect(resolveTeam({ hasClient: true, client: all }).every((m) => m.source === "client")).toBe(true);
   });
-  it("client change flows to inheriting Fund; override remains", () => {
+  it("client change flows to every inheriting Fund", () => {
     const changed = all.map((a) => (a.team_role === "operations" ? { ...a, user_id: "morgan" } : a));
     expect(by(resolveTeam({ hasClient: true, client: changed }), "operations").userId).toBe("morgan");
-    const withOverride = resolveTeam({ hasClient: true, client: changed, overrides: [{ team_role: "operations", user_id: "sam" }] });
-    expect(by(withOverride, "operations")).toEqual({ role: "operations", userId: "sam", source: "fund_override" });
   });
-  it("reset to Client Assignment and one Fund's override doesn't affect another", () => {
-    const a = resolveTeam({ hasClient: true, client: all, overrides: [{ team_role: "sales", user_id: "zed" }] });
-    const b = resolveTeam({ hasClient: true, client: all, overrides: [] });
-    expect(by(a, "sales").userId).toBe("zed");
-    expect(by(b, "sales").userId).toBe("alex");
+  it("one Client's team never affects another Client's Funds", () => {
+    const a = resolveTeam({ hasClient: true, client: all });
+    const b = resolveTeam({ hasClient: true, client: [{ team_role: "sales", user_id: "zed" }] });
+    expect(by(a, "sales").userId).toBe("alex");
+    expect(by(b, "sales").userId).toBe("zed");
   });
   it("existing Fund without Client remains functional", () => {
     const t = resolveTeam({ hasClient: false, client: [] });

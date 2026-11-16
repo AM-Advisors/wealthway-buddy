@@ -11,11 +11,10 @@ export async function assertAgreementVisibleToStaff(userId: string, roles: strin
   if (roles.includes("sales_management")) {
     try { const { viewerScope } = await import("./staff-directory.server"); people = [...(await viewerScope(userId)).visible]; } catch { /* self only */ }
   }
-  const [{ data: ca }, { data: sow }, { data: fo }] = await Promise.all([
+  const [{ data: ca }, { data: sow }] = await Promise.all([
     db.from("client_team_assignments").select("client_id").eq("client_id", clientId).in("user_id", people).limit(1),
     db.from("client_sows").select("id").eq("id", sowId).in("created_by", people).limit(1),
-    db.from("fund_team_overrides").select("offering_id, offerings!inner(client_id)").in("user_id", people).eq("offerings.client_id", clientId).limit(1),
   ]);
-  if ((ca ?? []).length || (sow ?? []).length || (fo ?? []).length) return;
-  throw new Error("This agreement isn't for a client or fund you're assigned to.");
+  if ((ca ?? []).length || (sow ?? []).length) return;
+  throw new Error("This agreement isn't for a client you're assigned to.");
 }

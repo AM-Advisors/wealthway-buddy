@@ -6,18 +6,17 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getHarmoniousTeam, getMyHarmoniousContacts, setClientTeamMember, setFundTeamOverride, setShowSalesRep } from "@/lib/harmonious-team.functions";
-import { TEAM_ROLE_LABEL, TEAM_SOURCE_LABEL, type TeamRole, type TeamSource } from "@/lib/harmonious-team";
+import { getHarmoniousTeam, getMyHarmoniousContacts, setClientTeamMember, setShowSalesRep } from "@/lib/harmonious-team.functions";
+import { TEAM_ROLE_LABEL, type TeamRole } from "@/lib/harmonious-team";
 
-/** Internal Harmonious Team for a Client or Fund. Ownership only - never a gate. */
-export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string; offeringId?: string }) {
+/** Internal Harmonious Team for a Client. Funds inherit it. Ownership only - never a gate. */
+export function HarmoniousTeamCard({ clientId }: { clientId: string }) {
   const load = useServerFn(getHarmoniousTeam);
   const setClient = useServerFn(setClientTeamMember);
-  const setFund = useServerFn(setFundTeamOverride);
   const setShow = useServerFn(setShowSalesRep);
   const qc = useQueryClient();
-  const key = ["harmonious-team", clientId ?? offeringId];
-  const q = useQuery({ queryKey: key, queryFn: () => load({ data: clientId ? { clientId } : { offeringId } }), retry: false });
+  const key = ["harmonious-team", clientId];
+  const q = useQuery({ queryKey: key, queryFn: () => load({ data: { clientId } }), retry: false });
   const [editing, setEditing] = useState<TeamRole | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const d = q.data as any;
@@ -25,11 +24,10 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
 
   const save = async (role: TeamRole, userId: string | null) => {
     try {
-      if (clientId) await setClient({ data: { clientId, role, userId } });
-      else await setFund({ data: { offeringId: offeringId!, role, userId } });
+      await setClient({ data: { clientId, role, userId } });
       setEditing(null);
       await qc.invalidateQueries({ queryKey: ["harmonious-team"] });
-      toast.success(userId ? "Assignment saved" : clientId ? "Assignment cleared" : "Reset to Client Assignment");
+      toast.success(userId ? "Assignment saved" : "Assignment cleared");
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -42,7 +40,7 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
           <CardTitle className="text-base">Harmonious Team</CardTitle>
           {d.followUp ? <Badge variant="outline">{d.followUp}</Badge> : null}
         </div>
-        <CardDescription>Internal ownership for routing. It does not change anyone's access.{d.setupUnderway ? " Setup is underway, so anyone on the Harmonious team can assign these." : ""}</CardDescription>
+        <CardDescription>Internal ownership for routing. Every fund under this client uses this team. It does not change anyone's access.{d.setupUnderway ? " Setup is underway, so anyone on the Harmonious team can assign these." : ""}</CardDescription>
         {d.administrator ? <p className="text-sm"><span className="text-muted-foreground">Fund administrator: </span><span className="font-medium">{d.administrator.name}</span></p> : null}
       </CardHeader>
       <CardContent className="space-y-3">
@@ -52,12 +50,11 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
               <div>
                 <p className="text-xs text-muted-foreground">{TEAM_ROLE_LABEL[m.role as TeamRole]}</p>
                 <p className="font-medium">{m.name ?? "Not assigned"}</p>
-                {d.scope === "fund" ? <p className="text-xs text-muted-foreground">{TEAM_SOURCE_LABEL[m.source as TeamSource]}</p> : null}
                 {m.role === "sales" ? (
                   d.canToggleSalesRep ? (
                     <label className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                       <input type="checkbox" checked={!!d.showSalesRep} onChange={async (e) => {
-                        try { await setShow({ data: { clientId: clientId!, show: e.target.checked } }); await qc.invalidateQueries({ queryKey: ["harmonious-team"] }); toast.success(e.target.checked ? "Shown to the client" : "Hidden from the client"); }
+                        try { await setShow({ data: { clientId, show: e.target.checked } }); await qc.invalidateQueries({ queryKey: ["harmonious-team"] }); toast.success(e.target.checked ? "Shown to the client" : "Hidden from the client"); }
                         catch (err) { toast.error((err as Error).message); }
                       }} />
                       Show to the client as their Sales Representative
@@ -77,15 +74,10 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
                     {d.staff.filter((s: any) => s.eligible[m.role]).map((s: any) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
-                    {d.scope === "client" && m.userId ? <option value="__clear">Clear assignment</option> : null}
+                    {m.userId ? <option value="__clear">Clear assignment</option> : null}
                   </SearchableNativeSelect>
                 ) : (
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" onClick={() => setEditing(m.role)}>{d.scope === "fund" ? "Override" : "Change"}</Button>
-                    {d.scope === "fund" && m.source === "fund_override" ? (
-                      <Button size="sm" variant="ghost" onClick={() => save(m.role, null)}>Reset to Client Assignment</Button>
-                    ) : null}
-                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setEditing(m.role)}>Change</Button>
                 )
               ) : null}
             </li>
@@ -98,8 +90,7 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
               <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
                 {d.history.map((h: any) => (
                   <li key={h.id}>
-                    {new Date(h.at).toLocaleDateString()} · {TEAM_ROLE_LABEL[h.role as TeamRole]}: {h.prior ?? "none"} → {h.next ?? "none"}
-                    {h.scope === "fund" ? ` (${TEAM_SOURCE_LABEL[h.newSource as TeamSource] ?? h.newSource})` : ""} · by {h.by ?? "system"}
+                    {new Date(h.at).toLocaleDateString()} · {TEAM_ROLE_LABEL[h.role as TeamRole]}: {h.prior ?? "none"} → {h.next ?? "none"} · by {h.by ?? "system"}
                   </li>
                 ))}
               </ul>

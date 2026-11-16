@@ -66,9 +66,9 @@ async function whoIs(context: any): Promise<Who> {
 /**
  * Which clients' agreements this staff member may see. null = all.
  * Sales reps: clients they own as Sales or SOWs they created; Sales Managers: their reporting team's clients;
- * Operations/Account Managers: clients (or funds) they are assigned to.
+ * Operations/Account Managers: clients they are assigned to.
  */
-async function agreementScope(who: Who): Promise<{ clients: Set<string>; offerings: Set<string>; sowsCreated: Set<string> } | null> {
+async function agreementScope(who: Who): Promise<{ clients: Set<string>; sowsCreated: Set<string> } | null> {
   if (who.roles.some((r) => (SEE_ALL_ROLES as readonly string[]).includes(r))) return null;
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   let people = new Set([who.userId]);
@@ -79,21 +79,15 @@ async function agreementScope(who: Who): Promise<{ clients: Set<string>; offerin
     } catch { /* fall back to self */ }
   }
   const ids = [...people];
-  const [{ data: ca }, { data: fo }, { data: own }] = await Promise.all([
+  const [{ data: ca }, { data: own }] = await Promise.all([
     db.from("client_team_assignments").select("client_id, team_role, user_id").in("user_id", ids),
-    db.from("fund_team_overrides").select("offering_id, user_id").in("user_id", ids),
     db.from("client_sows").select("id, client_id").in("created_by", ids),
   ]);
   const clients = new Set<string>();
   for (const a of (ca ?? []) as any[]) clients.add(a.client_id);
-  const offerings = new Set<string>(((fo ?? []) as any[]).map((f) => f.offering_id));
   const sowsCreated = new Set<string>(((own ?? []) as any[]).map((r) => r.id));
   for (const r of (own ?? []) as any[]) clients.add(r.client_id);
-  if (offerings.size) {
-    const { data: offs } = await db.from("offerings").select("id, client_id").in("id", [...offerings]);
-    for (const o of (offs ?? []) as any[]) if (o.client_id) clients.add(o.client_id);
-  }
-  return { clients, offerings, sowsCreated };
+  return { clients, sowsCreated };
 }
 
 async function requireSign(context: any) {
