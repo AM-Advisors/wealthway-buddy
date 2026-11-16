@@ -38,13 +38,15 @@ export async function sendSigningReminder(actorId: string, input: {
     }
   }
   const { data: o } = input.offeringId ? await d.from("offerings").select("name").eq("id", input.offeringId).maybeSingle() : { data: null };
-  const { data: me } = await d.from("profiles").select("legal_name").eq("user_id", actorId).maybeSingle();
+  const { data: me } = await d.from("profiles").select("legal_name, email").eq("user_id", actorId).maybeSingle();
+  // Harmonious staff are never named individually to recipients.
+  const requestedBy = /@harmonious\.co$/i.test(String(me?.email ?? "").trim()) ? "The Harmonious operations team" : (me?.legal_name ?? undefined);
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const { secondaryCcFor } = await import("@/lib/person-emails.server");
   const secondary = await secondaryCcFor(input.recipientEmail);
   const r: any = input.nativeSend ? await input.nativeSend().then(() => ({ sent: true })) : await sendTemplateEmail("signing-reminder", input.recipientEmail, {
     cc: secondary ? ["operations@harmonious.co", secondary] : "operations@harmonious.co", inboxForAnyUser: true,
-    templateData: { recipientName: input.recipientName.split(/\s+/)[0] || "there", documentTitle: input.documentTitle, fundName: input.contextName ?? o?.name ?? "your fund", steps: input.steps, requestedBy: me?.legal_name ?? undefined, ctaUrl, firstTime },
+    templateData: { recipientName: input.recipientName.split(/\s+/)[0] || "there", documentTitle: input.documentTitle, fundName: input.contextName ?? o?.name ?? "your fund", steps: input.steps, requestedBy, ctaUrl, firstTime },
   });
   const sent = r?.sent !== false;
   await d.from("document_reminders").insert({ reminder_key: input.reminderKey, client_id: input.clientId ?? null, offering_id: input.offeringId ?? null, document_title: input.documentTitle, recipient_email: input.recipientEmail, sent_by: actorId, delivered: sent, override_reason: hit ? input.override?.reason ?? null : null, message_id: r?.messageId ?? null, inbox_message_id: r?.inboxMessageId ?? null, recipient_user_id: userId });
