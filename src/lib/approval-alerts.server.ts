@@ -4,7 +4,7 @@
  * Best-effort, once per item; the first run records the existing backlog
  * silently so Slack isn't flooded.
  */
-export type AlertableItem = { id: string; title: string; requiredAction: string; fundId?: string | null; clientId?: string | null; recordType?: string };
+export type AlertableItem = { id: string; title: string; requiredAction: string; fundId?: string | null; clientId?: string | null; recordType?: string; submittedBy?: string | null };
 
 /** Pure, for tests. */
 export function alertTitle(i: Pick<AlertableItem, "title" | "requiredAction">) {
@@ -37,7 +37,7 @@ export async function runApprovalAlerts(): Promise<{ checked: number; sent: numb
     let path: string | null = null;
     try { const d = destinationFor(item as any) as any; path = typeof d === "string" ? d : null; } catch { path = null; }
     if (item.source === "onboarding.account_kyc") path = "/ops/security-compliance?section=overview";
-    await notifySubmission({ kind: "approval_needed", once: true, ref: item.id, title: alertTitle(item), offeringId: item.fundId ?? null, clientId: item.clientId ?? null, path: path && path.startsWith("/") ? path : "/ops/queue" });
+    await notifySubmission({ kind: "approval_needed", once: true, ref: item.id, title: alertTitle(item), offeringId: item.fundId ?? null, clientId: item.clientId ?? null, submittedBy: item.submittedBy ?? null, path: path && path.startsWith("/") ? path : "/ops/queue" });
     sent += 1;
   }
   return { checked: items.length, sent, baseline: false };

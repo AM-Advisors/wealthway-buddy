@@ -68,6 +68,8 @@ export type WorkItem = {
   followUpDate?: string | null;
   /** When the underlying record last moved; used for neutral ordering. */
   at?: string | null;
+  /** Who submitted or uploaded the record, when the workflow stores it. */
+  submittedBy?: string | null;
   priority: WorkPriority;
 };
 

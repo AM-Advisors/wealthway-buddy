@@ -791,7 +791,7 @@ async function reportingItems(s: any, lookup: Lookup, now: Date, fundId?: string
 async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
   let q = s
     .from("investor_documents")
-    .select("id, user_id, offering_id, doc_kind, review_status, uploaded_at")
+    .select("id, user_id, uploaded_by, offering_id, doc_kind, review_status, uploaded_at")
     // Uploads arrive as "new"; "pending" is kept for older rows.
     .in("review_status", ["new", "pending"])
     .limit(SOURCE_LIMIT);
@@ -812,6 +812,7 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
       requiredAction: "review",
       fundId: d.offering_id ?? null,
       investorUserId: d.user_id,
+      submittedBy: d.uploaded_by ?? d.user_id ?? null,
       at: d.uploaded_at ?? null,
     }),
   );
