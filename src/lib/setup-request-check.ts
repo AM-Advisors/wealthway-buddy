@@ -56,7 +56,7 @@ export type SetupPlace = keyof typeof SETUP_PLACES;
 export type CheckState = "in_setup" | "changed" | "missing" | "reference";
 export type CheckRow = { key: string; question: string; answer: string; setupValue: string | null; place: SetupPlace; state: CheckState };
 
-type Ans = { key: string; question: string; answer: string; place: SetupPlace; setup: (s: SetupSnapshot) => string | null; same?: (a: string, s: string, snap: SetupSnapshot) => boolean; reference?: boolean };
+type Ans = { key: string; question: string; answer: string; place: SetupPlace; setup: (s: SetupSnapshot) => string | null; same?: (a: string, s: string, snap: SetupSnapshot) => boolean; reference?: boolean; /** A "not applicable" answer is satisfied when Setup leaves the term blank (or 0). */ blankWhenNone?: boolean };
 
 const norm = (v: string | null | undefined) => String(v ?? "").toLowerCase().replace(/[^a-z0-9.]+/g, " ").trim();
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
@@ -65,6 +65,8 @@ const dollars = (v: string) => { const n = Number(v.replace(/[^0-9.]/g, "")); re
 const money = (c: number | null) => (c == null ? null : `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`);
 const months = (v: string) => { const n = pct(v); if (n == null) return null; return /year|yr/i.test(v) ? Math.round(n * 12) : Math.round(n); };
 const pctText = (n: number | null) => (n == null ? null : `${n}%`);
+/** Answers that say the term does not apply ("Not applicable", "None", "N/A", "No"). */
+export const saysNotApplicable = (v: string) => /^(not applicable|none|n\/?a|no|nil|-|0%?)$/i.test(v.trim().replace(/\.$/, ""));
 const nameIn = (list: string[], name: string) => list.some((n) => norm(n) === norm(name));
 
 const REG_LABEL: Record<string, string> = { "506b": "506(b)", "506c": "506(c)", regcf: "Reg CF", rega: "Reg A", regaplus: "Reg A+" };
@@ -105,9 +107,9 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   // Fees, terms and classes
   add({ key: "management_fee", question: "Management fee", answer: str(details["management_fee"]), place: "fees", setup: (s) => pctText(s.managementFeePct), same: (a, s) => nums(a, s, pct) || (/not applicable|none/i.test(a) && pct(s) === 0) });
   add({ key: "carry", question: "Carried interest", answer: str(details["carried_interest"]), place: "fees", setup: (s) => pctText(s.carryPct), same: (a, s) => nums(a, s, pct) || (/not applicable|none/i.test(a) && pct(s) === 0) });
-  add({ key: "preferred_return", question: "Preferred return", answer: str(details["preferred_return"]), place: "fees", setup: (s) => pctText(s.preferredReturnPct), same: (a, s) => nums(a, s, pct) });
-  add({ key: "fund_term", question: "Fund term", answer: str(details["fund_term"]), place: "details", setup: (s) => (s.fundTermMonths == null ? null : `${s.fundTermMonths} months`), same: (a, s) => months(a) === pct(s) });
-  add({ key: "investment_period", question: "Investment period", answer: str(details["investment_period"]), place: "details", setup: (s) => (s.investmentPeriodMonths == null ? null : `${s.investmentPeriodMonths} months`), same: (a, s) => months(a) === pct(s) });
+  add({ key: "preferred_return", question: "Preferred return", answer: str(details["preferred_return"]), place: "fees", setup: (s) => pctText(s.preferredReturnPct), same: (a, s) => nums(a, s, pct), blankWhenNone: true });
+  add({ key: "fund_term", question: "Fund term", answer: str(details["fund_term"]), place: "details", setup: (s) => (s.fundTermMonths == null ? null : `${s.fundTermMonths} months`), same: (a, s) => months(a) === pct(s), blankWhenNone: true });
+  add({ key: "investment_period", question: "Investment period", answer: str(details["investment_period"]), place: "details", setup: (s) => (s.investmentPeriodMonths == null ? null : `${s.investmentPeriodMonths} months`), same: (a, s) => months(a) === pct(s), blankWhenNone: true });
   const classes = (Array.isArray(details["classes"]) ? details["classes"] : []).filter((c: any) => str(c?.name) && (str(c?.fee) || str(c?.carry) || str(c?.hurdle) || str(c?.minimum)));
   if (classes.length > 1) {
     for (const c of classes) {
@@ -165,6 +167,9 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
 export function checkRequestAgainstSetup(details: Record<string, any> | null | undefined, snap: SetupSnapshot): CheckRow[] {
   return requestAnswers(details).map((a) => {
     const setupValue = a.setup(snap);
+    if (a.blankWhenNone && saysNotApplicable(a.answer) && (!setupValue || pct(setupValue) === 0)) {
+      return { key: a.key, question: a.question, answer: a.answer, setupValue: setupValue ?? "Not applicable", place: a.place, state: "in_setup" as CheckState };
+    }
     const state: CheckState = a.reference ? "reference" : !setupValue ? "missing" : (a.same ? a.same(a.answer, setupValue, snap) : norm(a.answer) === norm(setupValue)) ? "in_setup" : "changed";
     return { key: a.key, question: a.question, answer: a.answer, setupValue, place: a.place, state };
   });

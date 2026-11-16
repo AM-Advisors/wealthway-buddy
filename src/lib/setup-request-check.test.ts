@@ -39,6 +39,14 @@ describe("fund request answers vs Setup", () => {
     expect(state(checkRequestAgainstSetup(request, snap()), "investor_eligibility")).toBe("missing");
     expect(state(checkRequestAgainstSetup(request, snap({ setupDetails: { investor_eligibility: "Accredited only" } })), "investor_eligibility")).toBe("in_setup");
   });
+  it("a preferred return answered Not applicable or None is not flagged when Setup has none", () => {
+    for (const answer of ["Not applicable", "None", "N/A"]) {
+      const rows = checkRequestAgainstSetup({ ...request, preferred_return: answer }, snap());
+      expect(state(rows, "preferred_return")).toBe("in_setup");
+    }
+    expect(state(checkRequestAgainstSetup({ ...request, preferred_return: "Not applicable" }, snap({ preferredReturnPct: 8 })), "preferred_return")).toBe("changed");
+    expect(state(checkRequestAgainstSetup({ ...request, preferred_return: "8%" }, snap()), "preferred_return")).toBe("missing");
+  });
   it("older intake answers with no Setup field stay for a person to check", () => {
     expect(state(checkRequestAgainstSetup({ fund_name: "Old I", expected_investors: "12" }, snap()), "expected_investors")).toBe("reference");
   });
