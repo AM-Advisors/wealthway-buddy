@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromZonedInput, hourIn, toZonedInput, zonedToUtc } from "./org-timezone";
+import { fmtInTz, fromZonedInput, hourIn, toZonedInput, zonedToUtc } from "./org-timezone";
 
 describe("org time zone", () => {
   it("converts Chicago wall time to UTC across DST", () => {
@@ -37,5 +37,9 @@ describe("calendar day boundaries use the configured zone", () => {
     expect(moveToDay("2026-10-30T14:00:00.000Z", "2026-11-03", "America/Chicago")).toBe("2026-11-03T15:00:00.000Z");
     expect(moveToDay(null, "2026-11-03", "America/Chicago")).toBe("2026-11-03T15:00:00.000Z");
     expect(mondayOf("2026-10-11")).toBe("2026-10-05");
+  });
+  it("formats a date and time with the zone label without throwing", () => {
+    expect(fmtInTz("2026-11-16T22:24:00.000Z", "America/Chicago")).toBe("Nov 16, 2026, 4:24 PM CST");
+    expect(fmtInTz(null, "America/Chicago")).toBe(" · ");
   });
 });

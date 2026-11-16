@@ -35,7 +35,16 @@ export function fromZonedInput(v: string, tz: string) {
   return zonedToUtc(+m[1]!, +m[2]!, +m[3]!, +m[4]!, +m[5]!, tz).toISOString();
 }
 export function fmtInTz(iso: string | null | undefined, tz: string, opts: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" }) {
-  return iso ? new Date(iso).toLocaleString("en-US", { timeZone: tz, timeZoneName: opts.timeStyle ? "short" : undefined, ...opts }) : " · ";
+  if (!iso) return " · ";
+  const d = new Date(iso);
+  // Intl refuses timeZoneName together with dateStyle/timeStyle, so the zone label is appended separately.
+  if (opts.dateStyle || opts.timeStyle) {
+    const text = d.toLocaleString("en-US", { timeZone: tz, ...opts });
+    if (!opts.timeStyle || opts.timeStyle === "long" || opts.timeStyle === "full") return text;
+    const zone = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(d).find((x) => x.type === "timeZoneName")?.value;
+    return zone ? `${text} ${zone}` : text;
+  }
+  return d.toLocaleString("en-US", { timeZone: tz, ...opts });
 }
 
 /* ---------- calendar-day math in a configured zone (never the viewer's clock) ---------- */
