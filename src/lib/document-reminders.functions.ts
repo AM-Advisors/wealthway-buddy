@@ -22,7 +22,8 @@ export const remindMsaFn = createServerFn({ method: "POST" }).middleware([requir
     const { data: a } = await d.from("client_msa_agreements").select("status, executed_at").eq("client_id", c.id).eq("msa_version_id", v.id).maybeSingle();
     if (a?.executed_at || a?.status === "client_signed") throw new Error("This client has already signed the current MSA.");
     if (!c.msa_signer_user_id) throw new Error("Choose who is responsible to sign the MSA first.");
-    const { data: p } = await d.from("profiles").select("email, legal_name").eq("user_id", c.msa_signer_user_id).maybeSingle();
+    const uc = await (await import("@/lib/user-contact.server")).loadUserContact(d, c.msa_signer_user_id);
+    const p = { email: uc.email, legal_name: uc.name };
     if (!p?.email) throw new Error("The assigned signer has no email on file.");
     const { sendSigningReminder } = await import("@/lib/signing-reminder.server");
     return sendSigningReminder(context.userId, {

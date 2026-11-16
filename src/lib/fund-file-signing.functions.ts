@@ -93,7 +93,7 @@ export const fundSigningContextFn = createServerFn({ method: "POST" }).middlewar
     const investors = ((obs ?? []) as any[]).map((o) => { const p = pm.get(o.person_id); return { onboardingId: o.id as string, name: pname(p) || "Unnamed investor", email: (p?.email ?? null) as string | null }; });
     const signerUids = await (await import("@/lib/fund-signatories.server")).fundSignerUserIds(data.fundId);
     const uids = [...new Set([...((mgrs ?? []) as any[]).map((m) => m.user_id).filter(Boolean), ...signerUids])];
-    const { data: profs } = uids.length ? await d.from("profiles").select("user_id, legal_name, email").in("user_id", uids) : { data: [] };
+    const profsC = await (await import("@/lib/user-contact.server")).loadUserContacts(d, uids as string[]); const profs = (uids as string[]).map((id) => ({ user_id: id, legal_name: profsC.get(id)?.name ?? null, email: profsC.get(id)?.email ?? null }));
     const managers = ((profs ?? []) as any[]).map((p) => ({ userId: p.user_id as string, name: (p.legal_name || p.email || "Fund manager") as string, email: (p.email ?? null) as string | null }));
     return { investors, managers, signatures: ((sigs ?? []) as any[]).map((x) => ({ ...x, lastRemindedAt: reminded[`file-sign:${x.id}`] ?? null })) };
   });
@@ -163,7 +163,7 @@ export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middlew
       if (!data.managerUserId) throw new Error("Choose a fund manager.");
       const mgr = await (await import("@/lib/fund-signatories.server")).isFundSignerUser(data.fundId, data.managerUserId);
       if (!mgr) throw new Error("That person isn't a manager of this fund.");
-      const { data: prof } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
+      const profC = await (await import("@/lib/user-contact.server")).loadUserContact(d, data.managerUserId); const prof = { legal_name: profC.name, email: profC.email };
       if (!prof?.email) throw new Error("This fund manager has no email address.");
       mp = prof;
     }
@@ -219,7 +219,7 @@ export const sendFileToSignatoryFn = createServerFn({ method: "POST" }).middlewa
     if (f.status === "signed") throw new Error("This document is already signed.");
     const mgr = await (await import("@/lib/fund-signatories.server")).isFundSignerUser(data.fundId, data.managerUserId);
     if (!mgr) throw new Error("That person isn't a manager of this fund.");
-    const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
+    const mpC = await (await import("@/lib/user-contact.server")).loadUserContact(d, data.managerUserId); const mp = { legal_name: mpC.name, email: mpC.email };
     if (!mp?.email) throw new Error("This fund manager has no email address.");
     if (!f.body && (!f.storage_path || f.content_type !== "application/pdf")) throw new Error("Upload the exact PDF agreement before sending it to sign.");
     const { data: offering } = await d.from("offerings").select("name,legal_entity_name,fund_signatory_person_id,signatory_title").eq("id", data.fundId).maybeSingle();
@@ -357,7 +357,7 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
     if (v.self_serve_review_state && (v.self_serve_review_state !== "approved" || v.approval_status !== "approved" || v.signing_config_status !== "confirmed")) throw new Error("Approve this exact version and confirm its signing setup before sending.");
     const mgr = await (await import("@/lib/fund-signatories.server")).isFundSignerUser(data.fundId, data.managerUserId);
     if (!mgr) throw new Error("That person isn't a manager of this fund.");
-    const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
+    const mpC = await (await import("@/lib/user-contact.server")).loadUserContact(d, data.managerUserId); const mp = { legal_name: mpC.name, email: mpC.email };
     if (!mp?.email) throw new Error("This fund manager has no email address.");
 
     let body = "";

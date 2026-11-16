@@ -15,8 +15,9 @@ export async function requestW9AfterUpload(uid: string, fundId: string, sourceRe
     if (!existing?.length) await db().from("staff_tasks").insert({ offering_id: fundId, title, description: "A W-9 was uploaded. The fund manager must review the populated W-9 and sign it on the fund's Setup tab.", status: "open", priority: "high", team: "operations", created_by: uid, client_visibility: true, responsibility_status: "CLIENT_INFORMATION_REQUIRED", information_request_type: "signed_w9", requested_information: "Review and sign the fund W-9", related_workflow_type: "fund_w9_signature" });
     const { data: managers } = await db().from("fund_managers").select("user_id").eq("offering_id", fundId);
     const ids = (managers ?? []).map((m: any) => m.user_id).filter((id: string) => id !== uid);
-    const { data: profiles } = ids.length ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
-    for (const p of profiles ?? []) if (p.email) await (await import("@/lib/signing-reminder.server")).sendSigningReminder(uid, { offeringId: fundId, reminderKey: `fund-w9-upload:${sourceRef}:${p.user_id}`, documentTitle: "Fund Form W-9", recipientEmail: p.email, recipientName: p.legal_name || "Fund manager", recipientUserId: p.user_id, path: `/manager/fund/${fundId}?tab=setup`, steps: ["Open the fund W-9", "Review the saved fund details", "Sign as the fund manager"] }).catch(() => null);
+    const contacts = await (await import("@/lib/user-contact.server")).loadUserContacts(db(), ids);
+    const profiles = ids.map((id: string) => ({ user_id: id, legal_name: contacts.get(id)?.name ?? null, email: contacts.get(id)?.email ?? null }));
+    for (const p of profiles) if (p.email) await (await import("@/lib/signing-reminder.server")).sendSigningReminder(uid, { offeringId: fundId, reminderKey: `fund-w9-upload:${sourceRef}:${p.user_id}`, documentTitle: "Fund Form W-9", recipientEmail: p.email, recipientName: p.legal_name || "Fund manager", recipientUserId: p.user_id, path: `/manager/fund/${fundId}?tab=setup`, steps: ["Open the fund W-9", "Review the saved fund details", "Sign as the fund manager"] }).catch(() => null);
   } catch { /* best-effort notice must not fail an upload */ }
 }
 async function access(uid: string, fundId: string) {
@@ -85,7 +86,8 @@ export async function prepareW9(sb: any, uid: string, fundId: string, signerId: 
   const { error } = await db().from("fund_w9_signature_requests").insert({ id, offering_id: fundId, signer_user_id: signerId, source_ref: state.sourceRef, snapshot: { ...snapshot, einLast4: String(fill.tin).slice(-4) }, preview_path: path, preview_sha256: await sha256Hex(bytes), created_by: uid });
   if (error) throw new Error("The W-9 request could not be saved. Refresh to check for an existing request.");
   await (await import("@/lib/fund-audit.server")).logFundAudit(uid, { offeringId: fundId, eventType: "fund_w9_prepared", summary: "Fund W-9 prepared for manager signature", values: { requestId: id } });
-  const { data: profile } = await db().from("profiles").select("legal_name, email").eq("user_id", signerId).maybeSingle();
+  const c = await (await import("@/lib/user-contact.server")).loadUserContact(db(), signerId);
+  const profile = { legal_name: c.name, email: c.email };
   if (a.staff && signerId !== uid && profile?.email) {
     await (await import("@/lib/signing-reminder.server")).sendSigningReminder(uid, { offeringId: fundId, reminderKey: `fund-w9:${id}`, documentTitle: "Fund Form W-9", recipientEmail: profile.email, recipientName: profile.legal_name || "Fund manager", recipientUserId: signerId, path: `/manager/fund/${fundId}?tab=setup`, steps: ["Review your fund's W-9", "Confirm the fund details", "Sign"] }).catch(() => null);
   }

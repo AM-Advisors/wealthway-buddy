@@ -65,11 +65,19 @@ async function managersOf(db: any, offeringId: string) {
   const sigUser = o?.fund_signatory_person_id ? (await db.from("persons").select("user_id").eq("id", o.fund_signatory_person_id).maybeSingle()).data?.user_id : null;
   const ids = [...new Set([sigUser, ...((fm ?? []) as any[]).map((r) => r.user_id)].filter(Boolean))];
   if (!ids.length) return [] as { userId: string; name: string; email: string | null; phone: string | null }[];
-  const { data: profs } = await db.from("profiles").select("user_id, legal_name, email, phone").in("user_id", ids);
-  const byId = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p]));
+  // Contact comes from persons first (profiles is legacy; Google sign-ins may have no profile row).
+  const { loadUserContacts } = await import("@/lib/user-contact.server");
+  const [contacts, { data: people }, { data: profs }] = await Promise.all([
+    loadUserContacts(db, ids as string[]),
+    db.from("persons").select("user_id, phone").in("user_id", ids).is("merged_into_person_id", null),
+    db.from("profiles").select("user_id, phone").in("user_id", ids),
+  ]);
+  const phoneOf = new Map<string, string | null>();
+  for (const r of ((profs ?? []) as any[])) if (r.phone) phoneOf.set(r.user_id, r.phone);
+  for (const r of ((people ?? []) as any[])) if (r.phone) phoneOf.set(r.user_id, r.phone);
   return ids.map((id) => {
-    const p: any = byId.get(id) ?? {};
-    return { userId: id as string, name: (p.legal_name || p.email || "Fund manager") as string, email: (p.email ?? null) as string | null, phone: (p.phone ?? null) as string | null };
+    const c = contacts.get(id as string);
+    return { userId: id as string, name: (c?.name || c?.email || "Fund manager") as string, email: (c?.email ?? null) as string | null, phone: (phoneOf.get(id as string) ?? null) as string | null };
   });
 }
 
@@ -158,6 +166,7 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
     const managers = await managersOf(db, data.offeringId);
     const signer = managers.find((m) => m.userId === data.signerUserId);
     if (!signer) throw new Error("That person isn't a manager or the signatory of this fund.");
+    if (signer.userId !== context.userId && !signer.email) throw new Error("This manager has no email address on file, so the SS-4 can't be sent. Add their email first.");
     const form = strip(data.form);
     if (!String(form["legal_name"] ?? "").trim()) throw new Error("Add the legal name of the entity (line 1) first.");
     // One open request per fund: older open requests are cancelled, never deleted.
@@ -214,15 +223,15 @@ export const resendSs4RequestFn = createServerFn({ method: "POST" })
     await requireStaffOrManager(context.userId, r.offering_id);
     if (r.status !== "requested") throw new Error("Only a request still waiting for signature can be reminded.");
     if (!needsEinApplication(await fundHasEin(context, r.offering_id))) throw new Error("An EIN is already recorded. No SS-4 reminder is needed.");
-    const { data: prof } = await db.from("profiles").select("email, legal_name").eq("user_id", r.signer_user_id).maybeSingle();
-    const signerEmail = ((prof as any)?.email ?? null) as string | null;
+    const prof = await (await import("@/lib/user-contact.server")).loadUserContact(db, r.signer_user_id);
+    const signerEmail = prof.email;
     if (!signerEmail) throw new Error("The signer has no email address on file.");
     const { rpIdentifierMeta } = await import("@/lib/responsible-party-identifier.server");
     const meta = await rpIdentifierMeta(r.offering_id);
     const { sendSigningReminder } = await import("@/lib/signing-reminder.server");
     const res = await sendSigningReminder(context.userId, {
       offeringId: r.offering_id, reminderKey: `ss4:${r.id}`, documentTitle: "Form SS-4", recipientEmail: signerEmail,
-      recipientName: ((prof as any)?.legal_name || "Fund manager") as string, recipientUserId: r.signer_user_id, path: `/manager/ss4/${r.id}`,
+      recipientName: prof.name || "Fund manager", recipientUserId: r.signer_user_id, path: `/manager/ss4/${r.id}`,
       steps: [...(meta.onFile ? [] : ["Add the Responsible Party SSN or ITIN (line 7b)"]), "Confirm the details on each line", "Sign"],
       override: data.overrideReason ? { reason: data.overrideReason } : null,
     });
