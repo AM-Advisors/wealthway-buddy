@@ -32,7 +32,7 @@ import {
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
-import { backupKey, clearBackup, readBackup, saveStatusText, shouldOfferRestore, writeBackup, type LocalBackup } from "@/lib/fund-request-local-backup";
+import { backupKey, carryAnswersToClient, clearBackup, draftIdForClient, readBackup, saveStatusText, shouldOfferRestore, writeBackup, type LocalBackup } from "@/lib/fund-request-local-backup";
 
 const DOC_KINDS = ["Subscription agreement", "Operating agreement / LPA", "PPM", "Side letter", "Other"];
 
@@ -47,6 +47,9 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const [r, setR] = useState<FundRequest>(emptyRequest());
   const [step, setStep] = useState<RequestStepKey>("details");
   const [draftId, setDraftId] = useState<string | null>(draft ?? null);
+  /** Which client the saved draft belongs to; the page never re-creates itself when the client changes. */
+  const [draftOwner, setDraftOwner] = useState<string | null>(null);
+  const currentClient = useRef(id);
 
   const loadDraft = useServerFn(getFundRequestDraft);
   const save = useServerFn(saveFundRequestDraft);
@@ -64,6 +67,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   useEffect(() => {
     if (dq.data?.request) {
       const loaded = { ...emptyRequest(), ...dq.data.request };
+      setDraftOwner(dq.data.clientId ?? null);
       setR(loaded);
       lastSavedJson.current = JSON.stringify(loaded);
     }
@@ -128,11 +132,16 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     mutationFn: async (quiet: boolean) => {
       if (!id) throw new Error("No client account selected.");
       const snapshot = r;
-      const res = await save({ data: { clientId: id, draftId, request: snapshot as any } });
-      return { res, snapshot, quiet };
+      const savedFor = id;
+      const res = await save({ data: { clientId: savedFor, draftId: draftIdForClient(draftId, draftOwner, savedFor), request: snapshot as any } });
+      return { res, snapshot, quiet, savedFor };
     },
-    onSuccess: ({ res, snapshot, quiet }) => {
+    onSuccess: ({ res, snapshot, quiet, savedFor }) => {
+      // The client was changed while this save was on its way: the next save starts the new client's draft.
+      if (savedFor !== currentClient.current) return;
       setDraftId(res.id);
+      setDraftOwner(savedFor);
+      clearBackup(window.localStorage, backupKey(null, null));
       lastSavedJson.current = JSON.stringify(snapshot);
       setLastSavedAt(new Date());
       setSaveError(null);
@@ -149,10 +158,11 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const send = useMutation({
     mutationFn: async (paymentId?: string) => {
       if (!id) throw new Error("No client account selected.");
-      return submit({ data: { clientId: id, draftId, request: r as any, paymentId: paymentId ?? null } });
+      return submit({ data: { clientId: id, draftId: draftIdForClient(draftId, draftOwner, id), request: r as any, paymentId: paymentId ?? null } });
     },
     onSuccess: (res) => {
       clearBackup(window.localStorage, backupKey(id, draft ?? null));
+      clearBackup(window.localStorage, backupKey(null, null));
       onSubmitted?.();
       toast.success(res.duplicate
         ? "Sent. Harmonious will check whether this matches a fund you already have."
@@ -163,11 +173,31 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     onError: (e: any) => toast.error(e?.message ?? "Could not send."),
   });
 
+  // Choosing, changing or clearing the client keeps every answer (only files uploaded under a
+  // different client are dropped) and the next save goes to that client's own draft.
+  useEffect(() => {
+    const from = currentClient.current;
+    if (from === id) return;
+    currentClient.current = id;
+    const carried = carryAnswersToClient(r, from, id);
+    if (carried.removedFiles) {
+      setR(carried.request);
+      toast.warning(`${carried.removedFiles === 1 ? "1 uploaded file was" : `${carried.removedFiles} uploaded files were`} removed because it belonged to the other client. Please upload it again.`);
+    }
+    if (draftId && draftIdForClient(draftId, draftOwner, id) === null) setDraftId(null);
+    lastSavedJson.current = "";
+    setLastSavedAt(null);
+    setSaveError(null);
+  }, [id]);
+
   // Browser safety copy: survives refreshes even when saving to Harmonious fails.
   const bKey = backupKey(id, draft ?? null);
   const [restoreOffer, setRestoreOffer] = useState<LocalBackup<FundRequest> | null>(null);
+  // Offer an earlier copy only when the page opens, never later (a later offer could replace what was just typed).
+  const restoreChecked = useRef(false);
   useEffect(() => {
-    if (dq.isLoading) return;
+    if (dq.isLoading || restoreChecked.current) return;
+    restoreChecked.current = true;
     const b = readBackup<FundRequest>(window.localStorage, bKey);
     if (shouldOfferRestore(b, lastSavedJson.current || JSON.stringify(emptyRequest()))) setRestoreOffer(b);
   }, [bKey, dq.isLoading]);
@@ -196,6 +226,8 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const idx = Math.max(0, uiSteps.findIndex((s) => s.key === step));
   const go = (d: number) => setStep(uiSteps[Math.min(uiSteps.length - 1, Math.max(0, idx + d))]!.key);
   const spv = isSpv(r);
+  // Pages with a client box ask for the client before any step opens: answers are saved to that client.
+  const needsClient = !!clientPicker && !id;
 
   return (
     <div className="space-y-5">
@@ -207,12 +239,25 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
         </div>
         <div className="flex items-center gap-3">
           <p className={cn("text-xs", saveError ? "text-destructive" : "text-muted-foreground")} role="status">
-            {saveStatusText({ pending: saveDraft.isPending, error: saveError, savedLabel: lastSavedAt ? format(lastSavedAt, "h:mm a") : null, dirty: JSON.stringify(r) !== lastSavedJson.current })}
+            {!id ? "Choose a client to save" : saveStatusText({ pending: saveDraft.isPending, error: saveError, savedLabel: lastSavedAt ? format(lastSavedAt, "h:mm a") : null, dirty: JSON.stringify(r) !== lastSavedJson.current })}
           </p>
           <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate(false)}>Save draft</Button>
         </div>
       </div>
-      {clientPicker}
+      {clientPicker && (
+        <div className={cn("space-y-3 rounded-lg border p-4", needsClient ? "border-primary bg-primary/5" : "bg-muted/30")}>
+          {needsClient && (
+            <div role="alert" className="space-y-1">
+              <p className="text-base font-semibold text-foreground">Step 1: choose the client first</p>
+              <p className="text-sm text-muted-foreground">
+                The fund is saved to this client, so the setup steps open once a client is chosen.
+                {hasContent ? " Your answers so far are kept and will come back when you choose the client." : ""}
+              </p>
+            </div>
+          )}
+          {clientPicker}
+        </div>
+      )}
       {restoreOffer && (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-accent bg-accent/10 p-3 text-sm">
           <span>We found answers you entered on this device on {format(parseISO(restoreOffer.savedAt), "MMM d 'at' h:mm a")} that weren't saved yet.</span>
@@ -224,7 +269,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
       )}
       {saveError && <p role="alert" className="text-sm text-destructive">Not saved yet: {saveError} Your answers are kept on this device and we'll keep retrying.</p>}
 
-      <div className="flex flex-col gap-5 md:flex-row">
+      {!needsClient && <div className="flex flex-col gap-5 md:flex-row">
         <nav aria-label="Steps" className="flex gap-1 overflow-x-auto md:w-52 md:shrink-0 md:flex-col">
           {uiSteps.map((s, i) => (
             <button
@@ -539,7 +584,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
             )}
           </CardContent>
         </Card>
-      </div>
+      </div>}
     </div>
   );
 }

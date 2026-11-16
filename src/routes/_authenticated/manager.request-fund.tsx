@@ -41,7 +41,8 @@ function RequestFund() {
   ) : null;
   return (
     <main className="mx-auto max-w-5xl bg-background px-4 py-6">
-      <FundRequestEngine key={clientId ?? "none"} clientId={clientId} mode="client" clientPicker={picker} backTo={{ to: "/manager", label: "Home" }} />
+      {/* Changing the organization keeps every answer; the engine moves them to that organization's own draft. */}
+      <FundRequestEngine clientId={clientId} mode="client" clientPicker={picker} backTo={{ to: "/manager", label: "Home" }} />
     </main>
   );
 }

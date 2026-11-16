@@ -71,7 +71,7 @@ export const getFundRequestDraft = createServerFn({ method: "GET" })
     const { data: row } = await db.from("client_fund_intakes").select("id, client_id, status, details").eq("id", data.draftId).maybeSingle();
     if (!row || row.details?._kind !== KIND) throw new Error("Draft not found.");
     await requireMember(context, String(row.client_id));
-    return { id: String(row.id), status: String(row.status), request: row.details as FundRequest };
+    return { id: String(row.id), clientId: String(row.client_id), status: String(row.status), request: row.details as FundRequest };
   });
 
 /** Upload a supporting document for a request (stored privately; Harmonious reviews before use). */

@@ -2,9 +2,25 @@
 // never erases answers. Call only from effects/event handlers (uses localStorage).
 export type LocalBackup<T> = { savedAt: string; request: T };
 
-export function backupKey(clientId: string | null, draftId: string | null): string | null {
-  if (!clientId) return null;
-  return `fund-request-backup:${clientId}:${draftId ?? "new"}`;
+/** Answers typed before a client is chosen get their own copy, so they also survive a refresh. */
+export function backupKey(clientId: string | null, draftId: string | null): string {
+  return `fund-request-backup:${clientId || "no-client"}:${draftId ?? "new"}`;
+}
+
+/**
+ * Choosing or changing the client keeps every answer. Only uploaded files are dropped when
+ * moving from one client to another, because they were stored under the previous client.
+ */
+export function carryAnswersToClient<T extends { documents: unknown[] }>(request: T, from: string | null, to: string | null): { request: T; removedFiles: number } {
+  if (!from || !to || from === to || request.documents.length === 0) return { request, removedFiles: 0 };
+  return { request: { ...request, documents: [] }, removedFiles: request.documents.length };
+}
+
+/** A saved draft belongs to one client: after switching client, the next save starts a new draft. */
+export function draftIdForClient(draftId: string | null, draftOwner: string | null, clientId: string | null): string | null {
+  if (!draftId) return null;
+  if (draftOwner && clientId && draftOwner !== clientId) return null;
+  return draftId;
 }
 
 export function writeBackup<T>(storage: Pick<Storage, "setItem">, key: string | null, request: T, now = new Date()): void {
