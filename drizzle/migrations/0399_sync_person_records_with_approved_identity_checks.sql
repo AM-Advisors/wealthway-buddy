@@ -69,19 +69,19 @@ BEGIN
     WHERE id = r.person_id;
 
     IF v_kyc THEN
-      v_fields := v_fields || 'kyc_status';
+      v_fields := array_append(v_fields, 'kyc_status');
       INSERT INTO public.investor_record_changes
         (offering_id, onboarding_id, subject_table, subject_id, field, old_value, new_value, source, actor_user_id, manager_visible)
       VALUES (NULL, NULL, 'persons', r.person_id, 'kyc_status', to_jsonb(r.kyc_status), to_jsonb('approved'::text), 'harmonious_correction', NULL, false);
     END IF;
     IF v_dob IS NOT NULL THEN
-      v_fields := v_fields || 'date_of_birth';
+      v_fields := array_append(v_fields, 'date_of_birth');
       INSERT INTO public.investor_record_changes
         (offering_id, onboarding_id, subject_table, subject_id, field, old_value, new_value, source, actor_user_id, manager_visible)
       VALUES (NULL, NULL, 'persons', r.person_id, 'date_of_birth', 'null'::jsonb, to_jsonb(v_dob::text), 'harmonious_correction', NULL, false);
     END IF;
     IF v_email IS NOT NULL THEN
-      v_fields := v_fields || 'email';
+      v_fields := array_append(v_fields, 'email');
       INSERT INTO public.investor_record_changes
         (offering_id, onboarding_id, subject_table, subject_id, field, old_value, new_value, source, actor_user_id, manager_visible)
       VALUES (NULL, NULL, 'persons', r.person_id, 'email', to_jsonb(r.email), to_jsonb(v_email), 'harmonious_correction', NULL, false);
