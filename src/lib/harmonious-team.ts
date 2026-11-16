@@ -64,6 +64,9 @@ export function canManageRole(role: TeamRole, actorRoles: readonly string[], set
   return opsLead;
 }
 
+/** New Clients default their Sales assignment to McKay Pettit, whoever creates them. */
+export const DEFAULT_SALES_EMAIL = "mckay@storybookvc.com";
+
 /** When a Sales user creates a Client, they default to its Sales Team Member. */
 export function defaultSalesOwner(actorId: string, actorRoles: readonly string[], chosen?: string | null): string | null {
   if (chosen) return chosen;

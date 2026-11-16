@@ -1,5 +1,5 @@
 /** Server helpers for Harmonious Team ownership. Load only inside handlers. */
-import { TEAM_ROLES, defaultSalesOwner, eligibleFor, resolveTeam, type Assignment, type TeamRole } from "@/lib/harmonious-team";
+import { DEFAULT_SALES_EMAIL, TEAM_ROLES, defaultSalesOwner, eligibleFor, resolveTeam, type Assignment, type TeamRole } from "@/lib/harmonious-team";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
@@ -49,13 +49,21 @@ export async function logTeamEvent(e: {
   });
 }
 
+/** McKay Pettit is the automatic Sales owner for new Clients; falls back to the creating Sales user. */
+async function defaultSalesOwnerId(): Promise<string | null> {
+  const db = await admin();
+  const { data: profile } = await db.from("profiles").select("user_id").eq("email", DEFAULT_SALES_EMAIL).maybeSingle();
+  if (profile?.user_id && eligibleFor("sales", await rolesFor(profile.user_id))) return profile.user_id as string;
+  return null;
+}
+
 /**
- * Called after a Client is created. Defaults Sales to the creating Sales user.
+ * Called after a Client is created. Defaults Sales to McKay Pettit, then the creating Sales user.
  * Never throws: missing ownership is a follow-up, not a creation failure.
  */
 export async function safeSeedClientTeam(clientId: string, actorId: string) {
   try {
-    const owner = defaultSalesOwner(actorId, await rolesFor(actorId));
+    const owner = (await defaultSalesOwnerId()) ?? defaultSalesOwner(actorId, await rolesFor(actorId));
     if (!owner) return;
     const db = await admin();
     const { error } = await db.from("client_team_assignments").insert({ client_id: clientId, team_role: "sales", user_id: owner, assigned_by: actorId });

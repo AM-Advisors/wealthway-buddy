@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canManageRole, clientFacingContacts, defaultOperationsOwner, defaultSalesOwner, eligibleFor, isTeamBlocking, resolveTeam, teamFollowUp, type Assignment } from "@/lib/harmonious-team";
+import { DEFAULT_SALES_EMAIL, canManageRole, clientFacingContacts, defaultOperationsOwner, defaultSalesOwner, eligibleFor, isTeamBlocking, resolveTeam, teamFollowUp, type Assignment } from "@/lib/harmonious-team";
 import { staffProfile } from "@/lib/harmonious-staff";
 
 const all: Assignment[] = [
@@ -24,6 +24,12 @@ describe("Harmonious Team", () => {
     expect(defaultSalesOwner("me", ["sales"])).toBe("me");
     expect(defaultSalesOwner("me", ["operations"])).toBeNull();
     expect(defaultSalesOwner("me", ["sales"], "other")).toBe("other");
+  });
+  it("McKay Pettit is the automatic Sales owner for new Clients", () => {
+    expect(DEFAULT_SALES_EMAIL).toBe("mckay@storybookvc.com");
+    // The server seeds with McKay's id as the chosen owner; a chosen owner always wins.
+    expect(defaultSalesOwner("me", ["sales"], "mckay-id")).toBe("mckay-id");
+    expect(eligibleFor("sales", ["client_gp", "sales"])).toBe(true);
   });
   it("new Fund inherits all three", () => {
     expect(resolveTeam({ hasClient: true, client: all }).every((m) => m.source === "client")).toBe(true);
