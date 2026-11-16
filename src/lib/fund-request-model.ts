@@ -247,6 +247,28 @@ export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { n
   };
 }
 
+/**
+ * A one-class request has one set of terms: the fund's management fee, carry, preferred
+ * return and minimum ARE that class's fee, carry, hurdle and minimum. Keeps both copies equal;
+ * the preferred side wins when it has a value, otherwise the other side's value fills it.
+ * Two or more classes are left as entered (each class keeps its own terms).
+ */
+export function alignSingleClass(r: FundRequest, prefer: "fund" | "class" = "fund"): FundRequest {
+  if ((r.classes ?? []).length !== 1) return r;
+  const c = r.classes[0]!;
+  const pick = (fund: string | undefined, cls: string | undefined) => {
+    const f = String(fund ?? "").trim(); const k = String(cls ?? "").trim();
+    return prefer === "fund" ? (f || k) : (k || f);
+  };
+  const fee = pick(r.management_fee, c.fee);
+  const carry = pick(r.carried_interest, c.carry);
+  const hurdle = pick(r.preferred_return, c.hurdle);
+  const minimum = pick(r.minimum_investment, c.minimum);
+  if (fee === r.management_fee && carry === r.carried_interest && hurdle === r.preferred_return && minimum === r.minimum_investment
+    && fee === c.fee && carry === c.carry && hurdle === c.hurdle && minimum === c.minimum) return r;
+  return { ...r, management_fee: fee, carried_interest: carry, preferred_return: hurdle, minimum_investment: minimum, classes: [{ ...c, fee, carry, hurdle, minimum }] };
+}
+
 /** A one-class request: its name and minimum are kept (the class's fees become the fund defaults). */
 export function singleClassOf(r: Pick<FundRequest, "classes">): { name: string; minimumCents: number | null } | null {
   const named = (r.classes ?? []).filter((c) => c.name?.trim() && (c.fee || c.carry || c.hurdle || c.minimum));

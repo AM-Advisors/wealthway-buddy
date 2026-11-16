@@ -28,7 +28,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, defaultLegalName, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
+  CLASS_TERM_OPTIONS, alignSingleClass, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, defaultLegalName, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -66,14 +66,21 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const [saveError, setSaveError] = useState<string | null>(null);
   useEffect(() => {
     if (dq.data?.request) {
-      const loaded = { ...emptyRequest(), ...dq.data.request };
+      const loaded = alignSingleClass({ ...emptyRequest(), ...dq.data.request });
       setDraftOwner(dq.data.clientId ?? null);
       setR(loaded);
       lastSavedJson.current = JSON.stringify(loaded);
     }
   }, [dq.data]);
 
-  const set = <K extends keyof FundRequest>(k: K, v: FundRequest[K]) => setR((p) => ({ ...p, [k]: v }));
+  const FUND_TERM_KEYS: (keyof FundRequest)[] = ["management_fee", "carried_interest", "preferred_return", "minimum_investment"];
+  // One class = one set of terms: fund terms and that class's terms always feed each other.
+  const set = <K extends keyof FundRequest>(k: K, v: FundRequest[K]) => setR((p) => {
+    const next = { ...p, [k]: v };
+    if (FUND_TERM_KEYS.includes(k)) return alignSingleClass(next, "fund");
+    if (k === "classes") return alignSingleClass(next, p.classes.length === 1 ? "class" : "fund");
+    return next;
+  });
   const setKind = (kind: string) =>
     setR((p) => {
       const vehicle = defaultVehicle(kind === "spv" ? "launch_spv" : "launch_fund", kind);
@@ -420,7 +427,18 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
             {step === "classes" && (
               <div className="space-y-3">
-                {r.classes.map((c, i) => (
+                {r.classes.length === 1 && (
+                  <div className="space-y-3 rounded-md border p-3">
+                    <Grid>
+                      <F label="Class name"><Input value={r.classes[0]!.name} onChange={(e) => set("classes", [{ ...r.classes[0]!, name: e.target.value }])} /></F>
+                      <F label="Minimum investment"><Money value={r.classes[0]!.minimum} onChange={(v) => set("classes", [{ ...r.classes[0]!, minimum: v }])} /></F>
+                    </Grid>
+                    <p className="text-sm text-muted-foreground">
+                      This class uses the fund's terms: management fee {r.management_fee || "not set"}, carry {r.carried_interest || "not set"}, preferred return {r.preferred_return || "not set"}. Change them in the fees step and they update here too.
+                    </p>
+                  </div>
+                )}
+                {r.classes.length > 1 && r.classes.map((c, i) => (
                   <div key={i} className="grid gap-3 rounded-md border p-3 sm:grid-cols-5">
                     <F label="Class name"><Input value={c.name} onChange={(e) => set("classes", r.classes.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
                     <F label="Fee"><Pick value={c.fee} onChange={(v) => set("classes", r.classes.map((x, j) => (j === i ? { ...x, fee: v } : x)))} options={CLASS_TERM_OPTIONS.fee} /></F>

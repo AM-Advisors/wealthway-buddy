@@ -146,7 +146,8 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   add({ key: "investment_asset", question: "Investment", answer: str(details["investment_asset"]), place: "more", setup: (s) => s.investmentStrategy });
   if (classes.length === 1) {
     const only = classes[0];
-    add({ key: "class_name", question: "Class name", answer: str(only.name), place: "more", setup: (s) => detail(s, "class_name") });
+    // One class is the fund's default terms in Setup, never a separate class.
+    add({ key: "class_name", question: "Class name", answer: str(only.name), place: "fees", setup: (s) => (s.classNames.length >= 2 ? (nameIn(s.classNames, str(only.name)) ? str(only.name) : null) : detail(s, "class_name") ?? "Fund default terms"), same: () => true });
   }
 
   // Answers kept in More fund details.

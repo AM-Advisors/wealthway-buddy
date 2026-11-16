@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkRequestAgainstSetup, checkSummary, questionsStatus, type SetupSnapshot } from "./setup-request-check";
 import { sectionStatuses, type SetupFacts } from "./fund-setup-canonical";
-import { requestClassFields } from "./fund-request-model";
+import { alignSingleClass, emptyRequest, requestClassFields } from "./fund-request-model";
 
 const snap = (o: Partial<SetupSnapshot> = {}): SetupSnapshot => ({
   legalName: null, displayName: null, fundType: null, entityType: null, jurisdiction: null, formationDate: null, regType: null,
@@ -86,5 +86,26 @@ describe("request classes carry into Setup", () => {
   it("two named classes with terms mark the fund as multiple classes", () => {
     expect(requestClassFields({ classes: request.classes })).toEqual({ has_multiple_classes: true, planned_class_count: 2 });
     expect(requestClassFields({ classes: [request.classes[0]!] })).toEqual({});
+  });
+});
+
+describe("one-class funds have one set of terms", () => {
+  const one = { ...emptyRequest(), management_fee: "1%", carried_interest: "20%", preferred_return: "Not applicable", classes: [{ name: "Class A", fee: "", carry: "", hurdle: "", minimum: "" }] };
+  it("fund terms fill the single class", () => {
+    expect(alignSingleClass(one).classes[0]).toMatchObject({ fee: "1%", carry: "20%", hurdle: "Not applicable" });
+  });
+  it("a class change feeds the fund terms", () => {
+    const r = alignSingleClass({ ...one, classes: [{ ...one.classes[0]!, minimum: "50000" }] }, "class");
+    expect(r.minimum_investment).toBe("50000");
+  });
+  it("two classes keep their own terms", () => {
+    const two = { ...one, classes: [...one.classes, { name: "Class B", fee: "0%", carry: "0%", hurdle: "", minimum: "" }] };
+    expect(alignSingleClass(two)).toBe(two);
+  });
+  it("the single class name is part of the fund default terms, not a missing item", () => {
+    const req = { ...request, classes: [{ name: "Class A", fee: "1%", carry: "20%", hurdle: "Not applicable", minimum: "" }] };
+    const row = checkRequestAgainstSetup(req, snap()).find((x) => x.key === "class_name");
+    expect(row?.state).toBe("in_setup");
+    expect(row?.place).toBe("fees");
   });
 });

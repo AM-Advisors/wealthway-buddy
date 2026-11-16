@@ -13,7 +13,9 @@ import {
   previewLegalNameChangeFn,
   changeLegalNameFn,
   saveFundEconomicsFn,
+  fundSetupDetailsFn,
 } from "@/lib/fund-setup-canonical.functions";
+import { setupDetailsKey } from "@/components/fund-setup-more-details";
 import { approveEconomicsFn } from "@/lib/fund-setup.functions";
 import {
   CANONICAL_SECTIONS,
@@ -505,6 +507,9 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
   const setFee = (p: any) => setTerms({ ...terms, managementFee: { ...fee, ...p } });
   const multi = d.offering.hasMultipleClasses;
   const planned = (d.offering as any).plannedClassCount as number | null;
+  const loadDetails = useServerFn(fundSetupDetailsFn);
+  const detailsQ = useQuery({ queryKey: setupDetailsKey(offeringId), queryFn: () => loadDetails({ data: { offeringId } }), enabled: !multi });
+  const singleClassName = !multi ? String((detailsQ.data?.details as Record<string, unknown> | undefined)?.["class_name"] ?? "").trim() : "";
   const [multiAnswer, setMultiAnswer] = useState(multi || planned === 1);
   const [countDraft, setCountDraft] = useState(String(planned ?? (multi ? 2 : "")));
   const [confirmed, setConfirmed] = useState(false);
@@ -571,7 +576,8 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
           </div>
           <p className="text-xs text-muted-foreground">{multi ? `Enter each of the ${planned ?? "planned"} classes below and confirm how they differ.` : "Fund default terms apply unless an investor has separately approved side-letter exceptions."}</p>
         </section>
-        <h3 className="text-sm font-medium">{multi ? "Fund defaults" : "Fund default terms"}</h3>
+        <h3 className="text-sm font-medium">{multi ? "Fund defaults" : singleClassName ? `Fund default terms · ${singleClassName}` : "Fund default terms"}</h3>
+        {!multi && singleClassName && <p className="text-xs text-muted-foreground">{singleClassName} is the fund's only class, so these terms are its terms.</p>}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Management fee (%)">
             <PresetSelect disabled={!d.economics.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
