@@ -50,3 +50,16 @@ export function staffProfile(roles: readonly string[]): StaffProfile {
     commercialOnly: !operationsAccess && teams.includes("sales") && !roles.includes("executive"),
   };
 }
+
+/**
+ * Harmonious staff (any @harmonious.co address) work on funds through client
+ * assignments, never as fund team members. Fund manager seats are for the
+ * client's own people.
+ */
+export function isHarmoniousStaffEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return email.trim().toLowerCase().endsWith("@harmonious.co");
+}
+
+export const HARMONIOUS_STAFF_FUND_TEAM_MESSAGE =
+  "Harmonious staff can't be added as fund team members. Assign them to the client from the client record instead.";

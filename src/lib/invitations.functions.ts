@@ -150,6 +150,10 @@ export async function grantFundAccess(input: GrantInput) {
   const authz = await import("@/lib/reviewer-authz.server");
   authz.assertInvitableRole(role);
 
+  // Harmonious staff work on funds through client assignments, never as fund team members.
+  const { isHarmoniousStaffEmail, HARMONIOUS_STAFF_FUND_TEAM_MESSAGE } = await import("@/lib/harmonious-staff");
+  if (role === "fund_manager" && isHarmoniousStaffEmail(email)) throw new Error(HARMONIOUS_STAFF_FUND_TEAM_MESSAGE);
+
   for (const offeringId of offeringIds) {
     const table = role === "fund_manager" ? "fund_managers" : "investor_fund_access";
     const { error } = await supabaseAdmin
@@ -753,7 +757,8 @@ export const searchFundTeamCandidates = createServerFn({ method: "GET" })
     const ids = (people ?? []).map((p: any) => p.user_id);
     const { data: on } = ids.length ? await db.from("fund_managers").select("user_id").eq("offering_id", data.fundId).in("user_id", ids) : { data: [] };
     const onTeam = new Set((on ?? []).map((x: any) => x.user_id));
-    return (people ?? []).map((p: any) => ({ userId: p.user_id as string, name: (p.legal_name as string | null) ?? "Unnamed person", email: maskEmail(p.email), onTeam: onTeam.has(p.user_id) }));
+    const { isHarmoniousStaffEmail } = await import("@/lib/harmonious-staff");
+    return (people ?? []).map((p: any) => ({ userId: p.user_id as string, name: (p.legal_name as string | null) ?? "Unnamed person", email: maskEmail(p.email), onTeam: onTeam.has(p.user_id), harmoniousStaff: isHarmoniousStaffEmail(p.email) }));
   });
 
 /** Staff only: give an existing person fund-manager access to this exact fund (audited, no email). */

@@ -20,6 +20,12 @@ describe("Fund Team - server authorization", () => {
       expect(b).toMatch(/if \(!\(await canManageFundTeam\(ctx, context\.userId, data\.fundId\)\)\) throw/);
     });
   }
+  it("@harmonious.co staff can never be granted fund_manager, and search flags them", () => {
+    const s = src(INV);
+    const grant = s.slice(s.indexOf("export async function grantFundAccess"), s.indexOf("export async function sendInvitationEmail"));
+    expect(grant).toMatch(/role === "fund_manager" && isHarmoniousStaffEmail\(email\)/);
+    expect(fnBody(INV, "searchFundTeamCandidates")).toMatch(/harmoniousStaff: isHarmoniousStaffEmail/);
+  });
   it("add is duplicate-safe, audited through grantFundAccess, sends no email", () => {
     const b = fnBody(INV, "addFundTeamMember");
     expect(b).toMatch(/already_on_team/);

@@ -78,7 +78,9 @@ export function FundTeam({ fundId }: { fundId: string }) {
             {hits?.map((h) => (
               <div key={h.userId} className="flex items-center justify-between gap-2 rounded border p-2 text-sm">
                 <span>{h.name} <span className="text-xs text-muted-foreground">{h.email}</span></span>
-                {h.onTeam ? <Badge variant="outline">Already on team</Badge> : (
+                {h.onTeam ? <Badge variant="outline">Already on team</Badge> : h.harmoniousStaff ? (
+                  <span className="max-w-xs text-right text-xs text-muted-foreground">Harmonious staff work on funds through the client record, not as fund team members.</span>
+                ) : (
                   <Button size="sm" disabled={busy} onClick={() => { setBusy(true); add({ data: { fundId, userId: h.userId } }).then(() => { toast.success("Added as fund manager for this fund."); setHits(null); setTerm(""); refresh(); }, err).finally(() => setBusy(false)); }}>Add to team</Button>
                 )}
               </div>
