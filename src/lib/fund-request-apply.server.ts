@@ -39,7 +39,7 @@ export async function applyRequestToFund(input: {
   patch["service_providers"] = fillProvidersFromRequest(cur?.service_providers ?? {}, service_providers as any);
   patch["setup_details"] = fillDetailsFromRequest(cur?.setup_details ?? {}, setupDetailsFor(r));
   const { error: setupError } = await db.from("fund_setups").update(patch).eq("id", (setup as any).id);
-  if (setupError) issues.push({ title: "Fund details not copied into Setup", description: "Enter the request's strategy, providers, eligibility, GP commitment and notes in Setup → More fund details." });
+  if (setupError) issues.push({ title: "Fund details not copied into Setup", description: "Enter the request's strategy, providers, eligibility, GP commitment and notes in the matching Setup steps." });
 
   // Fees, carry and classes: Setup's Fees & terms (draft for the usual approval) and the Team tab fee row.
   const { economicsFromRequest } = await import("@/lib/request-economics");

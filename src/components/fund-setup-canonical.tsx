@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { SetupRequestCheck } from "@/components/setup-request-check";
+import { RequestAnswersHere } from "@/components/setup-request-check";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { ServiceProvidersSection } from "@/components/fund-setup-extras";
 import { useEffect, useState } from "react";
@@ -117,17 +117,16 @@ export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch =
         </CardContent>
       </Card>
 
-      {(d as any).requestCheck?.hasRequest && <Card><CardHeader><CardTitle>Fund request answers</CardTitle></CardHeader><CardContent><SetupRequestCheck check={(d as any).requestCheck} /></CardContent></Card>}
       <GuidedSetup
         steps={[
           { label: "Basics", body: <>
             <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
-            <div id="setup-details" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-details" /><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
-            <div id="setup-signatories" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
+            <div id="setup-details" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-details" /><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /><RequestAnswersHere offeringId={offeringId} places={["basic", "details", "jurisdiction", "ein"]} onSaved={refresh} /></div>
+            <div id="setup-signatories" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /><RequestAnswersHere offeringId={offeringId} places={["team"]} skipKeys={["p:counsel", "p:auditor", "p:tax_preparer"]} onSaved={refresh} /></div>
           </> },
-          { label: "Fees & terms", body: <div id="setup-economics" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div> },
-          { label: "Documents & questions", body: <div id="setup-documents" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div> },
-          { label: "Banking", body: <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} showClasses={false} /> },
+          { label: "Fees & terms", body: <div id="setup-economics" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} footer={<RequestAnswersHere offeringId={offeringId} places={["fees", "offering"]} onSaved={refresh} />} /></div> },
+          { label: "Documents & questions", body: <div id="setup-documents" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /><RequestAnswersHere offeringId={offeringId} places={["documents"]} onSaved={refresh} /></div> },
+          { label: "Banking", body: <><FundSetupPhase3 offeringId={offeringId} onChanged={refresh} showClasses={false} /><RequestAnswersHere offeringId={offeringId} places={["bank"]} skipKeys={["p:bank_or_custodian"]} onSaved={refresh} /></> },
           { label: "Review & approve", body: <>
             <FormationRecordCard offeringId={offeringId} />
             <FundServicesCard offeringId={offeringId} onChanged={refresh} />
@@ -491,7 +490,7 @@ function TextPresetSelect({ options, value, na, onChange, disabled }: { options:
   );
 }
 
-export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onSaved: () => void }) {
+export function EconomicsCard({ d, offeringId, onSaved, footer }: { d: D; offeringId: string; onSaved: () => void; footer?: ReactNode }) {
   const save = useServerFn(saveFundEconomicsFn);
   const saveFields = useServerFn(saveFundSetupFieldsFn);
   const approve = useServerFn(approveEconomicsFn);
@@ -698,6 +697,8 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
         )}
         {multi && <TabsContent value="investors" className="pt-3"><ClassAssignmentCard offeringId={offeringId} /></TabsContent>}
         </Tabs>
+
+        {footer && <section className="border-t pt-4">{footer}</section>}
 
         <section className="border-t pt-4">
           <h3 className="mb-2 text-sm font-medium">Investor-specific waivers / changes</h3>

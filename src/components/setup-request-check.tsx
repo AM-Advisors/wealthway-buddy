@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
-import { SETUP_PLACES, type CheckRow, type CheckState, type QuestionsStatus } from "@/lib/setup-request-check";
+import { STEP_DETAIL_KEYS, type CheckRow, type CheckState, type QuestionsStatus, type SetupPlace } from "@/lib/setup-request-check";
+import { FundSetupMoreDetails } from "@/components/fund-setup-more-details";
 
 type Check = { hasRequest: boolean; submittedAt: string | null; rows: CheckRow[]; questions: QuestionsStatus; summary: { missing: number; changed: number; inSetup: number; reference: number; toDo: string[] } };
 
@@ -32,47 +33,41 @@ export function requestCheckLabel(c: Check | undefined) {
   return c.summary.missing ? `${c.summary.missing} answer${c.summary.missing === 1 ? "" : "s"} not in Setup yet` : "All answers carried into Setup";
 }
 
-const ANCHOR: Partial<Record<string, string>> = { basic: "setup-form-basic", details: "setup-form-details", jurisdiction: "setup-form-jurisdiction", team: "setup-form-team", documents: "setup-form-documents", more: "setup-form-more" };
-const goTo = (place: string) => (ANCHOR[place] ? `#${ANCHOR[place]}` : null);
-
-/** Every answer from the client's fund request beside where it lives in Setup. */
-export function SetupRequestCheck({ check }: { check: Check | undefined }) {
-  if (!check) return <p className="text-sm text-muted-foreground">Checking the fund request…</p>;
-  if (!check.hasRequest) return <p className="text-sm text-muted-foreground">This fund was not started from a client fund request, so there are no request answers to compare.</p>;
+/**
+ * The fund request questionnaire inside one Setup step: the step's request-only fields (edited
+ * here) and each answer the client gave for this step beside what Setup holds. Nothing here
+ * changes the fund except the field editor, which saves through the existing Setup save path.
+ */
+export function RequestAnswersHere({ offeringId, places, withFields = true, skipKeys, onSaved }: { offeringId: string; places: SetupPlace[]; withFields?: boolean; skipKeys?: readonly string[] | undefined; onSaved?: (() => void) | undefined }) {
+  const { check } = useSetupRequestCheck(offeringId);
+  const keys = withFields ? places.flatMap((p) => STEP_DETAIL_KEYS[p] ?? []).filter((k) => !skipKeys?.includes(k)) : [];
   const order: CheckState[] = ["missing", "reference", "changed", "in_setup"];
-  const rows = [...check.rows].sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state));
+  const rows = check?.hasRequest ? check.rows.filter((r) => places.includes(r.place)).sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state)) : [];
+  if (!keys.length && !rows.length) return null;
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        Answers from the client's fund request{check.submittedAt ? ` sent ${new Date(check.submittedAt).toLocaleDateString("en-US")}` : ""}. Setup is the record investors and documents use; where Setup differs, Setup is used. Nothing here changes the fund.
-      </p>
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full bg-destructive/10 px-2.5 py-0.5 font-medium text-destructive">{check.summary.missing} not in Setup yet</span>
-        <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">{check.summary.reference} to check by hand</span>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 font-medium">{check.summary.changed} differ</span>
-        <span className="rounded-full bg-accent/15 px-2.5 py-0.5 font-medium">{check.summary.inSetup} in Setup</span>
-      </div>
-      <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-            <tr><th className="px-3 py-2 font-medium">Question</th><th className="px-3 py-2 font-medium">Request answer</th><th className="px-3 py-2 font-medium">In Setup</th><th className="px-3 py-2 font-medium">Status</th></tr>
-          </thead>
-          <tbody>
+      {keys.length > 0 && <FundSetupMoreDetails offeringId={offeringId} only={keys} onSaved={onSaved} />}
+      {rows.length > 0 && (
+        <div className="rounded-xl border bg-background p-4">
+          <p className="text-sm font-medium">From the fund request</p>
+          <p className="text-xs text-muted-foreground">What the client answered for this step{check?.submittedAt ? ` on ${new Date(check.submittedAt).toLocaleDateString("en-US")}` : ""}. Setup is what investors and documents use.</p>
+          <ul className="mt-2 divide-y text-sm">
             {rows.map((r) => {
               const [label, cls] = STATE[r.state];
-              const href = r.state === "missing" ? goTo(r.place) : null;
               return (
-                <tr key={r.key} className="border-t align-top">
-                  <td className="px-3 py-2 font-medium">{r.question}<span className="block text-xs font-normal text-muted-foreground">{SETUP_PLACES[r.place]}</span></td>
-                  <td className="px-3 py-2">{r.answer}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{r.setupValue ?? (r.state === "reference" ? "No Setup field" : "Not entered")}</td>
-                  <td className="px-3 py-2"><span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{label}</span>{href && <a href={href} className="mt-1 block text-xs text-primary underline">Go to {SETUP_PLACES[r.place]}</a>}</td>
-                </tr>
+                <li key={r.key} className="flex flex-wrap items-start justify-between gap-2 py-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{r.question}</p>
+                    <p className="break-words text-muted-foreground">Client answered: <span className="text-foreground">{r.answer}</span></p>
+                    {r.state !== "in_setup" && <p className="break-words text-xs text-muted-foreground">In Setup: {r.setupValue ?? (r.state === "reference" ? "No Setup field, check by hand" : "Not entered yet")}</p>}
+                  </div>
+                  <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{label}</span>
+                </li>
               );
             })}
-          </tbody>
-        </table>
-      </div>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

@@ -24,8 +24,8 @@ import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { Link } from "@tanstack/react-router";
 import { FundClassSummary } from "@/components/fund-class-summary";
 import { FundQuestionSectionCard } from "@/components/fund-question-section-card";
-import { FundSetupMoreDetails } from "@/components/fund-setup-more-details";
-import { SetupRequestCheck, questionsLabel, requestCheckLabel, useSetupRequestCheck } from "@/components/setup-request-check";
+import { RequestAnswersHere, questionsLabel, requestCheckLabel, useSetupRequestCheck } from "@/components/setup-request-check";
+import type { SetupPlace } from "@/lib/setup-request-check";
 import { EconomicsCard } from "@/components/fund-setup-canonical";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
 import { SeriesMasterFirstEntryHint, SeriesMasterJurisdiction, useSeriesMaster } from "@/components/series-master-jurisdiction";
@@ -125,13 +125,14 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
         <Button size="sm" disabled={!changed || busy} onClick={async () => { await save(keys, s.title); after?.(); }}>{isStaff || d.directSetupEdits ? "Save" : "Submit"}</Button>
       </div>
     );
+    const fromRequest = <RequestAnswersHere offeringId={offeringId} places={[id as SetupPlace]} onSaved={refresh} />;
     const fields = <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}{f.key === "jurisdiction" && seriesMaster && !seriesMaster.jurisdiction && <SeriesMasterFirstEntryHint master={seriesMaster} />}</div>)}</div>;
     if (!ret && !waiting(s.fields[0]?.section ?? "") && fieldSectionComplete(required, prior, changed && editingSection !== id)) {
       return (
         <div key={id} className="[&:has(>[data-class-summary])>[data-fees-defaults]]:hidden">
           {id === "fees" && <FundClassSummary offeringId={offeringId} onEdit={() => setEditingSection(id)} />}
           <div data-fees-defaults={id === "fees" || undefined}>
-          <SummaryBox title={s.title} rows={s.fields.map((f) => [f.label, display(f)] as [string, React.ReactNode])} onEdit={() => setEditingSection(id)} />
+          <SummaryBox title={s.title} rows={s.fields.map((f) => [f.label, display(f)] as [string, React.ReactNode])} onEdit={() => setEditingSection(id)} footer={fromRequest} />
           </div>
           <EditSheet open={editingSection === id} onOpenChange={(o) => { if (!o) { setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k)))); setEditingSection(null); } }} title={s.title}>
             {!isStaff && !d.directSetupEdits && <p className="text-sm text-muted-foreground">An investor has signed or sent capital. Changes need Harmonious review.</p>}
@@ -144,6 +145,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       <SetupSection open={open} setOpen={setOpen} id={s.id} title={s.title} status={<span className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:inline">{filled} of {editable} filled in</span>{statusFor(s.fields, s.fields[0]?.section)}</span>}>
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
         {fields}{saveBar()}
+        {fromRequest}
       </SetupSection>
     );
   };
@@ -161,23 +163,14 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       </div>
 
       <FundOriginControl offeringId={offeringId} origin={d.fundOrigin} editable={isStaff} />
-      {check?.hasRequest && (
-        <SetupSection open={open} setOpen={setOpen} id="request" title="Fund request answers" status={<Chip tone={check.summary.missing ? "miss" : "done"}>{requestCheckLabel(check)}</Chip>}>
-          <SetupRequestCheck check={check} />
-        </SetupSection>
-      )}
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
       <FormationEvidenceSection offeringId={offeringId} kinds={["formation", "certificate"]} />
-      <EinBox offeringId={offeringId} onChanged={refresh} />
+      <EinBox offeringId={offeringId} onChanged={refresh} footer={<RequestAnswersHere offeringId={offeringId} places={["ein"]} />} />
       <FundW9Card offeringId={offeringId} />
       {fieldSection("offering")}
       <ManagerTerms offeringId={offeringId} onChanged={refresh} />
-      <SetupSection open={open} setOpen={setOpen} id="more" title="More fund details">
-        <p className="text-sm text-muted-foreground">Investment, service providers and other answers from the fund request. Edit them here; the request keeps its original answers.</p>
-        <FundSetupMoreDetails offeringId={offeringId} onSaved={refresh} />
-      </SetupSection>
 
       <SetupSection open={open} setOpen={setOpen} id="team" title="Team & Signatory" status={<Chip tone={stepOf("team")?.status === "done" ? "done" : "miss"}>{stepOf("team")?.statusLabel ?? ""}</Chip>}>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
@@ -187,9 +180,10 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
         </ul>
         <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} />
         {!isStaff && workspace && <FundTeamAccessBox fundId={offeringId} />}
+        <RequestAnswersHere offeringId={offeringId} places={["team"]} onSaved={refresh} />
       </SetupSection>
 
-      <BankBox offeringId={offeringId} isStaff={isStaff} onChanged={refresh} />
+      <BankBox offeringId={offeringId} isStaff={isStaff} onChanged={refresh} footer={<RequestAnswersHere offeringId={offeringId} places={["bank"]} onSaved={refresh} />} />
       {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} viewerId={d.viewerId} onChange={refresh} />}
 
       <SetupSection open={open} setOpen={setOpen} id="questions" title="Investor questions" status={check ? <Chip tone={check.questions.next ? "miss" : "done"}>{questionsLabel(check.questions)}</Chip> : null}>
@@ -199,6 +193,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
 
       <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
         {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : workspace ? <Button asChild variant="outline"><Link to="/manager/fund/$fundId/documents" params={{ fundId: offeringId }}>Manage fund documents</Link></Button> : <FundDocumentsHub fundId={offeringId} staff={false} />}
+        <RequestAnswersHere offeringId={offeringId} places={["documents"]} onSaved={refresh} />
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} viewerId={d.viewerId} onChange={refresh} />
       </SetupSection>
 
@@ -241,7 +236,7 @@ function ManagerTerms({ offeringId, onChanged }: { offeringId: string; onChanged
   const q = useQuery({ queryKey: ["fund-setup-canonical", offeringId], queryFn: () => load({ data: { offeringId } }) });
   if (q.isPending) return <p className="text-sm text-muted-foreground">Loading fees & terms…</p>;
   if (!q.data || q.isError) return <p role="alert" className="text-sm text-destructive">Fees & terms could not be loaded.</p>;
-  return <EconomicsCard d={q.data} offeringId={offeringId} onSaved={onChanged} />;
+  return <EconomicsCard d={q.data} offeringId={offeringId} onSaved={onChanged} footer={<RequestAnswersHere offeringId={offeringId} places={["fees"]} onSaved={onChanged} />} />;
 }
 
 function SetupSection({ id, title, status, action, children, open, setOpen }: { id: string; title: string; status?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; open: Record<string, boolean>; setOpen: React.Dispatch<React.SetStateAction<Record<string, boolean>>> }) {

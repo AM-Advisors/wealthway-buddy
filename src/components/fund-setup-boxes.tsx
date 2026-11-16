@@ -20,7 +20,7 @@ const inputCls = "h-12 w-full rounded-xl border border-input bg-background px-4 
 const toBase64 = (f: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(f); });
 
 /** A finished section: read-only values, a Complete tick, and a separate Edit panel. */
-export function SummaryBox({ title, rows, note, onEdit }: { title: string; rows: [string, React.ReactNode][]; note?: React.ReactNode; onEdit?: () => void }) {
+export function SummaryBox({ title, rows, note, onEdit, footer }: { title: string; rows: [string, React.ReactNode][]; note?: React.ReactNode; onEdit?: () => void; footer?: React.ReactNode }) {
   return (
     <section className="rounded-2xl border bg-card p-5">
       <div className="mb-3 flex items-center gap-2">
@@ -33,6 +33,7 @@ export function SummaryBox({ title, rows, note, onEdit }: { title: string; rows:
         {rows.map(([k, v]) => <div key={k} className="rounded-xl border bg-background px-4 py-3"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="mt-0.5 break-words">{v || " · "}</dd></div>)}
       </dl>
       {note && <p className="mt-3 text-xs text-muted-foreground">{note}</p>}
+      {footer && <div className="mt-3">{footer}</div>}
     </section>
   );
 }
@@ -70,7 +71,7 @@ async function uploadLetter(upload: any, offeringId: string, file: File, categor
 }
 
 /** EIN: type it and load the IRS letter. Becomes a permanent box once both are on file. */
-export function EinBox({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {
+export function EinBox({ offeringId, onChanged, footer }: { offeringId: string; onChanged?: () => void; footer?: React.ReactNode }) {
   const qc = useQueryClient();
   const loadEin = useServerFn(fundEinFn);
   const loadW9 = useServerFn(fundW9StateFn);
@@ -93,7 +94,7 @@ export function EinBox({ offeringId, onChanged }: { offeringId: string; onChange
       <SummaryBox title="EIN" onEdit={() => setEditing(true)} rows={[
         ["EIN", <span className="inline-flex items-center gap-2 font-mono">{(ein.data as any)?.ein}<button type="button" className="font-sans text-xs text-primary underline" onClick={() => setReveal((x) => !x)}>{reveal ? "Hide" : "Show"}</button></span>],
         [letter ? "IRS letter" : "Signed W-9", letter?.url ? <a className="inline-flex items-center gap-1 text-primary underline" href={letter.url} target="_blank" rel="noreferrer"><FileText className="h-3.5 w-3.5" />{letter.file_name ?? letter.title}</a> : w9.data?.request?.url ? <a href={w9.data.request.url} target="_blank" rel="noreferrer" className="text-primary underline">Open signed W-9</a> : letter?.file_name],
-      ]} note={letter?.created_at ? `Letter added ${new Date(letter.created_at).toLocaleDateString()}` : undefined} />
+      ]} note={letter?.created_at ? `Letter added ${new Date(letter.created_at).toLocaleDateString()}` : undefined} footer={footer} />
       <EditSheet open={editing} onOpenChange={setEditing} title="EIN">{form}</EditSheet>
     </>
   );
@@ -104,6 +105,7 @@ export function EinBox({ offeringId, onChanged }: { offeringId: string; onChange
       {form}
       {status !== "recorded" && <Button type="button" size="sm" variant={showChoice ? "ghost" : "outline"} onClick={() => setShowChoice((x) => !x)}>{showChoice ? "Hide EIN options" : "No EIN yet? Complete or send the SS-4"}</Button>}
       {showChoice && <EinChoice offeringId={offeringId} onChanged={refresh} />}
+      {footer}
     </section>
   );
 }
@@ -134,7 +136,7 @@ function EinForm({ offeringId, letter, onSaved }: { offeringId: string; letter: 
 }
 
 /** Banking: bank details and the bank letter. Staff enter full numbers; managers send details for Harmonious to enter. */
-export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string; isStaff: boolean; onChanged?: () => void }) {
+export function BankBox({ offeringId, isStaff, onChanged, footer }: { offeringId: string; isStaff: boolean; onChanged?: () => void; footer?: React.ReactNode }) {
   const qc = useQueryClient();
   const loadWire = useServerFn(getFundWireInstructions);
   const wire = useQuery({ queryKey: ["fund-wire", offeringId], queryFn: () => loadWire({ data: { offering_id: offeringId } }), retry: false });
@@ -155,7 +157,7 @@ export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string
         ["Bank", det["bank_name"]], ["Bank address", det["bank_address"]], ["Account name", det["account_name"]], ["Beneficiary address", det["beneficiary_address"]], ["Account", <span className="font-mono">{det["account_number"]}</span>],
         ["Routing", <span className="font-mono">{det["routing_number"] ? `•••••${String(det["routing_number"]).slice(-4)}` : ""}</span>],
         ["Bank letter", letter?.url ? <a className="inline-flex items-center gap-1 text-primary underline" href={letter.url} target="_blank" rel="noreferrer"><FileText className="h-3.5 w-3.5" />{letter.file_name ?? letter.title}</a> : letter?.file_name],
-      ]} note="Full numbers are stored encrypted and shown masked." />
+      ]} note="Full numbers are stored encrypted and shown masked." footer={footer} />
       <EditSheet open={editing} onOpenChange={setEditing} title="Banking">{form}</EditSheet>
     </>
   );
@@ -165,6 +167,7 @@ export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string
       {form}
       <button type="button" className="text-sm text-primary underline" onClick={() => setShowChoice((x) => !x)}>{showChoice ? "Hide bank account options" : "Need a bank account?"}</button>
       {showChoice && <BankingChoice offeringId={offeringId} onChanged={refresh} />}
+      {footer}
     </section>
   );
 }

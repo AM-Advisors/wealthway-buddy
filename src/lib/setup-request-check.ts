@@ -48,10 +48,26 @@ export const SETUP_PLACES = {
   team: "Team & Signatory",
   bank: "Banking",
   documents: "Documents",
-  more: "More fund details",
+  offering: "Offering",
   admin: "Administration (Harmonious)",
 } as const;
 export type SetupPlace = keyof typeof SETUP_PLACES;
+
+/**
+ * Request-only fund facts (fund_setups.setup_details, service providers, strategy), each edited
+ * inside the Setup step it belongs to, so the request questionnaire reads as part of Setup.
+ * Keys: "investment_strategy", "p:<provider>", "d:<detail>", "services" (requested services, read-only).
+ */
+export const STEP_DETAIL_KEYS: Partial<Record<SetupPlace, readonly string[]>> = {
+  basic: ["d:client_notes", "services"],
+  details: ["investment_strategy"],
+  jurisdiction: ["d:series_master"],
+  offering: ["d:investor_eligibility"],
+  fees: ["d:class_name", "d:gp_commitment"],
+  team: ["p:counsel", "p:auditor", "p:tax_preparer", "d:management_llc_path"],
+  bank: ["d:bank_name", "p:bank_or_custodian"],
+  documents: ["d:documents_path"],
+};
 
 export type CheckState = "in_setup" | "changed" | "missing" | "reference";
 export type CheckRow = { key: string; question: string; answer: string; setupValue: string | null; place: SetupPlace; state: CheckState };
@@ -124,9 +140,9 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   if (hasEin === "yes") add({ key: "ein", question: "Fund already has an EIN", answer: "Yes", place: "ein", setup: (s) => (s.hasEin ? "Recorded" : null), same: () => true });
   const detail = (s: SetupSnapshot, k: string) => { const x = s.setupDetails?.[k]; return typeof x === "string" && x.trim() ? x.trim() : null; };
   const bankName = str(details["bank_name"]);
-  add({ key: "bank", question: "Preferred bank", answer: bankName, place: "more", setup: (s) => detail(s, "bank_name") });
+  add({ key: "bank", question: "Preferred bank", answer: bankName, place: "bank", setup: (s) => detail(s, "bank_name") });
   const custodian = str(details["bank_or_custodian"]);
-  add({ key: "provider_bank_or_custodian", question: "Bank or custodian", answer: custodian, place: "more", setup: (s) => s.serviceProviders["bank_or_custodian"] ?? null });
+  add({ key: "provider_bank_or_custodian", question: "Bank or custodian", answer: custodian, place: "bank", setup: (s) => s.serviceProviders["bank_or_custodian"] ?? null });
   const docs = Array.isArray(details["documents"]) ? details["documents"].filter((d: any) => str(d?.fileName)) : [];
   for (const d of docs) {
     const name = str(d.fileName);
@@ -135,27 +151,27 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
     add({ key: `document_${norm(name)}`, question: `Document: ${str(d.kind) || "Document"}`, answer: name, place: "documents", setup: (s) => ((s.documentFileNames ?? []).some((f) => sameFileName(f, name)) ? name : null) });
   }
   const docPath = str(details["documents_path"]);
-  add({ key: "documents_path", question: "Offering documents", answer: docPath === "have" ? "Client provides the documents" : docPath === "prepare" ? "Harmonious prepares from templates" : docPath, place: "more", setup: (s) => detail(s, "documents_path"), same: (a, s) => norm(a).includes(norm(s)) || (s === "have" && /client/i.test(a)) || (s === "prepare" && /harmonious/i.test(a)) });
+  add({ key: "documents_path", question: "Offering documents", answer: docPath === "have" ? "Client provides the documents" : docPath === "prepare" ? "Harmonious prepares from templates" : docPath, place: "documents", setup: (s) => detail(s, "documents_path"), same: (a, s) => norm(a).includes(norm(s)) || (s === "have" && /client/i.test(a)) || (s === "prepare" && /harmonious/i.test(a)) });
   const providers: [string, string, string][] = v2
     ? [["counsel", "Fund counsel", "counsel"], ["auditor", "Auditor", "auditor"], ["tax_preparer", "Tax preparer", "tax_preparer"]]
     : [["lawyer", "Fund counsel", "counsel"], ["accountant", "Accountant", "auditor"]];
   for (const [k, q, sk] of providers) {
     const a = v2 ? str(details[k]) : [str(details[k]?.name), str(details[k]?.firm)].filter(Boolean).join(", ");
-    add({ key: `provider_${k}`, question: q, answer: a, place: "more", setup: (s) => s.serviceProviders[sk] ?? null });
+    add({ key: `provider_${k}`, question: q, answer: a, place: "team", setup: (s) => s.serviceProviders[sk] ?? null });
   }
-  add({ key: "investment_asset", question: "Investment", answer: str(details["investment_asset"]), place: "more", setup: (s) => s.investmentStrategy });
+  add({ key: "investment_asset", question: "Investment", answer: str(details["investment_asset"]), place: "details", setup: (s) => s.investmentStrategy });
   if (classes.length === 1) {
     const only = classes[0];
     // One class is the fund's default terms in Setup, never a separate class.
     add({ key: "class_name", question: "Class name", answer: str(only.name), place: "fees", setup: (s) => (s.classNames.length >= 2 ? (nameIn(s.classNames, str(only.name)) ? str(only.name) : null) : detail(s, "class_name") ?? "Fund default terms"), same: () => true });
   }
 
-  // Answers kept in More fund details.
-  for (const [k, q, dk] of [["investor_eligibility", "Investor eligibility", "investor_eligibility"], ["gp_commitment", "GP commitment", "gp_commitment"], ["notes", "Notes to Harmonious", "client_notes"], ["management_llc_path", "Management company", "management_llc_path"]] as [string, string, string][]) {
-    add({ key: k, question: q, answer: str(details[k]), place: "more", setup: (s) => detail(s, dk), same: (a, s) => norm(a) === norm(s) || (k === "management_llc_path") });
+  // Request-only answers, each kept in the Setup step it belongs to.
+  for (const [k, q, dk, place] of [["investor_eligibility", "Investor eligibility", "investor_eligibility", "offering"], ["gp_commitment", "GP commitment", "gp_commitment", "fees"], ["notes", "Notes to Harmonious", "client_notes", "basic"], ["management_llc_path", "Management company", "management_llc_path", "team"]] as [string, string, string, SetupPlace][]) {
+    add({ key: k, question: q, answer: str(details[k]), place, setup: (s) => detail(s, dk), same: (a, s) => norm(a) === norm(s) || (k === "management_llc_path") });
   }
   if (v2 && str(details["series_home"]) && str(details["vehicle_structure"]) === "Series LLC") {
-    add({ key: "series_master", question: "Series master", answer: str(details["series_home"]).replace(/_/g, " "), place: "more", setup: (s) => detail(s, "series_master"), same: () => true });
+    add({ key: "series_master", question: "Series master", answer: str(details["series_home"]).replace(/_/g, " "), place: "jurisdiction", setup: (s) => detail(s, "series_master"), same: () => true });
   }
   // Older intake answers with no Setup field: shown so a person checks them, never auto-applied.
   for (const [k, q, place] of [["expected_investors", "Expected investors", "details"], ["distribution_source", "Distribution source", "bank"]] as [string, string, SetupPlace][]) {

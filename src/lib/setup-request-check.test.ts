@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkRequestAgainstSetup, checkSummary, questionsStatus, type SetupSnapshot } from "./setup-request-check";
+import { SETUP_PLACES, STEP_DETAIL_KEYS, checkRequestAgainstSetup, checkSummary, questionsStatus, type SetupSnapshot } from "./setup-request-check";
+import { PROVIDER_FIELDS, SETUP_DETAIL_FIELDS } from "./fund-setup-details";
 import { sectionStatuses, type SetupFacts } from "./fund-setup-canonical";
 import { alignSingleClass, emptyRequest, requestClassFields } from "./fund-request-model";
 
@@ -35,7 +36,7 @@ describe("fund request answers vs Setup", () => {
     const rows = checkRequestAgainstSetup(request, snap({ carryPct: 15 }));
     expect(state(rows, "carry")).toBe("changed");
   });
-  it("investor eligibility now has a Setup home (More fund details) and is matched against it", () => {
+  it("investor eligibility has a Setup home in the Offering step and is matched against it", () => {
     expect(state(checkRequestAgainstSetup(request, snap()), "investor_eligibility")).toBe("missing");
     expect(state(checkRequestAgainstSetup(request, snap({ setupDetails: { investor_eligibility: "Accredited only" } })), "investor_eligibility")).toBe("in_setup");
   });
@@ -107,5 +108,24 @@ describe("one-class funds have one set of terms", () => {
     const row = checkRequestAgainstSetup(req, snap()).find((x) => x.key === "class_name");
     expect(row?.state).toBe("in_setup");
     expect(row?.place).toBe("fees");
+  });
+  it("every request answer sits inside a Setup step, never a separate details section", () => {
+    const full = { ...request, bank_name: "Chase", bank_or_custodian: "Chase", counsel: "Smith LLP", auditor: "A", tax_preparer: "T", investment_asset: "Real estate", gp_commitment: "1%", notes: "Call me", management_llc_path: "setup", documents_path: "have", investor_eligibility: "Accredited only" };
+    const rows = checkRequestAgainstSetup(full, snap());
+    expect(rows.length).toBeGreaterThan(10);
+    for (const r of rows) expect(Object.keys(SETUP_PLACES)).toContain(r.place);
+    const place = (k: string) => rows.find((r) => r.key === k)?.place;
+    expect(place("investor_eligibility")).toBe("offering");
+    expect(place("gp_commitment")).toBe("fees");
+    expect(place("provider_counsel")).toBe("team");
+    expect(place("bank")).toBe("bank");
+    expect(place("documents_path")).toBe("documents");
+    expect(place("investment_asset")).toBe("details");
+  });
+  it("each request-only Setup field is edited in exactly one step", () => {
+    const all = [...SETUP_DETAIL_FIELDS.map((f) => `d:${f.key}`), ...PROVIDER_FIELDS.map((f) => `p:${f.key}`), "investment_strategy", "services"];
+    const placed = Object.values(STEP_DETAIL_KEYS).flat();
+    for (const k of all) expect(placed.filter((x) => x === k)).toHaveLength(1);
+    expect(placed.filter((k) => !all.includes(k))).toEqual([]);
   });
 });

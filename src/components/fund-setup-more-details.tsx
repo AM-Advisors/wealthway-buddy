@@ -12,8 +12,11 @@ import { PROVIDER_FIELDS, SETUP_DETAIL_FIELDS, detailLabel, type SetupDetailKey 
 
 export const setupDetailsKey = (offeringId: string) => ["fund-setup-details", offeringId] as const;
 
-/** Answers first given on the fund request that have no other Setup field: read and edited here. */
-export function FundSetupMoreDetails({ offeringId, onSaved }: { offeringId: string; onSaved?: () => void }) {
+/**
+ * Answers first given on the fund request that have no other Setup field. `only` limits the
+ * fields to one Setup step (see STEP_DETAIL_KEYS) so each answer is read and edited inside its step.
+ */
+export function FundSetupMoreDetails({ offeringId, onSaved, only }: { offeringId: string; onSaved?: (() => void) | undefined; only?: readonly string[] | undefined }) {
   const load = useServerFn(fundSetupDetailsFn);
   const save = useServerFn(saveFundSetupDetailsFn);
   const qc = useQueryClient();
@@ -31,7 +34,12 @@ export function FundSetupMoreDetails({ offeringId, onSaved }: { offeringId: stri
     ...Object.fromEntries(SETUP_DETAIL_FIELDS.map((f) => [`d:${f.key}`, String(d.details?.[f.key] ?? "")])),
   };
   const v = (k: string) => vals[k] ?? cur[k] ?? "";
-  const services = d.details?.requested_services ?? [];
+  const shown = (k: string) => !only || only.includes(k);
+  const services = shown("services") ? d.details?.requested_services ?? [] : [];
+  const providerFields = PROVIDER_FIELDS.filter((f) => shown(`p:${f.key}`));
+  const detailFields = SETUP_DETAIL_FIELDS.filter((f) => shown(`d:${f.key}`));
+  const showStrategy = shown("investment_strategy");
+  if (!showStrategy && !providerFields.length && !detailFields.length && !services.length) return null;
 
   const submit = async () => {
     const changed = Object.entries(vals).filter(([k, x]) => (x ?? "").trim() !== (cur[k] ?? "").trim());
@@ -56,10 +64,11 @@ export function FundSetupMoreDetails({ offeringId, onSaved }: { offeringId: stri
   };
 
   const rows: [string, string][] = [
-    ["Investment", cur["investment_strategy"] ?? ""],
-    ...PROVIDER_FIELDS.map((f) => [f.label, cur[`p:${f.key}`] ?? ""] as [string, string]),
-    ...SETUP_DETAIL_FIELDS.map((f) => [f.label, detailLabel(f.key, cur[`d:${f.key}`])] as [string, string]),
+    ...(showStrategy ? [["Investment", cur["investment_strategy"] ?? ""] as [string, string]] : []),
+    ...providerFields.map((f) => [f.label, cur[`p:${f.key}`] ?? ""] as [string, string]),
+    ...detailFields.map((f) => [f.label, detailLabel(f.key, cur[`d:${f.key}`])] as [string, string]),
   ];
+  const hasEditable = rows.length > 0;
 
   return (
     <div className="space-y-3">
@@ -80,15 +89,15 @@ export function FundSetupMoreDetails({ offeringId, onSaved }: { offeringId: stri
               <p className="mt-1 text-xs text-muted-foreground">Active services and pricing are managed under the fund's services and agreements.</p>
             </div>
           )}
-          {d.canEdit && <div className="flex justify-end"><Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button></div>}
+          {d.canEdit && hasEditable && <div className="flex justify-end"><Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button></div>}
         </>
       ) : (
         <div className="space-y-3">
-          <Field label="Investment" long value={v("investment_strategy")} onChange={(x) => setVals((s) => ({ ...s, investment_strategy: x }))} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {PROVIDER_FIELDS.map((f) => <Field key={f.key} label={f.label} value={v(`p:${f.key}`)} onChange={(x) => setVals((s) => ({ ...s, [`p:${f.key}`]: x }))} />)}
-          </div>
-          {SETUP_DETAIL_FIELDS.map((f) => f.options ? (
+          {showStrategy && <Field label="Investment" long value={v("investment_strategy")} onChange={(x) => setVals((s) => ({ ...s, investment_strategy: x }))} />}
+          {providerFields.length > 0 && <div className="grid gap-3 sm:grid-cols-2">
+            {providerFields.map((f) => <Field key={f.key} label={f.label} value={v(`p:${f.key}`)} onChange={(x) => setVals((s) => ({ ...s, [`p:${f.key}`]: x }))} />)}
+          </div>}
+          {detailFields.map((f) => f.options ? (
             <div key={f.key} className="space-y-1">
               <Label htmlFor={`sd-${f.key}`}>{f.label}</Label>
               <select id={`sd-${f.key}`} className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm" value={v(`d:${f.key}`)} onChange={(e) => setVals((s) => ({ ...s, [`d:${f.key}`]: e.target.value }))}>

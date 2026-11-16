@@ -446,7 +446,7 @@ async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: a
   return { hasRequest: !!row, submittedAt: (row?.submitted_at ?? null) as string | null, rows, questions, summary: checkSummary(rows, questions) };
 }
 
-/** "More fund details" in Setup: request-only answers, service providers and strategy, edited in one place. */
+/** Request-only answers, service providers and strategy, edited inside their Setup steps (STEP_DETAIL_KEYS). */
 export async function fundSetupDetails(userId: string, offeringId: string) {
   const actor = await assertRead(userId, offeringId);
   const canEdit = actor.isStaff || (await (await import("@/lib/self-serve.server")).selfServeAllows(userId, offeringId, "fund_setup"));
