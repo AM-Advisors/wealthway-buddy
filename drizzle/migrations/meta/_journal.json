@@ -2773,6 +2773,13 @@
       "when": 1794687982826,
       "tag": "0395_foundation_formation_rate_card",
       "breakpoints": true
+    },
+    {
+      "idx": 396,
+      "version": "7",
+      "when": 1794848912474,
+      "tag": "0396_withdraw_empty_duplicate_roas_applications",
+      "breakpoints": true
     }
   ]
 }

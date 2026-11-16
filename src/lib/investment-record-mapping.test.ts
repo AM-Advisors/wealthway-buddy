@@ -3,6 +3,7 @@ import {
   applicationHoldsValue,
   currentFundApplication,
   investmentToOpen,
+  investmentOnRecordForFund,
   joinFundRecords,
   overviewStageForSteps,
 } from "@/lib/investment-record-mapping";
@@ -43,6 +44,24 @@ describe("older identity page hand-off", () => {
     expect(investmentToOpen([open("inv-1")], "fund-b", false)).toBe("inv-1");
     expect(investmentToOpen([open("inv-1")], "fund-b", true)).toBeNull();
     expect(investmentToOpen([open("inv-1", { stage: "closed" })], "fund-a", false)).toBeNull();
+  });
+});
+
+describe("no new application beside an investment on record", () => {
+  it("a closed investment in the fund still counts, so no new application is started", () => {
+    expect(investmentOnRecordForFund([open("inv-1", { stage: "closed", closed_at: "2026-11-09" })], "fund-a")).toBe("inv-1");
+  });
+
+  it("an open investment in the fund counts", () => {
+    expect(investmentOnRecordForFund([open("inv-1")], "fund-a")).toBe("inv-1");
+  });
+
+  it("removed, cancelled, declined or other-fund records don't count", () => {
+    expect(investmentOnRecordForFund([open("inv-1", { removed_at: "2026-11-13" })], "fund-a")).toBeNull();
+    expect(investmentOnRecordForFund([open("inv-1", { stage: "cancelled" })], "fund-a")).toBeNull();
+    expect(investmentOnRecordForFund([open("inv-1", { stage: "declined" })], "fund-a")).toBeNull();
+    expect(investmentOnRecordForFund([open("inv-1")], "fund-b")).toBeNull();
+    expect(investmentOnRecordForFund([open("inv-1")], null)).toBeNull();
   });
 });
 

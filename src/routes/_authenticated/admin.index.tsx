@@ -104,9 +104,6 @@ function AdminQueue() {
               <Button asChild size="sm">
                 <Link to="/admin/setup">Set up a fund</Link>
               </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link to="/admin/new-application">New application</Link>
-              </Button>
 
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/access">Access</Link>

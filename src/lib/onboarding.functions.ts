@@ -176,6 +176,18 @@ export const getOnboarding = createServerFn({ method: "GET" })
       return { offering, profile: profileView, persona, application, kyc: null, aml: null, invited: true, currentInvestmentId };
     }
 
+    // Anyone with an investment record in this fund, including a closed one,
+    // is sent to that record. A withdrawn application is never reopened, and
+    // a new application is only started for someone with no record here.
+    const ENDED_APPLICATION = new Set(["withdrawn", "declined", "rejected", "cancelled"]);
+    if (!application || ENDED_APPLICATION.has(String((application as any).status ?? ""))) {
+      const { investmentOnRecordForFund } = await import("@/lib/investment-record-mapping");
+      const onRecord = investmentOnRecordForFund((myInvestments ?? []) as any[], offering?.id ?? null);
+      if (onRecord) {
+        return { offering, profile: profileView, persona, application, kyc: null, aml: null, invited: true, currentInvestmentId: onRecord };
+      }
+    }
+
     if (!application && offering) {
       const created = await supabase
         .from("investor_applications")

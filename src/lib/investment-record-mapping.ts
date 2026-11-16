@@ -13,7 +13,7 @@
  *   so rosters and ownership tables never drop modern investors.
  */
 import { isLiveInvestment } from "@/lib/investment-amounts";
-import { isOpenOnboarding, preferredOnboarding } from "@/lib/legacy-application-supersede";
+import { isCompletedOnboarding, isOpenOnboarding, preferredOnboarding } from "@/lib/legacy-application-supersede";
 
 export type InvestmentRef = {
   id: string;
@@ -77,6 +77,23 @@ export function investmentToOpen(
   if (sameFund.length) return preferredOnboarding(sameFund)?.id ?? null;
   if (hasApplication) return null;
   return preferredOnboarding(open)?.id ?? null;
+}
+
+/**
+ * The person's investment record in one fund, open or finished (closed). The
+ * older identity page uses it so a person who already has an investment in a
+ * fund is never given a new, separate application there, even after the
+ * investment closes. Removed, merged, cancelled and declined records don't count.
+ */
+export function investmentOnRecordForFund(
+  investments: readonly InvestmentRef[],
+  offeringId: string | null,
+): string | null {
+  if (!offeringId) return null;
+  const onRecord = investments.filter(
+    (o) => o.offering_id === offeringId && isLiveInvestment(o) && (isOpenOnboarding(o) || isCompletedOnboarding(o)),
+  );
+  return preferredOnboarding(onRecord)?.id ?? null;
 }
 
 /**
