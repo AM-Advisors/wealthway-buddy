@@ -1161,3 +1161,7 @@
 - [x] Verify undo, server checks, display-only badges, canonical screening reading, client wording and person-picker scope; fix one-decision-per-record and client follow-up wording
 - [ ] Isolated QA database run of the actual fund and foundation screens: needs a fresh isolated test copy created after this change is saved
 - [ ] Next consolidation candidate (proposal only): fund document approvals in Documents
+
+## SS-4 send and add fund choices (2026-11-16)
+- [x] Confirm Send SS-4 to a manager works for 4D Snoretox and reaches Jason Goldenberg
+- [x] Confirm the add fund page keeps choices made at the start through to the end
