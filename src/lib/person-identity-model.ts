@@ -79,3 +79,37 @@ export function prefillFactsFrom(personKycStatus: string | null, sessions: Prefi
     String(s.provider_decision ?? "").trim().toLowerCase() === "approved" && !!s.verified_full_name);
   return held ? pick(held) : null;
 }
+
+// One identity status per person. The person record is updated from the approved login check;
+// until it is, screens use the same rule so they never disagree.
+const OPEN_KYC = new Set(["not_started", "pending", "review"]);
+
+/** Identity status to show for a person: an approved login check counts unless the person record says approved or declined. */
+export function personKycFromLoginCheck(personKyc: string | null, loginCheck: PersonCheckState | null): string {
+  const p = personKyc ?? "not_started";
+  if (!OPEN_KYC.has(p)) return p;
+  return loginCheck === "approved" ? "approved" : p;
+}
+
+/**
+ * Person identity status after an approved login check is applied. Automatic (provider) results never
+ * overturn a declined person; a staff approval decides as before.
+ */
+export function personKycAfterApprovedCheck(personKyc: string | null, byStaff: boolean): "approved" | null {
+  const p = personKyc ?? "not_started";
+  if (p === "approved") return null;
+  if (p === "declined" && !byStaff) return null;
+  return "approved";
+}
+
+/** A blank person email is filled from the login only for the same, confirmed login whose email no other person already uses. */
+export function mayFillPersonEmail(i: {
+  personEmail: string | null; personSecondaryEmail: string | null; personUserId: string | null;
+  loginUserId: string | null; loginEmail: string | null; loginConfirmed: boolean; usedByOtherPerson: boolean;
+}): boolean {
+  if (String(i.personEmail ?? "").trim()) return false;
+  const email = String(i.loginEmail ?? "").trim().toLowerCase();
+  if (!email || !i.loginConfirmed || i.usedByOtherPerson) return false;
+  if (!i.personUserId || i.personUserId !== i.loginUserId) return false;
+  return String(i.personSecondaryEmail ?? "").trim().toLowerCase() !== email;
+}

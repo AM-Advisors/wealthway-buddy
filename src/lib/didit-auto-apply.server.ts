@@ -147,33 +147,71 @@ export async function autoApplyDiditSession(sessionId: string | null) {
 }
 
 /**
- * Staff-approved account identity check: fill still-blank person details
- * from the verified session (fill-blank mode, so typed answers stay) and mark
- * the person verified. Used when no onboarding links the session.
+ * Approved account identity check: fill still-blank person details from the
+ * verified session (fill-blank mode, so typed answers stay), fill a blank email
+ * from the same confirmed login, and mark the person verified. Runs for staff
+ * approvals and provider approvals alike, whatever stage the person's
+ * investments are in, so the person record never lags the check. Logged.
  */
-export async function applyApprovedAccountCheck(personId: string | null, sessionId: string | null, actorUserId: string) {
+export async function applyApprovedAccountCheck(
+  personId: string | null, sessionId: string | null, actorUserId: string | null,
+  opts: { loginUserId?: string | null; fallbackDateOfBirth?: string | null } = {},
+) {
   if (!personId || !sessionId) return { applied: false };
-  const decision = await fetchDiditSessionDecision(sessionId);
-  if (!decision) return { applied: false };
-  const x = extractDiditDetails(decision);
+  const { personKycAfterApprovedCheck, mayFillPersonEmail } = await import("@/lib/person-identity-model");
+  let decision: any = null;
+  try { decision = await fetchDiditSessionDecision(sessionId); } catch (e) { console.error("[didit-auto] account decision", (e as Error).message); }
+  const x = decision ? extractDiditDetails(decision) : null;
   const { data: person } = await db().from("persons").select("*").eq("id", personId).maybeSingle();
-  if (!person) return { applied: false };
+  if (!person || person.merged_into_person_id) return { applied: false };
   const now = new Date().toISOString();
-  const { legal_first_name: _f, legal_last_name: _l, ...facts } = x.fields as Record<string, string | null>;
+  const { legal_first_name: _f, legal_last_name: _l, ...facts } = (x?.fields ?? {}) as Record<string, string | null>;
   if (facts["country"]) facts["residence_country"] = facts["country"];
+  const dobFallback = String(opts.fallbackDateOfBirth ?? "").slice(0, 10);
+  if (!facts["date_of_birth"] && /^\d{4}-\d{2}-\d{2}$/.test(dobFallback)) facts["date_of_birth"] = dobFallback;
   const merged = mergeVerifiedPersonFields(person, facts, "fill-blank");
   const update: any = { ...merged.update };
-  if (person.kyc_status !== "approved") Object.assign(update, { kyc_status: "approved", kyc_verified_at: now, identity_verified_at: now });
-  if (x.amlStatus === "approved" && person.aml_status !== "approved") Object.assign(update, { aml_status: "approved", aml_screened_at: now });
-  if (!Object.keys(update).length) return { applied: true, changed: 0 };
+  const byStaff = !!actorUserId;
+  const kyc = personKycAfterApprovedCheck(person.kyc_status ?? null, byStaff);
+  if (kyc) Object.assign(update, { kyc_status: kyc, kyc_verified_at: person.kyc_verified_at ?? now, identity_verified_at: person.identity_verified_at ?? now });
+  if (x?.amlStatus === "approved" && person.aml_status !== "approved") Object.assign(update, { aml_status: "approved", aml_screened_at: now });
+  const loginUserId = opts.loginUserId ?? null;
+  if (loginUserId && !String(person.email ?? "").trim()) {
+    try {
+      const { data: u } = await db().auth.admin.getUserById(loginUserId);
+      const loginEmail = String(u?.user?.email ?? "").trim().toLowerCase() || null;
+      const { data: others } = loginEmail
+        ? await db().from("persons").select("id").neq("id", personId).ilike("email", loginEmail).limit(1)
+        : { data: [] };
+      if (mayFillPersonEmail({
+        personEmail: person.email ?? null, personSecondaryEmail: person.secondary_email ?? null, personUserId: person.user_id ?? null,
+        loginUserId, loginEmail, loginConfirmed: !!u?.user?.email_confirmed_at, usedByOtherPerson: (others ?? []).length > 0,
+      })) update.email = loginEmail;
+    } catch (e) { console.error("[didit-auto] login email", (e as Error).message); }
+  }
+  const fields = Object.keys(update);
+  if (!fields.length) return { applied: true, changed: 0 };
   update.updated_at = now;
   const { error } = await db().from("persons").update(update).eq("id", personId);
   if (error) throw new Error(error.message);
+  const logged = fields.filter((f) => !["kyc_verified_at", "identity_verified_at", "aml_screened_at"].includes(f));
+  if (logged.length) {
+    await db().from("investor_record_changes").insert(logged.map((f) => ({
+      subject_table: "persons", subject_id: personId, field: f, old_value: person[f] ?? null, new_value: update[f],
+      source: byStaff ? "identity_check_staff" : "provider", actor_user_id: actorUserId, manager_visible: f !== "date_of_birth",
+    })));
+  }
   await db().from("person_onboarding_events").insert({
     person_id: personId, from_state: person.onboarding_state ?? null, to_state: person.onboarding_state ?? "kyc_pending",
-    actor_kind: "staff", actor_user_id: actorUserId,
-    reason: "Staff-approved identity check applied to blank details",
-    detail: { fields: Object.keys(update) },
+    actor_kind: byStaff ? "staff" : "provider", actor_user_id: actorUserId,
+    reason: byStaff ? "Staff-approved identity check applied to blank details" : "Approved identity check applied to the person record",
+    detail: { fields, session: sessionId },
   });
-  return { applied: true, changed: Object.keys(update).length };
+  if (person.user_id) {
+    try {
+      const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+      await reconcileReadinessForSubjects({ investorUserId: person.user_id }, "account_identity_applied");
+    } catch (e) { console.error("[didit-auto] readiness", (e as Error).message); }
+  }
+  return { applied: true, changed: fields.length };
 }

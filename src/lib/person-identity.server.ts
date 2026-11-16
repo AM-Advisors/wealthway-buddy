@@ -64,9 +64,11 @@ export async function resolvePersonIdentity(userId: string | null, personId: str
 export async function fanOutPersonIdentity(personId: string | null, sessionId: string | null, actorUserId: string | null) {
   if (!personId || !sessionId) return { applied: 0 };
   let checkApproved = false;
+  let checkRow: any = null;
   // Carry a clean screening result from the passed login check to the person record.
   try {
-    const { data: chk } = await db().from("account_identity_checks").select("status, decision_summary").eq("session_id", sessionId).maybeSingle();
+    const { data: chk } = await db().from("account_identity_checks").select("status, decision_summary, review_details, user_id").eq("session_id", sessionId).maybeSingle();
+    checkRow = chk ?? null;
     checkApproved = (chk as any)?.status === "approved";
     const aml = (chk as any)?.decision_summary?.aml;
     const clean = (chk as any)?.status === "approved" && Number(aml?.hits ?? 0) === 0 && /approved|clear|passed/i.test(String(aml?.status ?? ""));
@@ -100,6 +102,17 @@ export async function fanOutPersonIdentity(personId: string | null, sessionId: s
       await (await import("./investor-onboarding.server")).reconcileAfter([ob.id], { actorUserId, trigger: "person_identity_applied" });
       applied++;
     } catch (e) { console.error("[person-identity] fan-out", (e as Error).message); }
+  }
+  // The person record follows an approved check whatever stage their investments are in
+  // (fill-blank; typed answers stay), so staff and investor screens show the same status.
+  if (checkApproved) {
+    try {
+      const { applyApprovedAccountCheck } = await import("@/lib/didit-auto-apply.server");
+      await applyApprovedAccountCheck(personId, sessionId, actorUserId, {
+        loginUserId: checkRow?.user_id ?? null,
+        fallbackDateOfBirth: checkRow?.review_details?.idDocument?.dateOfBirth ?? null,
+      });
+    } catch (e) { console.error("[person-identity] person write-back", (e as Error).message); }
   }
   return { applied };
 }
