@@ -47497,58 +47497,79 @@ export type Database = {
         Row: {
           aml: Json | null
           applied: Json
+          batch_id: string | null
           created_at: string
           decided_at: string | null
           decided_by: string | null
           decision_note: string | null
+          details: Json | null
           entered_at: string
           entered_by: string
           evidence_name: string | null
           evidence_path: string | null
           id: string
+          kyb: Json | null
           kyc: Json | null
           note: string | null
           person_id: string
+          profile_id: string | null
+          screening: Json | null
+          sensitive: Json
           source_reference: string
           status: string
+          subject_kind: string
           updated_at: string
         }
         Insert: {
           aml?: Json | null
           applied?: Json
+          batch_id?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           decision_note?: string | null
+          details?: Json | null
           entered_at?: string
           entered_by: string
           evidence_name?: string | null
           evidence_path?: string | null
           id?: string
+          kyb?: Json | null
           kyc?: Json | null
           note?: string | null
           person_id: string
+          profile_id?: string | null
+          screening?: Json | null
+          sensitive?: Json
           source_reference: string
           status?: string
+          subject_kind?: string
           updated_at?: string
         }
         Update: {
           aml?: Json | null
           applied?: Json
+          batch_id?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           decision_note?: string | null
+          details?: Json | null
           entered_at?: string
           entered_by?: string
           evidence_name?: string | null
           evidence_path?: string | null
           id?: string
+          kyb?: Json | null
           kyc?: Json | null
           note?: string | null
           person_id?: string
+          profile_id?: string | null
+          screening?: Json | null
+          sensitive?: Json
           source_reference?: string
           status?: string
+          subject_kind?: string
           updated_at?: string
         }
         Relationships: [
@@ -47557,6 +47578,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_verification_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -51972,6 +52000,13 @@ export type Database = {
           iv: string
         }[]
       }
+      read_staff_verification_secret: {
+        Args: { _entry: string; _kind: string }
+        Returns: {
+          ciphertext: string
+          iv: string
+        }[]
+      }
       read_tax_identifier: {
         Args: { _form: string }
         Returns: {
@@ -52164,6 +52199,17 @@ export type Database = {
           _iv: string
           _key_version: number
           _profile: string
+        }
+        Returns: undefined
+      }
+      store_staff_verification_secret: {
+        Args: {
+          _actor: string
+          _ciphertext: string
+          _entry: string
+          _iv: string
+          _key_version: number
+          _kind: string
         }
         Returns: undefined
       }

@@ -128,6 +128,13 @@ export async function encryptTin(tin: string): Promise<{ ciphertext: string; iv:
   return { ciphertext: b64(new Uint8Array(ct)), iv: b64(iv), keyVersion: 1 };
 }
 
+/** Same vault key as tax IDs, for identity document numbers (letters kept, spacing removed). */
+export async function encryptSensitiveText(text: string): Promise<{ ciphertext: string; iv: string; keyVersion: number }> {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await tinKey(), new TextEncoder().encode(text.replace(/[^A-Za-z0-9]/g, "").toUpperCase()));
+  return { ciphertext: b64(new Uint8Array(ct)), iv: b64(iv), keyVersion: 1 };
+}
+
 export async function decryptTin(ciphertext: string, iv: string): Promise<string> {
   const pt = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv: new Uint8Array(Buffer.from(iv, "base64")) },

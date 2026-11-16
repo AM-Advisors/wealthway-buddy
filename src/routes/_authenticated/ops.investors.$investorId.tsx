@@ -1,6 +1,6 @@
 import { PersonAccountsCard } from "@/components/person-accounts-card";
 import { InvestorVerificationCard } from "@/components/investor-verification-card";
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 
 import { OpsRecordPage } from "@/components/ops-record";
 import { GovernmentIdReview } from "@/components/government-id-review";
@@ -27,7 +27,7 @@ function RecordRoute() {
   const { investorId } = useParams({ from: "/_authenticated/ops/investors/$investorId" });
   return (
     <>
-      {/^[0-9a-f-]{36}$/i.test(investorId) ? <div className="mx-auto max-w-5xl p-4"><InvestorVerificationCard investorUserId={investorId} /></div> : null}
+      {/^[0-9a-f-]{36}$/i.test(investorId) ? <div className="mx-auto max-w-5xl space-y-2 p-4"><InvestorVerificationCard investorUserId={investorId} /><p className="text-sm"><Link to="/ops/verifications" search={{ account: investorId }} className="font-medium underline">Enter past KYC/AML results or run a fresh screening</Link></p></div> : null}
       <OpsRecordPage type="investor" id={investorId} />
       {/^[0-9a-f-]{36}$/i.test(investorId) ? <div className="mx-auto max-w-5xl p-4"><PersonAccountsCard userId={investorId} /></div> : null}
       {/^[0-9a-f-]{36}$/i.test(investorId) ? <GovernmentIdReview investorUserId={investorId} /> : null}
