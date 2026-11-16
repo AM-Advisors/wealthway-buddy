@@ -173,6 +173,8 @@ function FundDocumentsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       {doc.signed_at ? (
                         <Badge>Signed</Badge>
+                      ) : doc.requires_signature && (data as any)?.investmentClosed ? (
+                        <Badge variant="outline">No signature on file</Badge>
                       ) : doc.requires_signature ? (
                         <Badge variant="secondary">Needs your signature</Badge>
                       ) : (
@@ -198,6 +200,9 @@ function FundDocumentsPage() {
             </CardContent>
           </Card>
 
+          {(data as any)?.investmentClosed ? (
+            <p className="text-sm text-muted-foreground">Your investment in this fund is closed. Nothing here needs your signature.</p>
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle>Ready to commit?</CardTitle>
@@ -218,6 +223,7 @@ function FundDocumentsPage() {
               </Button>
             </CardContent>
           </Card>
+          )}
 
           <InvestorUploads fundId={fundId} />
         </>

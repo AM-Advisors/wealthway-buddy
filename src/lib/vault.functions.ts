@@ -151,6 +151,15 @@ export const getMyVault = createServerFn({ method: "GET" })
       });
     }
 
+    // Funds where the investor's investment is closed: never ask them to sign again.
+    const { data: closedRows } = await supabase
+      .from("investor_onboardings")
+      .select("offering_id, merged_into_onboarding_id")
+      .eq("investor_user_id", userId)
+      .eq("stage", "closed")
+      .is("removed_at", null);
+    const closedFunds = new Set(((closedRows ?? []) as any[]).filter((r) => !r.merged_into_onboarding_id).map((r) => String(r.offering_id)));
+
     const signedDocIds = new Set(
       ((signatures ?? []) as any[]).map((s) => String(s.offering_document_id)),
     );
@@ -161,7 +170,9 @@ export const getMyVault = createServerFn({ method: "GET" })
         kind: "fund_document",
         kindLabel: "Fund document",
         title: (doc.title as string) ?? "Fund document",
-        detail: doc.requires_signature ? "Awaiting your signature" : "For your records",
+        detail: doc.requires_signature
+          ? closedFunds.has(String(doc.offering_id)) ? "No signature on file" : "Awaiting your signature"
+          : "For your records",
         fundId: String(doc.offering_id),
         fundName: fundName.get(String(doc.offering_id)) ?? null,
         date: null,

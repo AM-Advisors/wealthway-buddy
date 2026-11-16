@@ -319,6 +319,16 @@ export const getFundLegalDocuments = createServerFn({ method: "GET" })
         : Promise.resolve({ data: null } as any),
     ]);
 
+    // A closed (admitted) investment is never asked to sign again.
+    const { data: closedRows } = await supabase
+      .from("investor_onboardings")
+      .select("id, stage, merged_into_onboarding_id")
+      .eq("investor_user_id", userId)
+      .eq("offering_id", selectedId)
+      .eq("stage", "closed")
+      .is("removed_at", null);
+    const investmentClosed = ((closedRows ?? []) as any[]).some((r) => !r.merged_into_onboarding_id);
+
     const { data: signatures } = application
       ? await supabase
           .from("document_signatures")
@@ -334,6 +344,7 @@ export const getFundLegalDocuments = createServerFn({ method: "GET" })
       funds,
       selected: funds.find((f) => f.id === selectedId) ?? null,
       applicationId: (application?.id as string) ?? null,
+      investmentClosed,
       documents: ((documents ?? []) as any[]).map((d) => ({
         id: d.id as string,
         title: d.title as string,

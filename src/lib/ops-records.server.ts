@@ -643,9 +643,9 @@ export async function investorRecord(context: any, data: { id: string }) {
     const [profiles, positions, onboardings] = await Promise.all([
       s.from("investment_profiles").select("id").eq("owner_user_id", data.id),
       s.from("investor_positions").select("id").eq("investor_user_id", data.id).eq("status", "active"),
-      s.from("investor_onboardings").select("accepted_amount_cents, funded_amount_cents, stage").eq("investor_user_id", data.id),
+      s.from("investor_onboardings").select("accepted_amount_cents, funded_amount_cents, stage, removed_at, merged_into_onboarding_id").eq("investor_user_id", data.id),
     ]);
-    const onboardingRows = rows(onboardings);
+    const onboardingRows = rows(onboardings).filter((o: any) => !o.removed_at && !o.merged_into_onboarding_id && o.stage !== "cancelled" && o.stage !== "declined");
     return {
       capabilities,
       record: {

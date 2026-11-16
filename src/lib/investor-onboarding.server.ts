@@ -1369,8 +1369,10 @@ export async function investorFundStatus(userId: string, offeringId: string) {
     .eq("offering_id", offeringId)
     .is("removed_at", null)
     .order("created_at", { ascending: false })
-    .limit(1);
-  const row = ((data ?? []) as any[])[0];
+    .limit(20);
+  // A newer cancelled, declined or merged record never replaces the investor's real investment.
+  const all = (data ?? []) as any[];
+  const row = all.find((r) => r.stage !== "cancelled" && r.stage !== "declined" && !r.merged_into_onboarding_id) ?? all[0];
   if (!row) return null;
 
   const facts = await gatherFacts(row);

@@ -172,7 +172,7 @@ export async function managerFundDashboard(userId: string, offeringId: string, r
 export async function investorDashboard(userId: string) {
   const actor = await onboardingActor(userId);
   const { data } = await db().from("investor_onboardings").select("*").eq("investor_user_id", actor.userId).order("created_at", { ascending: false }).limit(200);
-  const rows = ((data ?? []) as any[]).filter((r) => r.stage !== "declined" && r.stage !== "cancelled");
+  const rows = ((data ?? []) as any[]).filter((r) => r.stage !== "declined" && r.stage !== "cancelled" && !r.removed_at && !r.merged_into_onboarding_id);
   const built = await factsFor(rows);
   const offIds = [...new Set(rows.map((r) => r.offering_id))];
   const profIds = [...new Set(rows.map((r) => r.investment_profile_id).filter(Boolean))];
