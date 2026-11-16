@@ -42,6 +42,10 @@ export type SetupSnapshot = {
   eligibilityKeys?: string[] | null;
   /** offerings.banking_setup_by: who opens the bank account. */
   bankingSetupBy?: string | null;
+  /** offerings.banking_path: the banking approach chosen in Setup ("client", "harmonious", "not_required"). */
+  bankingPath?: string | null;
+  /** Fund wire/bank details are saved in Setup (banking task complete). */
+  bankOnFile?: boolean;
   /** Management companies recorded for this fund. */
   managementCompanies?: string[];
 };
@@ -100,6 +104,18 @@ const REG_LABEL: Record<string, string> = { "506b": "506(b)", "506c": "506(c)", 
 const regText = (v: string | null) => (v ? REG_LABEL[v] ?? v : null);
 const sameReg = (a: string, s: string) => norm(a).replace(/[^a-z0-9]/g, "").startsWith(norm(s).replace(/[^a-z0-9]/g, "")) || norm(regText(s)).replace(/ /g, "") === norm(a).replace(/ /g, "");
 
+export const BANK_ON_FILE = "Bank details on file";
+/**
+ * Who opens the bank account, as Setup records it: the explicit choice, else the banking approach
+ * chosen in Banking, else saved bank details. Saved bank details answer the question either way.
+ */
+export function setupBankingBy(s: SetupSnapshot): string | null {
+  if (s.bankingSetupBy === "fund" || s.bankingSetupBy === "harmonious") return BANKING_SETUP_LABEL[s.bankingSetupBy];
+  if (s.bankingPath === "client") return BANKING_SETUP_LABEL.fund;
+  if (s.bankingPath === "harmonious") return BANKING_SETUP_LABEL.harmonious;
+  return s.bankOnFile ? BANK_ON_FILE : null;
+}
+
 /** Normalizes both request forms into one list of answers with their Setup home. */
 export function requestAnswers(details: Record<string, any> | null | undefined): Ans[] {
   if (!details || typeof details !== "object") return [];
@@ -151,9 +167,9 @@ export function requestAnswers(details: Record<string, any> | null | undefined):
   if (hasEin === "yes") add({ key: "ein", question: "Fund already has an EIN", answer: "Yes", place: "ein", setup: (s) => (s.hasEin ? "Recorded" : null), same: () => true });
   const detail = (s: SetupSnapshot, k: string) => { const x = s.setupDetails?.[k]; return typeof x === "string" && x.trim() ? x.trim() : null; };
   const banking = bankingFromRequest(details);
-  if (banking?.setupBy) add({ key: "banking_setup_by", question: "Who opens the bank account", answer: BANKING_SETUP_LABEL[banking.setupBy], place: "bank", setup: (s) => (s.bankingSetupBy === "fund" || s.bankingSetupBy === "harmonious" ? BANKING_SETUP_LABEL[s.bankingSetupBy] : null) });
+  if (banking?.setupBy) add({ key: "banking_setup_by", question: "Who opens the bank account", answer: BANKING_SETUP_LABEL[banking.setupBy], place: "bank", setup: setupBankingBy, same: (a, s, snap) => !!snap.bankOnFile || norm(a) === norm(s) });
   const bankName = str(details["bank_name"]);
-  add({ key: "bank", question: "Preferred bank", answer: bankName, place: "bank", setup: (s) => detail(s, "bank_name") });
+  add({ key: "bank", question: "Preferred bank", answer: bankName, place: "bank", setup: (s) => detail(s, "bank_name") ?? (s.bankOnFile ? BANK_ON_FILE : null), same: (a, s, snap) => !!snap.bankOnFile || norm(a) === norm(s) });
   const custodian = str(details["bank_or_custodian"]);
   add({ key: "provider_bank_or_custodian", question: "Bank or custodian", answer: custodian, place: "bank", setup: (s) => s.serviceProviders["bank_or_custodian"] ?? null });
   const docs = Array.isArray(details["documents"]) ? details["documents"].filter((d: any) => str(d?.fileName)) : [];

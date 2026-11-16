@@ -423,9 +423,10 @@ async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: a
   ]);
   const { data: versionFiles } = await db().from("offering_document_versions").select("file_name").eq("offering_id", offeringId).limit(500);
   // Real Setup records the request's eligibility, banking and management company answers feed.
-  const [{ data: eligRows }, { data: mgmtRows }] = await Promise.all([
+  const [{ data: eligRows }, { data: mgmtRows }, { data: bankTask }] = await Promise.all([
     setup?.id ? db().from("fund_eligibility_configs").select("rules, version").eq("setup_id", setup.id).eq("status", "approved").order("version", { ascending: false }).limit(1) : Promise.resolve({ data: [] }),
     db().from("client_entities").select("id, legal_name, status").eq("offering_id", offeringId).eq("entity_type", "management_company").order("created_at"),
+    setup?.id ? db().from("fund_setup_tasks").select("status").eq("setup_id", setup.id).eq("task_key", "banking_account").limit(1).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const { effectiveEligibility, parseEligibilityConfig } = await import("@/lib/onboarding-compliance-model");
   const approvedElig = ((eligRows ?? []) as any[])[0] ?? null;
@@ -450,7 +451,7 @@ async function requestSetupCheck(offeringId: string, o: any, setup: any, econ: a
     documentCount: docs.count ?? 0, serviceProviders: providers, investmentStrategy: setup?.investment_strategy ?? null,
     setupDetails: (setup?.setup_details && typeof setup.setup_details === "object" ? setup.setup_details : {}) as Record<string, unknown>,
     documentFileNames: ((versionFiles ?? []) as any[]).map((v) => String(v.file_name ?? "")).filter(Boolean),
-    eligibilityKeys, bankingSetupBy: (o.banking_setup_by ?? null) as string | null, managementCompanies: managementCompanies.map((m) => m.legalName).filter(Boolean),
+    eligibilityKeys, bankingSetupBy: (o.banking_setup_by ?? null) as string | null, bankingPath: (o.banking_path ?? null) as string | null, bankOnFile: (bankTask as any)?.status === "complete", managementCompanies: managementCompanies.map((m) => m.legalName).filter(Boolean),
   }) : [];
   const { requestWiring } = await import("@/lib/request-setup-wiring");
   const questions = questionsStatus((sections.data ?? []) as any[]);

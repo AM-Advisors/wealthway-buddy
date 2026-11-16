@@ -138,4 +138,12 @@ describe("one-class funds have one set of terms", () => {
     expect(state(checkRequestAgainstSetup(r, snap()), "management_llc_path")).toBe("missing");
     expect(state(checkRequestAgainstSetup(r, snap({ managementCompanies: ["Acme Management LLC"] })), "management_llc_path")).toBe("in_setup");
   });
+  it("saved bank details or the Banking choice answer who opens the bank account", () => {
+    const r = { ...request, banking_path: "client", bank_name: "Chase" };
+    expect(state(checkRequestAgainstSetup(r, snap({ bankingPath: "client" })), "banking_setup_by")).toBe("in_setup");
+    expect(state(checkRequestAgainstSetup(r, snap({ bankOnFile: true })), "banking_setup_by")).toBe("in_setup");
+    expect(state(checkRequestAgainstSetup(r, snap({ bankOnFile: true })), "bank")).toBe("in_setup");
+    expect(state(checkRequestAgainstSetup(r, snap({ bankingPath: "harmonious" })), "banking_setup_by")).toBe("changed");
+    expect(state(checkRequestAgainstSetup(r, snap()), "banking_setup_by")).toBe("missing");
+  });
 });
