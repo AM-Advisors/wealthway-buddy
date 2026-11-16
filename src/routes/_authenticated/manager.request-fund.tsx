@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/manager/request-fund")({
+  validateSearch: (s: Record<string, unknown>): { clientId?: string } => (typeof s["clientId"] === "string" ? { clientId: s["clientId"] } : {}),
   head: () => ({
     meta: [
       { title: "Add Fund or SPV | Harmonious" },
@@ -26,8 +26,15 @@ function RequestFund() {
   const loadOptions = useServerFn(getFundRequestOptions);
   const options = useQuery({ queryKey: ["fund-request-options"], queryFn: () => loadOptions() });
   const clients = ((options.data as any)?.clients ?? []) as { id: string; name: string }[];
-  const [picked, setPicked] = useState("");
+  // The chosen organization lives in the page address, so a reload never quietly switches it back to the first one.
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const picked = clients.some((c) => c.id === search.clientId) ? search.clientId! : "";
   const clientId = picked || clients[0]?.id || null;
+  const setPicked = (next: string) => {
+    if (!next || next === clientId) return;
+    void navigate({ search: (prev: { clientId?: string }) => ({ ...prev, clientId: next }), replace: true });
+  };
   if (options.isPending) return <main className="mx-auto max-w-5xl p-6 text-sm text-muted-foreground">Loading…</main>;
   if (!clients.length) return <main className="mx-auto max-w-5xl p-6 text-sm">Your login isn't linked to a client organization yet. Ask Harmonious to add you.</main>;
   const picker = clients.length > 1 ? (
