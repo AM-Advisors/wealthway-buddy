@@ -49,6 +49,8 @@ export function InvestmentOfferingDocuments({ onboardingId, acknowledgeOnly = fa
             {d.canRead && <Button size="sm" variant="outline" onClick={() => setReading({ id: d.id, title: d.title })}>Read document</Button>}
             {d.action === "Completed" ? (
               <Badge variant="secondary">Completed</Badge>
+            ) : d.action === "No signature on file" ? (
+              <Badge variant="outline">No signature on file</Badge>
             ) : d.action === "Acknowledge" ? (
               <Button size="sm" onClick={() => acknowledge(d.id)}>I acknowledge and agree</Button>
             ) : d.action ? (

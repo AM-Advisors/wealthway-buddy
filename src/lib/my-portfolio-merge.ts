@@ -88,3 +88,93 @@ export function portfolioRowsFromResponse<T = any>(data: unknown): T[] {
   const funds = (data as { funds?: unknown } | null)?.funds;
   return Array.isArray(funds) ? (funds as T[]) : [];
 }
+
+/** One of the signed-in investor's own rows in a fund's cap table. */
+export type OwnCapTableHolding = {
+  application_id: string;
+  onboarding_id: string | null;
+  commitment_cents: number;
+  funded_cents: number;
+  shares: number | null;
+  share_class: string;
+  pct_of_committed: number;
+};
+
+export type PortfolioValueRow = Omit<OnboardingValueRow, "shares" | "valued_by"> & {
+  shares: number | null;
+  valued_by: "share_price" | "capital";
+};
+
+/**
+ * One portfolio row per fund from every cap-table row that belongs to the investor. An older
+ * application and the current investment that replaced it are already joined by the cap table,
+ * so each investment is counted once.
+ */
+export function portfolioRowForOffering(
+  offering: PortfolioOffering,
+  holdings: OwnCapTableHolding[],
+): PortfolioValueRow | null {
+  if (!holdings.length) return null;
+  const price = offering.share_price_cents != null ? Number(offering.share_price_cents) : null;
+  let commitment = 0;
+  let funded = 0;
+  let pctCommitted = 0;
+  let equity = 0;
+  let shares: number | null = 0;
+  let allByPrice = true;
+  for (const h of holdings) {
+    commitment += h.commitment_cents;
+    funded += h.funded_cents;
+    pctCommitted += h.pct_of_committed;
+    const byPrice = h.shares != null && price != null && price > 0;
+    if (!byPrice) allByPrice = false;
+    equity += byPrice ? Math.round(h.shares! * price!) : h.funded_cents;
+    shares = shares != null && h.shares != null ? shares + h.shares : null;
+  }
+  return {
+    offering_id: offering.id,
+    offering_name: offering.name,
+    reg_type: offering.reg_type ?? null,
+    share_price_cents: price,
+    shares,
+    share_class: holdings[0]!.share_class,
+    commitment_cents: commitment,
+    funded_cents: funded,
+    pct_of_committed: pctCommitted,
+    equity_value_cents: equity,
+    valued_by: allByPrice ? "share_price" : "capital",
+  };
+}
+
+/**
+ * Current investments the cap table did not already count: not linked to one of the investor's
+ * applications and not shown as one of their cap-table rows.
+ */
+export function onboardingsOutsideCapTable<T extends OnboardingHolding>(
+  onboardings: T[],
+  applicationIds: Set<string>,
+  countedOnboardingIds: Set<string>,
+): T[] {
+  return onboardings.filter(
+    (o) => !countedOnboardingIds.has(o.id) && !(o.application_id && applicationIds.has(o.application_id)),
+  );
+}
+
+/** A fund appears once: rows for the same fund are added together. */
+export function mergePortfolioRowsByFund(rows: PortfolioValueRow[]): PortfolioValueRow[] {
+  const byFund = new Map<string, PortfolioValueRow>();
+  for (const r of rows) {
+    const cur = byFund.get(r.offering_id);
+    if (!cur) {
+      byFund.set(r.offering_id, { ...r });
+      continue;
+    }
+    cur.commitment_cents += r.commitment_cents;
+    cur.funded_cents += r.funded_cents;
+    cur.pct_of_committed += r.pct_of_committed;
+    cur.equity_value_cents += r.equity_value_cents;
+    cur.shares = cur.shares != null && r.shares != null ? cur.shares + r.shares : null;
+    cur.valued_by = cur.valued_by === "share_price" && r.valued_by === "share_price" ? "share_price" : "capital";
+  }
+  return [...byFund.values()];
+}

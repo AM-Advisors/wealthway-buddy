@@ -230,6 +230,16 @@ export function investorDocumentAction(input: { usage: DocumentUsage | null; leg
   return "Review & Sign";
 }
 
+/**
+ * A closed (admitted) investment is never asked to sign again: a signature request that was
+ * never sent becomes "No signature on file". Re-sign requests and documents actually sent for
+ * signing keep their action.
+ */
+export function closedInvestmentDocumentAction(action: string, input: { closed: boolean; resignOpen: boolean; execution: ExecutionState }): string {
+  if (!input.closed || input.resignOpen || input.execution !== "not_sent") return action;
+  return action === "Review & Sign" ? "No signature on file" : action;
+}
+
 export type SetupDoc = {
   category: DocumentCategory | null;
   usage: DocumentUsage | null;

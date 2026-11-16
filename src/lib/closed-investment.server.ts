@@ -21,12 +21,15 @@ export async function closedInvestmentFor(
 ): Promise<ClosedInvestment> {
   const { data: obs, error } = await admin
     .from("investor_onboardings")
-    .select("id, application_id, stage, closed_at, position_id")
+    .select("id, application_id, stage, closed_at, position_id, merged_into_onboarding_id")
     .eq("investor_user_id", userId)
     .eq("offering_id", input.offeringId)
     .is("removed_at", null);
   if (error) throw new Error("Your investment status could not be loaded. Please try again.");
-  const list = (obs ?? []) as { id: string; application_id: string | null; stage: string; closed_at: string | null; position_id: string | null }[];
+  // Cancelled, declined or merged records are not the investor's investment, so a leftover one never
+  // hides the real (for example closed) investment in the same fund.
+  const list = ((obs ?? []) as { id: string; application_id: string | null; stage: string; closed_at: string | null; position_id: string | null; merged_into_onboarding_id: string | null }[])
+    .filter((o) => o.stage !== "cancelled" && o.stage !== "declined" && !o.merged_into_onboarding_id);
   const match =
     list.find((o) => o.application_id === input.applicationId) ??
     (list.length === 1 && !list[0]!.application_id ? list[0]! : null);

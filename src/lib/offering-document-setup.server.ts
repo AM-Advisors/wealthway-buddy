@@ -11,6 +11,7 @@ import {
   documentApplies,
   toOfferingExecutionState,
   investorDocumentAction,
+  closedInvestmentDocumentAction,
   offeringDocumentsSetupStatus,
   signingConfigErrors,
   signingStatusForNewVersion,
@@ -488,7 +489,7 @@ export async function decideChangeRequest(userId: string, input: { id: string; d
 
 /** Documents that apply to the caller's own Investment, with a plain action label. */
 export async function investorDocuments(userId: string, onboardingId: string) {
-  const { data: row, error: rowError } = await db().from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id, application_id, offering_class_key").eq("id", onboardingId).maybeSingle();
+  const { data: row, error: rowError } = await db().from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id, application_id, offering_class_key, stage").eq("id", onboardingId).maybeSingle();
   if (rowError) throw new Error("Your investment could not be loaded. Please try again.");
   if (!row || row.investor_user_id !== userId) forbid("that investment isn't yours.");
   const { data: profile, error: profileError } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null, error: null };
@@ -546,7 +547,10 @@ export async function investorDocuments(userId: string, onboardingId: string) {
       canRead: publication.get(d.id)?.ready === true || (inv[i]?.execution ?? "not_sent") !== "not_sent",
       action: !publication.get(d.id)?.ready && (inv[i]?.execution ?? "not_sent") === "not_sent"
         ? "Not yet available"
-        : investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
+        : closedInvestmentDocumentAction(
+            investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
+            { closed: row.stage === "closed", resignOpen: Boolean(rs), execution: inv[i]?.execution ?? "not_sent" },
+          ),
       versionLabel,
       signedOutside: false,
     };

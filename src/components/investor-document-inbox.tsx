@@ -22,7 +22,10 @@ export function InvestorDocumentInbox() {
         {groups.map((g) => (
           <div key={g.onboardingId}>
             <div className="mb-2 flex items-center justify-between">
-              <p className="font-medium">{g.fundName}</p>
+              <p className="font-medium">
+                {g.fundName}
+                {g.closed && !g.documents.some((d: any) => /sign/i.test(String(d.action)) && d.action !== "No signature on file") ? <span className="block text-sm font-normal text-muted-foreground">Your investment is closed. Nothing here needs your signature.</span> : null}
+              </p>
               <Button asChild size="sm" variant="outline">
                 <Link to="/investment/$onboardingId" params={{ onboardingId: g.onboardingId }}>Open investment</Link>
               </Button>
@@ -36,7 +39,7 @@ export function InvestorDocumentInbox() {
                       {[d.versionLabel, d.sentAt ? `Sent ${new Date(d.sentAt).toLocaleDateString()}` : null].filter(Boolean).join(" · ")}
                     </span>
                   </span>
-                  <Badge variant={d.action === "Completed" ? "secondary" : "default"}>{d.action}</Badge>
+                  <Badge variant={d.action === "Completed" ? "secondary" : d.action === "No signature on file" ? "outline" : "default"}>{d.action}</Badge>
                 </li>
               ))}
             </ul>

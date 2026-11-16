@@ -2,7 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { aggregateOnboardingHoldings, type PortfolioOffering } from "./my-portfolio-merge";
+import {
+  aggregateOnboardingHoldings,
+  mergePortfolioRowsByFund,
+  onboardingsOutsideCapTable,
+  portfolioRowForOffering,
+  type PortfolioOffering,
+} from "./my-portfolio-merge";
 
 /** One investor's position in a fund, derived from live commitments. */
 export interface CapTableHolder {
@@ -42,6 +48,8 @@ export interface FundCapTable {
   /** Empty for investors who are not allowed to see other holders. */
   holders: CapTableHolder[];
   you: CapTableHolder | null;
+  /** Every row that belongs to the viewer (they may hold more than one investment in a fund). */
+  your_holdings: CapTableHolder[];
   can_manage: boolean;
   /** True when the viewer may see who the other holders are. */
   names_visible: boolean;
@@ -260,6 +268,7 @@ async function buildCapTable(
     holder_count: holders.length,
     holders: canManage || namesVisible ? holders : you ? [you] : [],
     you,
+    your_holdings: holders.filter((h) => h.is_you),
     can_manage: canManage,
     names_visible: canManage || namesVisible,
     updated_at:
@@ -398,75 +407,48 @@ export const getMyPortfolioValue = createServerFn({ method: "GET" })
     const active = ((appsResult.data ?? []) as { id: string; offering_id: string; status: string }[]).filter(
       (a) => !EXCLUDED_STATUSES.has(a.status),
     );
-    // Canonical onboarding investments without a legacy application row still
-    // count as holdings; skip ones already represented by an application.
-    const activeAppIds = new Set(active.map((a) => a.id));
-    const onboardingOnly = ((onboardingResult.data ?? []) as {
+    const onboardings = (onboardingResult.data ?? []) as {
       id: string;
       offering_id: string;
       stage: string;
       commitment_amount_cents: number | null;
       funded_amount_cents: number | null;
       application_id: string | null;
-    }[]).filter((o) => !o.application_id || !activeAppIds.has(o.application_id));
-    if (active.length === 0 && onboardingOnly.length === 0) return [] as MyPortfolioValue[];
+    }[];
+    if (active.length === 0 && onboardings.length === 0) return [] as MyPortfolioValue[];
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const offeringIds = Array.from(new Set(active.map((a) => a.offering_id)));
+    // Funds with an older application are valued from the cap table, which already joins each
+    // application to the current investment that replaced it. One row per fund, never per application.
+    const capTableOfferingIds = Array.from(new Set(active.map((a) => a.offering_id)));
+    const allOfferingIds = Array.from(new Set([...capTableOfferingIds, ...onboardings.map((o) => o.offering_id)]));
 
-    const [{ data: offerings }, { data: positions }] = await Promise.all([
-      supabaseAdmin
-        .from("offerings")
-        .select("id, name, reg_type, share_price_cents")
-        .in("id", offeringIds),
-      supabaseAdmin
-        .from("investor_cap_positions")
-        .select("application_id, shares, share_class")
-        .in(
-          "application_id",
-          active.map((a) => a.id),
-        ),
-    ]);
-
-    const offeringById = new Map<string, any>();
+    const { data: offerings } = await supabaseAdmin
+      .from("offerings")
+      .select("id, name, reg_type, share_price_cents")
+      .in("id", allOfferingIds);
+    const offeringById = new Map<string, PortfolioOffering>();
     for (const o of (offerings ?? []) as any[]) offeringById.set(o.id, o);
-    const posByApp = new Map<string, any>();
-    for (const p of (positions ?? []) as any[]) posByApp.set(p.application_id, p);
 
     const tables = await Promise.all(
-      offeringIds.map((id) => buildCapTable(id, userId, false, false)),
+      capTableOfferingIds.map((id) => buildCapTable(id, userId, false, false)),
     );
-    const tableByOffering = new Map(tables.map((t) => [t.offering_id, t]));
 
     const rows: MyPortfolioValue[] = [];
-    for (const app of active) {
-      const offering = offeringById.get(app.offering_id);
-      const you = tableByOffering.get(app.offering_id)?.you;
-      if (!offering || !you) continue;
-      const price = offering.share_price_cents != null ? Number(offering.share_price_cents) : null;
-      const pos = posByApp.get(app.id);
-      const shares = pos?.shares != null ? Number(pos.shares) : null;
-      const valuedByPrice = shares != null && price != null && price > 0;
-      rows.push({
-        offering_id: offering.id,
-        offering_name: offering.name,
-        reg_type: offering.reg_type ?? null,
-        share_price_cents: price,
-        shares,
-        share_class: (pos?.share_class as string) ?? "LP interest",
-        commitment_cents: you.commitment_cents,
-        funded_cents: you.funded_cents,
-        pct_of_committed: you.pct_of_committed,
-        equity_value_cents: valuedByPrice ? Math.round(shares! * price!) : you.funded_cents,
-        valued_by: valuedByPrice ? "share_price" : "capital",
-      });
+    const countedOnboardingIds = new Set<string>();
+    for (const table of tables) {
+      const offering = offeringById.get(table.offering_id);
+      if (!offering) continue;
+      for (const h of table.your_holdings) if (h.onboarding_id) countedOnboardingIds.add(h.onboarding_id);
+      const row = portfolioRowForOffering(offering, table.your_holdings);
+      if (row) rows.push(row);
     }
 
-    // Aggregate onboarding-only investments per offering so a fund never
-    // appears twice, and value them at received capital.
-    rows.push(...aggregateOnboardingHoldings(onboardingOnly, offeringById));
+    // Current investments the cap table did not count are valued at received capital.
+    const extra = onboardingsOutsideCapTable(onboardings, new Set(active.map((a) => a.id)), countedOnboardingIds);
+    rows.push(...aggregateOnboardingHoldings(extra, offeringById));
 
-    return rows;
+    return mergePortfolioRowsByFund(rows);
   });
 
 /* ------------------------------------------------------------------ *

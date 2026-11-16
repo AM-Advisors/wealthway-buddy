@@ -11,6 +11,7 @@ import {
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { InvestorDocumentInbox } from "@/components/investor-document-inbox";
+import { myDocumentInboxFn } from "@/lib/offering-document-send.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,10 @@ function DocumentsPage() {
     queryKey: ["investor-documents"],
     queryFn: () => fetchDocuments(),
   });
+  // Same query (and cache) as InvestorDocumentInbox: a fund already listed there from the
+  // investor's current investment is not listed a second time from the older application.
+  const fetchInbox = useServerFn(myDocumentInboxFn);
+  const inbox = useQuery({ queryKey: ["investor-document-inbox"], queryFn: () => fetchInbox() });
 
   async function openSigned(signatureId: string) {
     setBusy(signatureId);
@@ -97,7 +102,7 @@ function DocumentsPage() {
     }
   }
 
-  if (query.isLoading) {
+  if (query.isLoading || inbox.isLoading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
         <Skeleton className="h-8 w-64" />
@@ -128,10 +133,32 @@ function DocumentsPage() {
   const data = query.data;
   const documents = data?.documents ?? [];
 
+  const coveredByInbox = (inbox.data ?? []).some(
+    (g) => g.documents.length > 0 && (!data?.application || g.offeringId === data.application.offering_id),
+  );
+  if (coveredByInbox) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-10">
+        <header className="mb-6">
+          <h1 className="text-2xl md:text-3xl">Your fund documents</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Each fund you invest in, and where each of its documents stands.
+          </p>
+        </header>
+        <InvestorDocumentInbox />
+        <FilesCard />
+        <p className="mt-8 text-xs text-muted-foreground">
+          <Link to="/home" className="underline">
+            Back to your dashboard
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   if (!data?.application) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <InvestorDocumentInbox />
         <h1 className="text-2xl">Your fund documents</h1>
         <Card className="mt-6">
           <CardContent className="pt-6">
@@ -253,7 +280,23 @@ function DocumentsPage() {
         </Card>
       ) : null}
 
-      <Card className="mt-8">
+      <FilesCard />
+
+
+
+      <p className="mt-8 text-xs text-muted-foreground">
+        Download links expire after a few minutes for your security.{" "}
+        <Link to="/home" className="underline">
+          Back to your dashboard
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+function FilesCard() {
+  return (
+    <Card className="mt-8">
         <CardHeader>
           <CardTitle>Your files</CardTitle>
           <CardDescription>
@@ -270,16 +313,6 @@ function DocumentsPage() {
           </Button>
         </CardContent>
       </Card>
-
-
-
-      <p className="mt-8 text-xs text-muted-foreground">
-        Download links expire after a few minutes for your security.{" "}
-        <Link to="/home" className="underline">
-          Back to your dashboard
-        </Link>
-      </p>
-    </div>
   );
 }
 

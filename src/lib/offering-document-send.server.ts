@@ -145,8 +145,9 @@ export async function sendDocumentsToInvestors(userId: string, input: { offering
 
 /** Everything sent to the signed-in investor, across their investments. */
 export async function myDocumentInbox(userId: string) {
-  const { data: rows } = await db().from("investor_onboardings").select("id, offering_id").eq("investor_user_id", userId).is("removed_at", null);
-  const list = (rows ?? []) as any[];
+  const { data: rows } = await db().from("investor_onboardings").select("id, offering_id, stage, merged_into_onboarding_id").eq("investor_user_id", userId).is("removed_at", null);
+  // Cancelled, declined or merged records are not live investments and never list documents.
+  const list = ((rows ?? []) as any[]).filter((r) => r.stage !== "cancelled" && r.stage !== "declined" && !r.merged_into_onboarding_id);
   if (!list.length) return [];
   const offeringIds = [...new Set(list.map((r) => r.offering_id))];
   const [{ data: funds }, { data: sends }] = await Promise.all([
@@ -159,6 +160,8 @@ export async function myDocumentInbox(userId: string) {
     const docs = await investorDocuments(userId, r.id).catch(() => []);
     out.push({
       onboardingId: r.id as string,
+      offeringId: r.offering_id as string,
+      closed: r.stage === "closed",
       fundName: (fundName.get(r.offering_id) as string) ?? "Fund",
       documents: docs.map((d: any) => ({ ...d, sentAt: (((sends ?? []) as any[]).find((s) => s.onboarding_id === r.id && s.offering_document_id === d.id)?.sent_at as string) ?? null })),
     });

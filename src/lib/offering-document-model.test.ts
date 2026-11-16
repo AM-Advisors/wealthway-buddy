@@ -180,3 +180,19 @@ describe("template rollout", () => {
     });
   });
 });
+
+describe("closed investments are not asked to sign again", () => {
+  it("an unsent signature request on a closed investment reads No signature on file", async () => {
+    const { closedInvestmentDocumentAction } = await import("./offering-document-model");
+    expect(closedInvestmentDocumentAction("Review & Sign", { closed: true, resignOpen: false, execution: "not_sent" })).toBe("No signature on file");
+  });
+  it("an open re-sign request or a document actually sent keeps its action", async () => {
+    const { closedInvestmentDocumentAction } = await import("./offering-document-model");
+    expect(closedInvestmentDocumentAction("Review & Sign", { closed: true, resignOpen: true, execution: "not_sent" })).toBe("Review & Sign");
+    expect(closedInvestmentDocumentAction("Continue Signing", { closed: true, resignOpen: false, execution: "sent" })).toBe("Continue Signing");
+  });
+  it("an investment that is not closed keeps Review & Sign", async () => {
+    const { closedInvestmentDocumentAction } = await import("./offering-document-model");
+    expect(closedInvestmentDocumentAction("Review & Sign", { closed: false, resignOpen: false, execution: "not_sent" })).toBe("Review & Sign");
+  });
+});
