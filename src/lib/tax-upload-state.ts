@@ -6,15 +6,24 @@ export type TaxUpload = {
   doc_kind: string;
   review_status: string | null;
   file_name: string;
+  prepared_for_person_id?: string | null;
 };
 
-/** Copy acceptance is not tax certification. Only exact-investment evidence is projected. */
-export function pendingTaxUpload(rows: TaxUpload[], investment: { id: string; investment_profile_id: string | null; investor_user_id: string | null }) {
-  if (!investment.investment_profile_id || !investment.investor_user_id) return null;
+/**
+ * Copy acceptance is not tax certification. Only exact-investment evidence is projected:
+ * same investment and investing profile, and the investor's own login, or for a record with
+ * no login yet, the copy prepared for that investment's recorded person (as upload review checks).
+ */
+export function pendingTaxUpload(rows: TaxUpload[], investment: { id: string; investment_profile_id: string | null; investor_user_id: string | null; person_id?: string | null }) {
+  if (!investment.investment_profile_id) return null;
+  const sameParty = (row: TaxUpload) => investment.investor_user_id
+    ? row.user_id === investment.investor_user_id
+    : !!investment.person_id && row.prepared_for_person_id === investment.person_id;
+  if (!investment.investor_user_id && !investment.person_id) return null;
   return rows.find((row) => row.doc_kind === "tax_form"
     && row.onboarding_id === investment.id
     && row.investment_profile_id === investment.investment_profile_id
-    && row.user_id === investment.investor_user_id
+    && sameParty(row)
     && ["new", "accepted", "completed_outside"].includes(row.review_status ?? "new")) ?? null;
 }
 

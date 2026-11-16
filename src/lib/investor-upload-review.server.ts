@@ -15,14 +15,17 @@ export async function uploadReviewContext(userId: string, documentId: string) {
   const { data: row, error } = await d.from("investor_documents").select("id, offering_id, onboarding_id, application_id, investment_profile_id, user_id, prepared_for_person_id, storage_path, file_name, doc_kind, review_status").eq("id", documentId).maybeSingle();
   if (error || !row?.offering_id) throw new Error("That file is not available.");
   const actor = await assertUploadReviewer(userId, row.offering_id);
+  let investorUserId: string | null = row.user_id ?? null;
   if (row.onboarding_id) {
     const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investment_profile_id, investor_user_id, person_id, removed_at").eq("id", row.onboarding_id).maybeSingle();
     if (!ob || ob.removed_at || ob.offering_id !== row.offering_id || (row.investment_profile_id && ob.investment_profile_id !== row.investment_profile_id) || (ob.investor_user_id ? row.user_id !== ob.investor_user_id : row.prepared_for_person_id !== ob.person_id)) throw new Error("This file does not match the recorded investor.");
+    // A record with no login yet stores the uploader in user_id; the investor is the recorded person.
+    investorUserId = ob.investor_user_id ?? null;
   } else if (row.application_id) {
     const { data: app } = await d.from("investor_applications").select("offering_id, user_id").eq("id", row.application_id).maybeSingle();
     if (!app || app.offering_id !== row.offering_id || app.user_id !== row.user_id) throw new Error("This file does not match the recorded investor.");
   } else throw new Error("This file needs a recorded investment before review.");
-  return { d, row, actor };
+  return { d, row, actor, investorUserId };
 }
 
 export async function reviewInvestorUpload(userId: string, input: { id: string; status: "new" | "accepted" | "needs_followup"; note?: string | null | undefined }) {
@@ -55,8 +58,8 @@ export function canCompleteTaxOutside(input: { isStaff: boolean; managesFund: bo
 
 /** Records a signed W-9/W-8 completed outside the platform for this exact investment. The original file is retained. */
 export async function completeTaxFormOutside(userId: string, input: { id: string; note?: string | null | undefined }) {
-  const { d, row, actor } = await uploadReviewContext(userId, input.id);
-  const check = canCompleteTaxOutside({ isStaff: actor.isStaff, managesFund: actor.offeringIds.includes(row.offering_id), actorId: userId, investorUserId: row.user_id, docKind: row.doc_kind, status: row.review_status });
+  const { d, row, actor, investorUserId } = await uploadReviewContext(userId, input.id);
+  const check = canCompleteTaxOutside({ isStaff: actor.isStaff, managesFund: actor.offeringIds.includes(row.offering_id), actorId: userId, investorUserId, docKind: row.doc_kind, status: row.review_status });
   if (!check.ok) throw new Error(check.reason);
   const note = input.note?.trim() || "Signed outside the platform";
   const { data: updated, error } = await d.from("investor_documents").update({ review_status: "completed_outside", review_note: note, reviewed_by: userId, reviewed_at: new Date().toISOString() }).eq("id", row.id).eq("review_status", row.review_status).select("id").maybeSingle();

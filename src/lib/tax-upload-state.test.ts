@@ -41,4 +41,14 @@ describe("uploaded tax-form handoff", () => {
     expect(result.items.find((item) => item.key === "approved_to_fund")?.status).toBe("not_started");
     expect(result.closeReady).toBe(false);
   });
+  it("a W-9 Harmonious uploaded for an investor with no login counts for that investment", () => {
+    const manual = { id: "knutz-investment", investment_profile_id: "knutz-profile", investor_user_id: null, person_id: "knutz-person" };
+    const staffCopy: TaxUpload = { ...copy, onboarding_id: manual.id, investment_profile_id: manual.investment_profile_id, user_id: "staff-uploader", prepared_for_person_id: "knutz-person" };
+    expect(taxStateWithUpload({ state: "missing" }, pendingTaxUpload([staffCopy], manual)).state).toBe("review_required");
+    expect(taxStateWithUpload({ state: "missing" }, pendingTaxUpload([{ ...staffCopy, review_status: "completed_outside" }], manual)).state).toBe("valid");
+  });
+  it("a no-login copy prepared for another person does not count", () => {
+    const manual = { id: "knutz-investment", investment_profile_id: "knutz-profile", investor_user_id: null, person_id: "knutz-person" };
+    expect(pendingTaxUpload([{ ...copy, onboarding_id: manual.id, investment_profile_id: manual.investment_profile_id, user_id: "staff-uploader", prepared_for_person_id: "someone-else" }], manual)).toBeNull();
+  });
 });

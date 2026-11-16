@@ -158,7 +158,7 @@ export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promis
     readIn(obIds, (c) => d.from("investor_certifications").select("onboarding_id, certification_key, certification_version, evidence, created_at").in("onboarding_id", c).order("created_at", { ascending: true })),
     readIn(obIds, (c) => d.from("investor_onboardings").select("id, requested_amount_cents, accepted_amount_cents").in("id", c)),
     readIn(offIds, (c) => d.from("fund_managers").select("offering_id, user_id").in("offering_id", c)),
-    readIn(obIds, (c) => d.from("investor_documents").select("id, onboarding_id, investment_profile_id, user_id, doc_kind, review_status, file_name").in("onboarding_id", c).eq("doc_kind", "tax_form").order("uploaded_at", { ascending: false })),
+    readIn(obIds, (c) => d.from("investor_documents").select("id, onboarding_id, investment_profile_id, user_id, prepared_for_person_id, doc_kind, review_status, file_name").in("onboarding_id", c).eq("doc_kind", "tax_form").order("uploaded_at", { ascending: false })),
   ]);
   const configs = await readIn(setups.map((s) => s.id), (c) => d.from("fund_eligibility_configs").select("setup_id, rules, version").in("setup_id", c).eq("status", "approved").order("version", { ascending: false }));
   const cfgBySetup = groupBy(configs, "setup_id");
@@ -207,7 +207,7 @@ async function coveredRoles(userId: string, offeringId: string, config: any): Pr
 }
 
 export interface Stage2Input {
-  onboarding: { id: string; offering_id: string; investor_user_id: string; investment_profile_id: string | null };
+  onboarding: { id: string; offering_id: string; investor_user_id: string; investment_profile_id: string | null; person_id?: string | null };
   profileType: string | null;
   tax: any;
   person: any;
@@ -399,7 +399,7 @@ async function wordingMap() {
  */
 export async function onboardingPreflight(onboardingId: string, opts: { signatureTemplateReady?: boolean } = {}) {
   const d = await db();
-  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id").eq("id", onboardingId).maybeSingle();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id, person_id").eq("id", onboardingId).maybeSingle();
   if (!ob) fail("Onboarding not found.");
   const { data: profile } = ob.investment_profile_id
     ? await d.from("investment_profiles").select("id, profile_type, legal_name").eq("id", ob.investment_profile_id).maybeSingle()
