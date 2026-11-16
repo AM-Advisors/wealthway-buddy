@@ -131,6 +131,50 @@ async function prefill(context: any, offeringId: string, signer?: { name: string
   return merged;
 }
 
+/** Record whether the first SS-4 email was handed to the email service (separate key from reminders). */
+async function recordSs4Email(db: any, requestId: string, offeringId: string, email: string, actorId: string, delivered: boolean, messageId: string | null) {
+  await db.from("document_reminders").insert({ reminder_key: `ss4-initial:${requestId}`, offering_id: offeringId, document_title: "Form SS-4", recipient_email: email, sent_by: actorId, delivered, message_id: messageId });
+}
+
+type Ss4EmailStatus = { label: string; tone: "good" | "bad" | "neutral"; at: string | null; recipient: string | null; kind: "request" | "reminder" | null };
+
+/** Latest SS-4 email per request, with provider-reported delivery (never assumed). */
+async function ss4EmailStatuses(db: any, requestIds: string[]): Promise<Map<string, Ss4EmailStatus>> {
+  const out = new Map<string, Ss4EmailStatus>();
+  if (!requestIds.length) return out;
+  const keys = requestIds.flatMap((id) => [`ss4-initial:${id}`, `ss4:${id}`]);
+  const { data } = await db.from("document_reminders").select("reminder_key, recipient_email, delivered, message_id, created_at").in("reminder_key", keys).order("created_at", { ascending: false });
+  const latest = new Map<string, any>();
+  for (const r of (data ?? []) as any[]) { const id = String(r.reminder_key).split(":")[1] ?? ""; if (!latest.has(id)) latest.set(id, r); }
+  const { deliveryStatus } = await import("@/lib/investor-emails-model");
+  const apiKey = process.env["LOVABLE_API_KEY"]; const brevoKey = process.env["BREVO_API_KEY"];
+  await Promise.all(requestIds.slice(0, 6).map(async (id) => {
+    const r = latest.get(id);
+    if (!r) return;
+    const kind = String(r.reminder_key).startsWith("ss4-initial:") ? "request" as const : "reminder" as const;
+    const base = { at: r.created_at as string, recipient: r.recipient_email as string, kind };
+    if (!r.delivered) { out.set(id, { ...base, label: "Email not sent", tone: "bad" }); return; }
+    let status: { label: string; tone: "good" | "bad" | "neutral" } = { label: "Sent, no delivery report yet", tone: "neutral" };
+    if (r.message_id && apiKey && brevoKey) {
+      try {
+        const qs = new URLSearchParams({ messageId: r.message_id, limit: "50" });
+        const res = await fetch(`https://connector-gateway.lovable.dev/brevo/smtp/statistics/events?${qs}`, { headers: { Authorization: `Bearer ${apiKey}`, "X-Connection-Api-Key": brevoKey } });
+        if (res.ok) {
+          const evs = (((await res.json()) as any).events ?? []) as any[];
+          const mine = evs.filter((e) => String(e.email ?? "").toLowerCase() === String(r.recipient_email).toLowerCase()).map((e) => ({
+            event: e.event === "requests" ? "request" : e.event === "hardBounces" ? "hard_bounce" : e.event === "softBounces" ? "soft_bounce" : e.event === "clicks" ? "click" : e.event === "invalid" ? "invalid_email" : e.event,
+            at: String(e.date), reason: e.reason ?? null,
+          }));
+          const s = deliveryStatus(mine);
+          status = s.label === "No delivery report yet" ? status : { label: s.label, tone: s.tone };
+        } else console.error(`[ss4] delivery lookup failed [${res.status}]: ${await res.text()}`);
+      } catch (e) { console.error("[ss4] delivery lookup failed", e); }
+    }
+    out.set(id, { ...base, ...status });
+  }));
+  return out;
+}
+
 export const ss4RequestContextFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid().optional() }).parse(d))
@@ -143,6 +187,7 @@ export const ss4RequestContextFn = createServerFn({ method: "POST" })
     const form = await prefill(context, data.offeringId, signer ? { name: signer.name, phone: signer.phone } : undefined);
     const { data: reqs } = await db.from("ss4_signature_requests").select("id, signer_user_id, status, created_at, signed_at, signer_name, signer_title, signed_pdf_path").eq("offering_id", data.offeringId).order("created_at", { ascending: false });
     const names = new Map(managers.map((m) => [m.userId, m.name]));
+    const emails = await ss4EmailStatuses(db, ((reqs ?? []) as any[]).filter((r) => r.status === "requested").map((r) => r.id as string));
     const { setupActor } = await import("@/lib/fund-setup.server");
     return {
       hasEin,
@@ -152,7 +197,7 @@ export const ss4RequestContextFn = createServerFn({ method: "POST" })
       managers: managers.map((m) => ({ userId: m.userId, name: m.name, email: m.email })),
       signerUserId: signer?.userId ?? null,
       form,
-      requests: ((reqs ?? []) as any[]).map((r) => ({ id: r.id as string, signerUserId: r.signer_user_id as string, signer: (names.get(r.signer_user_id) ?? "Former manager") as string, status: r.status as string, createdAt: r.created_at as string, signedAt: (r.signed_at ?? null) as string | null, signedBy: r.signer_name ? `${r.signer_name}${r.signer_title ? `, ${r.signer_title}` : ""}` : null, hasPdf: Boolean(r.signed_pdf_path) })),
+      requests: ((reqs ?? []) as any[]).map((r) => ({ id: r.id as string, signerUserId: r.signer_user_id as string, signer: (names.get(r.signer_user_id) ?? "Former manager") as string, status: r.status as string, createdAt: r.created_at as string, signedAt: (r.signed_at ?? null) as string | null, signedBy: r.signer_name ? `${r.signer_name}${r.signer_title ? `, ${r.signer_title}` : ""}` : null, hasPdf: Boolean(r.signed_pdf_path), email: emails.get(r.id) ?? null })),
     };
   });
 
@@ -180,7 +225,7 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
       try {
         const { data: o } = await db.from("offerings").select("name").eq("id", data.offeringId).maybeSingle();
         const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-        await sendTemplateEmail("manager-alert", signer.email, {
+        const sent = await sendTemplateEmail("manager-alert", signer.email, {
           idempotencyKey: `ss4-request:${row.id}`,
           templateData: {
             managerName: signer.name,
@@ -191,9 +236,11 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
             portalUrl: `${SITE}/manager/ss4/${row.id}`,
           },
         });
-        emailed = true;
+        emailed = sent.sent !== false;
+        await recordSs4Email(db, row.id as string, data.offeringId, signer.email, context.userId, emailed, sent.sent ? sent.messageId ?? null : null);
       } catch (e) {
         console.error("SS-4 request email failed", e);
+        await recordSs4Email(db, row.id as string, data.offeringId, signer.email, context.userId, false, null).catch(() => {});
       }
     }
     return { id: row.id as string, emailed, signerEmail: signer.email, self: false };

@@ -157,7 +157,7 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
         return await resendFn({ data: { requestId: id, overrideReason: reason.trim() } });
       }
     },
-    onSuccess: (r) => { toast.success(`Reminder sent to ${r.signerEmail}.`); },
+    onSuccess: (r) => { toast.success(`Reminder sent to ${r.signerEmail}.`); qc.invalidateQueries({ queryKey: ["ss4-request", fundId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const openPdf = async (id: string) => { try { const r = await pdfFn({ data: { requestId: id } }); if (r.url) window.open(r.url, "_blank", "noopener"); } catch (e) { toast.error((e as Error).message); } };
@@ -208,7 +208,19 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
             <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
               <div>
                 <div className="font-medium">{r.signer}</div>
-                <div className="text-xs text-muted-foreground">Sent {when(r.createdAt)}{r.signedAt ? ` · Signed ${when(r.signedAt)} by ${r.signedBy}` : ""}</div>
+                <div className="text-xs text-muted-foreground">Request created {when(r.createdAt)}{r.signedAt ? ` · Signed ${when(r.signedAt)} by ${r.signedBy}` : ""}</div>
+                {r.status === "requested" && (
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                    {r.email ? (
+                      <>
+                        <Badge variant={r.email.tone === "bad" ? "destructive" : r.email.tone === "good" ? "default" : "outline"}>{r.email.label}</Badge>
+                        <span className="text-muted-foreground">{r.email.kind === "reminder" ? "Latest reminder" : "Email"} to {r.email.recipient} · {when(r.email.at)}</span>
+                      </>
+                    ) : (
+                      <><Badge variant="destructive">No email sent</Badge><span className="text-muted-foreground">Click Send reminder to email it.</span></>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={r.status === "signed" ? "default" : "outline"}>{r.status === "requested" ? "Waiting for signature" : r.status === "signed" ? "Signed" : "Cancelled"}</Badge>
