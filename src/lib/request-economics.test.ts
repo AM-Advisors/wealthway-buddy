@@ -31,5 +31,7 @@ describe("fund request fees → Setup Fees & terms", () => {
     expect(parsePercent("None")).toBe(0);
     expect(parsePercent("")).toBeNull();
     expect(parsePercent("2.5%")).toBe(2.5);
+    expect(parsePercent(".25%")).toBe(0.25);
+    expect(parsePercent("0.25%")).toBe(0.25);
   });
 });

@@ -8,12 +8,13 @@ import { classKey, type EconomicTerms, type FundClass } from "@/lib/fund-setup-c
 
 export type FeeAnswers = { managementFeePct: number | null; carryPct: number | null; hurdlePct: number | null; basis?: string | null };
 
-/** "2%", "2.5", "None", "Not applicable" → number, 0 or null (unknown/blank). */
+/** "2%", "2.5", ".25%", "None", "Not applicable" → number, 0 or null (unknown/blank). */
 export function parsePercent(v: string | null | undefined): number | null {
   const s = String(v ?? "").trim();
   if (!s) return null;
   if (/^(none|n\/?a|not applicable|0)$/i.test(s)) return 0;
-  const m = s.match(/-?\d+(?:\.\d+)?/);
+  // A leading decimal point counts: ".25%" is 0.25, never 25.
+  const m = s.match(/-?(?:\d+(?:\.\d+)?|\.\d+)/);
   return m ? Number(m[0]) : null;
 }
 const notApplicableText = (v: string | null | undefined) => /^(none|n\/?a|not applicable)$/i.test(String(v ?? "").trim());
