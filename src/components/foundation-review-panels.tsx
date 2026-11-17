@@ -16,7 +16,8 @@ import {
   requestFoundationRelease, reviewFoundationDocument, reviewFoundationSubmission,
 } from "@/lib/foundation-onboarding.functions";
 import { setFoundationFlag } from "@/lib/foundation-admin.functions";
-import { AUTHORITY_ROLES } from "@/lib/foundation-admin-model";
+import { AUTHORITY_ROLES, CAPABILITY_LABELS, type Capability } from "@/lib/foundation-admin-model";
+import { exemptionReleaseEvidence } from "@/lib/foundation-exemption-model";
 import { CLIENT_FACT_FIELDS } from "@/lib/foundation-onboarding-model";
 import { FOUNDATION_FLAGS, REQUIRED_EVIDENCE, RELEASE_EVIDENCE, type FoundationFlagKey, type ReleaseDimension, type ReleaseEvidenceInput } from "@/lib/foundation-release-model";
 import { OWNERSHIP_NOTE } from "@/lib/foundation-verification-model";
@@ -222,13 +223,14 @@ export function FoundationReleaseControls() {
           <thead><tr className="text-left text-muted-foreground"><th className="py-2 pr-3">Component</th><th className="py-2 pr-3">What's built</th><th className="py-2 pr-3">Delivery readiness</th><th className="py-2">Commercial release</th></tr></thead>
           <tbody>{(d.components as any[]).map((c) => (
             <tr key={c.key} className="border-t align-top"><td className="py-2 pr-3 text-base font-medium">{c.name}</td>
-              <td className="py-2 pr-3"><span>{c.capability === "partial" ? "Partly built" : c.capability === "not_built" ? "Not built yet" : "Blocked until foundation accounting is validated"}</span>{c.missing.length > 0 && <p className="text-xs text-muted-foreground">Missing: {c.missing.join("; ")}</p>}</td>
+              <td className="py-2 pr-3"><span>{CAPABILITY_LABELS[c.capability as Capability] ?? c.capability}</span>{c.missing.length > 0 && <p className="text-xs text-muted-foreground">Missing: {c.missing.join("; ")}</p>}</td>
               <td className="py-2 pr-3">{dimCell(c, "delivery")}</td><td className="py-2">{dimCell(c, "commercial")}</td></tr>))}</tbody>
         </table></div>
         {form && (
           <div className="space-y-3 rounded-md border p-4">
             <h4 className="font-semibold">Request {form.dimension === "commercial" ? "commercial release" : "delivery readiness"}: {(d.components as any[]).find((c) => c.key === form.component)?.name}</h4>
             <p className="text-sm text-muted-foreground">Record where each piece of evidence lives (document, decision or test run) and who approved it. Every item is required.</p>
+            {form.component === "exemption_application" && <div className="rounded-md bg-muted/40 p-3 text-sm"><p>A starting draft describing the built Form 1023 workflow is available. Check every line against what you actually reviewed before requesting.</p><Button className="mt-2" size="sm" variant="outline" onClick={() => setEv({ ...exemptionReleaseEvidence(form.dimension), ...Object.fromEntries(Object.entries(ev).filter(([, v]) => (v ?? "").trim())) })}>Fill in the starting draft</Button></div>}
             {REQUIRED_EVIDENCE[form.dimension].map((k) => <div key={k} className="space-y-1"><Label htmlFor={`rel-${k}`}>{RELEASE_EVIDENCE[k]}</Label><Textarea id={`rel-${k}`} rows={2} value={ev[k] ?? ""} onChange={(e) => setEv({ ...ev, [k]: e.target.value })} /></div>)}
             <div className="space-y-1"><Label htmlFor="rel-reason">Reason</Label><Input id="rel-reason" value={reason} onChange={(e) => setReason(e.target.value)} /></div>
             <div className="flex gap-2"><Button disabled={request.isPending} onClick={() => { if (window.confirm("Send this release request for approval?")) request.mutate(); }}>Request release</Button><Button variant="ghost" onClick={() => setForm(null)}>Cancel</Button></div>

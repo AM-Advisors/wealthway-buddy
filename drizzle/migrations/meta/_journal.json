@@ -2843,6 +2843,13 @@
       "when": 1794954383948,
       "tag": "0405_foundation_line_pending_details",
       "breakpoints": true
+    },
+    {
+      "idx": 406,
+      "version": "7",
+      "when": 1794957739025,
+      "tag": "0406_foundation_exemption_workflow",
+      "breakpoints": true
     }
   ]
 }

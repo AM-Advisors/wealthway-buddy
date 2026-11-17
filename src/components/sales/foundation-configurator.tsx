@@ -10,13 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getQuoteFoundationOptions } from "@/lib/foundation-admin.functions";
 import {
-  FOUNDATION_COMPONENTS, FOUNDATION_ROLE_DISCLAIMER, FOUNDATION_SOW_TERMS, componentByKey, foundationLineLabel, foundationServiceKey, priceFoundationLine,
+  CAPABILITY_LABELS, FOUNDATION_COMPONENTS, FOUNDATION_ROLE_DISCLAIMER, FOUNDATION_SOW_TERMS, componentByKey, foundationLineLabel, foundationServiceKey, priceFoundationLine,
   type ComponentKey, type FoundationLineInput,
 } from "@/lib/foundation-admin-model";
 import type { QuoteLineInput } from "@/lib/sales-model";
 import { money } from "@/components/sales/sales-ui";
 
-const CAPABILITY_LABEL = { partial: "Partly built", not_built: "Not built yet", blocked_by_existing_gate: "Blocked until foundation accounting is validated" } as const;
+const CAPABILITY_LABEL = CAPABILITY_LABELS;
 const lines = (v: string) => v.split("\n").map((s) => s.trim()).filter(Boolean);
 const PLANNED = "__planned";
 const todayIso = () => new Date().toISOString().slice(0, 10);

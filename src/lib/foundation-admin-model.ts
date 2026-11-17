@@ -93,7 +93,8 @@ export function holdsAuthority(rows: readonly AuthorityRow[], personId: string, 
 
 export type ComponentKey = "onboarding_setup" | "governance_admin" | "bookkeeping_reporting" | "contributions_restrictions" | "grant_administration" | "annual_compliance"
   | "formation_planning" | "formation_incorporation" | "formation_governing_documents" | "exemption_application" | "state_registrations" | "operating_reporting";
-export type Capability = "partial" | "not_built" | "blocked_by_existing_gate";
+export type Capability = "built" | "partial" | "not_built" | "blocked_by_existing_gate";
+export const CAPABILITY_LABELS: Record<Capability, string> = { built: "Built, waiting for release", partial: "Partly built", not_built: "Not built yet", blocked_by_existing_gate: "Blocked until foundation accounting is validated" };
 
 export type FoundationComponent = {
   key: ComponentKey; name: string; cadence: "one_time" | "recurring"; summary: string;
@@ -200,7 +201,7 @@ export const FOUNDATION_COMPONENTS: readonly FoundationComponent[] = [
     included: ["Form 1023-EZ eligibility review", "Monitoring the application and organizing IRS questions"],
     excluded: ["Signing or submitting Form 1023: an authorized officer signs and submits", "Any promise of IRS approval or timing", "IRS user fee, billed at cost with no markup"],
     harmoniousDuties: ["Prepare the application and draft responses for the board to approve"],
-    readiness: { released: false, capability: "not_built", available: [], missing: ["Exemption application workflow and IRS correspondence tracking"] },
+    readiness: { released: false, capability: "built", available: ["Form 1023 tab: form choice with the 1023-EZ screen", "Prerequisite checklist", "Board approval and officer submission records", "IRS letter log with due dates and Operations tasks", "Determination letter updates the exemption status"], missing: [] },
   },
   {
     key: "state_registrations", group: "formation", name: "State charity, tax exemption and local registrations", cadence: "one_time",

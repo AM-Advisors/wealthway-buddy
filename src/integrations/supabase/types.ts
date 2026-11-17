@@ -20192,6 +20192,246 @@ export type Database = {
           },
         ]
       }
+      foundation_exemption_applications: {
+        Row: {
+          board_approved_on: string | null
+          board_approver_person_id: string | null
+          board_evidence_document_id: string | null
+          board_note: string | null
+          closed_note: string | null
+          closed_on: string | null
+          confirmation_ref: string | null
+          created_at: string
+          created_by: string
+          determination_document_id: string | null
+          determination_letter_on: string | null
+          draft_document_id: string | null
+          exemption_effective_on: string | null
+          ez_screen: Json
+          form: string | null
+          foundation_profile_id: string
+          id: string
+          outcome: string | null
+          projections_document_id: string | null
+          stage: string
+          submitted_by_person_id: string | null
+          submitted_on: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          board_approved_on?: string | null
+          board_approver_person_id?: string | null
+          board_evidence_document_id?: string | null
+          board_note?: string | null
+          closed_note?: string | null
+          closed_on?: string | null
+          confirmation_ref?: string | null
+          created_at?: string
+          created_by: string
+          determination_document_id?: string | null
+          determination_letter_on?: string | null
+          draft_document_id?: string | null
+          exemption_effective_on?: string | null
+          ez_screen?: Json
+          form?: string | null
+          foundation_profile_id: string
+          id?: string
+          outcome?: string | null
+          projections_document_id?: string | null
+          stage?: string
+          submitted_by_person_id?: string | null
+          submitted_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          board_approved_on?: string | null
+          board_approver_person_id?: string | null
+          board_evidence_document_id?: string | null
+          board_note?: string | null
+          closed_note?: string | null
+          closed_on?: string | null
+          confirmation_ref?: string | null
+          created_at?: string
+          created_by?: string
+          determination_document_id?: string | null
+          determination_letter_on?: string | null
+          draft_document_id?: string | null
+          exemption_effective_on?: string | null
+          ez_screen?: Json
+          form?: string | null
+          foundation_profile_id?: string
+          id?: string
+          outcome?: string | null
+          projections_document_id?: string | null
+          stage?: string
+          submitted_by_person_id?: string | null
+          submitted_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_exemption_applicatio_board_evidence_document_id_fkey"
+            columns: ["board_evidence_document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_exemption_application_determination_document_id_fkey"
+            columns: ["determination_document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_exemption_applications_draft_document_id_fkey"
+            columns: ["draft_document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_exemption_applications_foundation_profile_id_fkey"
+            columns: ["foundation_profile_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_exemption_applications_projections_document_id_fkey"
+            columns: ["projections_document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_exemption_events: {
+        Row: {
+          actor_id: string | null
+          application_id: string
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          application_id: string
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          application_id?: string
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_exemption_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_exemption_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foundation_irs_correspondence: {
+        Row: {
+          application_id: string
+          approved_on: string | null
+          approver_person_id: string | null
+          closed_reason: string | null
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          letter_document_id: string | null
+          received_on: string
+          responded_on: string | null
+          response_document_id: string | null
+          response_due_on: string | null
+          sent_by_person_id: string | null
+          status: string
+          summary: string
+          task_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          application_id: string
+          approved_on?: string | null
+          approver_person_id?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          kind: string
+          letter_document_id?: string | null
+          received_on: string
+          responded_on?: string | null
+          response_document_id?: string | null
+          response_due_on?: string | null
+          sent_by_person_id?: string | null
+          status?: string
+          summary: string
+          task_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          application_id?: string
+          approved_on?: string | null
+          approver_person_id?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          letter_document_id?: string | null
+          received_on?: string
+          responded_on?: string | null
+          response_document_id?: string | null
+          response_due_on?: string | null
+          sent_by_person_id?: string | null
+          status?: string
+          summary?: string
+          task_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_irs_correspondence_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_exemption_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_irs_correspondence_letter_document_id_fkey"
+            columns: ["letter_document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_irs_correspondence_response_document_id_fkey"
+            columns: ["response_document_id"]
+            isOneToOne: false
+            referencedRelation: "foundation_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       foundation_profile_events: {
         Row: {
           actor_id: string | null

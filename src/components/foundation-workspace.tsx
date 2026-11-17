@@ -18,10 +18,11 @@ import {
   startFoundationHandoff, storeFoundationTaxId, uploadFoundationDocument,
 } from "@/lib/foundation-admin.functions";
 import {
-  AUTHORITY_ROLES, AUTHORITY_SCOPES, CLASSIFICATIONS, EXEMPTION_STATUSES, FOUNDATION_COMPONENTS, FOUNDATION_ROLE_DISCLAIMER,
+  AUTHORITY_ROLES, AUTHORITY_SCOPES, CAPABILITY_LABELS, CLASSIFICATIONS, EXEMPTION_STATUSES, FOUNDATION_COMPONENTS, FOUNDATION_ROLE_DISCLAIMER,
   LEGAL_STRUCTURES, RETAINED_RESPONSIBILITIES, authorityProblem, type AuthorityScope, type ComponentKey,
 } from "@/lib/foundation-admin-model";
 import { money } from "@/components/sales/sales-ui";
+import { FoundationExemptionPanel } from "@/components/foundation-exemption-panel";
 import { FoundationReleaseControls, FoundationReviewPanel, FoundationSwitches, FoundationVerificationPanel } from "@/components/foundation-review-panels";
 import { FundPersonPicker, type PickPerson } from "@/components/fund-person-picker";
 import { ReviewStateBadge } from "@/components/admin-review";
@@ -32,7 +33,7 @@ const pickPeople = (people: any[]): PickPerson[] => people.map((p) => { const v 
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOC_KINDS = { governing_document: "Governing document", determination_letter: "Determination letter", authority_evidence: "Authority evidence", supporting_evidence: "Supporting evidence" } as const;
-const CAPABILITY = { partial: "Partly built", not_built: "Not built yet", blocked_by_existing_gate: "Blocked until foundation accounting is validated" } as const;
+const CAPABILITY = CAPABILITY_LABELS;
 const label = <T extends Record<string, string>>(o: T, k: string | null | undefined) => (k && k in o ? o[k as keyof T] : "Not recorded");
 const errMsg = (e: unknown) => toast.error((e as Error).message);
 
@@ -132,6 +133,7 @@ function FoundationCard({ clientId, f, people, canEdit }: { clientId: string; f:
             <TabsTrigger value="people">People and authority</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="services">Services, quotes and agreements</TabsTrigger>
+            <TabsTrigger value="exemption">Form 1023</TabsTrigger>
             <TabsTrigger value="tasks">Tasks and deadlines</TabsTrigger>
             <TabsTrigger value="review">Client submissions</TabsTrigger>
             <TabsTrigger value="verification">Verification</TabsTrigger>
@@ -140,6 +142,7 @@ function FoundationCard({ clientId, f, people, canEdit }: { clientId: string; f:
           <TabsContent value="people"><People clientId={clientId} f={f} people={people} canEdit={canEdit} /></TabsContent>
           <TabsContent value="documents"><Documents clientId={clientId} f={f} canEdit={canEdit} /></TabsContent>
           <TabsContent value="services"><Services f={f} /></TabsContent>
+          <TabsContent value="exemption"><FoundationExemptionPanel clientId={clientId} profileId={f.profile.id} canEdit={canEdit} /></TabsContent>
           <TabsContent value="tasks"><Tasks clientId={clientId} f={f} canEdit={canEdit} /></TabsContent>
           <TabsContent value="review"><FoundationReviewPanel profileId={f.profile.id} clientId={clientId} /></TabsContent>
           <TabsContent value="verification"><FoundationVerificationPanel profileId={f.profile.id} /></TabsContent>

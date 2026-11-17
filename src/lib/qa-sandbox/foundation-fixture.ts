@@ -5,6 +5,7 @@
 import { annualReturnReferenceDate, authorityProblem, foundationHandoffTasks, FOUNDATION_COMPONENTS, type ComponentKey } from "@/lib/foundation-admin-model";
 import { CLIENT_FACT_FIELDS, clientFactsSchema, onboardingChecklist, personRequestSchema, proposedChanges, reviewProblem, type FactChange } from "@/lib/foundation-onboarding-model";
 import { clientVerificationView, foundationRequirements, verificationSummary } from "@/lib/foundation-verification-model";
+import { QA_EXEMPTION_FNS, handleQaExemptionCall } from "./foundation-exemption-fixture";
 import { PROTECTED_FINANCIAL, RELEASE_DIMENSIONS, RELEASE_EVIDENCE, REQUIRED_EVIDENCE, releaseRequestProblem, releaseState } from "@/lib/foundation-release-model";
 
 export const QA_FOUNDATION_CLIENT = "f0000000-0000-4000-8000-0000000000c1";
@@ -21,6 +22,7 @@ export const QA_FOUNDATION_FNS = [
   "getFoundationReleaseControls", "requestFoundationRelease", "decideFoundationRelease",
   "getClientFoundationAvailability", "getClientFoundations", "submitClientFoundationFacts", "requestClientFoundationPerson", "uploadClientFoundationDocument",
   "openClientFoundationDocument", "markClientFoundationReady", "withdrawClientFoundationSubmission",
+  ...QA_EXEMPTION_FNS,
 ] as const;
 
 /** Fictional actors: the sandbox staff reviewer and a separate fictional client member, so maker-checker shows. */
@@ -69,6 +71,7 @@ function log(s: QaFoundation, profileId: string, event: string) {
 }
 
 export function handleQaFoundationCall(fn: string, data: any, s: QaFoundation): unknown {
+  if ((QA_EXEMPTION_FNS as readonly string[]).includes(fn)) return handleQaExemptionCall(fn, data, s, { usable: (st, d) => docView(st as QaFoundation, d).usable, people: PEOPLE, log: (st, id, e) => log(st as QaFoundation, id, e) });
   const profile = (id: string) => { const p = s.profiles.find((x) => x.id === id); if (!p) throw new Error("Foundation not found."); return p; };
   switch (fn) {
     case "getFoundationFlagState": return { enabled: true, flags: FLAGS, canToggle: false, show: true };

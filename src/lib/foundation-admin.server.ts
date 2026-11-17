@@ -47,7 +47,7 @@ export async function actor(db: any, userId: string) {
   return { roles, capabilities: capabilities as string[], memberClientIds: ((members ?? []) as any[]).map((m) => m.client_id as string), superAdmin: roles.includes("super_admin") };
 }
 
-async function authorize(db: any, userId: string, clientId: string, write: boolean) {
+export async function authorize(db: any, userId: string, clientId: string, write: boolean) {
   const a = await actor(db, userId);
   const problem = foundationAccessProblem({ ...a, clientId, write });
   if (problem) throw new Error(problem);
