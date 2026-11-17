@@ -83,7 +83,7 @@ function ReadinessHeader({ r, title, subtitle, action }: { r: any; title: string
 }
 
 
-export function AttentionNeeded({ r, viewer, onOpenItem, onOpenAccreditation, fundingApprovalAction }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined; onOpenAccreditation?: (() => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
+export function AttentionNeeded({ r, viewer, onOpenItem, onOpenAccreditation, fundingApprovalAction }: { r: any; viewer: Viewer; onOpenItem?: ((key: string, owner?: string | null) => void) | undefined; onOpenAccreditation?: (() => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   const list = blockersOf(r);
   if (!list.length || r.terminal) return null;
   return (
@@ -100,7 +100,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem, onOpenAccreditation, fu
               <p className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</p>
               {viewer !== "investor" && waitingDetail(i, r.items) ? <p className="break-words text-xs text-muted-foreground" data-testid="waiting-detail">{waitingDetail(i, r.items)}</p> : null}
             </div>
-            {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : i.key === "accreditation" && onOpenAccreditation ? <Button variant="outline" size="sm" className="w-full" onClick={onOpenAccreditation}>{openLabelFor(i.key, i.owner)}</Button> : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
+            {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : i.key === "accreditation" && onOpenAccreditation ? <Button variant="outline" size="sm" className="w-full" onClick={onOpenAccreditation}>{openLabelFor(i.key, i.owner)}</Button> : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key, i.owner)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
         ))}
       </ul>
@@ -188,7 +188,7 @@ function AuditDetails({ r }: { r: any }) {
   );
 }
 
-export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem, onOpenAccreditation, fundingApprovalAction }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string) => void) | undefined; onOpenAccreditation?: (() => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
+export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem, onOpenAccreditation, fundingApprovalAction }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string, owner?: string | null) => void) | undefined; onOpenAccreditation?: (() => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
   return (
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
@@ -214,7 +214,7 @@ function Empty({ title, body, icon }: { title: string; body: string; icon?: Reac
 }
 
 /** Investor / manager / staff view of one Investment's canonical checklist. */
-export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, onOpenAccreditation, providedData, fundingApprovalAction }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined; onOpenAccreditation?: () => void; providedData?: { readiness: any; viewer: "staff"; fundName: string; profileLabel: string | null }; fundingApprovalAction?: React.ReactNode }) {
+export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, onOpenAccreditation, providedData, fundingApprovalAction }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string, owner?: string | null) => void) | undefined; onOpenAccreditation?: () => void; providedData?: { readiness: any; viewer: "staff"; fundName: string; profileLabel: string | null }; fundingApprovalAction?: React.ReactNode }) {
   const load = useServerFn(investmentReadinessFn);
   const loadAs = useServerFn(viewAsInvestmentFn);
   // In View As the server resolves the investment from the live perspective; no ID is sent.

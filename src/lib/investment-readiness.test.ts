@@ -177,4 +177,12 @@ describe("blocked issue reason", () => {
     expect((readinessView(r, "investor").items.find((i: any) => i.key === "exceptions") as any).reason).toBeUndefined();
     expect((readinessView(r, "manager").items.find((i: any) => i.key === "exceptions") as any).reason).toBeUndefined();
   });
+  it("signed tax form on file: tax classification moves off the investor", () => {
+    const base = reqs();
+    const set = (taxDoc: string) => base.map((r: any) => r.key === "tax_classification" ? { ...r, state: "missing" } : r.key === "tax_documentation" ? { ...r, state: taxDoc } : r);
+    const withForm = item(computeReadiness(input({}, set("valid") as any)), "tax_classification");
+    expect(withForm).toBeTruthy(); { expect(withForm.owner).toBe("harmonious"); expect(withForm.status).toBe("needs_harmonious"); }
+    const noForm = item(computeReadiness(input({}, set("missing") as any)), "tax_classification");
+    expect(noForm.owner).toBe("investor");
+  });
 });

@@ -7,4 +7,8 @@ describe("readiness open targets", () => {
   it("wire matching goes to banking", () => expect(openTargetFor("funding")).toEqual({ kind: "fund", area: "banking" }));
   it("approve to fund stays on overview", () => expect(openTargetFor("approved_to_fund")).toEqual({ kind: "tab", tab: "overview" }));
   it("acceptance goes to operations onboarding", () => expect(openTargetFor("acceptance").kind).toBe("ops_onboarding"));
+  it("signed tax form on file: classification opens the copy, never re-sends", () => {
+    expect(openTargetFor("tax_classification", "harmonious")).toEqual({ kind: "tab", tab: "documents" });
+    expect(openTargetFor("tax_classification", "investor")).toEqual({ kind: "action", action: "send_tax_form" });
+  });
 });

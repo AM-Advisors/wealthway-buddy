@@ -289,6 +289,16 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
       automatic: true,
     });
   }
+  // A signed tax form already on file (online, accepted upload or outside-platform) states the tax status;
+  // the investor is never asked to sign again. Someone confirms the status from that form instead.
+  const taxDocDone = items.some((i) => i.key === "tax_documentation" && i.status === "complete");
+  const cls = items.find((i) => i.key === "tax_classification");
+  if (cls && taxDocDone && cls.status === "needs_investor") {
+    cls.status = "needs_harmonious";
+    cls.owner = "harmonious";
+    cls.action = "Confirm tax status from the signed tax form";
+    cls.reason = "Signed W-9 or W-8 is on file. Record the tax status shown on it.";
+  }
   const blockingEx = input.exceptions.filter((e) => e.severity === "blocking");
   const preFunding = items.filter((i) => STAGE_DEPENDS.funding.includes(i.stage));
   const preFundingDone = preFunding.length > 0 && preFunding.every((i) => i.status === "complete" || i.status === "not_applicable");

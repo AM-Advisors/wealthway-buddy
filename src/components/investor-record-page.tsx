@@ -80,8 +80,8 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   if (error || !data) return <p className="text-sm text-destructive">{(error as Error)?.message ?? "Investor not found."}</p>;
   const staff = data.viewer === "staff";
   const p = data.person; const inv = data.investment as any;
-  const openItem = async (key: string) => {
-    const t = openTargetFor(key);
+  const openItem = async (key: string, owner?: string | null) => {
+    const t = openTargetFor(key, owner);
     if (t.kind === "review") { setTab("overview"); return; }
     if (t.kind === "tab") { setTab(t.tab); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); return; }
     if (t.kind === "fund") {

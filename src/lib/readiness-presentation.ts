@@ -57,6 +57,7 @@ const done = (items: any[], key: string) => items.some((x) => x.key === key && (
 
 /** Action wording that avoids implying the questionnaire is open when it was already submitted. */
 export function actionText(i: any, items: any[] = []): string {
+  if (i.key === "tax_classification" && done(items, "tax_documentation")) return "Confirm tax status from the signed tax form";
   if (i.key === "tax_classification" && done(items, "subscription_questionnaire")) return "Confirm tax status on the tax form";
   return i.action ?? i.label;
 }
@@ -72,7 +73,8 @@ export function waitingDetail(i: any, items: any[] = []): string | null {
   switch (i.key) {
     case "accreditation": return i.status === "needs_harmonious" ? "Accreditation verification awaiting review" : i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed";
     case "tax_documentation": return "Investor signs the W-9 or W-8 online, or staff uploads a signed copy";
-    case "tax_classification": return qDone ? "Questionnaire is complete. Tax status is confirmed when the W-9 or W-8 is signed" : "Tax status questions in the questionnaire not answered yet";
+    case "tax_classification": if (taxDone) return "Signed W-9 or W-8 is on file. Harmonious or the fund manager records the tax status shown on it";
+      return qDone ? "Questionnaire is complete. Tax status is confirmed when the W-9 or W-8 is signed" : "Tax status questions in the questionnaire not answered yet";
     case "subscription_questionnaire": return "Questionnaire not submitted yet";
     case "bsa_aml": return qDone ? "Financial background answers still missing in the questionnaire" : "Financial background questions in the questionnaire not answered yet";
     case "certifications": return "Investor confirms the final certifications before signing";

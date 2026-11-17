@@ -305,7 +305,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   );
 }
 
-export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, initialAccreditationReview = false }: { fundId: string; id: string | null; embedded?: boolean; onOpenItem?: (key: string) => void; initialAccreditationReview?: boolean }) {
+export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, initialAccreditationReview = false }: { fundId: string; id: string | null; embedded?: boolean; onOpenItem?: (key: string, owner?: string | null) => void; initialAccreditationReview?: boolean }) {
   const [reviewTab, setReviewTab] = useState(initialAccreditationReview ? "documents" : "details");
   const [reviewRequest, setReviewRequest] = useState(initialAccreditationReview ? 1 : 0);
   const accreditationRef = useRef<HTMLElement>(null);

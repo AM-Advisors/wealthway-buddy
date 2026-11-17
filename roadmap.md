@@ -1171,3 +1171,8 @@
 ## SS-4 send and add fund choices (2026-11-16)
 - [x] Confirm Send SS-4 to a manager works for 4D Snoretox and reaches Jason Goldenberg
 - [x] Confirm the add fund page keeps choices made at the start through to the end
+
+## W-9 / forms / questionnaires (Nov 17 plan)
+- [x] Signed tax form on file stops asking investor for tax status; button opens the form
+- [ ] Read uploaded W-9/W-8 (then IDs, entity docs) and suggest details for confirmation
+- [ ] Investor questions: Harmonious Template vs Custom, client questionnaire library
