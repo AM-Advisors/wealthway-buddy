@@ -235,10 +235,15 @@ function fundingItem(input: ReadinessInput, preFundingDone: boolean, blockingExc
   const approval: ReadinessItem = {
     ...base,
     key: "approved_to_fund",
-    label: "Approved to receive funding instructions",
+    label: isReconciledFunding(String(input.fundingStatus ?? "")) && !approved ? "Fund manager approval" : "Approved to receive funding instructions",
     source: REQUIREMENT_SOURCE["approved_to_fund"]!,
     ...(approved
       ? { status: "complete" as const, owner: null, action: null }
+      : isReconciledFunding(String(input.fundingStatus ?? ""))
+        // Money already arrived: wire instructions are moot. Admission still needs the manager's approval.
+        ? (!preFundingDone
+          ? { status: "not_started" as const, owner: null, action: null, reason: "Capital already received; wire instructions not needed. Manager approves once earlier steps are done." }
+          : { status: "needs_fund_manager" as const, owner: "fund_manager" as const, action: "Fund manager: approve investor", reason: "Capital already received; wire instructions not needed." })
       : !preFundingDone
         ? { status: "not_started" as const, owner: null, action: null, reason: "Earlier steps must be complete first." }
         : blockingExceptions > 0
@@ -325,7 +330,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     ...((input.acceptedAt && (input.acceptedAmountCents ?? 0) > 0) || input.priorSubscription
       ? { status: "complete" as const, owner: null, action: null }
       : funded
-        ? { status: "needs_harmonious" as const, owner: "harmonious" as const, action: "Accept subscription" }
+        ? { status: "needs_harmonious" as const, owner: "harmonious" as const, action: "Accept & admit" }
         : { status: "not_started" as const, owner: null, action: null }),
   });
   if (input.closeAmountCents != null) {

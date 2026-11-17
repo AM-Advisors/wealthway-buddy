@@ -34,7 +34,16 @@ export function AcceptCloseCard({ onboardingId }: { onboardingId: string }) {
     },
     onError: err,
   });
-  const accept = useMutation({ mutationFn: () => acceptFn({ data: { onboardingId, signerName: signer.trim(), capacity: capacity.trim() } }), onSuccess: () => { toast.success("Subscription accepted."); refresh(); }, onError: err });
+  // One action: record acceptance (if not yet) and admit. Server gates on close stay authoritative.
+  const accept = useMutation({
+    mutationFn: async () => {
+      await acceptFn({ data: { onboardingId, signerName: signer.trim(), capacity: capacity.trim() } });
+      try { await closeFn({ data: { onboardingId } }); return { closed: true }; }
+      catch (e) { return { closed: false, reason: String((e as Error)?.message ?? e) }; }
+    },
+    onSuccess: (r) => { if (r.closed) toast.success("Accepted and admitted."); else toast.warning(`Accepted. Not admitted yet: ${r.reason}`); refresh(); },
+    onError: (e) => { err(e); refresh(); },
+  });
   const close = useMutation({ mutationFn: () => closeFn({ data: { onboardingId } }), onSuccess: () => { toast.success("Investment closed and admitted."); refresh(); }, onError: err });
 
   const o: any = (q.data as any)?.onboarding;
@@ -47,12 +56,11 @@ export function AcceptCloseCard({ onboardingId }: { onboardingId: string }) {
 
   return (
     <Card className="md:col-span-2">
-      <CardHeader><CardTitle className="text-base">Accept & close investment</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">Accept & admit investor</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-2">
           <Badge variant={funded ? "default" : "outline"}>{funded ? "Funds reconciled" : "Funds not reconciled"}</Badge>
-          <Badge variant={accepted ? "default" : "outline"}>{accepted ? "Accepted" : "Not accepted"}</Badge>
-          <Badge variant={closed ? "default" : "outline"}>{closed ? "Closed" : "Not closed"}</Badge>
+          <Badge variant={closed ? "default" : "outline"}>{closed ? "Admitted" : "Not admitted"}</Badge>
           <span className="text-muted-foreground">Received {money(o.funded_amount_cents)} of {money(o.accepted_amount_cents ?? o.requested_amount_cents)}</span>
         </div>
 
@@ -79,13 +87,13 @@ export function AcceptCloseCard({ onboardingId }: { onboardingId: string }) {
           )}
         </div>
 
-        {closed ? <p className="text-muted-foreground">This investment is closed and admitted.</p> : !funded ? <p className="text-muted-foreground">{unmatched.length ? "Match the wire above, then accept and close here." : "Once the wire is matched, accept and close here."}</p> : !accepted ? <>
+        {closed ? <p className="text-muted-foreground">This investment is closed and admitted.</p> : !funded ? <p className="text-muted-foreground">{unmatched.length ? "Match the wire above, then accept & admit here." : "Once the wire is matched, accept & admit here."}</p> : !accepted ? <>
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label htmlFor="acc-signer">Accepting signer</Label><Input id="acc-signer" value={signer} onChange={(e) => setSigner(e.target.value)} /></div>
             <div><Label htmlFor="acc-cap">Capacity</Label><Input id="acc-cap" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="General Partner" /></div>
           </div>
-          <Button disabled={accept.isPending || signer.trim().length < 2 || capacity.trim().length < 2} onClick={() => accept.mutate()}>{accept.isPending ? "Accepting…" : "Accept subscription"}</Button>
-        </> : <Button disabled={close.isPending} onClick={() => close.mutate()}>{close.isPending ? "Closing…" : "Close and admit"}</Button>}
+          <Button disabled={accept.isPending || signer.trim().length < 2 || capacity.trim().length < 2} onClick={() => accept.mutate()}>{accept.isPending ? "Admitting…" : "Accept & admit"}</Button>
+        </> : <Button disabled={close.isPending} onClick={() => close.mutate()}>{close.isPending ? "Admitting…" : "Admit investor"}</Button>}
       </CardContent>
     </Card>
   );

@@ -59,8 +59,6 @@ export function InvestorOnboardingOps() {
       onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
     });
 
-  const accept = act(acceptFn, "Subscription accepted.");
-  const close = act(closeFn, "Investment closed and admitted.");
   const raise = act(raiseFn, "Issue raised.");
   const resolve = act(resolveFn, "Issue resolved.");
 
@@ -217,16 +215,18 @@ export function InvestorOnboardingOps() {
               <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={signer.trim().length < 2 || capacity.trim().length < 2}
-                  onClick={() =>
-                    accept.mutate({
-                      data: { onboardingId: selected, signerName: signer.trim(), capacity: capacity.trim() },
-                    })
-                  }
+                  onClick={async () => {
+                    try {
+                      if (!d.onboarding?.accepted_at) await acceptFn({ data: { onboardingId: selected, signerName: signer.trim(), capacity: capacity.trim() } });
+                      await closeFn({ data: { onboardingId: selected } });
+                      toast.success("Accepted and admitted.");
+                    } catch (e: any) {
+                      toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, ""));
+                    }
+                    refresh();
+                  }}
                 >
-                  Accept subscription
-                </Button>
-                <Button variant="secondary" onClick={() => close.mutate({ data: { onboardingId: selected } })}>
-                  Close and admit
+                  Accept & admit
                 </Button>
               </div>
 

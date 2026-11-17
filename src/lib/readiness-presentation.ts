@@ -91,7 +91,7 @@ export function waitingDetail(i: any, items: any[] = []): string | null {
     case "account": return "Investor has not created a login yet";
     case "approved_to_fund": return "Fund manager approves the subscription to release wire instructions";
     case "funding": return i.status === "needs_harmonious" ? (i.reason ?? "Incoming wire waiting to be reconciled") : "Waiting for the investor to send funds";
-    case "acceptance": return "Funds received; subscription waiting to be accepted";
+    case "acceptance": return "Funds received; ready to accept & admit";
   }
   if (i.action === "Prepare subscription documents") return taxDone ? "Documents are ready to prepare" : "Prepares automatically once the tax form is signed";
   return i.reason ?? null;

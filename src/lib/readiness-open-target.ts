@@ -31,7 +31,7 @@ export function openLabelFor(key: string, owner: string | null | undefined): str
   if (t.kind === "review") return "Review accreditation";
   if (t.kind === "action") return "Send tax form to sign";
   if (t.kind === "fund") return t.area === "approvals" ? "Review accreditation" : "Match wire in Banking";
-  if (t.kind === "ops_onboarding") return key === "acceptance" ? "Accept subscription" : "Resolve exception";
+  if (t.kind === "ops_onboarding") return key === "acceptance" ? "Accept & admit" : "Resolve exception";
   if (key === "approved_to_fund") return "Approve to send funds";
   return owner === "investor" ? "View details" : "Review";
 }

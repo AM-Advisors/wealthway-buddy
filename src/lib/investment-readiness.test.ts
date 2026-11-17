@@ -186,3 +186,12 @@ describe("blocked issue reason", () => {
     expect(noForm.owner).toBe("investor");
   });
 });
+
+describe("funds already received", () => {
+  it("never asks to release wire instructions once capital is reconciled", () => {
+    const r = computeReadiness(input({ fundingStatus: "funded" }));
+    const a = r.items.find((i) => i.key === "approved_to_fund")!;
+    expect(a.label).toBe("Fund manager approval");
+    expect(a.reason).toContain("Capital already received");
+  });
+});

@@ -57,7 +57,7 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
   OPEN_ISSUE: R("OPEN_ISSUE", "application_flags", {
     investor: "Harmonious is looking into an item on your investment and will contact you if needed.", fund_manager: "An open item is with Harmonious.", harmonious: "Resolve open review issue." }, { harmonious: "/ops/readiness" }),
   ACCEPTANCE_REQUIRED: R("ACCEPTANCE_REQUIRED", "investor_onboardings", {
-    investor: "Your funds were received. Harmonious is finalizing acceptance.", fund_manager: "Funds received; acceptance pending.", harmonious: "Accept subscription." }, { harmonious: "/ops/readiness" }),
+    investor: "Your funds were received. Harmonious is finalizing acceptance.", fund_manager: "Funds received; acceptance pending.", harmonious: "Accept & admit." }, { harmonious: "/ops/readiness" }),
   OTHER: R("OTHER", "investor_onboardings", {
     investor: "Harmonious is handling the next step.", fund_manager: "Harmonious is handling the next step.", harmonious: "Review readiness." }, { harmonious: "/ops/readiness" }, false),
 };
