@@ -191,6 +191,17 @@ function BankingCard({ d, offeringId, onChanged, reviewOnly = false }: { d: D; o
                     <Badge variant={v.status === "verified" ? "default" : "outline"}>{BANK_VERSION_STATUS_LABELS[v.status]}</Badge>
                   </div>
                   {v.ownershipReview === "review_required" && <p className="mt-1 text-xs text-destructive">Account ownership requires review: the account name differs from the fund's Legal Name.</p>}
+                  {v.ownershipReview === "review_required" && d.canEdit && current?.version === v.version && current.status === "pending_verification" && (
+                    <div className="mt-2 rounded-md border bg-background p-2 text-xs text-muted-foreground">
+                      <p className="font-medium text-foreground">How to clear this and verify</p>
+                      <ol className="mt-1 list-decimal space-y-1 pl-4">
+                        <li>Confirm why the account name is different, for example the series uses its master entity's account. If it is a mistake, use Needs correction instead.</li>
+                        <li>In the Note box below, write the reason, for example "Series operates under AM SPV Fund Management LLC master account". Then click Accept account ownership.</li>
+                        <li>Call the bank on a known number to confirm the details. In the How verified box, write how you checked, then click Mark verified.</li>
+                        <li>Mark verified must be done by someone other than the person who entered the instructions.</li>
+                      </ol>
+                    </div>
+                  )}
                   {v.ownershipReview === "accepted" && d.canEdit && v.ownershipExplanation && <p className="mt-1 text-xs text-muted-foreground">Ownership accepted: {v.ownershipExplanation}</p>}
                   {v.status === "verified" && <p className="mt-1 text-xs text-muted-foreground">Verified {v.verifiedAt ? new Date(v.verifiedAt).toLocaleDateString() : ""} · {v.verificationMethod}</p>}
                   {v.status === "rejected" && d.canEdit && v.rejectionReason && <p className="mt-1 text-xs text-muted-foreground">Returned: {v.rejectionReason}</p>}
@@ -210,13 +221,19 @@ function BankingCard({ d, offeringId, onChanged, reviewOnly = false }: { d: D; o
                 </Label>
                 <Input placeholder="Note (ownership explanation or correction needed)" value={note} onChange={(e) => setNote(e.target.value)} />
                 {current.ownershipReview === "review_required" && (
-                  <Button size="sm" variant="outline" disabled={busy || !note.trim()} onClick={() => run(() => review({ data: { offeringId, version: current.version, decision: "accept_ownership", note } }), "Ownership accepted")}>Accept account ownership</Button>
+                  <div className="space-y-1">
+                    <Button size="sm" variant="outline" disabled={busy || !note.trim()} onClick={() => run(() => review({ data: { offeringId, version: current.version, decision: "accept_ownership", note } }), "Ownership accepted")}>Accept account ownership</Button>
+                    {!note.trim() && <p className="text-xs text-muted-foreground">Type the reason in the Note box to turn this on.</p>}
+                  </div>
                 )}
                 <Input placeholder="How verified, e.g. call-back to bank on known number" value={method} onChange={(e) => setMethod(e.target.value)} />
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" disabled={busy || !method.trim() || current.ownershipReview === "review_required"} onClick={() => run(() => review({ data: { offeringId, version: current.version, decision: "verify", method } }), "Verified")}>Mark verified</Button>
                   <Button size="sm" variant="ghost" disabled={busy || !note.trim()} onClick={() => run(() => review({ data: { offeringId, version: current.version, decision: "reject", note } }), "Returned for correction")}>Needs correction</Button>
                 </div>
+                {current.ownershipReview === "review_required"
+                  ? <p className="text-xs text-muted-foreground">Mark verified turns on after account ownership is accepted.</p>
+                  : !method.trim() && <p className="text-xs text-muted-foreground">Type how you verified to turn on Mark verified.</p>}
                 <p className="text-xs text-muted-foreground">Someone other than the person who entered the instructions must verify them.</p>
               </div>
             )}
