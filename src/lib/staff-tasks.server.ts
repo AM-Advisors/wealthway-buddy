@@ -16,11 +16,9 @@ async function ctx(viewer: string) {
   return { ...s, canWrite };
 }
 
-async function names(db: any, ids: string[]) {
-  const u = [...new Set(ids.filter(Boolean))];
-  if (!u.length) return new Map<string, string>();
-  const { data } = await db.from("profiles").select("user_id, email, legal_name").in("user_id", u);
-  return new Map<string, string>(((data ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Staff member"]));
+async function names(_db: any, ids: string[]) {
+  const { loadAccountLabels } = await import("@/lib/profile-name.server");
+  return loadAccountLabels(ids);
 }
 
 function taskVisible(t: any, viewer: string, s: Awaited<ReturnType<typeof ctx>>) {

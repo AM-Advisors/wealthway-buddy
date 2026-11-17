@@ -33,3 +33,8 @@ export function taxStateWithUpload<T extends { state: string; reason?: string }>
   if (state.state !== "missing") return state;
   return { state: "review_required" as const, reason: "Your uploaded tax form is on file. Harmonious needs to confirm its tax certification; you do not need to upload it again." };
 }
+/** Tax classification follows a staff-confirmed uploaded tax form; an unconfirmed copy never satisfies it. */
+export function classificationWithUpload<T extends { state: string; reason?: string | undefined }>(state: T, upload: TaxUpload | null): T {
+  if (!upload || state.state !== "missing" || upload.review_status !== "completed_outside") return state;
+  return { state: "valid", reason: "Tax status taken from the signed tax form recorded outside the platform." } as unknown as T;
+}

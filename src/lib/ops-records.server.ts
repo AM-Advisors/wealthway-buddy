@@ -12,7 +12,6 @@ import { requireOperations } from "@/lib/ops-access.functions";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import {
   RECORD_AREA,
-  attachInvestorRelations,
   bankingDetailVisible,
   investorListMatches,
   canOpenRecord,
@@ -97,49 +96,91 @@ export async function listRecords(context: any, data: { type: OpsRecordType; sea
       if (like) q = q.ilike("name", like);
       return { records: rows(await q).map((c: any) => ({ id: c.id, title: c.name, subtitle: c.legal_name, status: c.entity_type })) };
     }
-    // Investors: name/email/type plus the clients and funds they belong to.
-    // Search runs after the join so client and fund names match too.
-    const { data: profileRows, error: profileError } = await s
-      .from("profiles")
-      .select("user_id, legal_name, email, investor_type")
-      .order("legal_name")
-      .limit(500);
-    if (profileError) throw new Error(profileError.message);
-    const profiles = profileRows ?? [];
-    const userIds = profiles.map((p: any) => p.user_id);
+    // Investors: every person with a live investment in any fund (login or
+    // not), from canonical onboardings + persons + investing parties, plus
+    // logins that own an investing party but have no investment yet.
+    // Search runs after the join so party, client and fund names match too.
+    // Page through in 1,000-row pages so no investor is cut off by the row cap.
+    const allPages = async (build: () => any) => {
+      const out: any[] = [];
+      for (let from = 0; from < 20000; from += 1000) {
+        const page = rows(await build().order("id").range(from, from + 999));
+        out.push(...page);
+        if (page.length < 1000) break;
+      }
+      return out;
+    };
+    const onboardings = await allPages(() =>
+      s
+        .from("investor_onboardings")
+        .select("id, person_id, investor_user_id, offering_id, investment_profile_id, stage")
+        .is("removed_at", null)
+        .is("merged_into_onboarding_id", null),
+    );
+    const ownedProfiles = await allPages(() =>
+      s
+        .from("investment_profiles")
+        .select("id, person_id, owner_user_id, legal_name, display_label, profile_type")
+        .not("owner_user_id", "is", null),
+    );
+    const onboardingProfileIds = [...new Set(onboardings.map((o: any) => o.investment_profile_id).filter(Boolean))] as string[];
+    const ownedIds = new Set(ownedProfiles.map((p: any) => p.id));
+    const missingProfileIds = onboardingProfileIds.filter((id) => !ownedIds.has(id));
+    const chunk = <T,>(list: T[], size = 200) => Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, i * size + size));
+    const extraProfiles: any[] = [];
+    for (const ids of chunk(missingProfileIds)) {
+      extraProfiles.push(...rows(await s.from("investment_profiles").select("id, person_id, owner_user_id, legal_name, display_label, profile_type").in("id", ids)));
+    }
+    const profiles = [...ownedProfiles, ...extraProfiles];
 
-    const { data: onboardingRows, error: onboardingError } = userIds.length
-      ? await s
-          .from("investor_onboardings")
-          .select("investor_user_id, offering_id, stage")
-          .in("investor_user_id", userIds)
-      : { data: [], error: null };
-    if (onboardingError) throw new Error(onboardingError.message);
-    const onboardings = onboardingRows ?? [];
+    const userIds = [...new Set([
+      ...onboardings.map((o: any) => o.investor_user_id),
+      ...profiles.map((p: any) => p.owner_user_id),
+    ].filter(Boolean))] as string[];
+    const personIds = [...new Set(onboardings.map((o: any) => o.person_id).filter(Boolean))] as string[];
 
-    const offeringIds = [...new Set(onboardings.map((o: any) => o.offering_id).filter(Boolean))];
-    const { data: offeringRows, error: offeringError } = offeringIds.length
-      ? await s.from("offerings").select("id, name, client_id").in("id", offeringIds)
-      : { data: [], error: null };
-    if (offeringError) throw new Error(offeringError.message);
-    const offerings = offeringRows ?? [];
+    const logins: any[] = [];
+    const persons: any[] = [];
+    for (const ids of chunk(userIds)) {
+      logins.push(...rows(await s.from("profiles").select("user_id, legal_name, email, investor_type, is_test_demo").in("user_id", ids)));
+      persons.push(...rows(await s.from("persons").select("id, user_id, legal_first_name, legal_last_name, preferred_name, email, is_test_demo").in("user_id", ids)));
+    }
+    const seenPersons = new Set(persons.map((p: any) => p.id));
+    for (const ids of chunk(personIds.filter((id) => !seenPersons.has(id)))) {
+      persons.push(...rows(await s.from("persons").select("id, user_id, legal_first_name, legal_last_name, preferred_name, email, is_test_demo").in("id", ids)));
+    }
 
-    const clientIds = [...new Set(offerings.map((o: any) => o.client_id).filter(Boolean))];
-    const { data: clientRows, error: clientError } = clientIds.length
-      ? await s.from("clients").select("id, name").in("id", clientIds)
-      : { data: [], error: null };
-    if (clientError) throw new Error(clientError.message);
+    const offeringIds = [...new Set(onboardings.map((o: any) => o.offering_id).filter(Boolean))] as string[];
+    const offerings: any[] = [];
+    for (const ids of chunk(offeringIds)) offerings.push(...rows(await s.from("offerings").select("id, name, client_id").in("id", ids)));
+    const clientIds = [...new Set(offerings.map((o: any) => o.client_id).filter(Boolean))] as string[];
+    const clientRows: any[] = [];
+    for (const ids of chunk(clientIds)) clientRows.push(...rows(await s.from("clients").select("id, name").in("id", ids)));
 
-    let records = attachInvestorRelations(profiles, onboardings, offerings, clientRows ?? []);
+    const { isHarmoniousStaffEmail } = await import("@/lib/harmonious-staff");
+    const { buildInvestorDirectory, collapseSamePersonRows } = await import("@/lib/ops-records");
+    let records = buildInvestorDirectory({
+      persons,
+      logins,
+      onboardings,
+      profiles,
+      offerings,
+      clients: clientRows,
+      isStaffEmail: isHarmoniousStaffEmail,
+    });
     // Staff-grouped logins of one person show as one row (display only; accounts stay separate).
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: gm } = await (supabaseAdmin as any).from("person_account_group_members").select("user_id, group_id").in("user_id", records.map((r) => r.id)).is("removed_at", null);
-      const { collapseSamePersonRows } = await import("@/lib/ops-records");
-      records = collapseSamePersonRows(records, new Map(((gm ?? []) as any[]).map((m) => [m.user_id, m.group_id])));
+      const loginRowIds = records.filter((r) => r.hasLogin).map((r) => r.id);
+      const gm: any[] = [];
+      for (const ids of chunk(loginRowIds)) {
+        const { data } = await (supabaseAdmin as any).from("person_account_group_members").select("user_id, group_id").in("user_id", ids).is("removed_at", null);
+        gm.push(...((data ?? []) as any[]));
+      }
+      records = collapseSamePersonRows(records, new Map(gm.map((m) => [m.user_id, m.group_id])));
     } catch (e) { console.error("[ops-records] same-person grouping", e instanceof Error ? e.message : String(e)); }
     if (data.search) records = records.filter((r) => investorListMatches(r, data.search!));
-    return { records: records.slice(0, 100) };
+    return { records, total: records.length };
 }
 
 /* --------------------------------------------------------------- client 360 */

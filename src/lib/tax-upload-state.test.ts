@@ -52,3 +52,16 @@ describe("uploaded tax-form handoff", () => {
     expect(pendingTaxUpload([{ ...copy, onboarding_id: manual.id, investment_profile_id: manual.investment_profile_id, user_id: "staff-uploader", prepared_for_person_id: "someone-else" }], manual)).toBeNull();
   });
 });
+
+describe("tax classification from an uploaded tax form", () => {
+  const up = (review_status: string) => ({ id: "u", onboarding_id: "o", investment_profile_id: "p", user_id: null, doc_kind: "tax_form", review_status, file_name: "w9.pdf" });
+  it("is satisfied once the upload is recorded as completed outside the platform", async () => {
+    const { classificationWithUpload } = await import("./tax-upload-state");
+    expect(classificationWithUpload({ state: "missing" }, up("completed_outside")).state).toBe("valid");
+  });
+  it("is never satisfied by an unconfirmed copy", async () => {
+    const { classificationWithUpload } = await import("./tax-upload-state");
+    expect(classificationWithUpload({ state: "missing" }, up("accepted")).state).toBe("missing");
+    expect(classificationWithUpload({ state: "missing" }, null).state).toBe("missing");
+  });
+});

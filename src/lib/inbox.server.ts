@@ -54,9 +54,8 @@ export function canSeeThread(a: InboxActor, t: { client_id: string | null; chann
 }
 
 async function names(ids: string[]) {
-  if (!ids.length) return new Map<string, string>();
-  const { data } = await (await db()).from("profiles").select("user_id, legal_name, email").in("user_id", ids);
-  return new Map(((data ?? []) as any[]).map((p) => [p.user_id, (p.legal_name || p.email || "Harmonious") as string]));
+  const { loadAccountLabels } = await import("@/lib/profile-name.server");
+  return loadAccountLabels(ids);
 }
 
 /** Dedicated representatives assigned to the client (canonical team assignments). */
@@ -186,10 +185,19 @@ export async function directory(a: InboxActor) {
   kindOf.delete(a.userId);
   const ids = [...kindOf.keys()];
   if (!ids.length) return [];
-  const { data: profs } = await d.from("profiles").select("user_id, legal_name, email, is_test_demo").in("user_id", ids);
-  return ((profs ?? []) as any[])
-    .filter((p) => !p.is_test_demo)
-    .map((p) => ({ userId: p.user_id as string, name: (p.legal_name || p.email || "Unnamed") as string, email: (p.email as string) ?? "", kind: kindOf.get(p.user_id)! }))
+  // People without a profile row still appear, named from their person or sign-in record.
+  const [{ data: profs }, labels] = await Promise.all([
+    d.from("profiles").select("user_id, email, is_test_demo").in("user_id", ids),
+    names(ids),
+  ]);
+  const prof = new Map(((profs ?? []) as any[]).map((p) => [p.user_id as string, p]));
+  return ids
+    .filter((id) => !prof.get(id)?.is_test_demo)
+    .map((id) => {
+      const label = labels.get(id) ?? "";
+      const email = (prof.get(id)?.email as string | undefined) ?? (label.includes("@") ? label : "");
+      return { userId: id, name: label || email || "Unnamed", email, kind: kindOf.get(id)! };
+    })
     .sort((x, y) => x.name.localeCompare(y.name));
 }
 

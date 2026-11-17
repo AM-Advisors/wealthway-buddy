@@ -195,7 +195,7 @@ function fromRequirement(r: RequirementResult): Pick<ReadinessItem, "status" | "
   const s: RequirementState = r.state;
   if (s === "valid") return { status: "complete", owner: null, action: null };
   if (s === "not_applicable") return { status: "not_applicable", owner: null, action: null };
-  if (s === "review_required") return { status: "under_review", owner: "harmonious", action: r.key === "tax_documentation" ? "Review uploaded tax form certification" : `Review ${r.label.toLowerCase()}` };
+  if (s === "review_required") return { status: "under_review", owner: "harmonious", action: r.key === "tax_documentation" ? "Confirm uploaded tax form" : `Review ${r.label.toLowerCase()}` };
   if (s === "refresh_required") return { status: "needs_investor", owner: "investor", action: `Update ${r.label.toLowerCase()}` };
   if (r.key === "subscription_documents") return { status: "in_progress", owner: null, action: null };
   if (HARMONIOUS_WHEN_MISSING.has(r.key)) {
@@ -296,6 +296,14 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
   // the investor is never asked to sign again. Someone confirms the status from that form instead.
   const taxDocDone = items.some((i) => i.key === "tax_documentation" && i.status === "complete");
   const cls = items.find((i) => i.key === "tax_classification");
+  // An uploaded form waiting for confirmation covers the classification too: one confirmation, one item.
+  const taxDocPending = items.some((i) => i.key === "tax_documentation" && i.status === "under_review");
+  if (cls && taxDocPending && cls.status === "needs_investor") {
+    cls.status = "not_started";
+    cls.owner = null;
+    cls.action = null;
+    cls.reason = "Completed together with the uploaded tax form once Harmonious confirms it.";
+  }
   if (cls && taxDocDone && cls.status === "needs_investor") {
     cls.status = "needs_harmonious";
     cls.owner = "harmonious";

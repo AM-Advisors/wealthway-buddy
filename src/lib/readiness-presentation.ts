@@ -68,7 +68,7 @@ export function waitingDetail(i: any, items: any[] = []): string | null {
   const qDone = done(items, "subscription_questionnaire");
   const taxDone = done(items, "tax_documentation");
   if (i.status === "under_review" && i.key === "accreditation") return "Accreditation verification awaiting review";
-  if (i.status === "under_review") return i.key === "tax_documentation" ? "Uploaded tax form is waiting for review" : `${i.label} is waiting for review`;
+  if (i.status === "under_review") return i.key === "tax_documentation" ? "Uploaded tax form is on file. In Documents, click Mark completed outside platform to confirm it" : `${i.label} is waiting for review`;
   if (i.status === "blocked") return i.reason ?? "An open issue must be resolved first";
   switch (i.key) {
     case "accreditation": return i.status === "needs_harmonious" ? "Accreditation verification awaiting review" : i.action?.startsWith("Update ") ? "Updated accreditation information or proof needed" : "Accreditation information or proof needed";

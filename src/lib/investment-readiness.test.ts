@@ -185,6 +185,15 @@ describe("blocked issue reason", () => {
     const noForm = item(computeReadiness(input({}, set("missing") as any)), "tax_classification");
     expect(noForm.owner).toBe("investor");
   });
+  it("uploaded tax form under review: one open tax item, not two", () => {
+    const set = reqs().map((r: any) => r.key === "tax_classification" ? { ...r, state: "missing" } : r.key === "tax_documentation" ? { ...r, state: "review_required" } : r);
+    const r = computeReadiness(input({}, set as any));
+    const cls = item(r, "tax_classification");
+    expect(cls.status).toBe("not_started");
+    expect(cls.owner).toBeNull();
+    expect(item(r, "tax_documentation").status).toBe("under_review");
+    expect(item(r, "tax_documentation").action).toBe("Confirm uploaded tax form");
+  });
 });
 
 describe("funds already received", () => {

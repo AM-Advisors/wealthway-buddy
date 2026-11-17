@@ -101,8 +101,12 @@ export const priceFund = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: fund } = await db.from("offerings").select("id, client_id").eq("id", data.offeringId).maybeSingle();
     if (!fund) throw new Error("Fund not found.");
-    const { count } = await db.from("investor_applications").select("id", { count: "exact", head: true }).eq("offering_id", data.offeringId);
-    if ((count ?? 0) > 0) throw new Error("This Fund's pricing is already final, it has investors. Existing Funds are never repriced.");
+    // A fund has investors when it holds an older application or a live current investment.
+    const [{ count }, { count: investments }] = await Promise.all([
+      db.from("investor_applications").select("id", { count: "exact", head: true }).eq("offering_id", data.offeringId),
+      db.from("investor_onboardings").select("id", { count: "exact", head: true }).eq("offering_id", data.offeringId).is("removed_at", null).is("merged_into_onboarding_id", null),
+    ]);
+    if ((count ?? 0) + (investments ?? 0) > 0) throw new Error("This Fund's pricing is already final, it has investors. Existing Funds are never repriced.");
     const { data: open } = await db.from("pricing_approval_requests").select("id").eq("offering_id", data.offeringId).eq("status", "pending").maybeSingle();
     if (open) throw new Error("A pricing request for this Fund is already waiting for approval.");
     const { createFundPricingSnapshot } = await import("@/lib/commercial-pricing.server");

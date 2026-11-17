@@ -615,7 +615,7 @@ export async function offeringLanding(slugOrId: string) {
     offeringId: offering.id as string,
     slug: offering.slug as string,
     name: (setup.display_name ?? offering.name) as string,
-    legalName: (offering.legal_entity_name ?? setup.legal_fund_name ?? null) as string | null,
+    legalName: (offering.legal_entity_name ?? null) as string | null,
     description: (offering.description ?? setup.investment_strategy ?? null) as string | null,
     minInvestmentCents: currentFundMinimum(offering.min_investment_cents, setup.min_investment_cents),
     structure: setup.structure as string,

@@ -236,7 +236,7 @@ function FundPage() {
           label="Target raise"
           value={offering.target_raise_cents ? money(offering.target_raise_cents) : "Not set"}
         />
-        <Stat label="Applications" value={`${stats.applications}`} note={`${stats.funded} funded`} />
+        <Stat label="Investors" value={`${stats.applications}`} note={`${stats.funded} funded`} />
         <Stat label="Committed" value={money(stats.committedCents)} note={`${money(stats.settledCents)} settled`} />
       </div>
 

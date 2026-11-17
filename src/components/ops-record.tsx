@@ -37,7 +37,7 @@ import {
   getOpsInvestorTab,
   listOpsRecords,
 } from "@/lib/ops-records.functions";
-import { allowedActions, recordPath, recordTabs, RECORD_AREA, type InvestorListRow, type OpsRecordType } from "@/lib/ops-records";
+import { allowedActions, recordPath, recordTabs, RECORD_AREA, type InvestorListRow, type InvestorDirectoryRow, type OpsRecordType } from "@/lib/ops-records";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { FundCapTable } from "@/components/fund-cap-table";
@@ -497,13 +497,14 @@ function ClientAccessMenu({ id, archived, test }: { id: string; archived: boolea
   );
 }
 
-function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
-  const emails = all.map((r) => (r.subtitle && r.subtitle.includes("@") ? r.subtitle : "")).filter(Boolean) as string[];
+function InvestorListTable({ records: all }: { records: (InvestorListRow & Partial<InvestorDirectoryRow>)[] }) {
+  const emails = all.filter((r) => r.hasLogin !== false).map((r) => (r.subtitle && r.subtitle.includes("@") ? r.subtitle : "")).filter(Boolean) as string[];
   const access = useAccessStatus(emails);
   const [show, setShow] = useState<"current" | "archived" | "test">("current");
-  const acc = (r: InvestorListRow) => (r.subtitle ? access.data?.[r.subtitle.toLowerCase()] : undefined);
-  const records = all.filter((r) => show === "archived" ? acc(r)?.status === "archived" : show === "test" ? acc(r)?.isTestDemo : acc(r)?.status !== "archived" && !acc(r)?.isTestDemo);
-  const tabs = access.data ? <div className="mb-2 flex gap-1">{(["current", "archived", "test"] as const).map((v) => <button key={v} onClick={() => setShow(v)} className={`rounded border px-3 py-1 text-xs ${show === v ? "bg-primary text-primary-foreground" : ""}`}>{v === "current" ? "Current" : v === "archived" ? "Archived" : "Test/Demo"}</button>)}</div> : null;
+  const acc = (r: InvestorListRow & Partial<InvestorDirectoryRow>) => (r.hasLogin !== false && r.subtitle ? access.data?.[r.subtitle.toLowerCase()] : undefined);
+  const isTest = (r: InvestorListRow & Partial<InvestorDirectoryRow>) => !!(r.isTestDemo || acc(r)?.isTestDemo);
+  const records = all.filter((r) => show === "archived" ? acc(r)?.status === "archived" : show === "test" ? isTest(r) : acc(r)?.status !== "archived" && !isTest(r));
+  const tabs = <div className="mb-2 flex flex-wrap items-center gap-1">{(["current", "archived", "test"] as const).map((v) => <button key={v} onClick={() => setShow(v)} className={`rounded border px-3 py-1 text-xs ${show === v ? "bg-primary text-primary-foreground" : ""}`}>{v === "current" ? "Current" : v === "archived" ? "Archived" : "Test/Demo"}</button>)}<span className="ml-2 text-xs text-muted-foreground">{records.length} {records.length === 1 ? "investor" : "investors"}</span></div>;
   if (!records.length) {
     return <div>{tabs}<p className="text-sm text-muted-foreground">No investors match.</p></div>;
   }
@@ -525,11 +526,16 @@ function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
           {records.map((row) => (
             <TableRow key={row.id}>
               <TableCell>
-                <Link to={recordPath("investor", row.id) as any} className="font-medium hover:underline">
+                <Link to={(row.openPath ?? recordPath("investor", row.id)) as any} className="font-medium hover:underline">
                   {row.title}
                 </Link>
+                {row.parties?.length ? <div className="text-xs text-muted-foreground">Invests as {row.parties.join(", ")}</div> : null}
                 {row.subtitle ? <div className="text-xs text-muted-foreground">{row.subtitle}</div> : null}
-                <AccessBadge info={acc(row)} />
+                <span className="inline-flex flex-wrap gap-1">
+                  {row.hasLogin === false ? <Badge variant="outline">No login yet</Badge> : null}
+                  {row.isTestDemo && !acc(row) ? <Badge variant="secondary">Test/Demo</Badge> : null}
+                  <AccessBadge info={acc(row)} />
+                </span>
               </TableCell>
               <TableCell>
                 {row.clients.length
@@ -557,9 +563,9 @@ function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
               <TableCell>{row.stage ?? " · "}</TableCell>
               <TableCell>
                 <Button asChild size="sm" variant="outline">
-                  <Link to={recordPath("investor", row.id) as any}>Open</Link>
+                  <Link to={(row.openPath ?? recordPath("investor", row.id)) as any}>Open</Link>
                 </Button>
-                {access.data && row.subtitle?.includes("@") ? <PeopleActions email={row.subtitle} name={row.title} info={acc(row)}
+                {access.data && row.hasLogin !== false && row.subtitle?.includes("@") ? <PeopleActions email={row.subtitle} name={row.title} info={acc(row)}
                   /> : null}
               </TableCell>
             </TableRow>

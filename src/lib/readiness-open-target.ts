@@ -8,7 +8,7 @@ export type OpenTarget =
 
 export function openTargetFor(key: string, owner?: string | null): OpenTarget {
   // Tax form already signed: confirm the status from the copy in Documents, never re-send for signing.
-  if (key === "tax_classification" && owner && owner !== "investor") return { kind: "tab", tab: "documents" };
+  if ((key === "tax_classification" || key === "tax_documentation") && owner && owner !== "investor") return { kind: "tab", tab: "documents" };
   switch (key) {
     case "aml": case "identity_verification": case "entity_verification": case "close_amount":
     case "account": case "investment_profile": case "investment_amount": case "beneficial_owners": case "eligibility":
@@ -26,6 +26,7 @@ export function openTargetFor(key: string, owner?: string | null): OpenTarget {
 
 export function openLabelFor(key: string, owner: string | null | undefined): string {
   const t = openTargetFor(key, owner);
+  if (key === "tax_documentation" && t.kind === "tab") return "Confirm tax form";
   if (key === "tax_classification" && t.kind === "tab") return "Open tax form";
   if (key === "aml") return "Open screening review";
   if (t.kind === "review") return "Review accreditation";

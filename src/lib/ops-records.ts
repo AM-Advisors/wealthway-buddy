@@ -348,11 +348,134 @@ export function attachInvestorRelations(
   });
 }
 
+/* ------------------------------ investor directory: canonical records */
+
+export type InvestorDirectoryRow = InvestorListRow & {
+  /** Where "Open" goes: Investor 360 for a login, else the exact fund investor page. */
+  openPath: string;
+  /** Investing parties (trusts, LLCs, individuals) this person invests through. */
+  parties: string[];
+  /** True when the person has a portal login. */
+  hasLogin: boolean;
+  /** Marked as a test/demo person or login. */
+  isTestDemo: boolean;
+};
+
+type DirPerson = { id: string; user_id: string | null; legal_first_name: string | null; legal_last_name: string | null; preferred_name: string | null; email: string | null; is_test_demo?: boolean | null };
+type DirLogin = { user_id: string; legal_name: string | null; email: string | null; investor_type: string | null; is_test_demo?: boolean | null };
+type DirOnboarding = { id: string; person_id: string | null; investor_user_id: string | null; offering_id: string | null; investment_profile_id: string | null; stage: string | null };
+type DirProfile = { id: string; person_id: string | null; owner_user_id: string | null; legal_name: string | null; display_label: string | null; profile_type: string | null };
+
+const ENTITY_TYPE_SHORT: Record<string, string> = {
+  individual: "Individual", joint: "Joint", trust: "Trust", ira: "IRA", retirement_plan: "Retirement plan",
+  llc: "LLC", corporation: "Corporation", partnership: "Partnership", family_office: "Family office", foundation: "Foundation", other_entity: "Entity",
+};
+
+/**
+ * Every investor across all funds, from canonical records: one row per person
+ * with a live investment (removed/merged onboardings excluded), whether or not
+ * they have a login, plus login accounts that own an investing party but have
+ * no investment yet. Harmonious staff emails never appear. Pure and read-only.
+ */
+export function buildInvestorDirectory(input: {
+  persons: DirPerson[];
+  logins: DirLogin[];
+  onboardings: DirOnboarding[];
+  profiles: DirProfile[];
+  offerings: { id: string; name: string; client_id: string | null }[];
+  clients: { id: string; name: string }[];
+  isStaffEmail: (email: string | null | undefined) => boolean;
+}): InvestorDirectoryRow[] {
+  const offeringById = new Map(input.offerings.map((o) => [o.id, o]));
+  const clientById = new Map(input.clients.map((c) => [c.id, c.name]));
+  const loginById = new Map(input.logins.map((l) => [l.user_id, l]));
+  const profileById = new Map(input.profiles.map((p) => [p.id, p]));
+  const personById = new Map(input.persons.map((p) => [p.id, p]));
+  const personByUser = new Map(input.persons.filter((p) => p.user_id).map((p) => [p.user_id!, p]));
+
+  type Acc = { key: string; person: DirPerson | null; userId: string | null; onboardings: DirOnboarding[]; profileIds: Set<string> };
+  const acc = new Map<string, Acc>();
+  const get = (key: string, person: DirPerson | null, userId: string | null) => {
+    let a = acc.get(key);
+    if (!a) { a = { key, person, userId, onboardings: [], profileIds: new Set() }; acc.set(key, a); }
+    if (!a.userId && userId) a.userId = userId;
+    return a;
+  };
+
+  for (const o of input.onboardings) {
+    if (!o.offering_id || !offeringById.has(o.offering_id)) continue;
+    const person = (o.person_id ? personById.get(o.person_id) : undefined) ?? (o.investor_user_id ? personByUser.get(o.investor_user_id) : undefined) ?? null;
+    const userId = person?.user_id ?? o.investor_user_id ?? null;
+    const key = person ? `p:${person.id}` : userId ? `u:${userId}` : `o:${o.id}`;
+    const a = get(key, person, userId);
+    a.onboardings.push(o);
+    if (o.investment_profile_id) a.profileIds.add(o.investment_profile_id);
+  }
+
+  // Logins that own an investing party but have not started an investment yet.
+  for (const p of input.profiles) {
+    const userId = p.owner_user_id;
+    if (!userId || !loginById.has(userId)) continue;
+    const person = personByUser.get(userId) ?? null;
+    const key = person ? `p:${person.id}` : `u:${userId}`;
+    if (acc.has(key)) continue;
+    get(key, person, userId).profileIds.add(p.id);
+  }
+
+  const out: InvestorDirectoryRow[] = [];
+  for (const a of acc.values()) {
+    const login = a.userId ? loginById.get(a.userId) : undefined;
+    const personName = a.person ? [a.person.legal_first_name, a.person.legal_last_name].filter(Boolean).join(" ").trim() || a.person.preferred_name?.trim() || "" : "";
+    const email = a.person?.email || login?.email || null;
+    if (input.isStaffEmail(email) || (login && input.isStaffEmail(login.email))) continue;
+    const partyRows = [...a.profileIds].map((id) => profileById.get(id)).filter(Boolean) as DirProfile[];
+    const parties = [...new Set(partyRows.map((p) => (p.legal_name || p.display_label || "").trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y));
+    const title = personName || login?.legal_name || parties[0] || email || "Unnamed person";
+
+    const funds = new Map<string, InvestorFundLink>();
+    let bestStage: string | null = null;
+    let bestOnboarding: DirOnboarding | null = null;
+    for (const o of a.onboardings) {
+      const offering = offeringById.get(o.offering_id!)!;
+      if (!funds.has(offering.id)) {
+        funds.set(offering.id, { fundId: offering.id, fundName: offering.name, clientId: offering.client_id, clientName: offering.client_id ? (clientById.get(offering.client_id) ?? null) : null });
+      }
+      const rank = STAGE_RANK[o.stage ?? ""] ?? 0;
+      if (!bestOnboarding || rank > (STAGE_RANK[bestStage ?? ""] ?? -1)) { bestStage = o.stage; bestOnboarding = o; }
+    }
+    const fundList = [...funds.values()].sort((x, y) => x.fundName.localeCompare(y.fundName));
+    const clientMap = new Map<string, string>();
+    for (const f of fundList) if (f.clientId && f.clientName) clientMap.set(f.clientId, f.clientName);
+    const types = [...new Set(partyRows.map((p) => ENTITY_TYPE_SHORT[p.profile_type ?? ""] ?? null).filter(Boolean))] as string[];
+
+    const openPath = a.userId
+      ? `/ops/investors/${encodeURIComponent(a.userId)}`
+      : bestOnboarding
+        ? `/ops/fund/${encodeURIComponent(bestOnboarding.offering_id!)}/investor/${encodeURIComponent(bestOnboarding.id)}`
+        : "/ops/investors";
+    out.push({
+      id: a.userId ?? a.key,
+      title,
+      subtitle: email,
+      status: login?.investor_type || types.join(", ") || null,
+      stage: bestStage ? (STAGE_LABEL[bestStage] ?? bestStage) : null,
+      clients: [...clientMap.entries()].map(([id, name]) => ({ id, name })).sort((x, y) => x.name.localeCompare(y.name)),
+      funds: fundList,
+      openPath,
+      parties: parties.filter((n) => n.toLowerCase() !== title.toLowerCase()),
+      hasLogin: !!a.userId,
+      isTestDemo: !!(a.person?.is_test_demo || login?.is_test_demo),
+    });
+  }
+  return out.sort((x, y) => x.title.localeCompare(y.title));
+}
+
 /** Search matches the investor's name, email, client names and fund names. */
 export function investorListMatches(row: InvestorListRow, search: string): boolean {
   const needle = search.trim().toLowerCase();
   if (!needle) return true;
-  const hay = [row.title, row.subtitle, ...row.clients.map((c) => c.name), ...row.funds.map((f) => f.fundName)]
+  const parties = (row as Partial<InvestorDirectoryRow>).parties ?? [];
+  const hay = [row.title, row.subtitle, ...parties, ...row.clients.map((c) => c.name), ...row.funds.map((f) => f.fundName)]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -406,10 +529,10 @@ export function investorCheckRows(
 }
 
 /** Display-only: one row per person when staff grouped several logins as the same person. Accounts stay separate. */
-export function collapseSamePersonRows(rows: InvestorListRow[], groupOf: Map<string, string>): (InvestorListRow & { otherAccounts?: string[] })[] {
-  const out: (InvestorListRow & { otherAccounts?: string[] })[] = [];
+export function collapseSamePersonRows<T extends InvestorListRow>(rows: T[], groupOf: Map<string, string>): (T & { otherAccounts?: string[] })[] {
+  const out: (T & { otherAccounts?: string[] })[] = [];
   const base = new Map<string, string | null>();
-  const lead = new Map<string, InvestorListRow & { otherAccounts?: string[] }>();
+  const lead = new Map<string, T & { otherAccounts?: string[] }>();
   for (const r of rows) {
     const g = groupOf.get(r.id);
     const first = g ? lead.get(g) : undefined;

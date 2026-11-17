@@ -8,7 +8,6 @@ import { loadApplicationVerification } from "@/lib/application-verification";
 const fundScope = (data: unknown) =>
   z.object({ offering_id: z.string().uuid().optional() }).parse(data ?? {});
 import { assertFundConditions } from "@/lib/fund-conditions.functions";
-import { isReconciledFunding } from "@/lib/funding-status";
 
 export const wireSentSchema = z.object({
   expected_date: z.string().trim().min(1, "Choose the date the wire was sent"),
@@ -272,42 +271,18 @@ export const getFunding = createServerFn({ method: "GET" })
 export async function fundProgress(offeringId: string, targetCents: number | null) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: apps } = await supabaseAdmin
-      .from("investor_applications")
-      .select("id, commitment_cents, funding_status")
-      .eq("offering_id", offeringId);
-
-    const rows = (apps ?? []) as any[];
-    const ids = rows.map((r) => r.id);
-
-    let payments: any[] = [];
-    if (ids.length) {
-      const { data: pay } = await supabaseAdmin
-        .from("payments")
-        .select("application_id, amount_cents, status")
-        .in("application_id", ids);
-      payments = (pay ?? []) as any[];
-    }
-
-    const committedCents = rows.reduce((sum, r) => sum + Number(r.commitment_cents ?? 0), 0);
-    const receivedCents = payments
-      .filter((p) => p.status === "settled")
-      .reduce((sum, p) => sum + Number(p.amount_cents ?? 0), 0);
-    const inFlightCents = payments
-      .filter((p) => p.status === "processing" || p.status === "awaiting_wire")
-      .reduce((sum, p) => sum + Number(p.amount_cents ?? 0), 0);
-
+    const { loadFundingFigures } = await import("@/lib/funding-figures.server");
+    const f = (await loadFundingFigures(supabaseAdmin, [{ id: offeringId }])).get(offeringId)!;
     return {
-      investors: rows.length,
-      fundedInvestors: rows.filter((r) => isReconciledFunding(r.funding_status)).length,
-      committedCents,
-      receivedCents,
-      inFlightCents,
+      investors: f.investors,
+      fundedInvestors: f.settled,
+      committedCents: f.committedCents,
+      receivedCents: f.receivedCents,
+      inFlightCents: f.inFlightCents,
       targetCents,
       percentOfTarget:
         targetCents && targetCents > 0
-          ? Math.min(100, Math.round((receivedCents / targetCents) * 100))
+          ? Math.min(100, Math.round((f.receivedCents / targetCents) * 100))
           : null,
     };
   } catch {

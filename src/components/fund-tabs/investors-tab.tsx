@@ -335,6 +335,13 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
     });
     return () => cancelAnimationFrame(frame);
   }, [reviewRequest, reviewTab, d]);
+  // Uploaded documents sit above the questionnaire, and only when there are any.
+  const uploadedDocs = d?.documents?.length ? (
+    <section aria-label="Uploaded documents">
+      <h4 className="mb-1 font-medium">Documents</h4>
+      <div>{d.documents.map((x: any) => <UploadedDocRow key={x.id} doc={x} onboardingId={id} />)}</div>
+    </section>
+  ) : null;
   const openReviewItem = (key: string) => {
     if (key === "tax_form") {
       sendRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
@@ -467,6 +474,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
               {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {versionLabel(doc.version)} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
             </section>
             {id && <PriorSignedDocuments fundId={fundId} onboardingId={id} />}
+            {uploadedDocs}
             <section aria-label="Investor questionnaire">
               <Collapsible open={questionnaireOpen} onOpenChange={(o) => setQuestionnaireFor(o ? id : null)} className="rounded-lg border">
                 <CollapsibleTrigger className="flex w-full items-center gap-2 p-3 text-left transition-colors hover:bg-muted/50">
@@ -493,12 +501,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
               {d.canVerifyAccreditation && id ? <SetAccreditationStatus onboardingId={id} onChanged={() => void q.refetch()} /> : null}
             </section>
           </>}
-          <section>
-            <h4 className="mb-1 font-medium">Documents</h4>
-            {d.documents.length ? (
-              <div>{d.documents.map((x: any) => <UploadedDocRow key={x.id} doc={x} onboardingId={id} />)}</div>
-            ) : <p className="text-muted-foreground">No documents uploaded for this deal yet.</p>}
-          </section>
+          {!d.reviewEvidence && uploadedDocs}
             </TabsContent>
             <TabsContent value="terms" className="space-y-6">
           <section>

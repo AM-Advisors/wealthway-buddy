@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/admin/funding")({
       { property: "og:title", content: "Funding Dashboard | Harmonious Admin" },
       {
         property: "og:description",
-        content: "Per-fund raised, in-progress applications and target-raise progress.",
+        content: "Per-fund raised, in-progress investments and target-raise progress.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -113,7 +113,7 @@ function FundingDashboard() {
         <div>
           <h1 className="text-3xl">Funding dashboard</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Capital raised across every fund, applications still in progress, and how each fund is tracking
+            Capital raised across every fund, investments still in progress, and how each fund is tracking
             toward its target raise.
           </p>
         </div>
@@ -206,7 +206,7 @@ function FundingDashboard() {
                   <p className="text-xs text-muted-foreground">{money(f.inFlightCents)} in transit</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Applications</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Investors</p>
                   <p className="text-lg font-semibold">{f.applications}</p>
                   <p className="text-xs text-muted-foreground">
                     {f.inProgress} in progress · {f.settled} settled

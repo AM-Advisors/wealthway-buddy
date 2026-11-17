@@ -76,28 +76,28 @@ export const listReviewerActivity = createServerFn({ method: "GET" })
       ...new Set(events.map((e) => e.application_id as string).filter(Boolean)),
     ];
 
-    const [{ data: actorProfiles }, { data: apps }] = await Promise.all([
-      actorIds.length
-        ? supabase.from("profiles").select("user_id, legal_name, email").in("user_id", actorIds)
-        : Promise.resolve({ data: [] as any[] }),
+    // Investing-party names come from the current investment linked to each
+    // application; non-admins only get names for events in funds they manage.
+    const fundIds = new Set(((funds ?? []) as any[]).map((f) => f.id as string));
+    const nameableAppIds = [...new Set(events
+      .filter((e) => e.application_id && (isAdmin || (e.offering_id && fundIds.has(e.offering_id))))
+      .map((e) => e.application_id as string))];
+    const { loadAccountLabels, applicationPartyNames } = await import("@/lib/profile-name.server");
+    const [{ data: apps }, partyByApp] = await Promise.all([
       applicationIds.length
         ? supabase.from("investor_applications").select("id, user_id").in("id", applicationIds)
         : Promise.resolve({ data: [] as any[] }),
+      applicationPartyNames(nameableAppIds),
     ]);
 
-    const investorIds = [...new Set((apps ?? []).map((a: any) => a.user_id as string))];
-    const { data: investorProfiles } = investorIds.length
-      ? await supabase.from("profiles").select("user_id, legal_name, email").in("user_id", investorIds)
-      : { data: [] as any[] };
-
-    const nameOf = new Map<string, string>();
-    for (const p of [...(actorProfiles ?? []), ...(investorProfiles ?? [])] as any[]) {
-      nameOf.set(p.user_id as string, (p.legal_name as string) || (p.email as string) || "Reviewer");
-    }
+    const investorIds = [...new Set((apps ?? []).map((a: any) => a.user_id as string).filter(Boolean))];
+    const nameOf = await loadAccountLabels([...actorIds, ...investorIds]);
     const investorByApp = new Map<string, string>();
     for (const a of (apps ?? []) as any[]) {
-      investorByApp.set(a.id as string, nameOf.get(a.user_id as string) ?? "Investor");
+      const name = nameOf.get(a.user_id as string);
+      if (name) investorByApp.set(a.id as string, name);
     }
+    for (const [id, name] of partyByApp) investorByApp.set(id, name);
     const fundName = new Map<string, string>();
     for (const f of (funds ?? []) as any[]) fundName.set(f.id as string, f.name as string);
 

@@ -46,10 +46,8 @@ async function logActivity(row: { scope: Scope; offering_id: string | null; cont
 }
 
 async function names(ids: string[]) {
-  const uniq = [...new Set(ids.filter(Boolean))];
-  if (!uniq.length) return new Map<string, string>();
-  const { data } = await (await admin()).from("profiles").select("user_id, legal_name, email").in("user_id", uniq);
-  return new Map(((data ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Team member"]));
+  const { loadAccountLabels } = await import("@/lib/profile-name.server");
+  return loadAccountLabels(ids);
 }
 
 async function fundNames(ids: string[]) {
@@ -247,7 +245,7 @@ export async function staffOwners(userId: string) {
   const { data } = await db.from("user_roles").select("user_id, role").in("role", ["sales", "account_executive", "bdr", "sales_management", "cro", "super_admin", "admin", "operations", "client_success"]);
   const ids = [...new Set(((data ?? []) as any[]).map((r) => r.user_id))];
   const nm = await names(ids);
-  return ids.map((id) => ({ id, name: nm.get(id) ?? id })).sort((x, y) => x.name.localeCompare(y.name));
+  return ids.map((id) => ({ id, name: nm.get(id) ?? "Team member" })).sort((x, y) => x.name.localeCompare(y.name));
 }
 
 export async function logNote(userId: string, d: { contactId: string; dealId?: string | undefined; kind: "note" | "call" | "meeting" | "email_logged"; summary: string }) {

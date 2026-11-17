@@ -46,6 +46,11 @@ async function withoutReplacedApplications<A extends { id: string }>(
   }
 }
 
+async function canonicalNamesForApplications(appIds: string[]): Promise<Map<string, string>> {
+  const { applicationPartyNames } = await import("@/lib/profile-name.server");
+  return applicationPartyNames(appIds);
+}
+
 /** Funds the signed-in reviewer can work in: assigned funds, or all funds for admins. */
 export const getManagerFunds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -253,10 +258,12 @@ export const getFundSignedDocuments = createServerFn({ method: "GET" })
 
     const titleOf = new Map(((docs ?? []) as any[]).map((d) => [d.id as string, d.title as string]));
     const profileOf = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    const canonicalName = await canonicalNamesForApplications(appIds);
     const investorOf = new Map(
       applications.map((a) => [
         a.id as string,
-        (profileOf.get(a.user_id as string)?.legal_name as string) ||
+        canonicalName.get(a.id as string) ||
+          (profileOf.get(a.user_id as string)?.legal_name as string) ||
           (profileOf.get(a.user_id as string)?.email as string) ||
           "Investor",
       ]),
@@ -783,7 +790,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       return { isAdmin, roles, email: (context.claims as any)?.email ?? null, funds: [] as any[] };
     }
 
-    const [appsRes, flagsRes, docsRes] = await Promise.all([
+    const [appsRes, onbsRes, flagsRes, docsRes] = await Promise.all([
       supabase
         .from("investor_applications")
         .select(
@@ -791,6 +798,14 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
         )
         .in("offering_id", ids)
         .limit(2000),
+      // Current investment records: the same rows the fund workspace lists.
+      supabase
+        .from("investor_onboardings")
+        .select(
+          "id, offering_id, investor_user_id, application_id, stage, funding_status, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, removed_at, merged_into_onboarding_id",
+        )
+        .in("offering_id", ids)
+        .limit(5000),
       supabase
         .from("application_flags")
         .select("id, offering_id, status")
@@ -805,9 +820,11 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
         .limit(500),
     ]);
     if (appsRes.error) throw new Error(appsRes.error.message);
+    if (onbsRes.error) throw new Error("Investor records could not be loaded. Please try again.");
 
     const dashPersons = await loadPersonStatuses(supabase, [...new Set(((appsRes.data ?? []) as any[]).map((a) => a.user_id as string))]);
     const applications = await canonicalizeApplicationFunding(supabase, ((appsRes.data ?? []) as any[]).map((a) => withCanonicalVerification(a, dashPersons)));
+    const onboardings = (onbsRes.data ?? []) as any[];
     const appIds = applications.map((a) => a.id as string);
 
     const [{ data: wires }, { data: payments }] = appIds.length
@@ -828,27 +845,19 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       : [{ data: [] as any[] }, { data: [] as any[] }];
 
     const appOffering = new Map(applications.map((a) => [a.id as string, a.offering_id as string]));
+    const settledByApplication = new Map<string, number>();
+    for (const payment of (payments ?? []) as any[]) {
+      const id = payment.application_id as string;
+      settledByApplication.set(id, (settledByApplication.get(id) ?? 0) + Number(payment.amount_cents ?? 0));
+    }
+    const appsWithRecords = new Set<string>([
+      ...((wires ?? []) as any[]).map((w) => w.application_id as string),
+      ...settledByApplication.keys(),
+    ]);
+    const { managerFundCounts } = await import("@/lib/manager-panel-model");
 
     const summary = (funds ?? []).map((fund: any) => {
-      const own = applications.filter((a) => a.offering_id === fund.id);
-      let identity = 0;
-      let accreditation = 0;
-      let documents = 0;
-      let funding = 0;
-      let complete = 0;
-      let committedCents = 0;
-      const ownIds = new Set(own.map((app) => app.id as string));
-      const receivedCents = ((payments ?? []) as any[])
-        .filter((payment) => ownIds.has(payment.application_id as string))
-        .reduce((sum, payment) => sum + Number(payment.amount_cents ?? 0), 0);
-      for (const app of own) {
-        committedCents += app.commitment_cents ?? 0;
-        if (isReconciledFunding(app.funding_status)) complete += 1;
-        else if (app.kyc_status !== "approved" || app.aml_status !== "approved") identity += 1;
-        else if (app.accreditation_status !== "approved") accreditation += 1;
-        else if (app.documents_status !== "approved") documents += 1;
-        else funding += 1;
-      }
+      const counts = managerFundCounts(fund.id as string, onboardings, applications as any[], settledByApplication, appsWithRecords);
       return {
         id: fund.id as string,
         name: fund.name as string,
@@ -856,14 +865,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
         fundType: (fund.fund_type as string | null) ?? null,
         isOpen: Boolean(fund.is_open),
         targetRaiseCents: Number(fund.target_raise_cents ?? 0),
-        total: own.length,
-        identity,
-        accreditation,
-        documents,
-        funding,
-        complete,
-        committedCents,
-        receivedCents,
+        ...counts,
         signableDocuments: ((docsRes.data ?? []) as any[]).filter(
           (d) => d.offering_id === fund.id,
         ).length,
@@ -947,6 +949,7 @@ export const getWireTracking = createServerFn({ method: "GET" })
     ]);
 
     const profileOf = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    const canonicalName = await canonicalNamesForApplications(appIds);
     const latestWire = new Map<string, any>();
     for (const w of ((wires ?? []) as any[])) {
       if (!latestWire.has(w.application_id as string)) latestWire.set(w.application_id as string, w);
@@ -981,7 +984,7 @@ export const getWireTracking = createServerFn({ method: "GET" })
           fundId: app.offering_id as string,
           fundName: fundName.get(app.offering_id as string) ?? "Fund",
           investorName:
-            (profile?.legal_name as string) || (profile?.email as string) || "Investor",
+            canonicalName.get(app.id as string) || (profile?.legal_name as string) || (profile?.email as string) || "Investor",
           investorEmail: (profile?.email as string) ?? null,
           commitmentCents: (app.commitment_cents as number) ?? null,
           method: (payment?.method as string) ?? null,
@@ -1112,6 +1115,9 @@ export const getWireConfirmationBoard = createServerFn({ method: "GET" })
 
     const appOf = new Map(applications.map((a) => [a.id as string, a]));
     const profileOf = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    const canonicalName = await canonicalNamesForApplications(
+      [...new Set(((wires ?? []) as any[]).map((w) => w.application_id as string))],
+    );
     const paymentOf = new Map<string, any>();
     for (const p of ((payments ?? []) as any[])) {
       const current = paymentOf.get(p.application_id as string);
@@ -1147,7 +1153,8 @@ export const getWireConfirmationBoard = createServerFn({ method: "GET" })
         applicationId: w.application_id as string,
         fundId: (app?.offering_id as string) ?? null,
         fundName: fundName.get(app?.offering_id as string) ?? "Fund",
-        investorName: (profile?.legal_name as string) || (profile?.email as string) || "Investor",
+        investorName:
+          canonicalName.get(w.application_id as string) || (profile?.legal_name as string) || (profile?.email as string) || "Investor",
         investorEmail: (profile?.email as string) ?? null,
         amountCents: (w.amount_cents as number) ?? null,
         commitmentCents: (app?.commitment_cents as number) ?? null,

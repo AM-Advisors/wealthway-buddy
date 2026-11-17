@@ -139,15 +139,21 @@ export async function managerFundDashboard(userId: string, offeringId: string, r
   const facts = built.map((b) => b.fact);
   const k = kpis(facts);
   // Names only for investments in THIS fund.
+  // Person record first, then the investing party, then the login account.
   const userIds = [...new Set(rows.map((r) => r.investor_user_id).filter(Boolean))];
-  const personIds = [...new Set(rows.filter((r) => !r.investor_user_id && r.person_id).map((r) => r.person_id))];
-  const [{ data: profs }, { data: persons }] = await Promise.all([
-    userIds.length ? db().from("profiles").select("user_id, legal_name").in("user_id", userIds) : { data: [] },
+  const personIds = [...new Set(rows.map((r) => r.person_id).filter(Boolean))];
+  const partyIds = [...new Set(rows.map((r) => r.investment_profile_id).filter(Boolean))];
+  const { loadAccountNames } = await import("@/lib/profile-name.server");
+  const [byUser, { data: persons }, { data: parties }] = await Promise.all([
+    loadAccountNames(userIds),
     personIds.length ? db().from("persons").select("id, legal_first_name, legal_last_name").in("id", personIds) : { data: [] },
+    partyIds.length ? db().from("investment_profiles").select("id, legal_name, display_label").in("id", partyIds) : { data: [] },
   ]);
-  const byUser = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name]));
   const byPerson = new Map(((persons ?? []) as any[]).map((p) => [p.id, `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim()]));
-  const nameOf = (r: any) => (r?.investor_user_id ? byUser.get(r.investor_user_id) : byPerson.get(r?.person_id)) || "An investor";
+  const byParty = new Map(((parties ?? []) as any[]).map((p) => [p.id, String(p.legal_name || p.display_label || "").trim()]));
+  const nameOf = (r: any) =>
+    (r?.person_id && byPerson.get(r.person_id)) || (r?.investment_profile_id && byParty.get(r.investment_profile_id)) ||
+    (r?.investor_user_id && byUser.get(r.investor_user_id)) || "An investor";
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const activity = [
     ...rows.map((r) => ({ at: r.created_at as string, label: "Started onboarding", onboardingId: r.id, name: nameOf(r) })),

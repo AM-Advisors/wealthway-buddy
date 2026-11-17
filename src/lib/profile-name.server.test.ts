@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mock = vi.hoisted(() => ({ tables: {} as Record<string, any[]> }));
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
+  auth: { admin: { getUserById: async (id: string) => ({ data: { user: (mock.tables["auth"] ?? []).find((u) => u.id === id) ?? null } }) } },
   from: (table: string) => {
     const filters: ((row: any) => boolean)[] = [];
     const q: any = {
@@ -16,7 +17,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   },
 } }));
 
-import { accountName, loadAccountNames } from "./profile-name.server";
+import { accountName, loadAccountLabels, loadAccountNames } from "./profile-name.server";
 
 describe("loadAccountNames", () => {
   beforeEach(() => {
@@ -57,5 +58,43 @@ describe("loadAccountNames", () => {
   it("resolves a single account name", async () => {
     expect(await accountName("u-profile-blank")).toBe("Doug Mangrum");
     expect(await accountName("u-unknown")).toBeNull();
+  });
+});
+
+describe("loadAccountLabels", () => {
+  const STAFF = "11111111-1111-4111-8111-111111111111";
+  const NO_PROFILE = "22222222-2222-4222-8222-222222222222";
+  const AUTH_ONLY = "33333333-3333-4333-8333-333333333333";
+  const EMAIL_ONLY = "44444444-4444-4444-8444-444444444444";
+  const NOTHING = "55555555-5555-4555-8555-555555555555";
+  beforeEach(() => {
+    mock.tables = {
+      profiles: [
+        { user_id: STAFF, legal_name: "Jenner Smith", email: "jenner@test.dev" },
+        { user_id: EMAIL_ONLY, legal_name: null, email: "emailonly@test.dev" },
+      ],
+      persons: [{ user_id: NO_PROFILE, email: "buckman@test.dev", legal_first_name: "Ann", legal_last_name: "Buckman" }],
+      auth: [{ id: AUTH_ONLY, email: "authonly@test.dev", user_metadata: { full_name: "Auth Person" } }],
+    };
+  });
+
+  it("names a person who has no profile row from their person record", async () => {
+    expect((await loadAccountLabels([NO_PROFILE])).get(NO_PROFILE)).toBe("Ann Buckman");
+  });
+
+  it("keeps the profile name for staff", async () => {
+    expect((await loadAccountLabels([STAFF])).get(STAFF)).toBe("Jenner Smith");
+  });
+
+  it("uses the account email when no name is recorded", async () => {
+    expect((await loadAccountLabels([EMAIL_ONLY])).get(EMAIL_ONLY)).toBe("emailonly@test.dev");
+  });
+
+  it("falls back to the sign-in record when no profile or person exists", async () => {
+    expect((await loadAccountLabels([AUTH_ONLY])).get(AUTH_ONLY)).toBe("Auth Person");
+  });
+
+  it("leaves accounts with nothing on file unresolved", async () => {
+    expect((await loadAccountLabels([NOTHING])).has(NOTHING)).toBe(false);
   });
 });

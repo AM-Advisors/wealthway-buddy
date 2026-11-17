@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { isReconciledFunding } from "@/lib/funding-status";
 
 /** Reviewers are admins (all funds) and fund managers (their assigned funds). */
 async function reviewerScope(supabase: any, userId: string) {
@@ -74,19 +73,15 @@ export const getFundPage = createServerFn({ method: "GET" })
         supabase
           .rpc("get_wire_instructions", { p_offering_id: data.fundId })
           .maybeSingle(),
-        supabase
-          .from("investor_applications")
-          .select("id, status, funding_status, commitment_cents")
-          .eq("offering_id", data.fundId),
+        // Investor counts and money use the shared current-investment totals.
+        import("@/lib/funding-figures.server").then(({ loadFundingFigures }) =>
+          loadFundingFigures(supabase, [{ id: data.fundId, wire_fee_cents: (offering as any).wire_fee_cents }]),
+        ).then((m) => ({ data: m.get(data.fundId)! })),
         supabase.from("investor_fund_access").select("id").eq("offering_id", data.fundId),
         supabase.from("fund_managers").select("user_id").eq("offering_id", data.fundId),
       ]);
 
-    const apps = applications ?? [];
-    const settledCents = apps
-      .filter((a: any) => isReconciledFunding(a.funding_status))
-      .reduce((sum: number, a: any) => sum + Number(a.commitment_cents ?? 0), 0);
-    const committedCents = apps.reduce((sum: number, a: any) => sum + Number(a.commitment_cents ?? 0), 0);
+    const figures = applications as { investors: number; settled: number; committedCents: number; receivedCents: number };
 
     return {
       isAdmin,
@@ -103,12 +98,12 @@ export const getFundPage = createServerFn({ method: "GET" })
         updatedAt: (wireRow as any)?.updated_at ?? null,
       },
       stats: {
-        applications: apps.length,
-        funded: apps.filter((a: any) => isReconciledFunding(a.funding_status)).length,
+        applications: figures.investors,
+        funded: figures.settled,
         investorsWithAccess: (access ?? []).length,
         managers: (managers ?? []).length,
-        committedCents,
-        settledCents,
+        committedCents: figures.committedCents,
+        settledCents: figures.receivedCents,
       },
     };
   });

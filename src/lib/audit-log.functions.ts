@@ -63,14 +63,29 @@ async function lookups(context: any) {
     context.supabase.from("profiles").select("user_id, legal_name, email"),
     context.supabase.from("investor_applications").select("id, offering_id, user_id"),
     context.supabase.from("clients").select("id, name"),
+    context.supabase.from("persons").select("user_id, email, legal_first_name, legal_last_name").not("user_id", "is", null).limit(10000),
   ]);
   assertDiagnosticReads(results);
-  const [funds, people, apps, clients] = results.map(r => r.data);
+  const [funds, people, apps, clients, persons] = results.map(r => r.data);
   const fundName = new Map<string, string>((funds ?? []).map((f: any) => [f.id, f.name]));
   const clientName = new Map<string, string>((clients ?? []).map((c: any) => [c.id, c.name]));
-  const personName = new Map<string, string>(
-    (people ?? []).map((p: any) => [p.user_id, p.legal_name || p.email || "Unknown"]),
-  );
+  // Accounts without a profile row (or with a blank name) still resolve from
+  // their person record, so the Actor column names the real person.
+  const personByUser = new Map<string, { name: string | null; email: string | null }>();
+  for (const p of (persons ?? []) as any[]) {
+    const name = `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim() || null;
+    if (p.user_id) personByUser.set(p.user_id, { name, email: p.email ?? null });
+  }
+  const personName = new Map<string, string>();
+  for (const [id, p] of personByUser) {
+    const label = p.name || p.email;
+    if (label) personName.set(id, label);
+  }
+  for (const p of (people ?? []) as any[]) {
+    const person = personByUser.get(p.user_id);
+    const label = p.legal_name || person?.name || p.email || person?.email;
+    if (label) personName.set(p.user_id, label);
+  }
   const app = new Map<string, { offering_id: string | null; user_id: string | null }>(
     (apps ?? []).map((a: any) => [a.id, { offering_id: a.offering_id, user_id: a.user_id }]),
   );

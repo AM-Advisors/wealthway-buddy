@@ -591,8 +591,12 @@ export async function advanceEntityFormation(
     certificateDocumentId: input.certificateDocumentId ?? record.certificate_document_id,
     einLetterDocumentId: input.einLetterDocumentId ?? record.ein_letter_document_id,
   };
-  const { data: setupRow } = await db().from("fund_setups").select("series_parent_id,series_designation,entity_type,legal_fund_name").eq("id", input.setupId).maybeSingle();
-  const isSeries = !!(setupRow?.series_parent_id || setupRow?.series_designation || /series/i.test(String(setupRow?.entity_type ?? "")) || /\ba series of\b/i.test(String(setupRow?.legal_fund_name ?? "")));
+  const { data: setupRow } = await db().from("fund_setups").select("offering_id,series_parent_id,series_designation,entity_type").eq("id", input.setupId).maybeSingle();
+  // Legal name is canonical on the Fund (offerings.legal_entity_name), never the setup copy.
+  const { data: offRow } = setupRow?.offering_id
+    ? await db().from("offerings").select("legal_entity_name").eq("id", setupRow.offering_id).maybeSingle()
+    : { data: null };
+  const isSeries = !!(setupRow?.series_parent_id || setupRow?.series_designation || /series/i.test(String(setupRow?.entity_type ?? "")) || /\ba series of\b/i.test(String(offRow?.legal_entity_name ?? "")));
   const error = entityStepError(record.step as EntityStep, input.step, evidence, { isSeries });
   if (error) fail(error);
 
@@ -1222,12 +1226,12 @@ export async function syncFundFacts(offeringId: string) {
 
 /** Mark tasks/conditions complete when the entered data already proves them (series master, EIN, wire instructions). Logged; never un-completes. */
 export async function syncAutoCompletedTasks(setupId: string) {
-  const { data: setup } = await db().from("fund_setups").select("id, offering_id, legal_fund_name, created_by").eq("id", setupId).maybeSingle();
+  const { data: setup } = await db().from("fund_setups").select("id, offering_id, created_by").eq("id", setupId).maybeSingle();
   if (!setup) return;
-  const { data: off } = await db().from("offerings").select("name").eq("id", setup.offering_id).maybeSingle();
+  const { data: off } = await db().from("offerings").select("name, legal_entity_name").eq("id", setup.offering_id).maybeSingle();
   const { data: facts } = await db().rpc("fund_setup_entered_facts", { p_offering_id: setup.offering_id });
   const f = (Array.isArray(facts) ? facts[0] : facts) ?? {};
-  const master = seriesMasterName(setup.legal_fund_name) ?? seriesMasterName(off?.name);
+  const master = seriesMasterName(off?.legal_entity_name) ?? seriesMasterName(off?.name);
   const keys = autoCompletedKeys({ seriesMaster: master, hasEin: !!f.has_ein, hasWire: !!f.has_wire });
   const now = nowIso();
   const reason = (k: string) => k === "entity_ein" ? "EIN entered" : k === "banking_account" || k === "banking_active" ? "Wire instructions entered" : `Covered by master entity ${master}`;
@@ -1695,7 +1699,7 @@ export async function clientFundSetup(userId: string, setupId?: string) {
 
   const { data: mine } = await db()
     .from("fund_setups")
-    .select("id,display_name,legal_fund_name,stage,launch_state,offering_id")
+    .select("id,display_name,stage,launch_state,offering_id")
     .in("offering_id", actor.offeringIds.length > 0 ? actor.offeringIds : ["00000000-0000-0000-0000-000000000000"]);
 
   return {

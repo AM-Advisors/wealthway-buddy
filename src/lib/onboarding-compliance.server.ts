@@ -6,7 +6,7 @@
 import { usPersonFromVerification } from "@/lib/subscription-prefill";
 import { financialBackgroundKnown } from "@/lib/investor-financial-background";
 import { taxIntakeDefaults, taxReviewDetails } from "@/lib/investor-step-prefill";
-import { pendingTaxUpload, taxStateWithUpload, type TaxUpload } from "@/lib/tax-upload-state";
+import { pendingTaxUpload, taxStateWithUpload, classificationWithUpload, type TaxUpload } from "@/lib/tax-upload-state";
 import {
   BAD_ACTOR_QUESTIONNAIRE_VERSION,
   BAD_ACTOR_WORDING_STATUS,
@@ -270,6 +270,9 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
     : taxRequirementState({ required: input.taxRequired, routing, profileId, forms: (forms ?? []) as any[], nowIso: input.nowIso });
   const uploadedTaxForm = pendingTaxUpload(p.taxUploads?.get(input.onboarding.id) ?? [], input.onboarding);
   const tax = taxStateWithUpload(taxBase, uploadedTaxForm);
+  // A signed W-9/W-8 states the tax status itself: once Harmonious records the uploaded form as completed
+  // outside the platform, the classification is satisfied by that same confirmation (no second step).
+  const taxClassification = classificationWithUpload(taxClassificationState, uploadedTaxForm);
 
   const baConfig = (rules['badActor'] ?? null) as BadActorConfig | null;
   const roleSet = new Set<string>();
@@ -306,7 +309,7 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
     routing,
     taxFactsId: facts?.id ?? null,
     taxFactsAnswers: facts?.answers ?? null,
-    taxClassificationState,
+    taxClassificationState: taxClassification,
     taxState: tax,
     uploadedTaxForm,
     amlState,

@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { isReconciledFunding } from "@/lib/funding-status";
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -48,91 +47,21 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       };
     }
 
-    const { data: appsRaw } = await supabase
-      .from("investor_applications")
-      .select("id, offering_id, status, funding_status, commitment_cents, wire_fee_cents")
-      .in("offering_id", offeringIds);
-    // Same exclusions as the cap table: withdrawn, declined, rejected or cancelled applications never count.
-    const appRows = ((appsRaw ?? []) as any[]).filter((a) => !["withdrawn", "declined", "rejected", "cancelled"].includes(String(a.status)));
-    const appIds = appRows.map((a) => a.id as string);
-
-    let subRows: any[] = [];
-    let payRows: any[] = [];
-    if (appIds.length) {
-      const [{ data: subs }, { data: payments }] = await Promise.all([
-        supabase
-          .from("subscriptions")
-          .select("application_id, commitment_cents, status")
-          .in("application_id", appIds),
-        supabase
-          .from("payments")
-          .select("application_id, amount_cents, status")
-          .in("application_id", appIds),
-      ]);
-      subRows = (subs ?? []) as any[];
-      payRows = (payments ?? []) as any[];
-    }
-
-    const subByApp = new Map(subRows.map((s) => [s.application_id as string, s]));
-    const paysByApp = new Map<string, any[]>();
-    for (const p of payRows) {
-      const k = p.application_id as string;
-      if (!paysByApp.has(k)) paysByApp.set(k, []);
-      paysByApp.get(k)!.push(p);
-    }
+    const { loadFundingFigures } = await import("@/lib/funding-figures.server");
+    const figures = await loadFundingFigures(supabase, offeringRows);
 
     const funds = offeringRows.map((o) => {
-      const fundApps = appRows.filter((a) => a.offering_id === o.id);
-      const appIds = fundApps.map((a) => a.id);
-
-      const committedCents = fundApps.reduce(
-        (sum, a) => sum + Number(subByApp.get(a.id)?.commitment_cents ?? a.commitment_cents ?? 0),
-        0,
-      );
-      const receivedCents = appIds.reduce(
-        (sum, id) =>
-          sum +
-          (paysByApp.get(id) ?? [])
-            .filter((p) => p.status === "settled")
-            .reduce((s, p) => s + Number(p.amount_cents ?? 0), 0),
-        0,
-      );
-      const inFlightCents = appIds.reduce(
-        (sum, id) =>
-          sum +
-          (paysByApp.get(id) ?? [])
-            .filter((p) => p.status === "processing" || p.status === "awaiting_wire")
-            .reduce((s, p) => s + Number(p.amount_cents ?? 0), 0),
-        0,
-      );
-
-      const inProgress = fundApps.filter(
-        (a) => !isReconciledFunding(a.funding_status) && !["closed", "declined"].includes(String(a.funding_status ?? "")),
-      ).length;
-      const settled = fundApps.filter((a) =>
-        isReconciledFunding(a.funding_status),
-      ).length;
-      const declined = fundApps.filter(
-        (a) => String(a.status ?? "") === "declined" || String(a.funding_status ?? "") === "declined",
-      ).length;
-
-      const targetCents = Number(o.target_raise_cents ?? 0) || null;
       const wireFeeCents = Number((o as any).wire_fee_cents ?? 0);
       const closingCostCents = Number((o as any).closing_cost_cents ?? 0);
-      // Each investor is charged their own rate when one is set, otherwise the fund's.
-      const wireFeesTotalCents = fundApps
-        .filter((a) => isReconciledFunding(a.funding_status))
-        .reduce(
-          (s, a) => s + (a.wire_fee_cents != null ? Number(a.wire_fee_cents) : wireFeeCents),
-          0,
-        );
-      const totalCostsCents = wireFeesTotalCents + closingCostCents;
-      const netReceivedCents = Math.max(0, receivedCents - totalCostsCents);
+      const f = figures.get(o.id as string)!;
+      const targetCents = Number(o.target_raise_cents ?? 0) || null;
+      const totalCostsCents = f.wireFeesTotalCents + closingCostCents;
+      const netReceivedCents = Math.max(0, f.receivedCents - totalCostsCents);
       const percentOfTarget =
         targetCents && targetCents > 0
-          ? Math.min(100, Math.round((receivedCents / targetCents) * 100))
+          ? Math.min(100, Math.round((f.receivedCents / targetCents) * 100))
           : null;
-      const remainingToTargetCents = targetCents ? Math.max(0, targetCents - receivedCents) : null;
+      const remainingToTargetCents = targetCents ? Math.max(0, targetCents - f.receivedCents) : null;
 
       return {
         id: o.id as string,
@@ -141,19 +70,19 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
         regType: o.reg_type as string,
         isOpen: Boolean(o.is_open),
         targetCents,
-        applications: fundApps.length,
-        inProgress,
-        settled,
-        declined,
-        committedCents,
-        receivedCents,
-        inFlightCents,
-        outstandingCents: Math.max(0, committedCents - receivedCents),
+        applications: f.investors,
+        inProgress: f.inProgress,
+        settled: f.settled,
+        declined: f.declined,
+        committedCents: f.committedCents,
+        receivedCents: f.receivedCents,
+        inFlightCents: f.inFlightCents,
+        outstandingCents: Math.max(0, f.committedCents - f.receivedCents),
         percentOfTarget,
         remainingToTargetCents,
         wireFeeCents,
         closingCostCents,
-        wireFeesTotalCents,
+        wireFeesTotalCents: f.wireFeesTotalCents,
         totalCostsCents,
         netReceivedCents,
       };
