@@ -230,7 +230,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
 
       {tab === "documents" ? <>
       <h3 id="ir-sec-documents" className="scroll-mt-14 pt-2 text-lg font-semibold">Documents</h3>
-      <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
+      <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} fundId={fundId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
         <div className="mt-2"><Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/documents"} params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div>
       </> : null}
 
