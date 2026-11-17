@@ -34,6 +34,7 @@ import {
   type TermDocumentKey,
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
+import { FundSetupAiReader } from "@/components/fund-setup-ai-reader";
 import { ClassAssignmentCard, FundSetupPhase3 } from "@/components/fund-setup-phase3";
 import { FundServicesCard } from "@/components/fund-services-card";
 import { FormationRecordCard } from "@/components/formation-record-card";
@@ -116,6 +117,8 @@ export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch =
           })}
         </CardContent>
       </Card>
+
+      <FundSetupAiReader offeringId={offeringId} />
 
       <GuidedSetup
         steps={[
