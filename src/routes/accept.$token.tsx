@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AgreementReader } from "@/components/agreement-reader";
 import { ClientSowReader } from "@/components/sales/client-sow-reader";
 import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
 import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
@@ -145,42 +146,28 @@ function AcceptPage() {
       ) : (
         <Card>
           <CardHeader><CardTitle className="font-heading">Sign and approve</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div><Label htmlFor="sn">Full name</Label><Input id="sn" value={name} onChange={(e) => setName(e.target.value)} /></div>
-              <div><Label htmlFor="st">Title (optional)</Label><Input id="st" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5"><Label htmlFor="sn">Full name</Label><Input id="sn" value={name} onChange={(e) => setName(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label htmlFor="st">Title (optional)</Label><Input id="st" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             </div>
             {d.msa && (
-              <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={msaAgree} onChange={(e) => setMsaAgree(e.target.checked)} />
-                <span>I have read and accept the <button type="button" className="font-medium text-primary underline" onClick={() => setShowMsa(true)}>Master Service Agreement</button> (version {d.msa.version}) on behalf of my organization.</span></label>
-            )}
-            {d.msa && showMsa && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4" onClick={() => setShowMsa(false)}>
-                <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border bg-card p-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
-                  <div className="mb-2 flex items-center justify-between"><p className="font-heading font-semibold text-primary">Master Services Agreement · version {d.msa.version}</p>
-                    <Button size="sm" variant="outline" onClick={() => setShowMsa(false)}>Close</Button></div>
-                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 text-sm">
-                    {d.msa.sections.map((x, i) => <div key={i}><p className="font-semibold">{x.no ? `${x.no}. ` : ""}{x.title}</p><p className="whitespace-pre-wrap">{x.body}</p></div>)}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">You accept this once. You'll only be asked again if Harmonious updates it and assigns the new version to you.</p>
-                </div>
+              <div className="space-y-2 rounded-md border p-3">
+                <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={msaAgree} onChange={(e) => setMsaAgree(e.target.checked)} />
+                  <span>I have read and accept the Master Services Agreement (version {d.msa.version}) on behalf of my organization.</span></label>
+                <AgreementReader title={`Harmonious Master Services Agreement · version ${d.msa.version}`} sections={d.msa.sections} filename={`Harmonious-MSA-v${d.msa.version}.pdf`} />
+                <p className="text-xs text-muted-foreground">You don't need to keep it open to sign. You accept this once, and you'll only be asked again if Harmonious assigns you a new version.</p>
               </div>
             )}
             {(d.policies ?? []).map((p) => p.acceptedAt ? (
               <p key={p.documentId} className="text-sm text-muted-foreground">{p.label}: already accepted on {new Date(p.acceptedAt).toLocaleDateString()}</p>
             ) : (
-              <label key={p.documentId} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={ticked.includes(p.documentId)} onChange={(e) => setTicked((t) => e.target.checked ? [...t, p.documentId] : t.filter((x) => x !== p.documentId))} />
-                <span>I have read and accept the <button type="button" className="font-medium text-primary underline" onClick={() => setOpenPolicy(p.documentId)}>{p.label}</button> (version {p.version}).</span></label>
-            ))}
-            {shownPolicy && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4" onClick={() => setOpenPolicy(null)}>
-                <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border bg-card p-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
-                  <div className="mb-2 flex items-center justify-between"><p className="font-heading font-semibold text-primary">{shownPolicy.label} · version {shownPolicy.version}</p>
-                    <Button size="sm" variant="outline" onClick={() => setOpenPolicy(null)}>Close</Button></div>
-                  <div className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap pr-1 text-sm">{shownPolicy.body}</div>
-                </div>
+              <div key={p.documentId} className="space-y-2 rounded-md border p-3">
+                <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={ticked.includes(p.documentId)} onChange={(e) => setTicked((t) => e.target.checked ? [...t, p.documentId] : t.filter((x) => x !== p.documentId))} />
+                  <span>I have read and accept the {p.label} (version {p.version}).</span></label>
+                <AgreementReader title={`${p.label} · version ${p.version}`} sections={[{ body: p.body }]} filename={`Harmonious-${p.label.replace(/[^A-Za-z0-9]+/g, "-")}-v${p.version}.pdf`} />
               </div>
-            )}
+            ))}
             <MethodPicker value={method} onChange={setMethod} />
             {(d as any).payer && <p className="text-sm text-muted-foreground">The invoice will also go to {(d as any).payer.name} ({(d as any).payer.email}).</p>}
             {(d as any).canAddTeammate && <TeammateBox token={token} onDone={(handedOff) => handedOff ? qc.invalidateQueries({ queryKey: ["accept", token] }) : qc.invalidateQueries({ queryKey: ["accept", token] })} />}
@@ -210,13 +197,14 @@ function AcceptPage() {
 function TeammateBox({ token, onDone }: { token: string; onDone: (handedOff: boolean) => void }) {
   const add = useServerFn(addAcceptanceTeammate);
   const [open, setOpen] = useState(false);
-  const [role, setRole] = useState<"sign" | "pay">("pay");
+  const [role, setRole] = useState<"sign" | "pay" | "review">("review");
   const [n, setN] = useState(""); const [e, setE] = useState(""); const [t, setT] = useState(""); const [busy, setBusy] = useState(false);
-  if (!open) return <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>Add someone from my team</Button>;
+  if (!open) return <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>Send to someone to review or sign</Button>;
   return (
     <div className="space-y-3 rounded-md border p-3">
-      <p className="text-sm font-medium">Add someone from your team</p>
+      <p className="text-sm font-medium">Send to someone</p>
       <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" variant={role === "review" ? "default" : "outline"} onClick={() => setRole("review")}>Review only</Button>
         <Button type="button" size="sm" variant={role === "pay" ? "default" : "outline"} onClick={() => setRole("pay")}>They'll receive and pay the invoice</Button>
         <Button type="button" size="sm" variant={role === "sign" ? "default" : "outline"} onClick={() => setRole("sign")}>They should sign instead of me</Button>
       </div>
@@ -225,11 +213,12 @@ function TeammateBox({ token, onDone }: { token: string; onDone: (handedOff: boo
         <div><Label htmlFor="tm-e">Email</Label><Input id="tm-e" type="email" value={e} onChange={(x) => setE(x.target.value)} /></div>
         <div><Label htmlFor="tm-t">Title (optional)</Label><Input id="tm-t" value={t} onChange={(x) => setT(x.target.value)} /></div>
       </div>
+      {role === "review" && <p className="text-xs text-muted-foreground">We'll email them a link to read everything, including the MSA. They can't sign; you still sign here.</p>}
       {role === "sign" && <p className="text-xs text-muted-foreground">We'll email them their own link to sign. Your link will stop working for signing.</p>}
       <div className="flex gap-2">
         <Button type="button" size="sm" disabled={busy || n.trim().length < 2 || !e.includes("@")} onClick={async () => {
           setBusy(true);
-          try { const r = await add({ data: { token, role, fullName: n, email: e, title: t || null } }); toast.success(r.handedOff ? `Sent to ${n} to sign` : `${n} will receive the invoice`); setOpen(false); onDone(r.handedOff); }
+          try { const r = await add({ data: { token, role, fullName: n, email: e, title: t || null } }); toast.success(r.handedOff ? `Sent to ${n} to sign` : role === "review" ? `Sent to ${n} to review` : `${n} will receive the invoice`); setOpen(false); onDone(r.handedOff); }
           catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
         }}>Save</Button>
         <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

@@ -62,7 +62,7 @@ async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded
 /** A quote's signer can be changed before signing; the old person's link then stops working. */
 function replacedSigner(r: Loaded, email: string | null | undefined) {
   if (r.kind !== "quote" || !email || !r.recipientEmail) return null;
-  return r.recipientEmail.trim().toLowerCase() === email.trim().toLowerCase() ? null : "This quote now has a different signer. Please ask your Harmonious contact for help.";
+  return r.recipientEmail.trim().toLowerCase() === email.trim().toLowerCase() ? null : "This link is for review only. The person signing has their own link.";
 }
 
 async function fromToken(token: string) {
@@ -461,7 +461,7 @@ async function notifyAfterSign(db: any, r: Loaded, acc: any, inv: { id: string; 
  * The current signer, from their own link and before signing, can name a teammate to sign
  * instead or to receive and pay the invoice. Recorded as the client's action (no staff actor).
  */
-export async function teammateByToken(d: { token: string; role: "sign" | "pay"; fullName: string; email: string; title?: string | null | undefined; ip: string | null }) {
+export async function teammateByToken(d: { token: string; role: "sign" | "pay" | "review"; fullName: string; email: string; title?: string | null | undefined; ip: string | null }) {
   const t = await fromToken(d.token);
   if (t.kind !== "quote") throw new Error("Ask your Harmonious contact to change who signs this document.");
   const db = await admin();
@@ -472,6 +472,17 @@ export async function teammateByToken(d: { token: string; role: "sign" | "pay"; 
   if (!r.clientId || !r.ownerId) throw new Error("Ask your Harmonious contact to add your teammate.");
   const email = d.email.trim().toLowerCase();
   if (d.role === "sign" && email === String(t.email).toLowerCase()) throw new Error("That's already you.");
+  if (d.role === "review") {
+    if (email === String(t.email).toLowerCase()) throw new Error("That's already you.");
+    // A link bound to a non-signer email is read-only: signing refuses it (replacedSigner).
+    const url = await acceptLinkFor("quote", t.id, t.version, email);
+    await db.from("sales_quote_events").insert({ quote_id: t.id, event: "client_review_shared", actor_id: null, note: `${t.email} (client, via sign link) shared for review with ${email}` });
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("signing-reminder", email, { idempotencyKey: `quote-review:${t.id}:${t.version}:${email}`, templateData: {
+      recipientName: d.fullName.trim(), documentTitle: r.title, fundName: "your organization", steps: ["Read the quote and Master Services Agreement", "Send any comments back"],
+      requestedBy: t.email, ctaUrl: url, ctaLabel: "Review" } });
+    return { ok: true, handedOff: false };
+  }
   const { data: existing } = await db.from("crm_contacts").select("id").eq("client_id", r.clientId).ilike("email", email).limit(1).maybeSingle();
   let contactId = existing?.id as string | undefined;
   if (!contactId) {

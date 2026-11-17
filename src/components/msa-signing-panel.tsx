@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check } from "lucide-react";
+import { Check, Download } from "lucide-react";
+import { downloadAgreementPdf } from "@/components/agreement-reader";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -78,7 +79,12 @@ export function MsaSigningPanel({
         </Card>
       )}
 
-      <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button type="button" size="sm" variant="outline" onClick={() => void downloadAgreementPdf("Harmonious Master Services Agreement", data.sections, "Harmonious-MSA.pdf")}>
+          <Download className="mr-2 h-4 w-4" />Download PDF
+        </Button>
+      </div>
+      <div className="max-h-[60vh] space-y-4 overflow-y-auto rounded-md border p-3">
         {data.sections.map((section) => (
           <Card key={section.id}>
             <CardHeader className="pb-3">
@@ -139,11 +145,11 @@ export function MsaSigningPanel({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label htmlFor="msa-name">Full legal name</Label>
                 <Input id="msa-name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label htmlFor="msa-title">Title</Label>
                 <Input id="msa-title" value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>

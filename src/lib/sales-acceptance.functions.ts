@@ -33,7 +33,7 @@ export const signAcceptance = createServerFn({ method: "POST" })
   });
 
 export const addAcceptanceTeammate = createServerFn({ method: "POST" })
-  .validator((d) => z.object({ token, role: z.enum(["sign", "pay"]), fullName: z.string().trim().min(2).max(160), email: z.string().trim().email().max(255), title: z.string().trim().max(160).nullish() }).parse(d))
+  .validator((d) => z.object({ token, role: z.enum(["sign", "pay", "review"]), fullName: z.string().trim().min(2).max(160), email: z.string().trim().email().max(255), title: z.string().trim().max(160).nullish() }).parse(d))
   .handler(async ({ data }) => { noStore(); return (await S()).teammateByToken({ ...data, ip: ip() }); });
 
 export const acceptanceRemittance = createServerFn({ method: "POST" })
