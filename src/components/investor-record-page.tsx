@@ -102,7 +102,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           card.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
         }, 80);
       }
-      else if (staff) navigate({ to: "/admin/investor-onboarding" });
+      else if (staff) navigate({ to: "/admin/investor-onboarding", search: { onboarding: onboardingId } });
       else toast.message("Harmonious handles this step. It's already on their list.");
       return;
     }

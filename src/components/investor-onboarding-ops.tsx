@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 const money = (cents: number | null | undefined) =>
   cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
-export function InvestorOnboardingOps() {
+export function InvestorOnboardingOps({ initialOnboardingId = null }: { initialOnboardingId?: string | null } = {}) {
   const qc = useQueryClient();
   const queueFn = useServerFn(reviewQueueFn);
   const detailFn = useServerFn(reviewDetailFn);
@@ -32,7 +32,8 @@ export function InvestorOnboardingOps() {
   const raiseFn = useServerFn(raiseExceptionFn);
   const resolveFn = useServerFn(resolveExceptionFn);
 
-  const [selected, setSelected] = useState<string | null>(null);
+  // A link to one investor (?onboarding=) opens that investor's review directly.
+  const [selected, setSelected] = useState<string | null>(initialOnboardingId);
   const [signer, setSigner] = useState("");
   const [capacity, setCapacity] = useState("");
   const [search, setSearch] = useState("");

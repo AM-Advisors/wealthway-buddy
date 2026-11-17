@@ -86,7 +86,9 @@ export function ViewAsBanner({ ctx }: { ctx: any }) {
       qc.removeQueries({ queryKey: ["view-as"] });
       qc.invalidateQueries({ queryKey: ["edit-context"] });
       // Existing Operations screens and their canonical save paths; edits are recorded under the staff account.
-      if (r.onboardingId) navigate({ to: "/admin/investor-onboarding" });
+      // Return to the exact investor record being viewed, never the general queue.
+      if (r.onboardingId && r.offeringId) navigate({ to: "/ops/fund/$fundId/investor/$onboardingId", params: { fundId: r.offeringId, onboardingId: r.onboardingId } });
+      else if (r.onboardingId) navigate({ to: "/admin/investor-onboarding", search: { onboarding: r.onboardingId } });
       else navigate({ to: "/manager/fund/$fundId", params: { fundId: r.offeringId } });
       return;
     }

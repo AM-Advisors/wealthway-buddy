@@ -21,14 +21,21 @@ export const Route = createFileRoute("/_authenticated/admin/investor-onboarding"
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => (
+  validateSearch: (s: Record<string, unknown>): { onboarding?: string } =>
+    typeof s["onboarding"] === "string" && s["onboarding"] ? { onboarding: s["onboarding"] } : {},
+  component: InvestorOnboardingPage,
+});
+
+function InvestorOnboardingPage() {
+  const { onboarding } = Route.useSearch();
+  return (
     <main className="mx-auto max-w-7xl px-4 py-10">
       <h1 className="text-3xl">Investor onboarding</h1>
       <p className="mb-6 mt-2 text-sm text-muted-foreground">
         Everything waiting on Harmonious: checks to review, subscriptions to approve, money to
         confirm and investors to admit.
       </p>
-      <InvestorOnboardingOps />
+      <InvestorOnboardingOps initialOnboardingId={onboarding ?? null} />
     </main>
-  ),
-});
+  );
+}
