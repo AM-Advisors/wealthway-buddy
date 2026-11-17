@@ -29,6 +29,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
   const start = useServerFn(startPriorUploadFn);
   const record = useServerFn(recordPriorDocFn);
   const open = useServerFn(openPriorDocFn);
+  const getOutside = useServerFn(outsideSubscriptionFn);
   const q = useQuery({ queryKey: key, queryFn: () => list({ data: { fundId, onboardingId } }) });
   const [adding, setAdding] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -71,10 +72,12 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
 
   // An active signed Subscription Agreement is changed only through Replace, never loaded a second time.
   const hasActiveSub = (q.data ?? []).some((d) => d.kind === "subscription_agreement" && !d.replaced);
+  const outside = useQuery({ queryKey: ["prior-signed-docs", onboardingId, "outside"], queryFn: () => getOutside({ data: { fundId, onboardingId } }) });
+  const outsideDone = !!outside.data?.marked && !!outside.data?.complete;
   const kindOptions = Object.entries(KINDS).filter(([k]) => !(hasActiveSub && !replacesId && k === "subscription_agreement"));
   return (
     <div className="space-y-4">
-    <OutsideSubscription fundId={fundId} onboardingId={onboardingId} onLoad={() => openForm(() => { setKind("subscription_agreement"); setTitle("Subscription Agreement"); })} />
+    {!outsideDone && <OutsideSubscription fundId={fundId} onboardingId={onboardingId} onLoad={() => openForm(() => { setKind("subscription_agreement"); setTitle("Subscription Agreement"); })} />}
     <section className="space-y-2" aria-label="Previously signed documents">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-medium">Signed before joining Harmonious</h4>
@@ -87,15 +90,16 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
             <div className="min-w-0">
               <p className="break-words font-medium">{d.title}</p>
-              <p className="text-xs text-muted-foreground">{d.kindLabel} · Signed {d.signedOn} · Loaded by {d.uploadedBy}{d.replaced ? " · Replaced, retained copy" : ""}</p>
+              <p className="text-xs text-muted-foreground">{d.kindLabel !== d.title ? `${d.kindLabel} · ` : ""}Signed {d.signedOn} · Loaded by {d.uploadedBy}{outsideDone && d.kind === "subscription_agreement" && !d.replaced ? " · Signed outside the platform" : ""}{d.replaced ? " · Replaced, retained copy" : ""}</p>
               {d.note && <p className="text-xs text-muted-foreground">{d.note}</p>}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" onClick={async () => {
                 try { const r = await open({ data: { fundId, onboardingId, documentId: d.id } }); const a = document.createElement("a"); a.href = r.url; a.download = ""; a.rel = "noreferrer"; a.click(); }
                 catch (e) { toast.error(e instanceof Error ? e.message : "The document could not be opened."); }
               }}>Download</Button>
               {!d.replaced && <Button size="sm" variant="ghost" onClick={() => openForm(() => { setReplacesId(d.id); setKind(d.kind as Kind); setTitle(d.title); })}>Replace</Button>}
+              {outsideDone && d.kind === "subscription_agreement" && !d.replaced && <UndoOutside fundId={fundId} onboardingId={onboardingId} />}
             </div>
           </div>
         )) : !adding && <p className="text-muted-foreground">No documents loaded.</p>}
@@ -168,4 +172,29 @@ function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string;
       )}
     </section>
   );
+}
+
+/** Inline undo for a completed outside-signed Subscription Agreement; reason still required. */
+function UndoOutside({ fundId, onboardingId }: { fundId: string; onboardingId: string }) {
+  const qc = useQueryClient();
+  const mark = useServerFn(markOutsideSubscriptionFn);
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (!open) return <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>Undo</Button>;
+  return <div className="flex w-full flex-wrap items-center gap-2">
+    <Input className="min-w-48 flex-1" aria-label="Reason" placeholder="Reason for undoing (required)" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
+    <Button size="sm" variant="outline" disabled={busy || !note.trim()} onClick={async () => {
+      setBusy(true);
+      try {
+        await mark({ data: { fundId, onboardingId, marked: false, signedOn: null, note: note.trim() } });
+        toast.success("Outside signing undone.");
+        setOpen(false); setNote("");
+        await qc.invalidateQueries({ queryKey: ["prior-signed-docs", onboardingId] });
+        await refreshFund(qc);
+      } catch (e) { toast.error(e instanceof Error ? e.message : "This could not be saved."); }
+      finally { setBusy(false); }
+    }}>{busy ? "Saving…" : "Confirm undo"}</Button>
+    <Button size="sm" variant="ghost" disabled={busy} onClick={() => setOpen(false)}>Cancel</Button>
+  </div>;
 }
