@@ -26,7 +26,7 @@ describe("Harmonious Team", () => {
     expect(defaultSalesOwner("me", ["sales"], "other")).toBe("other");
   });
   it("McKay Pettit is the automatic Sales owner for new Clients", () => {
-    expect(DEFAULT_SALES_EMAIL).toBe("mckay@storybookvc.com");
+    expect(DEFAULT_SALES_EMAIL).toBe("mckay@harmonious.co");
     // The server seeds with McKay's id as the chosen owner; a chosen owner always wins.
     expect(defaultSalesOwner("me", ["sales"], "mckay-id")).toBe("mckay-id");
     expect(eligibleFor("sales", ["client_gp", "sales"])).toBe(true);
