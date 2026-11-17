@@ -4,6 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 export const DEAL_DOC_TABS = [
   { url: "/sales/documents", label: "Proposals & RFPs" },
   { url: "/sales/quotes", label: "Quotes" },
+  { url: "/sales/custom-services", label: "Custom services" },
   { url: "/admin/agreements", label: "MSAs & SOWs" },
   { url: "/ops/contracts/sow-templates", label: "SOW templates" },
 ] as const;

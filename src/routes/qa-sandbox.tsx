@@ -25,6 +25,8 @@ import { WealthPortfolio } from "@/components/wealth-portfolio";
 import { FoundationWorkspace } from "@/components/foundation-workspace";
 import { FoundationClientOnboarding } from "@/components/foundation-client-onboarding";
 import { FoundationConfigurator } from "@/components/sales/foundation-configurator";
+import { CustomServicesWorkspace } from "@/components/sales/custom-services-workspace";
+import { createQaCustomServices, type QaCustomActor } from "@/lib/qa-sandbox/custom-services-fixture";
 import { QA_FOUNDATION_CLIENT } from "@/lib/qa-sandbox/foundation-fixture";
 import { QA_SUBMISSION_FUND } from "@/lib/qa-sandbox/fund-submission-fixture";
 import { History as FundSubmissionHistory } from "@/components/fund-manager-setup-loader";
@@ -152,7 +154,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey" | "foundation" | "shared">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey" | "foundation" | "shared" | "custom">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -180,11 +182,12 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "signin" ? "default" : "outline"} onClick={() => setTab("signin")}>Sign-in check</Button>
             <Button size="sm" variant={tab === "foundation" ? "default" : "outline"} onClick={() => setTab("foundation")}>Foundation</Button>
             <Button size="sm" variant={tab === "shared" ? "default" : "outline"} onClick={() => setTab("shared")}>Shared review: fund</Button>
+            <Button size="sm" variant={tab === "custom" ? "default" : "outline"} onClick={() => setTab("custom")}>Custom services</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "foundation" ? <QaFoundationArea /> : tab === "shared" ? <QaSharedFundReview key={formKey} /> : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner John Smith: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "custom" ? <QaCustomServicesArea /> : tab === "foundation" ? <QaFoundationArea /> : tab === "shared" ? <QaSharedFundReview key={formKey} /> : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner John Smith: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>
@@ -284,6 +287,26 @@ function QaSharedFundReview() {
       <p className="text-sm text-muted-foreground">Fictional fund Ridgeview Sample Fund I, shown with the same review list the fund Setup tab uses. Decisions go to the fund review action modeled in memory. Nothing reaches the real backend.</p>
       <div aria-label="Fund submission review" className="space-y-2 rounded-md border p-3"><h3 className="font-semibold">Fund manager submissions</h3>
         {q.data ? <FundSubmissionHistory items={(q.data as any).items} isStaff={!!(q.data as any).isStaff} viewerId={(q.data as any).viewerId} onChange={() => qc.invalidateQueries({ queryKey: ["fund-submissions", QA_SUBMISSION_FUND] })} /> : <p className="text-sm">Loading…</p>}</div>
+    </section>
+  );
+}
+
+/** Fictional custom services: switch between the Sales writer and a Product Reviewer. No AI, Slack or quotes are touched. */
+function QaCustomServicesArea() {
+  const { state } = useQa();
+  const qc = useQueryClient();
+  const cs = (state.customServices ??= createQaCustomServices());
+  const [actor, setActor] = useState<QaCustomActor>(cs.actor);
+  const pick = (a: QaCustomActor) => { cs.actor = a; setActor(a); void qc.invalidateQueries({ queryKey: ["custom-services"] }); };
+  return (
+    <section aria-label="Custom services" className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Signed in as">
+        <span className="text-sm text-muted-foreground">Signed in as:</span>
+        <Button size="sm" variant={actor === "writer" ? "default" : "outline"} onClick={() => pick("writer")}>Sales writer</Button>
+        <Button size="sm" variant={actor === "reviewer" ? "default" : "outline"} onClick={() => pick("reviewer")}>Product reviewer</Button>
+      </div>
+      {cs.notices.length > 0 && <p className="text-xs text-muted-foreground" aria-label="Fictional notices">Notices that would go to the review team: {cs.notices.join(" · ")}</p>}
+      <CustomServicesWorkspace key={actor} hideTabs />
     </section>
   );
 }

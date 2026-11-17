@@ -7,6 +7,7 @@ import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "
 import { sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import { normalizeQuoteBilling } from "@/lib/quote-billing";
 import { isFoundationKey } from "@/lib/foundation-admin-model";
+import { customServiceIdFromKey, isCustomServiceKey, priceCustomLine } from "@/lib/custom-service-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -25,7 +26,8 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
   const adminLevels = await adminCatalog();
   const { data: funds } = clientId ? await db.from("offerings").select("id, name").eq("client_id", clientId).order("name") : { data: [] };
   const { data: contacts } = clientId ? await db.from("crm_contacts").select("id, full_name, email, title").eq("client_id", clientId).not("email", "is", null).order("full_name").limit(200) : { data: [] };
-  return { funds: (funds ?? []) as any[], contacts: (contacts ?? []) as any[], versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, quarterlyCents: l.quarterlyCents ?? null, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
+  const customServices = await (await import("@/lib/custom-services.server")).activeCustomServices().catch(() => []);
+  return { customServices, funds: (funds ?? []) as any[], contacts: (contacts ?? []) as any[], versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, quarterlyCents: l.quarterlyCents ?? null, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
 }
 
 /** Administration levels as quote lines, keyed by product + level, from current pricing versions. */
@@ -161,7 +163,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   const { loadBaseline } = await import("@/lib/commercial-pricing.server");
   const base = await loadBaseline(d.clientId ?? null);
   const card = new Map([...base.lines, ...(await adminCatalog())].map((l: any) => [l.serviceKey, l]));
-  const unknown = d.lines.find((l) => l.serviceKey !== BOOKKEEPING_KEY && !isFoundationKey(l.serviceKey) && !card.has(l.serviceKey));
+  const unknown = d.lines.find((l) => l.serviceKey !== BOOKKEEPING_KEY && !isFoundationKey(l.serviceKey) && !isCustomServiceKey(l.serviceKey) && !card.has(l.serviceKey));
   if (unknown) throw new Error(`"${unknown.label || unknown.serviceKey}" isn't on the current rate card.`);
   // Baseline and label always come from the live rate card, never from the browser.
   const db = await admin();
@@ -169,6 +171,33 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   const foundationSnaps = new Map<number, any>();
   let foundationNeedsExec = false;
   const pendingLines = new Map<number, QuoteLineInput>();
+  // Custom services written by Sales: no rate card, so the typed price always needs CEO or CRO.
+  // Retired services stay on quotes that already had them, but can't be newly added.
+  let customNeedsExec = false;
+  if (d.lines.some((l) => isCustomServiceKey(l.serviceKey))) {
+    const ids = [...new Set(d.lines.map((l) => customServiceIdFromKey(l.serviceKey)).filter((x): x is string => !!x))];
+    const { data: svcs, error: svcError } = await db.from("sales_custom_services").select("id, name, summary, included, excluded, billing_frequency, archived_at").in("id", ids);
+    if (svcError) throw new Error("Couldn't check the custom services on this quote.");
+    const byId = new Map(((svcs ?? []) as any[]).map((r) => [r.id as string, r]));
+    const priorIds = [d.id, d.supersedingQuoteId].filter((x): x is string => !!x);
+    const prior = new Set<string>();
+    if (priorIds.length) {
+      const { data: had } = await db.from("sales_quote_lines").select("service_key").in("quote_id", priorIds);
+      for (const h of (had ?? []) as any[]) prior.add(h.service_key);
+    }
+    for (const [i, l] of d.lines.entries()) {
+      if (!isCustomServiceKey(l.serviceKey)) continue;
+      const svc = byId.get(customServiceIdFromKey(l.serviceKey) ?? "");
+      if (!svc) throw new Error(`"${l.label || "Custom service"}" isn't in the custom services list.`);
+      if (svc.archived_at && !prior.has(l.serviceKey)) throw new Error(`"${svc.name}" was retired. Pick another service.`);
+      if (l.bookkeeping || l.foundation) throw new Error("Custom services can't carry bookkeeping or foundation terms.");
+      const p = priceCustomLine(l, svc.name);
+      customNeedsExec = true;
+      const freq = (["one_time", "monthly", "quarterly", "annual"] as const).find((f) => f === l.billingFrequency) ?? svc.billing_frequency ?? "one_time";
+      const details = cleanLineDetails(l.details) ?? cleanLineDetails({ scope: svc.summary, included: svc.included ?? [], excluded: svc.excluded ?? [] });
+      pendingLines.set(i, { ...l, label: svc.name, quantity: p.quantity, unitCents: p.unitCents, baselineUnitCents: p.unitCents, billingFrequency: freq, details, foundation: undefined, bookkeeping: undefined });
+    }
+  }
   // Foundation Administration: approved rate when one exists, otherwise an explicit negotiated price
   // that always needs executive approval; never $0, never auto-approved, never sent while unreleased.
   if (d.lines.some((l) => isFoundationKey(l.serviceKey) || l.foundation)) {
@@ -238,7 +267,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   let id = d.id ?? null;
   const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null, offering_id: d.offeringId || null,
     valid_until: d.validUntil || null, notes: d.notes || null, ...(d.billingContactId !== undefined ? { billing_contact_id: d.billingContactId || null } : {}), total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
-    needs_exec_approval: priced.needsExecApproval || foundationNeedsExec || [...snapshots.values()].some((s) => s.pricing?.needsExecutiveApproval), pricing_version_id: base.versionId, updated_at: now,
+    needs_exec_approval: priced.needsExecApproval || foundationNeedsExec || customNeedsExec || [...snapshots.values()].some((s) => s.pricing?.needsExecutiveApproval), pricing_version_id: base.versionId, updated_at: now,
     ...(d.sections !== undefined ? { sections: sanitizeQuoteSections(d.sections) } : {}) };
   const savedLines = priced.lines.map((l, i) => ({ service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents,
     baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
@@ -571,7 +600,13 @@ export async function quoteFromSow(userId: string, sowId: string) {
   const card = new Map([...(await loadBaseline(sow.client_id)).lines, ...(await adminCatalog())].map((l: any) => [l.serviceKey, l]));
   const src = Array.isArray(sow.generated_lines) ? (sow.generated_lines as any[]) : [];
   const lines = src.map((l) => {
-    const key = l.service_key ?? l.serviceKey ?? l.key; const c: any = card.get(key);
+    const key = l.service_key ?? l.serviceKey ?? l.key;
+    if (isCustomServiceKey(key)) {
+      const qty = Number(l.quantity ?? 1) || 1;
+      const unit = Math.round(Number(l.unit_cents ?? l.unitCents ?? (l.amount_cents != null ? Number(l.amount_cents) / qty : 0)));
+      return { serviceKey: key, label: l.label ?? "Custom service", quantity: qty, unitCents: unit, baselineUnitCents: unit, billingFrequency: l.billing_frequency ?? l.billingFrequency ?? undefined, firstBillOn: l.first_bill_on ?? null, details: l.service_details ?? undefined } as QuoteLineInput;
+    }
+    const c: any = card.get(key);
     if (!c) return null;
     const qty = Number(l.quantity ?? 1) || 1;
     const unit = Number(l.unit_cents ?? l.unitCents ?? (l.amount_cents != null ? Number(l.amount_cents) / qty : c.baselineCents));

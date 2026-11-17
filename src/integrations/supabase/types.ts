@@ -44257,6 +44257,110 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_custom_service_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          service_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          service_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_custom_service_events_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "sales_custom_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_custom_services: {
+        Row: {
+          archived_at: string | null
+          archived_by: string | null
+          billing_frequency: string
+          category: string
+          created_at: string
+          created_by: string
+          excluded: string[]
+          id: string
+          included: string[]
+          name: string
+          product_target: string | null
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          suggested_price_cents: number | null
+          summary: string
+          updated_at: string
+          updated_by: string | null
+          written_with: string
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
+          billing_frequency?: string
+          category?: string
+          created_at?: string
+          created_by: string
+          excluded?: string[]
+          id?: string
+          included?: string[]
+          name: string
+          product_target?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          suggested_price_cents?: number | null
+          summary: string
+          updated_at?: string
+          updated_by?: string | null
+          written_with?: string
+        }
+        Update: {
+          archived_at?: string | null
+          archived_by?: string | null
+          billing_frequency?: string
+          category?: string
+          created_at?: string
+          created_by?: string
+          excluded?: string[]
+          id?: string
+          included?: string[]
+          name?: string
+          product_target?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          suggested_price_cents?: number | null
+          summary?: string
+          updated_at?: string
+          updated_by?: string | null
+          written_with?: string
+        }
+        Relationships: []
+      }
       sales_document_assist_requests: {
         Row: {
           assignee_user_id: string | null
@@ -52703,6 +52807,7 @@ export type Database = {
         | "marketing_contributor"
         | "compliance_reviewer"
         | "executive_approver"
+        | "product_reviewer"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -53204,6 +53309,7 @@ export const Constants = {
         "marketing_contributor",
         "compliance_reviewer",
         "executive_approver",
+        "product_reviewer",
       ],
       assisted_draft_status: [
         "awaiting_client_review",

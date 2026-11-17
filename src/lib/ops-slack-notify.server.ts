@@ -176,3 +176,35 @@ export async function notifyComplianceClear(n: { personId: string; personName: s
     console.error("compliance slack notify", e);
   }
 }
+
+/**
+ * Posts to #operations when Sales adds (or rewrites) a custom service, asking the reviewers to
+ * decide whether it needs design or build, belongs in an existing product, or isn't tech related.
+ * Best-effort and deduplicated per service version; carries only the name, writer and a link, never prices.
+ */
+export async function notifyCustomService(n: { serviceId: string; name: string; createdBy: string; version: string; reopened?: boolean }): Promise<void> {
+  try {
+    const db = await admin();
+    const key = `custom_service:${n.serviceId}:${n.version}`;
+    const { error: dup } = await db.from("ops_slack_notifications").insert({ dedupe_key: key, kind: "custom_service", status: "pending" });
+    if (dup) return;
+    const sub = await (await import("@/lib/user-contact.server")).loadUserContact(db, n.createdBy);
+    const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const { appUrl } = await import("@/lib/app-origins");
+    const url = appUrl("ops", `/sales/custom-services?service=${encodeURIComponent(n.serviceId)}`);
+    const head = n.reopened ? "Custom service changed, review again" : "New custom service from Sales";
+    const r = await slack("chat.postMessage", {
+      channel: OPS_SLACK_CHANNEL,
+      unfurl_links: false,
+      text: `${head} · ${n.name}`,
+      blocks: [
+        { type: "section", text: { type: "mrkdwn", text: `*${head}*\n${n.name}` } },
+        { type: "context", elements: [{ type: "mrkdwn", text: `Written by ${sub.name || sub.email || "Sales"} · ${when} · Decide: needs design or build, add to a product, or not tech related` }] },
+        { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Review in Harmonious" }, url }] },
+      ],
+    });
+    await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null }).eq("dedupe_key", key);
+  } catch (e) {
+    console.error("custom service slack notify", e);
+  }
+}

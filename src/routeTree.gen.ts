@@ -333,6 +333,7 @@ import { Route as AuthenticatedProfileProfileIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedSalesCommissionsRouteImport } from './routes/_authenticated/sales_.commissions'
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
 import { Route as AuthenticatedSalesCroRouteImport } from './routes/_authenticated/sales_.cro'
+import { Route as AuthenticatedSalesCustomServicesRouteImport } from './routes/_authenticated/sales_.custom-services'
 import { Route as AuthenticatedSalesDashboardRouteImport } from './routes/_authenticated/sales_.dashboard'
 import { Route as AuthenticatedSalesDocumentsRouteImport } from './routes/_authenticated/sales_.documents'
 import { Route as AuthenticatedSalesFollowUpsRouteImport } from './routes/_authenticated/sales_.follow-ups'
@@ -2331,6 +2332,12 @@ const AuthenticatedSalesCroRoute = AuthenticatedSalesCroRouteImport.update({
   path: '/sales/cro',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSalesCustomServicesRoute =
+  AuthenticatedSalesCustomServicesRouteImport.update({
+    id: '/sales_/custom-services',
+    path: '/sales/custom-services',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSalesDashboardRoute =
   AuthenticatedSalesDashboardRouteImport.update({
     id: '/sales_/dashboard',
@@ -3624,6 +3631,7 @@ export interface FileRoutesByFullPath {
   '/sales/commissions': typeof AuthenticatedSalesCommissionsRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
+  '/sales/custom-services': typeof AuthenticatedSalesCustomServicesRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
   '/sales/documents': typeof AuthenticatedSalesDocumentsRoute
   '/sales/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
@@ -4109,6 +4117,7 @@ export interface FileRoutesByTo {
   '/sales/commissions': typeof AuthenticatedSalesCommissionsRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
+  '/sales/custom-services': typeof AuthenticatedSalesCustomServicesRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
   '/sales/documents': typeof AuthenticatedSalesDocumentsRoute
   '/sales/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
@@ -4602,6 +4611,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/commissions': typeof AuthenticatedSalesCommissionsRoute
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
   '/_authenticated/sales_/cro': typeof AuthenticatedSalesCroRoute
+  '/_authenticated/sales_/custom-services': typeof AuthenticatedSalesCustomServicesRoute
   '/_authenticated/sales_/dashboard': typeof AuthenticatedSalesDashboardRoute
   '/_authenticated/sales_/documents': typeof AuthenticatedSalesDocumentsRoute
   '/_authenticated/sales_/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
@@ -5096,6 +5106,7 @@ export interface FileRouteTypes {
     | '/sales/commissions'
     | '/sales/crm'
     | '/sales/cro'
+    | '/sales/custom-services'
     | '/sales/dashboard'
     | '/sales/documents'
     | '/sales/follow-ups'
@@ -5581,6 +5592,7 @@ export interface FileRouteTypes {
     | '/sales/commissions'
     | '/sales/crm'
     | '/sales/cro'
+    | '/sales/custom-services'
     | '/sales/dashboard'
     | '/sales/documents'
     | '/sales/follow-ups'
@@ -6073,6 +6085,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/commissions'
     | '/_authenticated/sales_/crm'
     | '/_authenticated/sales_/cro'
+    | '/_authenticated/sales_/custom-services'
     | '/_authenticated/sales_/dashboard'
     | '/_authenticated/sales_/documents'
     | '/_authenticated/sales_/follow-ups'
@@ -8609,6 +8622,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesCroRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales_/custom-services': {
+      id: '/_authenticated/sales_/custom-services'
+      path: '/sales/custom-services'
+      fullPath: '/sales/custom-services'
+      preLoaderRoute: typeof AuthenticatedSalesCustomServicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sales_/dashboard': {
       id: '/_authenticated/sales_/dashboard'
       path: '/sales/dashboard'
@@ -10299,6 +10319,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalesCommissionsRoute: typeof AuthenticatedSalesCommissionsRoute
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
   AuthenticatedSalesCroRoute: typeof AuthenticatedSalesCroRoute
+  AuthenticatedSalesCustomServicesRoute: typeof AuthenticatedSalesCustomServicesRoute
   AuthenticatedSalesDashboardRoute: typeof AuthenticatedSalesDashboardRoute
   AuthenticatedSalesDocumentsRoute: typeof AuthenticatedSalesDocumentsRoute
   AuthenticatedSalesFollowUpsRoute: typeof AuthenticatedSalesFollowUpsRoute
@@ -10659,6 +10680,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalesCommissionsRoute: AuthenticatedSalesCommissionsRoute,
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
   AuthenticatedSalesCroRoute: AuthenticatedSalesCroRoute,
+  AuthenticatedSalesCustomServicesRoute: AuthenticatedSalesCustomServicesRoute,
   AuthenticatedSalesDashboardRoute: AuthenticatedSalesDashboardRoute,
   AuthenticatedSalesDocumentsRoute: AuthenticatedSalesDocumentsRoute,
   AuthenticatedSalesFollowUpsRoute: AuthenticatedSalesFollowUpsRoute,

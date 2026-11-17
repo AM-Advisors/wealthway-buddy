@@ -178,6 +178,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Unpaid invoices", url: "/admin/invoices", description: "Client invoices awaiting payment", step: "Track" },
       { title: "Incoming requests", url: "/admin/requests", description: "Requests from clients", cap: "tasks", step: "Track" },
       { title: "Clients and scope", url: "/admin/contracts", description: "Contract terms and engagement scope", step: "Reference" },
+      { title: "Custom services review", url: "/sales/custom-services", description: "Services Sales wrote for quotes: decide if they need design or build, belong in a product, or aren't tech related", step: "Review" },
       { title: "Services catalog", url: "/admin/services", description: "Service catalog and delivery", step: "Reference" },
       { title: "Bank setup packets", url: "/admin/bank-packets", description: "Partner bank paperwork clients receive", step: "Reference" },
       { title: "Contract permissions", url: "/ops/contracts/permissions", description: "Who may upload, review, approve and price contracts", step: "Reference" },
