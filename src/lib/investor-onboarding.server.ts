@@ -1,4 +1,5 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
+import { queueInvestorLabel } from "@/lib/review-queue-label";
 import { investmentAmountCents, isLiveInvestment } from "@/lib/investment-amounts";
 import { closingLedgerEntries } from "@/lib/closing-ledger";
 import { currentFundMinimum } from "@/lib/fund-minimum";
@@ -1663,6 +1664,8 @@ export async function reviewQueue(
       investorUserId: row.investor_user_id,
       investmentProfileId: row.investment_profile_id,
       profileLabel: facts.profile?.display_label ?? null,
+      person: facts.person ?? null,
+      profile: facts.profile ?? null,
       stage: row.stage,
       bucket,
       fundingStatus: row.funding_status,
@@ -1679,7 +1682,7 @@ export async function reviewQueue(
   const filtered = filters.bucket ? items.filter((i) => i.bucket === filters.bucket) : items;
 
   const offeringIds = [...new Set(filtered.map((i) => i.offeringId))];
-  const investorIds = [...new Set(filtered.map((i) => i.investorUserId))];
+  const investorIds = [...new Set(filtered.map((i) => i.investorUserId).filter(Boolean))];
   const [{ data: offerings }, { data: people }] = await Promise.all([
     offeringIds.length
       ? db().from("offerings").select("id, name").in("id", offeringIds)
@@ -1692,12 +1695,18 @@ export async function reviewQueue(
   const investor = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p]));
 
   return {
-    items: filtered.map((i) => ({
-      ...i,
-      offeringName: offeringName.get(i.offeringId) ?? "Fund",
-      investorName: investor.get(i.investorUserId)?.legal_name ?? investor.get(i.investorUserId)?.email ?? "Investor",
-      investorEmail: investor.get(i.investorUserId)?.email ?? null,
-    })),
+    items: filtered.map(({ person, profile, ...i }) => {
+      // Investors added before sign-in have no account: name them from the investment's own records.
+      const label = queueInvestorLabel({ person, profile, account: i.investorUserId ? investor.get(i.investorUserId) : null });
+      return {
+        ...i,
+        offeringName: offeringName.get(i.offeringId) ?? "Fund",
+        investorName: label.investorName,
+        contactName: label.contactName,
+        investorEmail: label.investorEmail,
+        isEntity: label.isEntity,
+      };
+    }),
   };
 }
 

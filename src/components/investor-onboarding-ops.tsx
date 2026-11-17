@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { Search, X } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import {
   reviewDetailFn,
   reviewQueueFn,
 } from "@/lib/investor-onboarding.functions";
+import { matchesQueueSearch } from "@/lib/review-queue-label";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,8 @@ export function InvestorOnboardingOps() {
   const [selected, setSelected] = useState<string | null>(null);
   const [signer, setSigner] = useState("");
   const [capacity, setCapacity] = useState("");
+  const [search, setSearch] = useState("");
+  const reviewRef = useRef<HTMLDivElement>(null);
 
   const queue = useQuery({ queryKey: ["onboarding-queue"], queryFn: () => queueFn({ data: {} }) });
   const detail = useQuery({
@@ -61,33 +65,80 @@ export function InvestorOnboardingOps() {
   const resolve = act(resolveFn, "Issue resolved.");
 
   const items: any[] = (queue.data as any)?.items ?? [];
+  const shown = useMemo(() => items.filter((i) => matchesQueueSearch(i, search)), [items, search]);
+  const current = items.find((i) => i.id === selected) ?? null;
   const d: any = detail.data;
 
+  const choose = (id: string) => {
+    setSelected(id);
+    setSigner("");
+    setCapacity("");
+    // On narrow screens the review sits below the list; bring it into view so it is clear it opened.
+    requestAnimationFrame(() => reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-      <Card>
-        <CardHeader>
-          <CardTitle>Review queue</CardTitle>
-          <CardDescription>Every investor waiting on Harmonious.</CardDescription>
+    <div className="grid items-start gap-6 lg:grid-cols-[380px_1fr]">
+      <Card className="lg:sticky lg:top-4">
+        <CardHeader className="space-y-3">
+          <div>
+            <CardTitle>Review queue</CardTitle>
+            <CardDescription>Every investor waiting on Harmonious.</CardDescription>
+          </div>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              type="search"
+              aria-label="Search investors"
+              placeholder="Search by investor, email, fund or status"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 pr-8"
+            />
+            {search ? (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+          {!queue.isLoading && items.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {search.trim() ? `Showing ${shown.length} of ${items.length} investors` : `${items.length} investor${items.length === 1 ? "" : "s"} waiting`}
+            </p>
+          ) : null}
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 lg:max-h-[calc(100vh-16rem)] lg:overflow-y-auto">
           {queue.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
           {items.length === 0 && !queue.isLoading ? (
             <p className="text-sm text-muted-foreground">Nothing is waiting right now.</p>
           ) : null}
-          {items.map((item) => (
+          {items.length > 0 && shown.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No investors match "{search.trim()}".</p>
+          ) : null}
+          {shown.map((item) => (
             <button
               key={item.id}
               type="button"
-              onClick={() => setSelected(item.id)}
-              className={`w-full rounded-md border p-3 text-left text-sm ${
-                selected === item.id ? "border-primary bg-primary/5" : ""
+              aria-pressed={selected === item.id}
+              onClick={() => choose(item.id)}
+              className={`w-full rounded-md border p-3 text-left text-sm transition-colors hover:bg-muted/50 ${
+                selected === item.id ? "border-primary bg-primary/5 ring-1 ring-primary" : ""
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-start justify-between gap-2">
                 <span className="font-medium">{item.investorName ?? "Investor"}</span>
-                <Badge variant="outline">{String(item.bucket ?? item.stage).replace(/_/g, " ")}</Badge>
+                <Badge variant="outline" className="shrink-0">{String(item.bucket ?? item.stage).replace(/_/g, " ")}</Badge>
               </div>
+              {item.contactName || item.investorEmail ? (
+                <div className="truncate text-xs text-muted-foreground">
+                  {[item.contactName, item.investorEmail].filter(Boolean).join(" · ")}
+                </div>
+              ) : null}
               <div className="text-muted-foreground">
                 {item.offeringName ?? item.offeringId} · {money(item.requestedAmountCents)}
               </div>
@@ -99,12 +150,23 @@ export function InvestorOnboardingOps() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card ref={reviewRef} className="scroll-mt-4 lg:sticky lg:top-4">
         <CardHeader>
           <CardTitle>Investment review</CardTitle>
           <CardDescription>
             Approval, acceptance and closing stay with Harmonious.
           </CardDescription>
+          {current ? (
+            <div className="mt-2 rounded-md border border-primary/40 bg-primary/5 p-3 text-sm">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Now reviewing</div>
+              <div className="text-base font-semibold">{current.investorName}</div>
+              <div className="text-muted-foreground">
+                {[current.contactName, current.investorEmail].filter(Boolean).join(" · ")}
+                {current.contactName || current.investorEmail ? <br /> : null}
+                {current.offeringName} · {money(current.requestedAmountCents)}
+              </div>
+            </div>
+          ) : null}
         </CardHeader>
         <CardContent className="space-y-5">
           {!selected ? (
