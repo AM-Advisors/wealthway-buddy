@@ -36,6 +36,7 @@ export const getMyCapTables = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const w = await who(context);
     if (!w.clientId) return { clientId: null, canManage: false, hasActive: false, subscriptions: [] as any[] };
+    if ((await (await import("@/lib/client-tab-access.server")).myHiddenTabs(context.userId)).includes("cap_table")) return { clientId: w.clientId, canManage: false, hasActive: false, subscriptions: [] as any[] };
     const db = await admin();
     let q = db.from("cap_table_subscriptions").select("id, company_name, tier, billing_interval, status, current_period_end, cancel_at_period_end, created_at, environment")
       .eq("client_id", w.clientId).order("created_at", { ascending: false });

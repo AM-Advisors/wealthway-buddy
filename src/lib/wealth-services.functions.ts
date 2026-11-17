@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from '@/lib/require-auth';
 import { WEALTH_ASSET_CLASSES, currentWealthHoldings, type WealthObservation } from '@/lib/wealth-services';
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 export const getWealthServices = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  await (await import('@/lib/client-tab-access.server')).assertTabOpen(context.userId, 'wealth');
   const [selections, holdings, funds] = await Promise.all([
     context.supabase.from('wealth_service_selections').select('*').eq('owner_user_id', context.userId).order('created_at', { ascending: false }),
     context.supabase.from('personal_wealth_observations').select('*').eq('owner_user_id', context.userId).order('created_at', { ascending: false }),

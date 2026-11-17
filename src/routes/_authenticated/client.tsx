@@ -25,6 +25,7 @@ import { recordPortalSignIn } from "@/lib/sign-in-log.functions";
 
 import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { MsaGate } from "@/components/msa-gate";
+import { TabAccessGate } from "@/components/client-tab-access-panel";
 import { useClientBrand } from "@/components/client-brand";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
@@ -279,12 +280,12 @@ function ClientShell() {
             </nav>
           </aside>
           <section className="min-w-0 flex-1">
-            <Outlet />
+            <TabAccessGate><Outlet /></TabAccessGate>
           </section>
         </div>
       ) : (
         <section className="mt-6 min-w-0">
-          <Outlet />
+          <TabAccessGate><Outlet /></TabAccessGate>
         </section>
       )}
 

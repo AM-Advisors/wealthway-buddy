@@ -2829,6 +2829,13 @@
       "when": 1794872426262,
       "tag": "0403_client_entity_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 404,
+      "version": "7",
+      "when": 1794940226993,
+      "tag": "0404_migration",
+      "breakpoints": true
     }
   ]
 }

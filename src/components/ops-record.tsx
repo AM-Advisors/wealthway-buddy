@@ -1,3 +1,8 @@
+import { ClientServicesPanel } from "@/components/client-services-panel";
+import { SetupFeeWaiverCard } from "@/components/setup-fee-waiver-card";
+import { ClientViewAsCard } from "@/components/client-view-as-card";
+import { ClientTimeline } from "@/components/client-timeline";
+import { ClientTabAccessPanel, ClientRelationshipMap } from "@/components/client-tab-access-panel";
 import { DocumentLibrary } from "@/components/document-library";
 import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 import { CommercialAgreementCard } from "@/components/commercial-agreement-card";
@@ -397,9 +402,10 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
         {type === "client" ? (
           <ClientOverviewActions clientId={id} goTo={(tab) => navigate({ to: ".", search: (prev) => ({ ...(prev as any), tab }), replace: true, resetScroll: false })} />
         ) : null}
-        {type === "client" ? <HarmoniousTeamCard clientId={id} /> : null}
+        {type === "client" && active === "overview" ? <ClientRelationshipMap record={record} goTo={(tab) => navigate({ to: ".", search: (prev) => ({ ...(prev as any), tab }), replace: true, resetScroll: false })} /> : null}
+        {type === "client" && active === "overview" ? <HarmoniousTeamCard clientId={id} /> : null}
         {type === "fund" && record.clientId ? <HarmoniousTeamCard clientId={record.clientId} /> : null}
-        {type === "client" ? <CommercialAgreementCard clientId={id} /> : null}
+        {type === "client" && active === "overview" ? <CommercialAgreementCard clientId={id} /> : null}
         {type === "fund" ? <CommercialAgreementCard offeringId={id} /> : null}
         {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}
         {type === "investor" ? <DriveInvestorCard investorUserId={id} /> : null}
@@ -444,12 +450,18 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
       {type === "client" && (active === "services" || active === "contracts") ? (
         <div className="space-y-6">
           <ClientServicesPricingPanel clientId={id} />
+          <ClientServicesPanel clientId={id} />
+          <SetupFeeWaiverCard clientId={id} />
           <div id="client-contracts" className="space-y-2">
             <h3 className="text-base font-semibold">Contracts & SOWs</h3>
             <p className="text-xs text-muted-foreground">The SOWs and agreements that make the services above Contracted once fully executed.</p>
             <ClientContractsPanel clientId={id} />
           </div>
         </div>
+      ) : type === "client" && active === "access" ? (
+        <div className="space-y-6"><ClientTabAccessPanel clientId={id} /><ClientViewAsCard clientId={id} /></div>
+      ) : type === "client" && active === "tasks" ? (
+        <div className="space-y-6"><TabBody type={type} id={id} tab={active} /><ClientTimeline clientId={id} /></div>
       ) : type === "client" && active === "foundation" ? (
         <FoundationWorkspace clientId={id} />
       ) : type === "client" && active === "contacts" ? (

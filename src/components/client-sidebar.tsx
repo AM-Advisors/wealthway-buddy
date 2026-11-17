@@ -26,6 +26,8 @@ import { useClientWorkspace } from "@/components/client-workspace";
 import { getMyCapTables } from "@/lib/cap-table-billing.functions";
 import { myEntitlementsFn } from "@/lib/saas-orders.functions";
 import { filterByEntitlements } from "@/lib/saas-order-model";
+import { filterByHiddenTabs } from "@/lib/client-tab-access";
+import { myHiddenTabsFn } from "@/lib/client-tab-access.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import {
@@ -95,7 +97,10 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
     ? navigation.primary
     : navigation.primary.filter((i: { url: string }) => !capLinks.some((c) => i.url === c || i.url.startsWith(`${c}/`)));
   // Clients on purchased-services menus only see what they bought; legacy clients are unchanged.
-  const items = filterByEntitlements(base, ents.data ?? null);
+  const hiddenFn = useServerFn(myHiddenTabsFn);
+  const hidden = useQuery({ queryKey: ["my-hidden-tabs"], queryFn: () => hiddenFn(), staleTime: 60_000 });
+  // Areas staff switched off for this client are hidden completely.
+  const items = filterByHiddenTabs(filterByEntitlements(base, ents.data ?? null), hidden.data ?? []);
   const active = (options ?? []).find((o) => o.id === activeId);
   const brand = useClientBrand(active?.kind === "company");
   const sharedFn = useServerFn(listMySharedFunds);

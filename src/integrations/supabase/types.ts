@@ -7815,6 +7815,73 @@ export type Database = {
           },
         ]
       }
+      client_tab_access: {
+        Row: {
+          client_id: string
+          enabled: boolean
+          tab_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          client_id: string
+          enabled: boolean
+          tab_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string
+          enabled?: boolean
+          tab_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_tab_access_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_tab_access_events: {
+        Row: {
+          actor_id: string | null
+          client_id: string
+          created_at: string
+          enabled: boolean
+          id: string
+          tab_key: string
+        }
+        Insert: {
+          actor_id?: string | null
+          client_id: string
+          created_at?: string
+          enabled: boolean
+          id?: string
+          tab_key: string
+        }
+        Update: {
+          actor_id?: string | null
+          client_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          tab_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_tab_access_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_team_assignments: {
         Row: {
           assigned_at: string
