@@ -9,7 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
-import { managerUploadUrlFn } from "@/lib/investor-extras.functions";
+import { managerUploadUrlFn, uploadOnboardingDocForFn } from "@/lib/investor-extras.functions";
 import { Button } from "@/components/ui/button";
 import { ApprovalButton } from "@/components/approval-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -549,6 +549,9 @@ function AccreditationFileOpen({ documentId }: { documentId: string }) {
 /** Staff or this fund's managers record the accredited-investor category and its status for the investor. */
 function SetAccreditationStatus({ onboardingId, onChanged }: { onboardingId: string; onChanged: () => void }) {
   const setFn = useServerFn(setAccreditationStatusFn);
+  const uploadFn = useServerFn(uploadOnboardingDocForFn);
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileInputKey, setFileInputKey] = useState(0);
   const qList: any[] = Array.isArray(standardQuestions) ? (standardQuestions as any[]) : ((standardQuestions as any).questions ?? []);
   const options: string[] = qList.find((q: any) => q.key === ACCREDITATION_QUESTION_KEY)?.options ?? [];
   const [category, setCategory] = useState("");
@@ -558,7 +561,7 @@ function SetAccreditationStatus({ onboardingId, onChanged }: { onboardingId: str
   return (
     <div className="mt-3 space-y-2 rounded-md border bg-muted/30 p-3">
       <p className="text-sm font-medium">Set accreditation status</p>
-      <p className="text-xs text-muted-foreground">Records the accredited-investor category and its status for this investor. The person who set it and any note are saved with the record, and an investor attestation is never fabricated.</p>
+      <p className="text-xs text-muted-foreground">Records the accredited-investor category, its status and any proof you attach for this investor. The person who set it and any note are saved with the record, and an investor attestation is never fabricated.</p>
       <div className="grid gap-2 sm:grid-cols-2">
         <select aria-label="Accreditation category" className="min-h-10 rounded-md border bg-background px-3 text-sm" value={category} onChange={(e) => setCategory(e.target.value)}>
           <option value="">Choose category</option>
@@ -569,16 +572,33 @@ function SetAccreditationStatus({ onboardingId, onChanged }: { onboardingId: str
           <option value="review">Under review</option>
         </select>
       </div>
+      <div className="space-y-1">
+        <label className="block text-sm font-medium" htmlFor={`accreditation-proof-${onboardingId}`}>Proof of accreditation (optional)</label>
+        <input key={fileInputKey} id={`accreditation-proof-${onboardingId}`} type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.heic,.doc,.docx"
+          className="block w-full text-sm file:mr-3 file:rounded-md file:border file:bg-background file:px-3 file:py-1.5 file:text-sm"
+          onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 10))} />
+        <p className="text-xs text-muted-foreground">For example a CPA, attorney or adviser letter, tax returns, or bank and brokerage statements. Up to 10 files, 50 MB each. {decision === "approved" ? "Saving as Verified keeps these as the proof for this decision." : "Files stay awaiting review with the rest of this investor's proof."}</p>
+        {files.length > 0 && <ul className="text-xs">{files.map((f) => <li key={f.name + f.size} className="break-all">{f.name}</li>)}</ul>}
+      </div>
       <Input aria-label="Note for the record" placeholder="Note for the record (optional)" value={notes} maxLength={600} onChange={(e) => setNotes(e.target.value)} />
       <Button size="sm" disabled={busy || category.length < 2} onClick={async () => {
         setBusy(true);
+        const proofDocumentIds: string[] = [];
         try {
-          await setFn({ data: { onboardingId, category, decision, notes: notes.trim() } });
-          toast.success(decision === "approved" ? "Accreditation recorded as verified." : "Accreditation recorded as under review.");
-          setNotes("");
+          for (const file of files) {
+            if (file.size > 50 * 1024 * 1024) throw new Error(`${file.name} is larger than 50 MB.`);
+            const buf = new Uint8Array(await file.arrayBuffer()); let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+            const r = await uploadFn({ data: { onboardingId, kind: "accreditation_proof", fileName: file.name, contentType: file.type, base64: btoa(bin) } });
+            proofDocumentIds.push(r.id);
+          }
+          await setFn({ data: { onboardingId, category, decision, notes: notes.trim(), proofDocumentIds } });
+          toast.success(`${decision === "approved" ? "Accreditation recorded as verified" : "Accreditation recorded as under review"}${proofDocumentIds.length ? ` with ${proofDocumentIds.length} proof file${proofDocumentIds.length === 1 ? "" : "s"}` : ""}.`);
+          setNotes(""); setFiles([]); setFileInputKey((k) => k + 1);
           onChanged();
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : "The accreditation status could not be saved.");
+          const msg = error instanceof Error ? error.message : "The accreditation status could not be saved.";
+          toast.error(proofDocumentIds.length ? `${msg} The uploaded proof was kept and is awaiting review.` : msg);
+          if (proofDocumentIds.length) { setFiles([]); setFileInputKey((k) => k + 1); onChanged(); }
         } finally {
           setBusy(false);
         }

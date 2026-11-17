@@ -168,8 +168,9 @@ export function handleQaServerCall(fnName: string, data: any, state: QaState): u
     case "managerUploadReviewsFn": return state.investorCopies ?? [];
     case "uploadOnboardingDocForFn": {
       const copies = state.investorCopies ??= [];
-      copies.push({ id: `fictional-copy-${copies.length}`, fileName: data.fileName, kind: data.kind, status: "new", note: null, canReview: ["entity_formation", "operating_agreement", "ownership_list", "tax_form"].includes(data.kind) });
-      return { ok: true };
+      const id = `fictional-copy-${copies.length}`;
+      copies.push({ id, fileName: data.fileName, kind: data.kind, status: "new", note: null, canReview: ["entity_formation", "operating_agreement", "ownership_list", "tax_form"].includes(data.kind) });
+      return { ok: true, id };
     }
     case "managerReviewUploadFn": {
       const row = state.investorCopies?.find(r => r.id === data.id);

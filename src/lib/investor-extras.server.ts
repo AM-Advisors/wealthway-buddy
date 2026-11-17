@@ -121,17 +121,17 @@ export async function uploadDocFor(userId: string, input: { onboardingId: string
   const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType: input.contentType || "application/octet-stream" });
   if (up.error) throw new Error("Couldn't save that file. Please try again.");
   const role = actor.isStaff ? "harmonious" : "manager";
-  const { error } = await d.from("investor_documents").insert({
+  const { data: inserted, error } = await d.from("investor_documents").insert({
     onboarding_id: ob.id, application_id: ob.application_id, offering_id: ob.offering_id, user_id: owner, investment_profile_id: ob.investment_profile_id,
     storage_path: path, file_name: safe, doc_kind: input.kind, uploaded_by: userId, uploaded_by_role: role,
     prepared_for_person_id: ob.investor_user_id ? null : ob.person_id,
-  });
-  if (error) { await d.storage.from(BUCKET).remove([path]); throw new Error(error.message); }
+  }).select("id").single();
+  if (error || !inserted) { await d.storage.from(BUCKET).remove([path]); throw new Error(error?.message ?? "Couldn't save that file. Please try again."); }
   await d.from("investment_profile_events").insert({ profile_id: ob.investment_profile_id, actor_id: userId, event: "supporting_document_uploaded_on_behalf", detail: { kind: input.kind, onboarding_id: ob.id, role } });
   await d.from("investor_onboarding_events").insert({ onboarding_id: ob.id, offering_id: ob.offering_id, event: "document_uploaded_on_behalf", detail: { kind: input.kind }, actor_user_id: userId, actor_role: role });
   const { reconcileReadinessForSubjects } = await import("./investor-onboarding.server");
   await reconcileReadinessForSubjects({ investmentProfileId: ob.investment_profile_id }, "profile_document_uploaded").catch(() => null);
-  return { ok: true };
+  return { ok: true, id: String(inserted.id) };
 }
 
 /** Only files Harmonious hasn't reviewed yet can be removed. */

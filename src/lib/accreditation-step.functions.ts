@@ -85,5 +85,5 @@ export const decideOnboardingProofFn = createServerFn({ method: "POST" })
 /** Fund managers or Harmonious set the accredited-investor category and its status on the investor's behalf. */
 export const setAccreditationStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(z.object({ onboardingId: z.string().uuid(), category: z.string().trim().min(2).max(300), decision: z.enum(["approved", "review"]), notes: z.string().trim().max(600).default("") }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid(), category: z.string().trim().min(2).max(300), decision: z.enum(["approved", "review"]), notes: z.string().trim().max(600).default(""), proofDocumentIds: z.array(z.string().uuid()).max(10).default([]) }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).setStatus(context.userId, data));

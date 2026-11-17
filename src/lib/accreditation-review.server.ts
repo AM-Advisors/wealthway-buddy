@@ -228,7 +228,7 @@ export async function canVerify(userId: string, offeringId: string) {
  * own attestation is never fabricated. Approval follows the same rules as
  * paperwork review, and a verified status is never moved back to review.
  */
-export async function setStatus(userId: string, input: { onboardingId: string; category: string; decision: "approved" | "review"; notes: string }) {
+export async function setStatus(userId: string, input: { onboardingId: string; category: string; decision: "approved" | "review"; notes: string; proofDocumentIds?: string[] }) {
   const d = await db();
   const { data: ob } = await d.from("investor_onboardings").select("id, investor_user_id, application_id, offering_id, investment_profile_id, questionnaire_responses").eq("id", input.onboardingId).maybeSingle();
   if (!ob) throw new Error("Investment not found.");
@@ -247,6 +247,14 @@ export async function setStatus(userId: string, input: { onboardingId: string; c
     : { data: null };
   const guard = accreditationSetGuard({ currentApproved: existingAcc?.status === "approved", decision: input.decision });
   if (guard) throw new Error(guard);
+  // Proof attached with this status: only accreditation files this person just added to this same
+  // investment, still unreviewed. Originals are kept; nothing else is touched.
+  const proofIds = [...new Set(input.proofDocumentIds ?? [])];
+  if (proofIds.length) {
+    const { data: proofs } = await d.from("investor_documents").select("id, onboarding_id, doc_kind, uploaded_by, review_status").in("id", proofIds);
+    const ok = ((proofs ?? []) as any[]).filter((p) => p.onboarding_id === ob.id && p.doc_kind === "accreditation_proof" && p.uploaded_by === userId && (p.review_status ?? "new") === "new");
+    if (ok.length !== proofIds.length) throw new Error("One of the attached proof files isn't part of this investment. Nothing was saved.");
+  }
   const now = new Date().toISOString();
   const status = input.decision === "approved" ? "approved" : "review";
   const previous = (ob.questionnaire_responses ?? {})[ACCREDITATION_QUESTION_KEY] ?? null;
@@ -255,12 +263,20 @@ export async function setStatus(userId: string, input: { onboardingId: string; c
     const patch = input.decision === "approved"
       ? { status: "approved" as const, basis, verification_method: "reviewer_selection", verifier_kind: "reviewer", verified_at: now, expires_at: new Date(Date.now() + 90 * 86400000).toISOString(), updated_at: now }
       : { status: "pending" as const, basis, verification_method: "reviewer_selection", updated_at: now };
-    const evidence = { ...(existingAcc?.evidence ?? {}), selection: { by: userId, at: now, category, notes: input.notes || null } };
+    const priorDocs = Array.isArray((existingAcc?.evidence as any)?.documents) ? (existingAcc!.evidence as any).documents : [];
+    const evidence = { ...(existingAcc?.evidence ?? {}), ...(proofIds.length ? { documents: [...priorDocs, ...proofIds.map((id) => ({ id }))] } : {}), selection: { by: userId, at: now, category, notes: input.notes || null, proof_document_ids: proofIds } };
     const res = existingAcc
       ? await d.from("profile_accreditations").update({ ...patch, evidence }).eq("id", existingAcc.id)
       : await d.from("profile_accreditations").insert({ profile_id: profileId, offering_id: ob.offering_id, evidence, ...patch });
     if (res.error) throw new Error(res.error.message);
-    await d.from("investment_profile_events").insert({ profile_id: profileId, actor_id: userId, event: "accreditation_status_set", detail: { category, previous_category: previous, decision: input.decision, notes: input.notes || null, onboarding_id: ob.id } });
+    await d.from("investment_profile_events").insert({ profile_id: profileId, actor_id: userId, event: "accreditation_status_set", detail: { category, previous_category: previous, decision: input.decision, notes: input.notes || null, onboarding_id: ob.id, proof_document_ids: proofIds } });
+  }
+  // Verified with proof: the attached copies are the reviewed evidence for this decision.
+  // Under review: they stay awaiting review like any other uploaded proof.
+  if (proofIds.length && input.decision === "approved") {
+    const pr = await d.from("investor_documents").update({ review_status: "accepted", review_note: input.notes || "Proof for verified accreditation", reviewed_by: userId, reviewed_at: now })
+      .in("id", proofIds).eq("review_status", "new");
+    if (pr.error) throw new Error(pr.error.message);
   }
   if (ob.application_id) {
     const payload = {

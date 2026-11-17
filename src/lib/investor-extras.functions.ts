@@ -65,7 +65,7 @@ export const updateAttachmentOptionsFn = createServerFn({ method: "POST" })
 export const uploadOnboardingDocForFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ onboardingId: uuid, kind: KIND, fileName: z.string().min(1).max(255), contentType: z.string().max(120), base64: z.string().min(1).max(21_000_000) }).parse)
-  .handler(async ({ data, context }): Promise<{ ok: boolean }> => (await x()).uploadDocFor(context.userId, data));
+  .handler(async ({ data, context }): Promise<{ ok: boolean; id: string }> => (await x()).uploadDocFor(context.userId, data));
 
 export const managerUploadReviewsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ onboardingId: uuid }).parse)
