@@ -2836,6 +2836,13 @@
       "when": 1794940226993,
       "tag": "0404_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 405,
+      "version": "7",
+      "when": 1794954383948,
+      "tag": "0405_foundation_line_pending_details",
+      "breakpoints": true
     }
   ]
 }
