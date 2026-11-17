@@ -163,9 +163,9 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
                   {f.isDemo ? <span className="ml-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">Demo</span> : null}
                 </div>
                 <span className="text-muted-foreground">{f.clientName ?? "-"}</span>
-                <span className="flex items-center gap-2 text-right lg:text-left">
+                <span className="flex flex-col items-end gap-1 text-right lg:items-start lg:text-left">
                   <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted lg:inline-block"><span className="block h-full bg-primary" style={{ width: `${pct ?? 0}%` }} /></span>
-                  {sd.text}
+                  <span className={sd.operating && pct != null && pct < 100 ? "text-xs leading-tight text-muted-foreground" : undefined}>{sd.text}</span>
                 </span>
                 <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.ready}/{f.metrics.investors} ready</span>
                 <span className={cn("text-right text-xs lg:text-left", f.metrics.blocked ? "text-destructive" : f.metrics.needsAttention ? "font-medium" : "text-muted-foreground")}>{next}</span>
