@@ -18,18 +18,21 @@ import { money } from "@/components/sales/sales-ui";
 
 const CAPABILITY_LABEL = { partial: "Partly built", not_built: "Not built yet", blocked_by_existing_gate: "Blocked until foundation accounting is validated" } as const;
 const lines = (v: string) => v.split("\n").map((s) => s.trim()).filter(Boolean);
+const PLANNED = "__planned";
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 /** Adds one Foundation Administration component to a quote draft. The server re-prices and re-checks everything. */
-export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: {
-  clientId: string; rateCents: (serviceKey: string) => number | null; onAdd: (line: QuoteLineInput) => void; onClose: () => void;
+export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose, initialComponent }: {
+  clientId: string; initialComponent?: ComponentKey | null; rateCents: (serviceKey: string) => number | null; onAdd: (line: QuoteLineInput) => void; onClose: () => void;
 }) {
   const optsFn = useServerFn(getQuoteFoundationOptions);
   const opts = useQuery({ queryKey: ["quote-foundations", clientId], queryFn: () => optsFn({ data: { clientId } }) });
   const [profileId, setProfileId] = useState<string>("");
-  const [component, setComponent] = useState<ComponentKey>("onboarding_setup");
+  const [plannedName, setPlannedName] = useState("");
+  const startKey: ComponentKey = initialComponent && componentByKey(initialComponent) ? initialComponent : "onboarding_setup";
+  const [component, setComponent] = useState<ComponentKey>(startKey);
   const def = componentByKey(component)!;
-  const [billing, setBilling] = useState<FoundationLineInput["billing"]>("one_time");
+  const [billing, setBilling] = useState<FoundationLineInput["billing"]>(() => { const c = componentByKey(startKey)!; return c.cadence === "one_time" ? "one_time" : c.billingOnly ?? "annual"; });
   const [price, setPrice] = useState("");
   const [reason, setReason] = useState("");
   const [optional, setOptional] = useState(false);
@@ -49,8 +52,12 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
   };
   const foundation = opts.data?.foundations.find((f) => f.profileId === profileId) ?? null;
   const rate = opts.data?.rates?.[foundationServiceKey(component)] ?? rateCents(foundationServiceKey(component));
-  const input: FoundationLineInput | null = foundation ? {
-    component, foundationProfileId: foundation.profileId, clientEntityId: foundation.clientEntityId, billing,
+  const planned = profileId === PLANNED;
+  const plannedOk = planned && plannedName.trim().length >= 2;
+  const foundationName = planned ? `${plannedName.trim()} (to be formed)` : foundation?.name ?? "";
+  const input: FoundationLineInput | null = foundation || plannedOk ? {
+    component, foundationProfileId: planned ? null : foundation!.profileId, clientEntityId: planned ? null : foundation!.clientEntityId,
+    plannedFoundationName: planned ? plannedName.trim() : null, billing,
     negotiatedUnitCents: price.trim() === "" ? null : Math.round(Number(price) * 100), negotiatedReason: reason.trim() || null, optional,
     limits: limits.filter((l) => l.label.trim() && l.unit.trim()).map((l) => ({ label: l.label.trim(), quantity: Number(l.quantity) || 0, unit: l.unit.trim() })),
     scope: scope.trim(), deliverables: lines(deliverables), included: lines(included), excluded: lines(excluded),
@@ -61,7 +68,6 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
   if (opts.isLoading) return <p className="mt-2 text-sm text-muted-foreground">Loading foundations…</p>;
   if (opts.error) return <p className="mt-2 text-sm text-destructive">{(opts.error as Error).message}</p>;
   if (!opts.data?.enabled) return <p className="mt-2 text-sm text-muted-foreground">Foundation Administration is turned off.</p>;
-  if (!opts.data.foundations.length) return <p className="mt-2 text-sm text-muted-foreground">This client has no foundation on file yet. Set one up from the client's Foundation tab in Operations first.</p>;
 
   return (
     <div className="mt-3 space-y-4 rounded-lg border bg-card p-4">
@@ -72,7 +78,9 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1"><Label>Foundation</Label>
           <Select value={profileId} onValueChange={setProfileId}><SelectTrigger aria-label="Foundation"><SelectValue placeholder="Choose the foundation" /></SelectTrigger>
-            <SelectContent>{opts.data.foundations.map((f) => <SelectItem key={f.profileId} value={f.profileId}>{f.name}</SelectItem>)}</SelectContent></Select></div>
+            <SelectContent>{opts.data.foundations.map((f) => <SelectItem key={f.profileId} value={f.profileId}>{f.name}</SelectItem>)}<SelectItem value={PLANNED}>Foundation not formed yet</SelectItem></SelectContent></Select>
+          {planned && <Input aria-label="Name of the foundation to be formed" className="mt-2" placeholder="Name of the foundation to be formed" value={plannedName} onChange={(e) => setPlannedName(e.target.value)} />}
+          {planned && <p className="text-xs text-muted-foreground">After signing, Operations links or sets up the real foundation before any work starts.</p>}</div>
         <div className="space-y-1"><Label>Service component</Label>
           <Select value={component} onValueChange={(v) => chooseComponent(v as ComponentKey)}><SelectTrigger aria-label="Service component"><SelectValue /></SelectTrigger>
             <SelectContent>{FOUNDATION_COMPONENTS.map((c) => <SelectItem key={c.key} value={c.key}>{c.group === "formation" ? `New nonprofit · ${c.name}` : c.name}</SelectItem>)}</SelectContent></Select></div>
@@ -121,7 +129,7 @@ export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose }: 
       <div className="flex gap-2">
         <Button disabled={!input || !priced?.ok} onClick={() => {
           if (!input || !priced?.ok) return;
-          onAdd({ serviceKey: foundationServiceKey(component), label: `${foundationLineLabel(input)} · ${foundation!.name}`, quantity: 1, unitCents: priced.pricing.unitCents, baselineUnitCents: priced.pricing.baselineUnitCents, billingFrequency: billing, firstBillOn: billStart, foundation: input, details: { scope: input.scope || def.summary, included: input.included, excluded: input.excluded } });
+          onAdd({ serviceKey: foundationServiceKey(component), label: `${foundationLineLabel(input)} · ${foundationName}`, quantity: 1, unitCents: priced.pricing.unitCents, baselineUnitCents: priced.pricing.baselineUnitCents, billingFrequency: billing, firstBillOn: billStart, foundation: input, details: { scope: input.scope || def.summary, included: input.included, excluded: input.excluded } });
         }}>Add to quote</Button>
         <Button variant="ghost" onClick={onClose}>Close</Button>
       </div>

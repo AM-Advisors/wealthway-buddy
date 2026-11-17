@@ -171,3 +171,22 @@ describe("nonprofit formation and operating services (proposal v3 prices)", () =
     expect(snap.terms.excluded.join(" ")).toMatch(/authorized officer signs and submits/);
   });
 });
+
+describe("foundation to be formed", () => {
+  const { foundationProfileId: _p, clientEntityId: _e, ...rest } = base as any;
+  it("accepts a planned foundation name without a foundation on file", () => {
+    const v = foundationLineInputSchema.parse({ ...rest, plannedFoundationName: "Smith Family Foundation" });
+    expect(v.clientEntityId).toBeNull();
+    const snap = foundationSnapshot(v, { unitCents: 100, baselineUnitCents: 100, rateCents: null, priceSource: "negotiated", needsExecutiveApproval: true, negotiatedReason: "x" }, { entityName: "Smith Family Foundation (to be formed)", checkedAt: "2026-11-17" });
+    expect(snap.foundationStatus).toBe("to_be_formed");
+    expect(snap.plannedFoundationName).toBe("Smith Family Foundation");
+  });
+  it("rejects a line with neither a foundation nor a planned name", () => {
+    expect(foundationLineInputSchema.safeParse(rest).success).toBe(false);
+  });
+  it("negotiated pricing for a planned foundation still needs CEO or CRO approval", () => {
+    const v = foundationLineInputSchema.parse({ ...rest, plannedFoundationName: "Smith Family Foundation", negotiatedUnitCents: 500000, negotiatedReason: "Agreed with client on call" });
+    const r = priceFoundationLine(v, null);
+    expect(r.ok && r.pricing.needsExecutiveApproval).toBe(true);
+  });
+});

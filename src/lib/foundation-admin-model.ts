@@ -255,8 +255,10 @@ const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const list = z.array(z.string().trim().min(1).max(300)).max(20);
 export const foundationLineInputSchema = z.object({
   component: z.enum(COMPONENT_KEYS),
-  foundationProfileId: z.string().uuid(),
-  clientEntityId: z.string().uuid(),
+  foundationProfileId: z.string().uuid().nullable().default(null),
+  clientEntityId: z.string().uuid().nullable().default(null),
+  /** Name of a foundation that isn't formed or on file yet. Operations links the real foundation after signing. */
+  plannedFoundationName: z.string().trim().max(200).nullable().default(null),
   billing: z.enum(["one_time", "monthly", "quarterly", "annual"]),
   negotiatedUnitCents: z.number().int().min(0).max(100_000_000_00).nullable(),
   negotiatedReason: z.string().trim().max(1000).nullable(),
@@ -265,8 +267,13 @@ export const foundationLineInputSchema = z.object({
   scope: z.string().trim().max(2000),
   deliverables: list, included: list, excluded: list,
   serviceStartOn: day, serviceEndOn: day.nullable(), billingStartOn: day,
+}).superRefine((v, ctx) => {
+  const linked = !!v.foundationProfileId && !!v.clientEntityId;
+  if (!linked && (v.foundationProfileId || v.clientEntityId)) ctx.addIssue({ code: "custom", message: "Choose the foundation again." });
+  if (!linked && (v.plannedFoundationName ?? "").length < 2) ctx.addIssue({ code: "custom", message: "Choose the foundation, or enter the name of the foundation to be formed." });
 });
 export type FoundationLineInput = z.infer<typeof foundationLineInputSchema>;
+export const isPlannedFoundation = (i: Pick<FoundationLineInput, "clientEntityId">) => !i.clientEntityId;
 
 export type FoundationPricing = { unitCents: number; baselineUnitCents: number; rateCents: number | null; priceSource: "rate_card" | "negotiated"; needsExecutiveApproval: boolean; negotiatedReason: string | null };
 
@@ -360,6 +367,7 @@ export function foundationSnapshot(input: FoundationLineInput, pricing: Foundati
   return {
     version: 1, component: input.component, componentName: c.name,
     foundationProfileId: input.foundationProfileId, clientEntityId: input.clientEntityId, entityName: ctx.entityName,
+    plannedFoundationName: input.clientEntityId ? null : input.plannedFoundationName, foundationStatus: input.clientEntityId ? "on_file" as const : "to_be_formed" as const,
     input, priceSource: pricing.priceSource, unitCents: pricing.unitCents, pricing,
     terms: foundationLineTerms(input),
     coverageCheck: { checkedAt: ctx.checkedAt, conflicts: [] as string[] },

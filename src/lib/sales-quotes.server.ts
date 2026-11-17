@@ -167,10 +167,10 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     const { verifyFoundationQuoteLine, foundationRates } = await import("@/lib/foundation-admin.server");
     const approvedRates = await foundationRates(db);
     const exclude = [d.id, d.supersedingQuoteId].filter((x): x is string => !!x);
-    const seen: { component: any; clientEntityId: string; serviceStartOn: string; serviceEndOn: string | null }[] = [];
+    const seen: { component: any; clientEntityId: string | null; serviceStartOn: string; serviceEndOn: string | null }[] = [];
     for (const [i, l] of d.lines.entries()) {
       if (!isFoundationKey(l.serviceKey) && !l.foundation) continue;
-      if (!isFoundationKey(l.serviceKey) || !l.foundation) throw new Error("Configure the Foundation Administration component first.");
+      if (!isFoundationKey(l.serviceKey) || !l.foundation) throw new Error(`"${l.label || "Foundation Administration"}" is missing its foundation details. Remove that line and add it with Configure Foundation Administration.`);
       if (l.serviceKey !== `FOUNDATION_ADMIN:${l.foundation.component}`) throw new Error("That Foundation Administration line doesn't match its component.");
       const c: any = card.get(l.serviceKey);
       const rateCents = approvedRates.get(l.serviceKey) ?? (c && Number(c.baselineCents) > 0 ? Number(c.baselineCents) : null);

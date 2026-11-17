@@ -311,25 +311,34 @@ export async function startFoundationHandoff(userId: string, d: { profileId: str
 // ------------------------------------------------------------ Quote integration (called by the Sales quote engine)
 
 /** Validates one Foundation Administration quote line and returns the priced line plus its frozen snapshot. */
-export async function verifyFoundationQuoteLine(db: any, ctx: { clientId: string | null; rateCents: number | null; excludeQuoteIds: string[]; siblings: { component: ComponentKey; clientEntityId: string; serviceStartOn: string; serviceEndOn: string | null }[] }, raw: unknown) {
+export async function verifyFoundationQuoteLine(db: any, ctx: { clientId: string | null; rateCents: number | null; excludeQuoteIds: string[]; siblings: { component: ComponentKey; clientEntityId: string | null; serviceStartOn: string; serviceEndOn: string | null }[] }, raw: unknown) {
   if (!(await foundationQuotingEnabled(db))) throw new Error("Foundation Administration quoting is turned off.");
   const input = foundationLineInputSchema.parse(raw);
   if (!ctx.clientId) throw new Error("Choose the client before adding Foundation Administration.");
-  const p = await profileFor(db, input.foundationProfileId);
-  if (p.client_id !== ctx.clientId || p.client_entity_id !== input.clientEntityId || p.status !== "active") throw new Error("That foundation doesn't belong to the chosen client.");
-  const entity = must(await db.from("client_entities").select("legal_name, client_id").eq("id", input.clientEntityId).maybeSingle(), "Couldn't read the foundation entity.") as any;
-  if (!entity || entity.client_id !== ctx.clientId) throw new Error("That foundation doesn't belong to the chosen client.");
+  let entityName: string;
+  if (input.clientEntityId && input.foundationProfileId) {
+    const p = await profileFor(db, input.foundationProfileId);
+    if (p.client_id !== ctx.clientId || p.client_entity_id !== input.clientEntityId || p.status !== "active") throw new Error("That foundation doesn't belong to the chosen client.");
+    const entity = must(await db.from("client_entities").select("legal_name, client_id").eq("id", input.clientEntityId).maybeSingle(), "Couldn't read the foundation entity.") as any;
+    if (!entity || entity.client_id !== ctx.clientId) throw new Error("That foundation doesn't belong to the chosen client.");
+    entityName = entity.legal_name;
+  } else {
+    // Foundation to be formed: priced and approved normally; coverage is checked once Operations links the real foundation.
+    entityName = `${input.plannedFoundationName} (to be formed)`;
+  }
   const priced = priceFoundationLine(input, ctx.rateCents);
   if (!priced.ok) throw new Error(priced.problem);
-  const rows = await foundationCoverageRows(db, input.clientEntityId, ctx.excludeQuoteIds);
-  const sibling = ctx.siblings.map((s, i) => ({ source: "quote" as const, ref: `line-${i}`, component: s.component, clientEntityId: s.clientEntityId, startOn: s.serviceStartOn, endOn: s.serviceEndOn }));
-  const conflict = foundationCoverageConflict(input, [...rows, ...sibling]);
-  if (conflict) throw new Error(conflict);
-  const snapshot = foundationSnapshot(input, priced.pricing, { entityName: entity.legal_name, checkedAt: new Date().toISOString() });
+  if (input.clientEntityId) {
+    const rows = await foundationCoverageRows(db, input.clientEntityId, ctx.excludeQuoteIds);
+    const sibling = ctx.siblings.filter((s) => s.clientEntityId).map((s, i) => ({ source: "quote" as const, ref: `line-${i}`, component: s.component, clientEntityId: s.clientEntityId as string, startOn: s.serviceStartOn, endOn: s.serviceEndOn }));
+    const conflict = foundationCoverageConflict(input as any, [...rows, ...sibling]);
+    if (conflict) throw new Error(conflict);
+  }
+  const snapshot = foundationSnapshot(input, priced.pricing, { entityName, checkedAt: new Date().toISOString() });
   const terms = snapshot.terms;
   return {
     input, snapshot, needsExecutiveApproval: priced.pricing.needsExecutiveApproval,
-    line: { serviceKey: `FOUNDATION_ADMIN:${input.component}`, label: `${foundationLineLabel(input)} · ${entity.legal_name}`.slice(0, 300), quantity: 1,
+    line: { serviceKey: `FOUNDATION_ADMIN:${input.component}`, label: `${foundationLineLabel(input)} · ${entityName}`.slice(0, 300), quantity: 1,
       unitCents: priced.pricing.unitCents, baselineUnitCents: priced.pricing.baselineUnitCents, billingFrequency: input.billing, firstBillOn: input.billingStartOn,
       details: { scope: terms.scope, included: terms.included, excluded: terms.excluded } },
   };
