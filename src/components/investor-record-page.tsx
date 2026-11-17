@@ -91,8 +91,17 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       return;
     }
     if (t.kind === "ops_onboarding") {
-      // Open issues resolve right here; acceptance keeps its existing page.
+      // Open issues and acceptance both resolve right here on this investor's page.
       if (staff && key === "exceptions") setResolvingIssues(true);
+      else if (staff && key === "acceptance") {
+        setTab("overview");
+        setTimeout(() => {
+          const card = document.getElementById("accept-admit-card");
+          if (!card) { toast.message("The Accept & admit card is still loading. Try again in a moment."); return; }
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+          card.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
+        }, 80);
+      }
       else if (staff) navigate({ to: "/admin/investor-onboarding" });
       else toast.message("Harmonious handles this step. It's already on their list.");
       return;

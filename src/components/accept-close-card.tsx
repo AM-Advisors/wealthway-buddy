@@ -55,7 +55,7 @@ export function AcceptCloseCard({ onboardingId }: { onboardingId: string }) {
   const unmatched = deposits.filter((d) => !d.matched);
 
   return (
-    <Card className="md:col-span-2">
+    <Card id="accept-admit-card" className="md:col-span-2 scroll-mt-16">
       <CardHeader><CardTitle className="text-base">Accept & admit investor</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-2">
