@@ -190,9 +190,14 @@ export const listSetupDocumentsFn = createServerFn({ method: "POST" })
   .validator(z.object({ offeringId: uuid }).parse)
   .handler(async ({ data, context }) => (await docs()).listSetupDocuments(context.userId, data.offeringId));
 
+export const renameSetupDocumentFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ documentId: uuid, title: z.string().trim().min(1).max(200), expectedTitle: z.string().max(500) }).parse)
+  .handler(async ({ data, context }) => (await docs()).renameSetupDocument(context.userId, data));
+
 export const createSetupDocumentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(z.object({ offeringId: uuid, category: z.enum(["operating_agreement", "subscription_agreement", "ppm", "other"]), title: z.string().trim().max(160).nullish() }).parse)
+  .validator(z.object({ offeringId: uuid, category: z.enum(["operating_agreement", "subscription_agreement", "ppm", "other"]), title: z.string().trim().max(200).nullish() }).parse)
   .handler(async ({ data, context }) => __auto(await (await docs()).createSetupDocument(context.userId, data), { offeringId: data.offeringId }));
 
 export const uploadDocumentVersionFn = createServerFn({ method: "POST" })

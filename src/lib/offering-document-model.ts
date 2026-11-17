@@ -336,3 +336,12 @@ export const sameFileName = (a: string, b: string) => {
   const n = (x: string) => x.toLowerCase().replace(/\s*\(\d+\)(?=\.[a-z0-9]+$|$)/, "").replace(/[^a-z0-9.]+/g, " ").trim();
   return n(a) === n(b);
 };
+
+
+/** Fund document display name: a custom name when given, otherwise the standard label. "Other" always needs a name. */
+export function documentTitleFor(category: DocumentCategory, title?: string | null): string | null {
+  const t = (title ?? "").trim().replace(/\s+/g, " ");
+  if (t.length > 200) return null;
+  if (t) return t;
+  return category === "other" ? null : DOCUMENT_CATEGORY_LABELS[category];
+}

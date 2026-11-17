@@ -196,3 +196,16 @@ describe("closed investments are not asked to sign again", () => {
     expect(closedInvestmentDocumentAction("Review & Sign", { closed: false, resignOpen: false, execution: "not_sent" })).toBe("Review & Sign");
   });
 });
+
+import { documentTitleFor } from "./offering-document-model";
+describe("documentTitleFor", () => {
+  it("uses the standard name when no custom name is given", () => {
+    expect(documentTitleFor("operating_agreement", "  ")).toBe("Operating Agreement");
+  });
+  it("keeps a custom name for a core document", () => {
+    expect(documentTitleFor("ppm", "Corps Erebor PPM (Amended)")).toBe("Corps Erebor PPM (Amended)");
+  });
+  it("refuses an unnamed Other document", () => {
+    expect(documentTitleFor("other", "")).toBeNull();
+  });
+});

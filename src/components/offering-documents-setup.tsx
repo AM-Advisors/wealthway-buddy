@@ -11,6 +11,7 @@ import {
   activateDocumentVersionFn,
   approveDocumentVersionFn,
   createSetupDocumentFn,
+  renameSetupDocumentFn,
   listSetupDocumentsFn,
   decideChangeRequestFn,
   requestDocumentChangeFn,
@@ -65,6 +66,7 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
     onChanged?.();
   };
   const [otherName, setOtherName] = useState("");
+  const [coreNames, setCoreNames] = useState<Record<string, string>>({});
 
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading offering documents…</p>;
   if (q.error || !q.data) return <p className="text-sm text-destructive">Offering documents couldn't be loaded.</p>;
@@ -99,7 +101,10 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
           ) : (
             <div key={c} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed p-3">
               <span className="text-sm">{DOCUMENT_CATEGORY_LABELS[c]} <span className="text-muted-foreground">- not added</span></span>
-              {d.canEdit && <Button size="sm" variant="outline" onClick={() => add(c)}>Add</Button>}
+              {d.canEdit && <span className="flex flex-wrap items-center gap-2">
+                <Input aria-label={`Name for ${DOCUMENT_CATEGORY_LABELS[c]} (optional)`} className="h-9 w-64" maxLength={200} placeholder={`Name (optional), default ${DOCUMENT_CATEGORY_LABELS[c]}`} value={coreNames[c] ?? ""} onChange={(e) => setCoreNames({ ...coreNames, [c]: e.target.value })} />
+                <Button size="sm" variant="outline" onClick={() => add(c, coreNames[c]?.trim() || undefined)}>Add</Button>
+              </span>}
             </div>
           );
         })}
@@ -187,7 +192,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
     <div className="rounded-md border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-medium">{doc.title}</p>
+          <p className="flex flex-wrap items-center gap-2 text-sm font-medium">{doc.title}{data.canEdit && <RenameDocument documentId={doc.id} title={doc.title} onChanged={onChanged} />}</p>
           <p className="text-xs text-muted-foreground">
             {active ? `Fund template v${active.version} (in use)` : latest ? "Draft, not in use yet" : "Needs setup"}
             {" · "}{doc.usage ? DOCUMENT_USAGE_LABELS[doc.usage] : "Usage not chosen"}
@@ -597,5 +602,32 @@ function SendDocDialog({ doc, offeringId, onClose, onSent }: { doc: Doc; offerin
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Renames the document label only. Versions, approvals and signed copies stay as they were. */
+function RenameDocument({ documentId, title, onChanged }: { documentId: string; title: string; onChanged: () => void }) {
+  const rename = useServerFn(renameSetupDocumentFn);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(title);
+  const [busy, setBusy] = useState(false);
+  return (
+    <>
+      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setValue(title); setOpen(true); }}>Rename</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Rename document</DialogTitle><DialogDescription>Changes the name shown to your team and investors. Files, versions, approvals and signed copies stay exactly as they are.</DialogDescription></DialogHeader>
+          <Input aria-label="Document name" value={value} maxLength={200} autoFocus onChange={(e) => setValue(e.target.value)} />
+          <DialogFooter>
+            <Button variant="ghost" disabled={busy} onClick={() => setOpen(false)}>Cancel</Button>
+            <Button disabled={busy || !value.trim() || value.trim() === title} onClick={async () => {
+              setBusy(true);
+              try { await rename({ data: { documentId, title: value.trim(), expectedTitle: title } }); toast.success("Document renamed"); setOpen(false); onChanged(); }
+              catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+            }}>{busy ? "Saving…" : "Save name"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

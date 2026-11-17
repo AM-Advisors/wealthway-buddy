@@ -154,8 +154,9 @@ export async function createSetupDocument(userId: string, input: { offeringId: s
 }
 
 async function createSetupDocumentRow(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
-  const title = input.category === "other" ? (input.title ?? "").trim() : DOCUMENT_CATEGORY_LABELS[input.category];
-  if (!title) throw new Error("Give the document a clear name.");
+  const { documentTitleFor } = await import("@/lib/offering-document-model");
+  const title = documentTitleFor(input.category, input.title);
+  if (!title) throw new Error("Give the document a clear name (up to 200 characters).");
   if (input.category !== "other") {
     const { data: existing } = await db().from("offering_documents").select("id").eq("offering_id", input.offeringId).eq("document_category", input.category).maybeSingle();
     if (existing) return { id: existing.id };
@@ -168,6 +169,21 @@ async function createSetupDocumentRow(userId: string, input: { offeringId: strin
   if (error) throw new Error(error.message);
   await event(input.offeringId, data.id, null, "document_created", userId, { category: input.category });
   return { id: data.id };
+}
+
+/** Renames a fund document's label only; type, versions, approvals and signed copies are untouched. Logged. */
+export async function renameSetupDocument(userId: string, input: { documentId: string; title: string; expectedTitle: string }) {
+  const d = await docRow(input.documentId);
+  if (d.removed_at) throw new Error("That document was removed.");
+  await assertStaff(userId, d.offering_id);
+  const t = input.title.trim().replace(/\s+/g, " ");
+  if (!t || t.length > 200) throw new Error("Give the document a clear name (up to 200 characters).");
+  if (t === d.title) return { id: d.id, title: t };
+  const { data, error } = await db().from("offering_documents").update({ title: t }).eq("id", d.id).eq("title", input.expectedTitle).select("id");
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("Someone else renamed this document. Refresh and try again.");
+  await event(d.offering_id, d.id, null, "document_renamed", userId, { from: d.title, to: t });
+  return { id: d.id, title: t };
 }
 
 /** Every upload appends a new version; nothing is overwritten. */
