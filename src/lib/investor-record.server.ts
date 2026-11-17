@@ -750,26 +750,36 @@ export async function proposeUpdate(userId: string, input: { onboardingId: strin
   const { data: cur } = await db().from(input.subjectTable).select(input.field).eq("id", subjectId).maybeSingle();
   const current = (cur as any)?.[input.field] ?? null;
   if (sameValue(current, input.proposed)) return { created: false };
-  await db().from("investor_record_suggestions").insert({ offering_id: row.offering_id, onboarding_id: row.id, subject_table: input.subjectTable, subject_id: subjectId, field: input.field, current_value: current, proposed_value: input.proposed, source: input.source, source_ref: input.sourceRef ?? null, proposed_by: actor.userId });
-  return { created: true };
+  const { data: inserted } = await db().from("investor_record_suggestions").insert({ offering_id: row.offering_id, onboarding_id: row.id, subject_table: input.subjectTable, subject_id: subjectId, field: input.field, current_value: current, proposed_value: input.proposed, source: input.source, source_ref: input.sourceRef ?? null, proposed_by: actor.userId }).select("id").single();
+  return { created: true, id: (inserted as any)?.id as string | undefined };
 }
 
-export async function resolveSuggestion(userId: string, input: { id: string; action: "accept" | "reject" | "review_later" }) {
+export async function resolveSuggestion(userId: string, input: { id: string; action: "accept" | "reject" | "review_later" | "update"; value?: string | null | undefined }) {
   const { data: s } = await db().from("investor_record_suggestions").select("*").eq("id", input.id).maybeSingle();
   if (!s) fail("That suggestion was not found.");
   const { actor, role } = await assertOnboardingAccess(userId, s.onboarding_id);
   if (role !== "staff") forbid("only Harmonious reviewers can resolve information conflicts.");
   if (s.status === "accepted" || s.status === "rejected") return { status: s.status };
   if (s.field === "account_link" && input.action === "accept") return linkPreparedAccount(userId, s.id);
-  if (input.action === "accept") {
+  if (s.field === "account_link" && input.action === "update") fail("Account links can only be accepted or rejected.");
+  // Update: the reviewer corrects the suggested value and applies the correction. The original
+  // suggestion stays as proposed; the change log records the corrected value and who applied it.
+  let applied: unknown = s.proposed_value;
+  if (input.action === "update") {
+    const { normalizeEditedSuggestion } = await import("@/lib/investor-suggestion-edit");
+    const r = normalizeEditedSuggestion(s.field, input.value ?? "");
+    if (!r.ok) fail(r.error);
+    applied = r.value;
+  }
+  if (input.action === "accept" || input.action === "update") {
     const table = APPLY_TABLES[s.subject_table]; if (!table) fail("Unsupported field.");
     const { data: cur } = await db().from(table).select(s.field).eq("id", s.subject_id).maybeSingle();
-    const { error } = await db().from(table).update({ [s.field]: s.proposed_value }).eq("id", s.subject_id);
+    const { error } = await db().from(table).update({ [s.field]: applied }).eq("id", s.subject_id);
     if (error) fail(error.message);
-    await logChanges([{ offeringId: s.offering_id, onboardingId: s.onboarding_id, table, id: s.subject_id, field: s.field, from: (cur as any)?.[s.field] ?? null, to: s.proposed_value, source: "harmonious", actor: actor.userId }]);
+    await logChanges([{ offeringId: s.offering_id, onboardingId: s.onboarding_id, table, id: s.subject_id, field: s.field, from: (cur as any)?.[s.field] ?? null, to: applied, source: "harmonious", actor: actor.userId }]);
     await reconcileAfter([s.onboarding_id], { actorUserId: actor.userId, trigger: "conflict_resolved" });
   }
-  const status = input.action === "accept" ? "accepted" : input.action === "reject" ? "rejected" : "review_later";
+  const status = input.action === "accept" || input.action === "update" ? "accepted" : input.action === "reject" ? "rejected" : "review_later";
   await db().from("investor_record_suggestions").update({ status, resolved_by: actor.userId, resolved_at: nowIso() }).eq("id", s.id);
   return { status };
 }

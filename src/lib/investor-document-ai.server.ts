@@ -78,7 +78,8 @@ export async function readInvestorDocument(userId: string, input: { onboardingId
     : { type: "input_image", image_url: `data:${input.mimeType};base64,${input.base64}` };
   const out = await ai([part, { type: "input_text", text: `File name: ${name}` }]);
 
-  const found: { label: string; value: unknown; suggested: boolean }[] = [];
+  const { editableSuggestionText } = await import("@/lib/investor-suggestion-edit");
+  const found: { label: string; value: unknown; suggested: boolean; suggestionId: string | null; editValue: string }[] = [];
   for (const k of KEYS) {
     const raw = out?.[k];
     if (typeof raw !== "string") continue;
@@ -86,7 +87,7 @@ export async function readInvestorDocument(userId: string, input: { onboardingId
     const value = normalize(t.kind, raw);
     if (value == null) continue;
     const r = await proposeUpdate(userId, { onboardingId: input.onboardingId, subjectTable: t.table, field: t.field, proposed: value, source: "document", sourceRef: name });
-    found.push({ label: k.replace(/_/g, " "), value: t.kind === "cents" ? `$${((value as number) / 100).toLocaleString()}` : value, suggested: r.created });
+    found.push({ label: k.replace(/_/g, " "), value: t.kind === "cents" ? `$${((value as number) / 100).toLocaleString()}` : value, suggested: r.created, suggestionId: (r as { id?: string }).id ?? null, editValue: editableSuggestionText(t.field, value) });
   }
   return { documentKind: String(out?.document_kind ?? "Document"), summary: String(out?.summary ?? ""), found };
 }

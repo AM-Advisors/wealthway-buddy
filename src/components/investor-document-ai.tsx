@@ -3,12 +3,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { readInvestorDocumentFn } from "@/lib/investor-record.functions";
+import { readInvestorDocumentFn, resolveSuggestionFn } from "@/lib/investor-record.functions";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-type Result = { file: string; documentKind: string; summary: string; found: { label: string; value: unknown; suggested: boolean }[] };
+type Found = { label: string; value: unknown; suggested: boolean; suggestionId?: string | null; editValue?: string; decision?: "approved" | "denied" | "updated"; appliedValue?: string | undefined };
+type Result = { file: string; documentKind: string; summary: string; found: Found[] };
 const ACCEPT = "application/pdf,image/png,image/jpeg,image/webp";
 
 function toBase64(file: File) {
@@ -26,6 +28,23 @@ export function InvestorDocumentAi({ onboardingId }: { onboardingId: string }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Result[]>([]);
+  const resolve = useServerFn(resolveSuggestionFn);
+  const [deciding, setDeciding] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
+
+  async function decide(ri: number, fi: number, f: Found, action: "accept" | "reject" | "update", value?: string) {
+    if (!f.suggestionId) return;
+    setDeciding(f.suggestionId);
+    try {
+      await resolve({ data: { id: f.suggestionId, action, value: value ?? null } });
+      const decision: Found["decision"] = action === "accept" ? "approved" : action === "reject" ? "denied" : "updated";
+      setResults((p) => p.map((r, i) => i !== ri ? r : { ...r, found: r.found.map((x, j) => j !== fi ? x : { ...x, decision, appliedValue: value }) }));
+      setEditing(null);
+      toast.success(action === "accept" ? `${f.label} saved to the investor record` : action === "reject" ? `${f.label} suggestion denied` : `${f.label} updated on the investor record`);
+      await qc.invalidateQueries();
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setDeciding(null); }
+  }
 
   async function run(files: FileList | null) {
     for (const file of Array.from(files ?? [])) {
@@ -46,7 +65,7 @@ export function InvestorDocumentAi({ onboardingId }: { onboardingId: string }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Read documents with AI</CardTitle>
-        <CardDescription>Upload subscription agreements, W-9s, IDs, accreditation letters or entity documents (PDF or image). What the AI finds becomes suggested updates to review on the Overview tab. Nothing changes until you accept it. Tax numbers are never read.</CardDescription>
+        <CardDescription>Upload subscription agreements, W-9s, IDs, accreditation letters or entity documents (PDF or image). Approve, Deny or Update each suggested detail right here, or later on the Overview tab. Nothing changes on the record until you approve or update it. Tax numbers are never read.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <label className="inline-flex">
@@ -57,10 +76,30 @@ export function InvestorDocumentAi({ onboardingId }: { onboardingId: string }) {
           <div key={i} className="rounded-md border p-3 text-sm">
             <p className="font-medium">{r.file} · {r.documentKind}</p>
             {r.summary ? <p className="text-xs text-muted-foreground">{r.summary}</p> : null}
-            {r.found.length ? <ul className="mt-2 space-y-1">{r.found.map((f, j) => (
-              <li key={j} className="flex flex-wrap items-center gap-2"><span className="capitalize text-muted-foreground">{f.label}:</span><span>{String(f.value)}</span>
-                <Badge variant={f.suggested ? "default" : "secondary"}>{f.suggested ? "Suggested" : "Already matches"}</Badge></li>
-            ))}</ul> : <p className="mt-2 text-xs text-muted-foreground">No investor details found.</p>}
+            {r.found.length ? <ul className="mt-2 space-y-2">{r.found.map((f, j) => {
+              const busyRow = !!f.suggestionId && deciding === f.suggestionId;
+              const isEditing = !!f.suggestionId && editing?.id === f.suggestionId;
+              return (
+              <li key={j} className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="capitalize text-muted-foreground">{f.label}:</span>
+                  <span className={f.decision === "denied" || f.decision === "updated" ? "line-through text-muted-foreground" : undefined}>{String(f.value)}</span>
+                  {f.decision === "updated" && <span className="font-medium">{f.appliedValue}</span>}
+                  {f.decision ? <Badge variant="outline">{f.decision === "approved" ? "Approved" : f.decision === "denied" ? "Denied" : "Updated"}</Badge>
+                    : <Badge variant={f.suggested ? "default" : "secondary"}>{f.suggested ? "Suggested" : "Already matches"}</Badge>}
+                  {f.suggested && f.suggestionId && !f.decision && !isEditing && <span className="flex flex-wrap gap-1">
+                    <Button size="sm" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => void decide(i, j, f, "accept")}>Approve</Button>
+                    <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => void decide(i, j, f, "reject")}>Deny</Button>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => setEditing({ id: f.suggestionId!, value: f.editValue ?? String(f.value ?? "") })}>Update</Button>
+                  </span>}
+                </div>
+                {isEditing && editing && <div className="flex flex-wrap items-center gap-2 pl-1">
+                  <Input aria-label={`Corrected ${f.label}`} className="h-8 max-w-xs" value={editing.value} maxLength={300} autoFocus onChange={(e) => setEditing({ ...editing, value: e.target.value })} />
+                  <Button size="sm" className="h-8" disabled={busyRow || !editing.value.trim()} onClick={() => void decide(i, j, f, "update", editing.value.trim())}>{busyRow ? "Saving…" : "Save correction"}</Button>
+                  <Button size="sm" variant="ghost" className="h-8" disabled={busyRow} onClick={() => setEditing(null)}>Cancel</Button>
+                </div>}
+              </li>);
+            })}</ul> : <p className="mt-2 text-xs text-muted-foreground">No investor details found.</p>}
           </div>
         ))}
       </CardContent>

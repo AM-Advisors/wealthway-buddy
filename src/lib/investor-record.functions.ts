@@ -53,7 +53,7 @@ export const investorRecordDetailFn = createServerFn({ method: "POST" }).middlew
   .handler(async ({ data, context }) => (await srv()).investorRecordDetail(context.userId, data.onboardingId));
 
 export const resolveSuggestionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(z.object({ id: uuid, action: z.enum(["accept", "reject", "review_later"]) }).parse)
+  .validator(z.object({ id: uuid, action: z.enum(["accept", "reject", "review_later", "update"]), value: z.string().max(300).nullish() }).parse)
   .handler(async ({ data, context }) => (await srv()).resolveSuggestion(context.userId, data));
 
 export const bulkPreviewFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
