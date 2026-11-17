@@ -20,6 +20,7 @@
     "@ai-sdk/openai": "^4.0.104",
     "@ai-sdk/openai-compatible": "^3.0.80",
     "@hookform/resolvers": "^5.9.2",
+    "@lovable.dev/ai-gateway": "^0.1.13",
     "@lovable.dev/cloud-auth-js": "^1.2.1",
     "@lovable.dev/email-js": "0.3.1",
     "@lovable.dev/webhooks-js": "0.0.3",

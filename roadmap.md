@@ -1176,3 +1176,8 @@
 - [x] Signed tax form on file stops asking investor for tax status; button opens the form
 - [ ] Read uploaded W-9/W-8 (then IDs, entity docs) and suggest details for confirmation
 - [ ] Investor questions: Harmonious Template vs Custom, client questionnaire library
+
+## Add investor from documents (2026-11-17)
+- [x] Add one investor: upload documents, AI fills blank boxes for review; tax ID never read
+- [x] Upload a list or documents: up to 25 documents read into rows for the existing preview and confirm
+- [ ] Save the uploaded files onto the new investor's record automatically (not built; files are read only)

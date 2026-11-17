@@ -147,3 +147,11 @@ export const addDistributionDestinationFn = createServerFn({ method: "POST" }).m
     }),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).addDistributionDestination(context.userId, data as any));
+
+/** AI reading of one uploaded investor document: suggestions only, nothing saved or stored. */
+export const readNewInvestorDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({
+    offeringId: uuid, fileName: z.string().min(1).max(200), contentType: z.string().max(60),
+    base64: z.string().min(16).max(14_500_000),
+  }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/investor-doc-extract.server")).readNewInvestorDocument(context.userId, data));

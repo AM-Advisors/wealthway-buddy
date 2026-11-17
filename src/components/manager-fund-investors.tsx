@@ -171,8 +171,8 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   const showInvites = !drill.stage && !drill.bucket && (filter === "all" || filter === "investor");
   const shownInvites = showInvites ? pendingCount : 0;
   const addOptions: { p: Panel; title: string; body: string; staff?: boolean }[] = [
-    { p: "create", title: "Add one investor", body: "Enter their name and email. We check for an existing record and email them a personal invitation." },
-    { p: "records", title: "Upload a list", body: "Add many investors from a spreadsheet. You see a preview before anything is saved." },
+    { p: "create", title: "Add one investor", body: "Enter their name and email, or upload their documents to fill it in. We check for an existing record and email them a personal invitation." },
+    { p: "records", title: "Upload a list or documents", body: "Add many investors from a spreadsheet or a stack of documents read for you. You see a preview before anything is saved." },
     { p: "bulkInvite", title: "Invite several by email", body: "Paste email addresses to send fund invitations." },
     { p: "prep", title: "Prepare a draft", body: "Fill in an investor's details for review before they are invited." },
     { p: "existing", title: "Add an existing investor", body: "Link someone already on Harmonious to this fund.", staff: true },

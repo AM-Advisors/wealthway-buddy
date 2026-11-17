@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { InvestorDocumentDrop, type FileReading } from "@/components/investor-document-drop";
+import { FIELD_LABELS, fillBlankFormFields, mergeInvestors, type ExtractedInvestor } from "@/lib/investor-doc-extract-model";
 
 const SECTIONS = ["Contact", "Investment Profile", "Entity / Ownership", "Investment", "Eligibility", "Documents", "Review"] as const;
 type Related = { firstName: string; lastName: string; email: string; role: string; ownershipPercent: string };
@@ -40,6 +42,22 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const [mismatchConfirmed, setMismatchConfirmed] = useState(false);
   // Set when saving was stopped by a possible existing match, so the "different person" choice is always offered.
   const [matchBlocked, setMatchBlocked] = useState(false);
+  const [profileTouched, setProfileTouched] = useState(false);
+  const [found, setFound] = useState<ExtractedInvestor[]>([]);
+  const [filledNote, setFilledNote] = useState<string | null>(null);
+  const applyFound = (inv: ExtractedInvestor) => {
+    const r = fillBlankFormFields(f, inv, { profileTouched });
+    setF(r.form);
+    if (r.filled.some((k) => !["firstName", "lastName", "email", "profileType", "entityName", "amount"].includes(k))) setFull(true);
+    setFilledNote(r.filled.length ? `Filled from the documents: ${r.filled.map((k) => FIELD_LABELS[k]).join(", ")}. Check every box before saving.` : "Nothing new to fill: the boxes already have values. Check them against the documents.");
+  };
+  const onRead = (results: FileReading[]) => {
+    const all = mergeInvestors(results.flatMap((r) => r.reading?.investors ?? []));
+    setFound(all);
+    if (all.length === 1) applyFound(all[0]!);
+    else if (!all.length) setFilledNote(results.some((r) => r.reading) ? "No investor details were found in those documents." : null);
+    else setFilledNote(null);
+  };
 
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) || null : null);
   const runSearch = async () => {
@@ -112,10 +130,22 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
       <CardHeader><CardTitle className="text-base">Create New Investor</CardTitle>
         <p className="text-sm text-muted-foreground">We search existing Harmonious records first so nobody is entered twice. Only name and email are needed to start. Investor type defaults to Individual; the amount can be added later.</p></CardHeader>
       <CardContent className="space-y-5">
+        <InvestorDocumentDrop fundId={fundId} multiple onRead={onRead} title="Fill in from documents"
+          hint="Upload a W-9, W-8, ID, subscription agreement, or trust or company papers. We read them and fill in the blank boxes below for you to check. Tax ID numbers are never read; add them by hand. The files aren't saved here: upload them to the investor's record after saving." />
+        {found.length > 1 ? (
+          <div className="space-y-2 rounded-md border p-3">
+            <p className="text-sm font-medium">These documents name {found.length} investors. Choose who you're adding now.</p>
+            <div className="flex flex-wrap gap-2">{found.map((inv, i) => (
+              <Button key={i} type="button" size="sm" variant="outline" onClick={() => applyFound(inv)}>{inv.entityName ?? ([inv.firstName, inv.lastName].filter(Boolean).join(" ") || inv.email)}</Button>
+            ))}</div>
+            <p className="text-xs text-muted-foreground">To add them all at once, use Upload a list and read the documents there.</p>
+          </div>
+        ) : null}
+        {filledNote ? <p className="rounded-md bg-muted p-2 text-sm">{filledNote}</p> : null}
         {!chosen?.profileId ? (
           <div className="flex flex-wrap gap-2" role="group" aria-label="Investor kind">
-            <Button type="button" size="sm" variant={type === "entity" ? "outline" : "default"} onClick={() => set("profileType")("individual")}>Individual</Button>
-            <Button type="button" size="sm" variant={type === "entity" ? "default" : "outline"} onClick={() => set("profileType")("entity")}>Business / organization</Button>
+            <Button type="button" size="sm" variant={type === "entity" ? "outline" : "default"} onClick={() => { setProfileTouched(true); set("profileType")("individual"); }}>Individual</Button>
+            <Button type="button" size="sm" variant={type === "entity" ? "default" : "outline"} onClick={() => { setProfileTouched(true); set("profileType")("entity"); }}>Business / organization</Button>
           </div>
         ) : null}
         {type === "entity" ? <p className="text-xs text-muted-foreground">For another fund, LLC, corporation, partnership or family office. Enter the contact person below; the invitation is addressed to the business, which completes business verification (entity documents, owners and signers, entity W-9).</p> : null}
@@ -179,7 +209,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
 
         {!chosen?.profileId ? (
           <div className="space-y-1"><Label>Investing as</Label>
-            <Select value={type} onValueChange={set("profileType")}><SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={type} onValueChange={(v) => { setProfileTouched(true); set("profileType")(v); }}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{PROFILE_TYPES.map((t) => <SelectItem key={t} value={t}>{PROFILE_TYPE_LABELS[t]}</SelectItem>)}</SelectContent></Select></div>
         ) : null}
         <div className="grid gap-3 sm:grid-cols-2">{field("amount", "Investment amount (USD)", { inputMode: "decimal" })}</div>

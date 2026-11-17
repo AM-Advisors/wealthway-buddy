@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { InvestorDocumentDrop, type FileReading } from "@/components/investor-document-drop";
+import { investorsToBulkCsv, mergeInvestors } from "@/lib/investor-doc-extract-model";
 
 type Preview = { importId: string; summary: Record<BulkClass, number>; rows: { index: number; cls: string; errors: string[]; name: string; email: string; amount: string; conflicts: { field: string; current: unknown; proposed: unknown }[] }[] };
 const tone: Record<BulkClass, "default" | "secondary" | "outline" | "destructive"> = { create_new: "default", match_existing: "secondary", already_in_fund: "outline", needs_review: "outline", invalid: "destructive" };
@@ -58,6 +60,12 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
       await loadRows(XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[wb.SheetNames[0]!]!, { header: 1, raw: false, defval: "" }));
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
+  const onDocs = (results: FileReading[]) => {
+    const all = mergeInvestors(results.flatMap((r) => r.reading?.investors ?? []));
+    if (!all.length) return void toast.error("No investor details were found in those documents.");
+    setCsv(investorsToBulkCsv(all));
+    toast.success(`Found ${all.length} investor${all.length === 1 ? "" : "s"}. Check the rows below, then Preview.`);
+  };
   const run = async () => { setBusy(true); try { setP((await preview({ data: { offeringId: fundId, csv } })) as Preview); setDecisions({}); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   const confirm = async () => {
     if (!p) return; setBusy(true);
@@ -80,6 +88,8 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
             <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="Choose Excel or CSV file" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} className="text-sm" />
             <Button variant="outline" size="sm" onClick={() => void downloadTemplate()}>Download template</Button>
           </div>
+          <InvestorDocumentDrop fundId={fundId} multiple onRead={onDocs} title="Or read investor documents"
+            hint="Upload up to 25 W-9s, IDs, subscription agreements or a scanned list. Documents about the same investor are combined into one row. Tax ID numbers are never read. Check the rows, then Preview; nothing is saved and no one is emailed until you confirm." />
           <div className="flex flex-wrap gap-2"><Input className="min-w-64 flex-1" placeholder="Google Sheets link (shared: anyone with the link can view)" value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} /><Button variant="outline" onClick={onSheet} disabled={busy || !sheetUrl.trim()}>Load sheet</Button></div>
           <Textarea aria-label="CSV content" rows={5} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder="first_name,last_name,email,profile_type,amount" />
           <Button onClick={run} disabled={busy || !csv.trim()}>{busy ? "Checking…" : "Preview"}</Button>
