@@ -19,7 +19,7 @@ const CADENCE: Record<string, string> = { annual: "Yearly", quarterly: "Quarterl
 export function ClientServicesPanel({ clientId }: { clientId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(clientServicesFn);
-  const q = useQuery({ queryKey: ["client-services", clientId], queryFn: () => load({ data: { clientId } }), retry: false, staleTime: 30_000 });
+  const q = useQuery({ queryKey: ["client-billing-services", clientId], queryFn: () => load({ data: { clientId } }), retry: false, staleTime: 30_000 });
   const save = useServerFn(saveClientServiceFn);
   const decide = useServerFn(decideClientServiceFn);
   const reqSwitch = useServerFn(requestMenuSwitchFn);
@@ -27,7 +27,7 @@ export function ClientServicesPanel({ clientId }: { clientId: string }) {
   const pause = useServerFn(pauseRemindersFn);
   const remind = useServerFn(sendPaymentReminderFn);
   const [form, setForm] = useState({ serviceKey: "", cadence: "annual" as "annual" | "quarterly" | "one_time", amount: "", startDate: new Date().toISOString().slice(0, 10), cardAutopay: false });
-  const refresh = () => qc.invalidateQueries({ queryKey: ["client-services", clientId] });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["client-billing-services", clientId] });
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } };
   const askNote = (msg: string, required: boolean) => { const n = window.prompt(msg) ?? null; if (required && !n?.trim()) return undefined; return n; };
 
