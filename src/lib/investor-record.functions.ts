@@ -105,8 +105,23 @@ export const readInvestorDocumentFn = createServerFn({ method: "POST" }).middlew
     onboardingId: uuid, fileName: z.string().max(200),
     mimeType: z.enum(["application/pdf", "image/png", "image/jpeg", "image/webp"]),
     base64: z.string().max(14_000_000),
+    expectedKind: z.string().max(40).nullish(),
   }).parse)
-  .handler(async ({ data, context }) => (await (await import("@/lib/investor-document-ai.server")).readInvestorDocument(context.userId, data)) as unknown as { documentKind: string; summary: string; found: { label: string; value: string; suggested: boolean }[] });
+  .handler(async ({ data, context }) => (await (await import("@/lib/investor-document-ai.server")).readInvestorDocument(context.userId, data)) as unknown as import("@/lib/investor-document-save-model").DocumentReadResult);
+
+const docAi = () => import("@/lib/investor-document-ai.server");
+export const confirmDocumentOwnerFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid, targetOnboardingId: uuid, fileName: z.string().max(200), values: z.record(z.string().max(60), z.string().max(300)), within: z.enum(["entity", "signer", "owner"]).nullish() }).parse)
+  .handler(async ({ data, context }) => (await (await docAi()).confirmDocumentOwner(context.userId, data)) as unknown as { found: import("@/lib/investor-document-save-model").FoundRow[]; onboardingId: string });
+export const documentOwnerOptionsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid }).parse)
+  .handler(async ({ data, context }) => (await docAi()).documentOwnerOptions(context.userId, data.onboardingId));
+export const recentDocumentReadsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid }).parse)
+  .handler(async ({ data, context }): Promise<import("@/lib/investor-document-save-model").RecentRead[]> => (await (await docAi()).recentDocumentReads(context.userId, data.onboardingId)).map((e) => ({ event: e.event, at: e.at, fileName: e.fileName, type: e.detail?.type ?? e.detail?.expectedType ?? e.detail?.detectedType ?? null, owner: e.detail?.owner ?? null })));
+export const recordDocumentStepFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid, fileName: z.string().max(200), step: z.enum(["saved", "used"]), type: z.string().max(40), use: z.string().max(40).nullish() }).parse)
+  .handler(async ({ data, context }) => (await docAi()).recordDocumentStep(context.userId, data));
 
 /** Reads a Google Sheet shared "anyone with the link" as CSV. Only docs.google.com sheet ids are fetched. */
 export const fetchGoogleSheetCsvFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

@@ -6,7 +6,7 @@ import { readNewInvestorDocumentFn } from "@/lib/investor-record.functions";
 import { DOC_READ_ACCEPT, DOC_READ_MAX_BYTES, DOC_READ_MAX_FILES, DOC_READ_TYPES, type DocumentReading } from "@/lib/investor-doc-extract-model";
 import { Badge } from "@/components/ui/badge";
 
-export type FileReading = { fileName: string; reading: DocumentReading | null; error: string | null };
+export type FileReading = { fileName: string; reading: DocumentReading | null; error: string | null; file?: File };
 
 const typeFor = (f: File) => {
   if ((DOC_READ_TYPES as readonly string[]).includes(f.type)) return f.type;
@@ -42,13 +42,14 @@ export function InvestorDocumentDrop({ fundId, multiple, title, hint, onRead }: 
         const f = files[next++]!;
         const contentType = typeFor(f);
         let row: FileReading;
+        const withFile = (x: FileReading): FileReading => ({ ...x, file: f });
         if (!contentType) row = { fileName: f.name, reading: null, error: "Upload a PDF or a photo (PNG, JPG or WEBP)." };
         else if (f.size > DOC_READ_MAX_BYTES) row = { fileName: f.name, reading: null, error: "Over 10 MB. Upload a smaller copy." };
         else {
           try { row = { fileName: f.name, reading: await read({ data: { offeringId: fundId, fileName: f.name, contentType, base64: await toBase64(f) } }), error: null }; }
           catch (e) { row = { fileName: f.name, reading: null, error: (e as Error).message.replace(/^Forbidden:\s*/, "") }; }
         }
-        out.push(row);
+        out.push(withFile(row));
         setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
       }
     };
