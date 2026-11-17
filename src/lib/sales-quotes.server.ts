@@ -168,6 +168,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   const snapshots = new Map<number, any>();
   const foundationSnaps = new Map<number, any>();
   let foundationNeedsExec = false;
+  const pendingLines = new Map<number, QuoteLineInput>();
   // Foundation Administration: approved rate when one exists, otherwise an explicit negotiated price
   // that always needs executive approval; never $0, never auto-approved, never sent while unreleased.
   if (d.lines.some((l) => isFoundationKey(l.serviceKey) || l.foundation)) {
@@ -177,7 +178,18 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     const seen: { component: any; clientEntityId: string | null; serviceStartOn: string; serviceEndOn: string | null }[] = [];
     for (const [i, l] of d.lines.entries()) {
       if (!isFoundationKey(l.serviceKey) && !l.foundation) continue;
-      if (!isFoundationKey(l.serviceKey) || !l.foundation) throw new Error(`"${l.label || "Foundation Administration"}" is missing its foundation details. Remove that line and add it with Configure Foundation Administration.`);
+      if (!isFoundationKey(l.serviceKey)) throw new Error("That Foundation Administration line doesn't match its component.");
+      // Details collected at onboarding: Sales quotes the service and price only; the foundation is
+      // set up on the platform after the client signs and pays.
+      if (!l.foundation) {
+        const c: any = card.get(l.serviceKey);
+        const rate = approvedRates.get(l.serviceKey) ?? (c && Number(c.baselineCents) > 0 ? Number(c.baselineCents) : null);
+        const unit = Math.max(0, Math.round(Number(l.unitCents) || 0)) || rate || 0;
+        if (unit <= 0) throw new Error(`"${l.label || "Foundation Administration"}" has no rate card price yet. Enter a price; it will need CEO or CRO approval.`);
+        if (rate == null || unit < rate) foundationNeedsExec = true;
+        pendingLines.set(i, { ...l, quantity: Math.max(1, Number(l.quantity) || 1), unitCents: unit, baselineUnitCents: rate ?? unit, foundation: undefined, bookkeeping: undefined });
+        continue;
+      }
       if (l.serviceKey !== `FOUNDATION_ADMIN:${l.foundation.component}`) throw new Error("That Foundation Administration line doesn't match its component.");
       const c: any = card.get(l.serviceKey);
       const rateCents = approvedRates.get(l.serviceKey) ?? (c && Number(c.baselineCents) > 0 ? Number(c.baselineCents) : null);
@@ -188,13 +200,23 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     }
   }
   const verifiedLines = await Promise.all(d.lines.map(async (l, i) => {
+    if (pendingLines.has(i)) return pendingLines.get(i)!;
     if (foundationSnaps.has(i)) return { ...l, ...foundationSnaps.get(i).line, foundation: undefined, bookkeeping: undefined } as QuoteLineInput;
     if (l.serviceKey !== BOOKKEEPING_KEY) {
       if (l.bookkeeping) throw new Error("Bookkeeping terms can only be attached to bookkeeping lines.");
       const c: any = card.get(l.serviceKey);
       return normalizeQuoteBilling({ ...l, quantity: Math.max(0, Number(l.quantity) || 0), unitCents: Math.max(0, Math.round(l.unitCents)) }, c);
     }
-    if (!l.bookkeeping) throw new Error("Configure the proposed bookkeeping service first.");
+    if (!l.bookkeeping) {
+      // Details collected at onboarding: priced from the rate card when one exists; otherwise the typed
+      // price needs CEO or CRO approval.
+      const c: any = card.get(l.serviceKey);
+      const rate = c && Number(c.baselineCents) > 0 ? Number(c.baselineCents) : null;
+      const unit = Math.max(0, Math.round(Number(l.unitCents) || 0)) || rate || 0;
+      if (unit <= 0) throw new Error("Enter a price for bookkeeping; the details are collected at onboarding.");
+      if (rate == null) foundationNeedsExec = true;
+      return { ...l, quantity: Math.max(1, Number(l.quantity) || 1), unitCents: unit, baselineUnitCents: rate ?? unit };
+    }
     const { data: version, error } = await db.from("bookkeeping_config_versions").select("id,configuration,effective_on").eq("id", l.bookkeeping.configVersionId).maybeSingle();
     if (error || !version) throw new Error("Choose a recorded proposed bookkeeping configuration.");
     const config = bookkeepingConfigSchema.parse(version.configuration);
@@ -700,4 +722,28 @@ export async function sendQuotePackage(userId: string, d: { id: string; subject:
   await db.from("sales_quotes").update({ package_issued_through: through, package_issued_at: now, updated_at: now }).eq("id", q.id);
   await event(q.id, "package_sent", userId, `SOW, quote and ${issued.length} invoices through ${through}`);
   return { ok: true, sowId, through, invoices: issued, totalCents: issued.reduce((s, i) => s + i.amountCents, 0) };
+}
+
+
+/** True when a saved quote line still needs its foundation or bookkeeping details collected at onboarding. */
+export function lineDetailsPending(l: { service_key?: string | null; foundation_snapshot?: unknown; bookkeeping_snapshot?: unknown }) {
+  return (isFoundationKey(l.service_key ?? "") && l.foundation_snapshot == null) || (l.service_key === BOOKKEEPING_KEY && l.bookkeeping_snapshot == null);
+}
+
+/** After the client signs: one onboarding to-do per quote whose lines still need details. Never sets anything up. */
+export async function openOnboardingDetailTasks(sowId: string, actorId: string) {
+  try {
+    const db = await admin();
+    const { data: quotes } = await db.from("sales_quotes").select("id, quote_number, client_id, owner_user_id").eq("sow_id", sowId);
+    for (const q of (quotes ?? []) as any[]) {
+      const { data: lines } = await db.from("sales_quote_lines").select("label, service_key, foundation_snapshot, bookkeeping_snapshot").eq("quote_id", q.id);
+      const pending = ((lines ?? []) as any[]).filter(lineDetailsPending);
+      if (!pending.length) continue;
+      const { data: c } = q.client_id ? await db.from("clients").select("name, legal_name").eq("id", q.client_id).maybeSingle() : { data: null };
+      const title = `Onboarding call: collect service details | ${(c as any)?.legal_name || (c as any)?.name || "client"} | ${q.quote_number ?? "quote"}`;
+      const { data: dup } = await db.from("staff_tasks").select("id").eq("title", title).limit(1);
+      if ((dup ?? []).length) continue;
+      await db.from("staff_tasks").insert({ title, description: `Once payment is received, collect these details on the onboarding call and enter them in the client's setup screens: ${pending.map((l) => l.label).join("; ")}.`, priority: "normal", team: "account_management", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "quote_onboarding_details", related_workflow_id: q.id, source: "workflow", assignee_user_id: q.owner_user_id ?? null, created_by: actorId });
+    }
+  } catch (e) { console.error("onboarding detail task failed", e); }
 }

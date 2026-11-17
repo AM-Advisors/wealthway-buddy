@@ -17,8 +17,7 @@ import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
 import { money } from "@/components/sales/sales-ui";
 import { DIRECTION_LABEL, KIND_LABEL, STATUS_LABEL, type DocDirection, type DocKind } from "@/lib/sales-documents-model";
 import { Panel } from "@/components/sales/sales-ui";
-import { FoundationConfigurator } from "@/components/sales/foundation-configurator";
-import { isFoundationKey, type ComponentKey, type FoundationLineInput } from "@/lib/foundation-admin-model";
+import { isFoundationKey, type FoundationLineInput } from "@/lib/foundation-admin-model";
 import { BOOKKEEPING_KEY } from "@/lib/bookkeeping-model";
 
 export const Route = createFileRoute("/_authenticated/sales_/documents")({
@@ -203,11 +202,9 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const [q, setQ] = useState("");
   const all = (c.data?.lines ?? []) as any[];
-  const shown = all.filter((l) => l.serviceKey !== BOOKKEEPING_KEY).filter((l) => !q || String(l.label).toLowerCase().includes(q.toLowerCase())).slice(0, 60);
+  const shown = all.filter((l) => !q || String(l.label).toLowerCase().includes(q.toLowerCase())).slice(0, 60);
   const has = (k: string) => lines.some((l) => l.serviceKey === k);
-  // Foundation services always need their foundation details, so they open the setup box instead of a plain line.
-  const [foundationStart, setFoundationStart] = useState<ComponentKey | null>(null);
-  const toggle = (l: any) => has(l.serviceKey) ? setLines(lines.filter((x) => x.serviceKey !== l.serviceKey)) : isFoundationKey(l.serviceKey) ? setFoundationStart(l.serviceKey.split(":")[1] as ComponentKey) : setLines([...lines, { serviceKey: l.serviceKey, label: l.label, quantity: 1, unitCents: l.baselineCents, baselineUnitCents: l.baselineCents, billingFrequency: l.pricingModel === "annual" ? "annual" : l.pricingModel === "quarterly" ? "quarterly" : l.pricingModel === "monthly" ? "monthly" : "one_time" }]);
+  const toggle = (l: any) => has(l.serviceKey) ? setLines(lines.filter((x) => x.serviceKey !== l.serviceKey)) : setLines([...lines, { serviceKey: l.serviceKey, label: l.label, quantity: 1, unitCents: l.baselineCents, baselineUnitCents: l.baselineCents, billingFrequency: l.pricingModel === "annual" ? "annual" : l.pricingModel === "quarterly" ? "quarterly" : l.pricingModel === "monthly" ? "monthly" : "one_time" }]);
   const total = lines.reduce((s, l) => s + l.quantity * l.unitCents, 0);
   const base = lines.reduce((s, l) => s + l.quantity * l.baselineUnitCents, 0);
   return (
@@ -223,15 +220,11 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
           </label>
         ))}
       </div>
-      {foundationStart && <FoundationConfigurator key={foundationStart} initialComponent={foundationStart} clientId={clientId}
-        rateCents={(key) => { const r = all.find((x) => x.serviceKey === key); return r && Number(r.baselineCents) > 0 ? Number(r.baselineCents) : null; }}
-        onAdd={(line) => { setLines([...lines.filter((x) => x.serviceKey !== line.serviceKey), line as SvcLine]); setFoundationStart(null); }}
-        onClose={() => setFoundationStart(null)} />}
       {lines.length > 0 && (
         <div className="rounded-md border">
           {lines.map((l, i) => (
             <div key={l.serviceKey} className="grid grid-cols-12 items-center gap-2 border-b px-3 py-2 last:border-0">
-              <span className="col-span-5">{l.label}</span>
+              <span className="col-span-5">{l.label}{(isFoundationKey(l.serviceKey) || l.serviceKey === BOOKKEEPING_KEY) && <span className="block text-xs text-muted-foreground">Details collected at onboarding</span>}</span>
               <Input aria-label="Quantity" className="col-span-2" disabled={!!l.foundation} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x))} />
               <Input aria-label="Price" className="col-span-2" disabled={!!l.foundation} inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x))} />
               <select aria-label="Billing frequency" disabled={!!l.foundation} className="col-span-3 h-9 rounded-md border bg-background px-2" value={l.billingFrequency ?? "one_time"} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, billingFrequency: e.target.value as any } : x))}>{BILLING_FREQUENCIES.map((fq) => <option key={fq.id} value={fq.id}>{fq.label}</option>)}</select>

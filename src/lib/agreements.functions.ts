@@ -1022,6 +1022,7 @@ export const signSow = createServerFn({ method: "POST" })
     const sow = await loadSowForWrite(context, who, data.sowId);
     if (sow.executed_at) {
       await (await import("@/lib/commission-notify.server")).afterSowSigned(data.sowId);
+    await (await import("@/lib/sales-quotes.server")).openOnboardingDetailTasks(data.sowId, who.userId);
       return { ok: true, alreadySigned: true } as const;
     }
 
