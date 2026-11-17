@@ -84,6 +84,11 @@ export async function acceptLinkFor(kind: AcceptKind, id: string, version: numbe
     const db = await admin();
     const quoteId = kind === "quote" ? id : ((await db.from("sales_documents").select("quote_id").eq("id", id).maybeSingle()).data?.quote_id ?? null);
     await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, quoteId, "sign");
+    // Prospects can be quoted and approved before a client record exists; signing needs the client on the quote.
+    if (quoteId) {
+      const { data: qc } = await db.from("sales_quotes").select("client_id").eq("id", quoteId).maybeSingle();
+      if (qc && !qc.client_id) throw new Error("Add the client to this quote before sending it to sign.");
+    }
   }
   const { signAcceptToken, TRACKING_BASE } = await import("@/lib/email-tracking.server");
   const token = await signAcceptToken({ kind, id, version, email });

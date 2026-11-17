@@ -60,7 +60,7 @@ export const startFoundationHandoff = createServerFn({ method: "POST" }).middlew
   .handler(async ({ data, context }) => (await F()).startFoundationHandoff(context.userId, data));
 
 export const getQuoteFoundationOptions = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .validator((d) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ clientId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ data, context }) => (await F()).quoteFoundationOptions(context.userId, data.clientId));
 
 export const getFoundationFlagState = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])

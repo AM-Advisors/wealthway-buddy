@@ -314,9 +314,9 @@ export async function startFoundationHandoff(userId: string, d: { profileId: str
 export async function verifyFoundationQuoteLine(db: any, ctx: { clientId: string | null; rateCents: number | null; excludeQuoteIds: string[]; siblings: { component: ComponentKey; clientEntityId: string | null; serviceStartOn: string; serviceEndOn: string | null }[] }, raw: unknown) {
   if (!(await foundationQuotingEnabled(db))) throw new Error("Foundation Administration quoting is turned off.");
   const input = foundationLineInputSchema.parse(raw);
-  if (!ctx.clientId) throw new Error("Choose the client before adding Foundation Administration.");
   let entityName: string;
   if (input.clientEntityId && input.foundationProfileId) {
+    if (!ctx.clientId) throw new Error("Choose the client before picking a foundation on file.");
     const p = await profileFor(db, input.foundationProfileId);
     if (p.client_id !== ctx.clientId || p.client_entity_id !== input.clientEntityId || p.status !== "active") throw new Error("That foundation doesn't belong to the chosen client.");
     const entity = must(await db.from("client_entities").select("legal_name, client_id").eq("id", input.clientEntityId).maybeSingle(), "Couldn't read the foundation entity.") as any;
@@ -374,14 +374,15 @@ export async function assertFoundationReleased(db: any, quoteId: string | null |
 }
 
 /** Sales quote builder: the chosen client's active foundations. Sales roles only; no profile details beyond names. */
-export async function quoteFoundationOptions(userId: string, clientId: string) {
+export async function quoteFoundationOptions(userId: string, clientId: string | null) {
   const { salesActor } = await import("@/lib/sales-hub.server");
   const { canDraftQuote } = await import("@/lib/sales-model");
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   const db = await admin();
   if (!(await foundationQuotingEnabled(db))) return { enabled: false, rates: {} as Record<string, number>, foundations: [] as { profileId: string; clientEntityId: string; name: string; classification: string; exemptionStatus: string }[] };
-  const profs = must(await db.from("foundation_profiles").select("id, client_entity_id, classification, exemption_status").eq("client_id", clientId).eq("status", "active"), "Couldn't read foundations.") as any[];
+  // Prospects without a client record can still quote a foundation to be formed.
+  const profs = clientId ? must(await db.from("foundation_profiles").select("id, client_entity_id, classification, exemption_status").eq("client_id", clientId).eq("status", "active"), "Couldn't read foundations.") as any[] : [];
   const ids = profs.map((p) => p.client_entity_id);
   const ents = ids.length ? (must(await db.from("client_entities").select("id, legal_name").in("id", ids), "Couldn't read foundations.") as any[]) : [];
   const rates = Object.fromEntries(await foundationRates(db));

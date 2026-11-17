@@ -188,7 +188,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const baseline = displayLines.reduce((s, l) => s + Math.round(l.quantity * l.baselineUnitCents), 0);
   const belowBaseline = displayLines.some(l => l.unitCents < l.baselineUnitCents);
   const add = (key: string) => {
-    if (isFoundationKey(key)) { if (!clientId) { toast.error("Choose the client first, then set up Foundation Administration."); return; } setFoundationStart(key.split(":")[1] as ComponentKey); setShowFoundation(true); return; }
+    if (isFoundationKey(key)) { setFoundationStart(key.split(":")[1] as ComponentKey); setShowFoundation(true); return; }
     const it = c.data?.lines.find((l: any) => l.serviceKey === key);
     if (it) { const std = standardInclusions(it.serviceKey); const billingFrequency = defaultQuoteBilling(it); const added = normalizeQuoteBilling({ serviceKey: it.serviceKey, label: it.label, quantity: 1, unitCents: it.baselineCents, baselineUnitCents: it.baselineCents, billingFrequency, details: std ? { included: std.included, excluded: std.excluded } : undefined }, it); setLines([...lines, { ...added, unitCents: added.baselineUnitCents }]); }
   };
@@ -196,7 +196,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
     <Panel title={initial ? "Edit quote" : "New quote"}>
       <div className="grid gap-3 sm:grid-cols-4">
         <Input placeholder="Quote title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { if (v === "__new") { setNewClient(""); return; } setClientId(v === "none" ? null : v); setOfferingId(null); setSignerId(null); setPayerId(null); setLines(previous => previous.filter(l => !l.bookkeeping && !l.foundation)); setShowFoundation(false); }}>
+        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { if (v === "__new") { setNewClient(""); return; } setClientId(v === "none" ? null : v); setOfferingId(null); setSignerId(null); setPayerId(null); setLines(previous => previous.filter(l => !l.bookkeeping && !(l.foundation && l.foundation.clientEntityId))); setShowFoundation(false); }}>
           <SelectTrigger aria-label="Client"><SelectValue placeholder="Client" /></SelectTrigger>
           <SelectContent><SelectItem value="none">Choose client…</SelectItem><SelectItem value="__new">+ Add new client</SelectItem>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
         </SearchablePeoplePicker>
@@ -234,8 +234,8 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
         <Button variant="outline" onClick={() => setShowBookkeeping(v => !v)}>{showBookkeeping ? "Close bookkeeping" : "Configure Bookkeeping"}</Button>
-        {clientId && <Button variant="outline" className="ml-2" onClick={() => setShowFoundation(v => !v)}>{showFoundation ? "Close Foundation Administration" : "Configure Foundation Administration"}</Button>}
-        {showFoundation && clientId && <FoundationConfigurator key={foundationStart ?? "default"} initialComponent={foundationStart} clientId={clientId} rateCents={(key) => { const r = c.data?.lines.find((x: any) => x.serviceKey === key); return r && Number(r.baselineCents) > 0 ? Number(r.baselineCents) : null; }} onAdd={(line) => { setLines(previous => [...previous, line]); setShowFoundation(false); }} onClose={() => { setShowFoundation(false); setFoundationStart(null); }} />}
+        {<Button variant="outline" className="ml-2" onClick={() => setShowFoundation(v => !v)}>{showFoundation ? "Close Foundation Administration" : "Configure Foundation Administration"}</Button>}
+        {showFoundation && <FoundationConfigurator key={foundationStart ?? "default"} initialComponent={foundationStart} clientId={clientId} rateCents={(key) => { const r = c.data?.lines.find((x: any) => x.serviceKey === key); return r && Number(r.baselineCents) > 0 ? Number(r.baselineCents) : null; }} onAdd={(line) => { setLines(previous => [...previous, line]); setShowFoundation(false); }} onClose={() => { setShowFoundation(false); setFoundationStart(null); }} />}
         {showBookkeeping && bookkeeping.error && <p className="mt-2 text-sm text-destructive">{(bookkeeping.error as Error).message}</p>}
         {showBookkeeping && bookkeeping.data && <BookkeepingConfigurator configuration={bookkeeping.data.configuration} versionId={bookkeeping.data.versionId} clientId={clientId} onAdd={(input, invoiceCents) => { setLines(previous => [...previous, { serviceKey: BOOKKEEPING_KEY, label: `Bookkeeping · ${BOOKKEEPING_OPTIONS[input.option].name}`, quantity: 1, unitCents: invoiceCents, baselineUnitCents: invoiceCents, billingFrequency: input.billing, firstBillOn: input.effectiveOn, bookkeeping: input }]); setShowBookkeeping(false); }} />}
         <Select value="" onValueChange={add}><SelectTrigger className="w-72"><SelectValue placeholder="Add a service from the rate card" /></SelectTrigger>

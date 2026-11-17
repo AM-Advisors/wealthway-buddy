@@ -93,3 +93,15 @@ describe("coverage check pending for entities not on file", () => {
     expect(coverageBlocker([{ service_key: "OTHER" }])).toBeNull();
   });
 });
+
+import { bookkeepingCoverageBlocker as _blk, unlinkedMatchesOnFile } from "./bookkeeping-model";
+describe("entities being set up", () => {
+  it("an entity to be set up does not block the quote", () => {
+    expect(_blk([{ bookkeeping_snapshot: { coverageCheck: { status: "to_be_formed", unlinkedReferences: ["New Fund LP"] } } }])).toBeNull();
+  });
+  it("a name already on file still has to be linked", () => {
+    expect(unlinkedMatchesOnFile(["Acme Fund, L.P."], ["acme fund lp"])).toEqual(["Acme Fund, L.P."]);
+    expect(unlinkedMatchesOnFile(["New Fund LP"], ["Acme Fund LP"])).toEqual([]);
+    expect(_blk([{ bookkeeping_snapshot: { coverageCheck: { status: "pending", unlinkedReferences: ["Acme"] } } }])).not.toBeNull();
+  });
+});

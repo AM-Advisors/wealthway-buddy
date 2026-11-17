@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { COVERAGE_PENDING, type CoverageCheck } from "@/lib/bookkeeping-model";
+import { COVERAGE_PENDING, ENTITY_TO_BE_FORMED, type CoverageCheck } from "@/lib/bookkeeping-model";
 import { getBookkeepingEntityCoverage } from "@/lib/bookkeeping.functions";
 import { linkSalesQuoteBookkeepingEntity } from "@/lib/sales-hub.functions";
 
@@ -54,10 +54,13 @@ function CoverageLine({ quoteId, clientId, canEdit, line }: { quoteId: string; c
       </div>
     );
   }
+  const toBeFormed = check?.status === "to_be_formed";
   return (
     <div className="space-y-2 text-sm">
-      <Badge variant="outline">{COVERAGE_PENDING}</Badge>
-      <p className="text-muted-foreground">{line.label}: {refs.join(", ") || "This entity"} {refs.length === 1 ? "isn't" : "aren't"} linked to an entity on file. This quote stays a draft until each entity is linked and the coverage and open-request checks pass.</p>
+      <Badge variant="outline">{toBeFormed ? ENTITY_TO_BE_FORMED : COVERAGE_PENDING}</Badge>
+      <p className="text-muted-foreground">{toBeFormed
+        ? `${line.label}: ${refs.join(", ") || "This entity"} will be set up, so the quote can move forward. Link it here once it's on file.`
+        : `${line.label}: ${refs.join(", ") || "This entity"} matches an entity already on file. Link it so coverage and open requests can be checked before this quote moves forward.`}</p>
       {!canEdit ? <p className="text-xs text-muted-foreground">Only an editable draft can be linked. Create a new version to link the entity.</p>
         : !clientId ? <p className="text-xs text-muted-foreground">Choose the client on this quote first.</p>
         : entities.data && entities.data.length === 0 ? <p className="text-xs text-muted-foreground">Add the entity to the client first, then link it here.</p>

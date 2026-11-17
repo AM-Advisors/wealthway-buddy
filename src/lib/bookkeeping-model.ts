@@ -145,10 +145,19 @@ export function bookkeepingDraftBlocker(lines: readonly { bookkeeping_snapshot?:
 }
 
 export const COVERAGE_PENDING = "Coverage check pending";
+export const ENTITY_TO_BE_FORMED = "Entity to be set up";
+
+/** An unlinked line names only new entities when none of its names match an entity already on file. */
+export function unlinkedMatchesOnFile(references: readonly string[], onFileNames: readonly string[]): string[] {
+  const norm = (x: string) => x.trim().toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ");
+  const onFile = new Set(onFileNames.map(norm));
+  return references.filter((r) => onFile.has(norm(r)));
+}
 
 /** Server-computed result of the coverage and open-request checks, saved on each bookkeeping quote line. */
 export interface CoverageCheck {
-  status: "pending" | "passed";
+  /** "to_be_formed": the entity isn't set up yet and no entity on file has its name; coverage is checked once it's linked. */
+  status: "pending" | "passed" | "to_be_formed";
   entityId: string | null;
   entityName: string | null;
   organizationId: string | null;
@@ -185,7 +194,7 @@ export function bookkeepingCoverageBlocker(lines: readonly { bookkeeping_snapsho
   const pending = lines
     .filter((l) => l.bookkeeping_snapshot || l.service_key === BOOKKEEPING_KEY)
     .map((l) => (l.bookkeeping_snapshot ?? {}) as { coverageCheck?: CoverageCheck; entityReferences?: string[] })
-    .filter((s) => s.coverageCheck?.status !== "passed");
+    .filter((s) => s.coverageCheck?.status !== "passed" && s.coverageCheck?.status !== "to_be_formed");
   if (!pending.length) return null;
   const names = [...new Set(pending.flatMap((s) => s.coverageCheck?.unlinkedReferences ?? s.entityReferences ?? []))];
   return `${COVERAGE_PENDING}: ${names.length ? names.join(", ") : "an entity"} ${names.length === 1 ? "isn't" : "aren't"} linked to an entity on file. Link each entity and rerun the coverage and open-request checks before this quote can move forward.`;

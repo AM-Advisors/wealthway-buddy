@@ -23,11 +23,11 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 
 /** Adds one Foundation Administration component to a quote draft. The server re-prices and re-checks everything. */
 export function FoundationConfigurator({ clientId, rateCents, onAdd, onClose, initialComponent }: {
-  clientId: string; initialComponent?: ComponentKey | null; rateCents: (serviceKey: string) => number | null; onAdd: (line: QuoteLineInput) => void; onClose: () => void;
+  clientId: string | null; initialComponent?: ComponentKey | null; rateCents: (serviceKey: string) => number | null; onAdd: (line: QuoteLineInput) => void; onClose: () => void;
 }) {
   const optsFn = useServerFn(getQuoteFoundationOptions);
   const opts = useQuery({ queryKey: ["quote-foundations", clientId], queryFn: () => optsFn({ data: { clientId } }) });
-  const [profileId, setProfileId] = useState<string>("");
+  const [profileId, setProfileId] = useState<string>(clientId ? "" : PLANNED);
   const [plannedName, setPlannedName] = useState("");
   const startKey: ComponentKey = initialComponent && componentByKey(initialComponent) ? initialComponent : "onboarding_setup";
   const [component, setComponent] = useState<ComponentKey>(startKey);

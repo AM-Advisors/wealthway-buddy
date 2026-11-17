@@ -2,7 +2,7 @@
 import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, quoteAutoApproves, quoteDeleteProblem, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
-import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingCoverageBlocker, bookkeepingDraftBlocker, bookkeepingInputSchema, bookkeepingTerms, calculateBookkeeping, coverageCheckFor, type CoverageCheck } from "@/lib/bookkeeping-model";
+import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingCoverageBlocker, bookkeepingDraftBlocker, bookkeepingInputSchema, bookkeepingTerms, calculateBookkeeping, coverageCheckFor, unlinkedMatchesOnFile, type CoverageCheck } from "@/lib/bookkeeping-model";
 import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "@/lib/quote-sow-sync";
 import { sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import { normalizeQuoteBilling } from "@/lib/quote-billing";
@@ -37,7 +37,14 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
 async function bookkeepingCoverageCheck(db: any, clientId: string | null, raw: unknown): Promise<CoverageCheck> {
   const input = bookkeepingInputSchema.parse(raw);
   const now = new Date().toISOString();
-  if (!input.entityId) return coverageCheckFor(input, null, now);
+  if (!input.entityId) {
+    // Entities being set up for a prospect or new client: fine to quote, unless the name is already on file (then link it).
+    const pending = coverageCheckFor(input, null, now);
+    if (!clientId) return { ...pending, status: "to_be_formed" };
+    const { data: onFile } = await db.from("client_entities").select("legal_name").eq("client_id", clientId).neq("status", "archived");
+    const matches = unlinkedMatchesOnFile(input.entityReferences, ((onFile ?? []) as any[]).map((e) => String(e.legal_name ?? "")));
+    return matches.length ? pending : { ...pending, status: "to_be_formed" };
+  }
   const { data: entity } = await db.from("client_entities").select("id, client_id, legal_name, offering_id, entity_type, status").eq("id", input.entityId).maybeSingle();
   if (!entity || !clientId || entity.client_id !== clientId) throw new Error("That entity doesn't belong to the chosen client.");
   if (entity.status === "archived") throw new Error("That entity is archived. Choose an active entity.");
@@ -291,7 +298,6 @@ export async function submitQuote(userId: string, id: string) {
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
   if (!q || !canSee(a, q.owner_user_id) || !["draft", "rejected"].includes(q.status)) throw new Error("This quote can't be submitted.");
-  if (!q.client_id) throw new Error("Choose the client before submitting for approval.");
   const { data: quoteLines, error: linesError } = await db.from("sales_quote_lines").select("service_key,bookkeeping_snapshot,foundation_snapshot").eq("quote_id", id);
   if (linesError) throw new Error("Couldn't check the quote's service terms.");
   const foundationLines = ((quoteLines ?? []) as any[]).filter((l) => l.foundation_snapshot);
@@ -346,6 +352,7 @@ export async function createAgreements(userId: string, id: string) {
 export async function draftAgreements(userId: string, q: any) {
   const db = await admin();
   if (q.sow_id) return { sowId: q.sow_id as string };
+  if (!q.client_id) throw new Error("Add the client to this quote before creating the agreement. Use Add client on the draft, or create a new version.");
   await (await import("@/lib/foundation-admin.server")).assertFoundationReleased(db, q.id, "contract");
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", q.id).order("sort_order");
   await assertBookkeepingCoverage(db, q.client_id, lines ?? []);

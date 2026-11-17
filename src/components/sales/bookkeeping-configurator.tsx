@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { calculateBookkeeping, type BookkeepingConfig, type BookkeepingInput } from "@/lib/bookkeeping-model";
 import { ADDONS, BOOKKEEPING_OPTIONS, CHARGED_LABELS, FREQUENCY_LABELS, NOT_YET_AVAILABLE, OPTION_KEYS, SUPPORT_LEVELS, coverageConflicts, optionAvailableFor, quoteCoverageRows, type BookkeepingOption, type ChargedScope } from "@/lib/bookkeeping-options";
-import { COVERAGE_PENDING } from "@/lib/bookkeeping-model";
+import { ENTITY_TO_BE_FORMED } from "@/lib/bookkeeping-model";
 import { getBookkeepingEntityCoverage } from "@/lib/bookkeeping.functions";
 
 const money = (n: number | null) => n === null ? "Custom price required" : `$${(n / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
@@ -59,8 +59,8 @@ export function BookkeepingConfigurator({ configuration, versionId, clientId, on
     <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-1"><Label htmlFor="bk-entities">{chosenEntity ? "Other legal entities (one per line)" : "Legal entities (one per line)"}</Label><Textarea id="bk-entities" placeholder="Legal entity name" value={entities} onChange={e => setEntities(e.target.value)} /></div><div className="space-y-1"><Label htmlFor="bk-reporting">Reporting requirements</Label><Textarea id="bk-reporting" value={input.reportingRequirements} onChange={e => patch({ reportingRequirements: e.target.value })} /></div></div>
     {input.customMonthlyCents != null && <div className="space-y-1"><Label htmlFor="bk-reason">Custom price reason</Label><Input id="bk-reason" value={input.customReason} onChange={e => patch({ customReason: e.target.value })} /></div>}
     {!chosenEntity && <div className="space-y-1 rounded-md border p-3 text-sm" role="status">
-      <Badge variant="outline">{COVERAGE_PENDING}</Badge>
-      <p className="text-muted-foreground">This entity isn't on file yet, so coverage and open requests can't be checked. The quote stays a draft until the entity is added to the client and linked on the quote page.</p>
+      <Badge variant="outline">{ENTITY_TO_BE_FORMED}</Badge>
+      <p className="text-muted-foreground">Fine to quote an entity you're setting up. If an entity with this name is already on file for the client, link it on the quote page so coverage can be checked.</p>
     </div>}
     {chosenEntity && <p className="text-sm text-muted-foreground">Organization: <span className="font-medium text-foreground">{chosenEntity.organizationName}</span> · Entity: <span className="font-medium text-foreground">{chosenEntity.legalName}</span></p>}
     {availability && !availability.available && <p role="alert" className="text-sm text-destructive">{BOOKKEEPING_OPTIONS[input.option].name}: {NOT_YET_AVAILABLE} for {chosenEntity?.legalName}. {availability.reason}</p>}
