@@ -1077,3 +1077,13 @@ export function canLinkPreparedInvestment(
   if (!a) return false;
   return !p || p === a;
 }
+
+/**
+ * Money received can be recorded at any stage, even before the investor has done anything.
+ * The investment stage only moves to "funded" when the investor was already approved to fund,
+ * so recording money never skips steps, signatures, approval or admission.
+ */
+export function manualReceiptStageUpdate(stage: string | null | undefined, status: FundingStatus): { stage?: "funded" } {
+  const approved = ["approved_to_fund", "awaiting_funds", "funded"].includes(String(stage ?? ""));
+  return status === "funded" && approved ? { stage: "funded" } : {};
+}

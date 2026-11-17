@@ -47,6 +47,7 @@ import {
   signingRequirementSatisfied,
   verificationAllowsSigning,
   deriveFundingStatus,
+  manualReceiptStageUpdate,
   determineOnboardingRequirements,
   invitationStatusForStage,
   invitationUsableError,
@@ -2109,9 +2110,9 @@ export async function recordManualReceipt(
   if (reference.length < 2) fail("Add the wire or check reference.");
   const row = await onboardingRow(input.onboardingId);
   if (row.removed_at) fail("This investment was removed from the fund.");
-  if (!["approved_to_fund", "awaiting_funds", "funded"].includes(String(row.stage))) {
-    fail("Approve this investor to fund before recording money received.");
-  }
+  // Money can arrive before the investor finishes any step. Recording it is allowed at any stage;
+  // it never skips steps, signatures, approval or admission (stage only moves once already approved to fund).
+  const approvedStage = ["approved_to_fund", "awaiting_funds", "funded"].includes(String(row.stage));
   const { data: prior } = await db()
     .from("investor_onboarding_events")
     .select("detail")
@@ -2126,7 +2127,7 @@ export async function recordManualReceipt(
   await touch(row.id, {
     funded_amount_cents: funded,
     funding_status: status,
-    ...(status === "funded" ? { stage: "funded" } : {}),
+    ...manualReceiptStageUpdate(row.stage, status),
   });
   await recordEvent({
     onboardingId: row.id,
@@ -2134,7 +2135,7 @@ export async function recordManualReceipt(
     event: "manual_receipt_recorded",
     fromStatus: row.funding_status ?? null,
     toStatus: status,
-    detail: { amountCents: input.amountCents, receivedOn: input.receivedOn, reference, note: input.note?.trim() || null, source: "manual_entry" },
+    detail: { amountCents: input.amountCents, receivedOn: input.receivedOn, reference, note: input.note?.trim() || null, source: "manual_entry", stageAtReceipt: row.stage ?? null, beforeApproval: !approvedStage },
     actorUserId: actor.userId,
     actorRole: "harmonious",
   });

@@ -38,7 +38,7 @@ export function ManualReceiptCard({ onboardingId }: { onboardingId: string }) {
     <Card className="md:col-span-2">
       <CardHeader>
         <CardTitle className="text-base">Record money received</CardTitle>
-        <CardDescription>Mark this investor's money as received without loading a bank statement. Each entry is kept in the history; nothing is moved.</CardDescription>
+        <CardDescription>Mark this investor's money as received without loading a bank statement. You can record it at any step, even before the investor has started. Their remaining steps and your approval are still needed before they are admitted. Each entry is kept in the history; nothing is moved.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1"><Label htmlFor="mr-amount">Amount received (USD)</Label><Input id="mr-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="100,000" /></div>
