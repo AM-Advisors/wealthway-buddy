@@ -1,3 +1,4 @@
+import { exceptionReason } from "@/lib/onboarding-exception-reason";
 import { STALL_DAYS, isStalled, waitingLabel } from "@/lib/stalled-items";
 import { canonicalizeApplications } from "@/lib/verification-status";
 /**
@@ -233,7 +234,7 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordId: parent.investor_user_id,
         recordTab: "identity",
         title: `${lookup.people.get(parent.investor_user_id) ?? "Investor"} | onboarding exception`,
-        reason: String(e.exception_type ?? "Exception raised").replace(/_/g, " "),
+        reason: exceptionReason({ type: e.exception_type ?? null, detail: e.detail ?? null }),
         workflowState: String(e.status ?? "open"),
         requiredAction: "review",
         fundId: parent.offering_id,
@@ -241,7 +242,7 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         assignedTo: null,
         assignedToName: typeof e.owner === "string" ? e.owner : null,
         blocked: true,
-        blockReason: String(e.exception_type ?? "Exception raised").replace(/_/g, " "),
+        blockReason: exceptionReason({ type: e.exception_type ?? null, detail: e.detail ?? null }),
         at: e.created_at ?? null,
       }),
     );

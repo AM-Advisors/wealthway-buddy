@@ -4,6 +4,7 @@
 - [x] "Resolve exception" on the investor page resolves the issue right there (no trip to the review queue)
 - [x] A later wire that completes the amount clears its own out-of-date shortfall alert
 - [x] Show the reason under "Blocked" so Ops knows why
+- [x] Same fixes swept: capital call wires clear their own shortfall alerts; Operations work queue shows the plain reason
 
 ## Portfolio Reporting & Analytics phase 1 (2026-11-11)
 - [x] Consolidated portfolio on Wealth (manual, CSV import, fund records; source labels; connected accounts excluded while in test mode)

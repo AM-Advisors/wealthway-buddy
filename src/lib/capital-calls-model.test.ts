@@ -406,3 +406,12 @@ describe("closing and manager boards", () => {
     expect(safe.nested.stage).toBe("funded");
   });
 });
+
+describe("capital call shortfall alerts", () => {
+  it("close once the call is fully received; overages and returned wires stay open", async () => {
+    const { shortfallExceptionsToClose } = await import("./capital-calls-model");
+    const open = [{ id: "p", kind: "partial_funding" }, { id: "o", kind: "overfunding" }, { id: "r", kind: "returned_wire" }];
+    expect(shortfallExceptionsToClose("received", open)).toEqual(["p"]);
+    expect(shortfallExceptionsToClose("partially_received", open)).toEqual([]);
+  });
+});

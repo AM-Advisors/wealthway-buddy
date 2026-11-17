@@ -648,6 +648,15 @@ export function proposeFundingMatch(
 }
 
 /** An accepted match still has to describe what happened to the expectation. */
+/**
+ * Once posted cash covers an expected funding in full, its open shortfall alerts are out of date and
+ * close with a recorded reason. Overage, returned-wire and other alerts always stay for a person.
+ */
+export function shortfallExceptionsToClose(expectedStatus: string, open: { id: string; kind: string }[]): string[] {
+  if (expectedStatus !== "received") return [];
+  return open.filter((e) => e.kind === "partial_funding").map((e) => e.id);
+}
+
 export function expectedFundingStatus(input: {
   expectedAmountCents: number;
   receivedAmountCents: number;

@@ -1405,16 +1405,41 @@ export async function postFundingMatch(userId: string, matchId: string) {
 
   if (expected) {
     const received = Number(expected.received_amount_cents ?? 0) + Number(match.proposed_amount_cents);
+    const newStatus = expectedFundingStatus({
+      expectedAmountCents: Number(expected.expected_amount_cents),
+      receivedAmountCents: received,
+    });
     await db()
       .from("expected_fundings")
-      .update({
-        received_amount_cents: received,
-        status: expectedFundingStatus({
-          expectedAmountCents: Number(expected.expected_amount_cents),
-          receivedAmountCents: received,
-        }),
-      })
+      .update({ received_amount_cents: received, status: newStatus })
       .eq("id", expected.id);
+
+    // A later wire that completes the amount closes the earlier shortfall alert, with the reason recorded.
+    const { shortfallExceptionsToClose } = await import("@/lib/capital-calls-model");
+    const { data: openEx } = await db().from("funding_exceptions").select("id, kind").eq("expected_funding_id", expected.id).eq("status", "open");
+    const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+    const resolution = `Cleared automatically: full amount received (${usd(received)} of ${usd(Number(expected.expected_amount_cents))}).`;
+    for (const id of shortfallExceptionsToClose(newStatus, ((openEx ?? []) as any[]).map((e) => ({ id: String(e.id), kind: String(e.kind) })))) {
+      const { data: closed } = await db()
+        .from("funding_exceptions")
+        .update({ status: "resolved", resolution, resolved_by: actor.userId, resolved_at: nowIso() })
+        .eq("id", id)
+        .eq("status", "open")
+        .select("id");
+      if (!(closed ?? []).length) continue;
+      await recordEvent({
+        offeringId: match.offering_id,
+        fundingMatchId: match.id,
+        expectedFundingId: expected.id,
+        event: "funding_exception_resolved",
+        fromStatus: "open",
+        toStatus: "resolved",
+        reason: resolution,
+        detail: { automatic: true, exceptionId: id },
+        actorUserId: actor.userId,
+        actorRole: "harmonious",
+      });
+    }
 
     if (expected.capital_call_line_id) {
       const { data: line } = await db()
