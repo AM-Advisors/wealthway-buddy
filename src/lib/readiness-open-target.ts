@@ -18,7 +18,7 @@ export function openTargetFor(key: string, owner?: string | null): OpenTarget {
     case "subscription_documents": return { kind: "tab", tab: "documents" };
     case "accreditation": return { kind: "review", section: "accreditation" };
     case "funding": return { kind: "fund", area: "banking" };
-    case "approved_to_fund": return { kind: "tab", tab: "overview" };
+    case "approved_to_fund": case "manager_approval": return { kind: "tab", tab: "overview" };
     case "acceptance": case "exceptions": return { kind: "ops_onboarding" };
     default: return { kind: "tab", tab: "documents" };
   }
@@ -33,5 +33,6 @@ export function openLabelFor(key: string, owner: string | null | undefined): str
   if (t.kind === "fund") return t.area === "approvals" ? "Review accreditation" : "Match wire in Banking";
   if (t.kind === "ops_onboarding") return key === "acceptance" ? "Accept & admit" : "Resolve exception";
   if (key === "approved_to_fund") return "Approve to send funds";
+  if (key === "manager_approval") return "Approve investor";
   return owner === "investor" ? "View details" : "Review";
 }

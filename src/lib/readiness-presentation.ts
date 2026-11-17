@@ -90,6 +90,7 @@ export function waitingDetail(i: any, items: any[] = []): string | null {
     case "investment_profile": return "Investor has not chosen who is investing";
     case "account": return "Investor has not created a login yet";
     case "approved_to_fund": return "Fund manager approves the subscription to release wire instructions";
+    case "manager_approval": return "Funds received; fund manager approves the investor before admission";
     case "funding": return i.status === "needs_harmonious" ? (i.reason ?? "Incoming wire waiting to be reconciled") : "Waiting for the investor to send funds";
     case "acceptance": return "Funds received; ready to accept & admit";
   }

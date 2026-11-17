@@ -69,7 +69,7 @@ const ITEM_REASON: Record<string, ReasonCode> = {
   aml: "SCREENING_REVIEW_REQUIRED", sanctions: "SCREENING_REVIEW_REQUIRED",
   accreditation: "ACCREDITATION_REQUIRED", tax_form: "TAX_FORM_REQUIRED",
   signature: "SIGNATURE_REQUIRED", countersignature: "FUND_COUNTERSIGNATURE_REQUIRED",
-  approved_to_fund: "APPROVAL_TO_FUND_REQUIRED", exceptions: "OPEN_ISSUE", acceptance: "ACCEPTANCE_REQUIRED",
+  approved_to_fund: "APPROVAL_TO_FUND_REQUIRED", manager_approval: "APPROVAL_TO_FUND_REQUIRED", exceptions: "OPEN_ISSUE", acceptance: "ACCEPTANCE_REQUIRED",
 };
 
 /** Reason for one readiness item, using its status to split funding sub-cases. */

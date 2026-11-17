@@ -235,15 +235,13 @@ function fundingItem(input: ReadinessInput, preFundingDone: boolean, blockingExc
   const approval: ReadinessItem = {
     ...base,
     key: "approved_to_fund",
-    label: isReconciledFunding(String(input.fundingStatus ?? "")) && !approved ? "Fund manager approval" : "Approved to receive funding instructions",
+    label: isReconciledFunding(String(input.fundingStatus ?? "")) && !approved ? "Capital already received" : "Approved to receive funding instructions",
     source: REQUIREMENT_SOURCE["approved_to_fund"]!,
     ...(approved
       ? { status: "complete" as const, owner: null, action: null }
       : isReconciledFunding(String(input.fundingStatus ?? ""))
-        // Money already arrived: wire instructions are moot. Admission still needs the manager's approval.
-        ? (!preFundingDone
-          ? { status: "not_started" as const, owner: null, action: null, reason: "Capital already received; wire instructions not needed. Manager approves once earlier steps are done." }
-          : { status: "needs_fund_manager" as const, owner: "fund_manager" as const, action: "Fund manager: approve investor", reason: "Capital already received; wire instructions not needed." })
+        // Money already arrived: wire instructions are moot. The manager's admission approval moves to Close Readiness.
+        ? { status: "complete" as const, owner: null, action: null, reason: "Wire instructions not needed." }
       : !preFundingDone
         ? { status: "not_started" as const, owner: null, action: null, reason: "Earlier steps must be complete first." }
         : blockingExceptions > 0
@@ -322,6 +320,18 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
       : { status: "complete" as const, owner: null, action: null }),
   });
   const funded = isReconciledFunding(input.fundingStatus);
+  // Funds arrived before approval: admission still needs the fund manager's approval (or countersignature).
+  if (funded && !input.approvedToFundAt && !input.priorSubscription) {
+    items.push({
+      ...cr,
+      key: "manager_approval",
+      label: "Fund manager approved the investor",
+      source: REQUIREMENT_SOURCE["approved_to_fund"]!,
+      ...(!preFundingDone
+        ? { status: "not_started" as const, owner: null, action: null, reason: "Earlier steps must be complete first." }
+        : { status: "needs_fund_manager" as const, owner: "fund_manager" as const, action: "Fund manager: approve investor" }),
+    });
+  }
   items.push({
     ...cr,
     key: "acceptance",
