@@ -409,3 +409,27 @@ export const inviteFundPersonFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ offeringId: uuid, contactKey: z.string().max(80).nullish(), fullName: opt, email: z.string().trim().max(254).nullish() }).parse)
   .handler(async ({ data, context }) => (await signatories()).inviteFundPerson(context.userId, data));
+
+// ---------------------------------------------------------------- AI reader for fund documents
+const aiReader = () => import("@/lib/fund-doc-extract.server");
+export const readFundSetupDocumentFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ offeringId: uuid, fileName: z.string().min(1).max(200), contentType: z.string().max(60), base64: z.string().min(16).max(14_500_000) }).parse)
+  .handler(async ({ data, context }) => (await aiReader()).readFundSetupDocument(context.userId, data));
+
+export const fundSetupAiCurrentValuesFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ offeringId: uuid }).parse)
+  .handler(async ({ data, context }) => (await aiReader()).fundSetupAiCurrentValues(context.userId, data.offeringId));
+
+export const applyFundSetupSuggestionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({
+    offeringId: uuid,
+    field: z.string().max(60),
+    action: z.enum(["approve", "update", "deny"]),
+    value: z.string().max(600).nullable(),
+    expectedCurrent: z.string().max(600).nullable(),
+    sources: z.array(z.object({ fileName: z.string().max(200), page: z.number().int().nullable() })).max(20),
+  }).parse)
+  .handler(async ({ data, context }) => (await aiReader()).applyFundSetupSuggestion(context.userId, data));
