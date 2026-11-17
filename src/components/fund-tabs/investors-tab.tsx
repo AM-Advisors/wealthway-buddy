@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
+import { managerUploadUrlFn } from "@/lib/investor-extras.functions";
 import { Button } from "@/components/ui/button";
 import { ApprovalButton } from "@/components/approval-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -495,7 +496,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
           <section>
             <h4 className="mb-1 font-medium">Documents</h4>
             {d.documents.length ? (
-              <ul className="divide-y rounded-md border">{d.documents.map((x: any) => <li key={x.id} className="flex justify-between gap-2 p-2"><span className="break-all">{x.file_name}</span><span className="shrink-0 text-xs capitalize text-muted-foreground">{String(x.doc_kind).replace(/_/g, " ")}</span></li>)}</ul>
+              <div>{d.documents.map((x: any) => <UploadedDocRow key={x.id} doc={x} onboardingId={id} />)}</div>
             ) : <p className="text-muted-foreground">No documents uploaded for this deal yet.</p>}
           </section>
             </TabsContent>
@@ -617,4 +618,26 @@ function InvestorLevelsCard({ fundId }: { fundId: string }) {
       </CardContent>
     </Card>
   );
+}
+
+const UPLOAD_STATUS: Record<string, string> = { new: "Waiting for review", accepted: "Accepted", needs_followup: "Needs follow-up", completed_outside: "Signed outside the platform" };
+/** One uploaded file per row: name, small details, Download on the same line. */
+function UploadedDocRow({ doc, onboardingId }: { doc: { id: string; file_name: string; doc_kind: string; uploaded_at: string | null; review_status: string | null; onboarding_id?: string | null }; onboardingId: string | null | undefined }) {
+  const open = useServerFn(managerUploadUrlFn);
+  const [busy, setBusy] = useState(false);
+  const kind = String(doc.doc_kind).replace(/_/g, " ");
+  const status = UPLOAD_STATUS[doc.review_status ?? "new"];
+  const canOpen = !!onboardingId && doc.onboarding_id === onboardingId;
+  return <div className="flex flex-wrap items-center justify-between gap-2 border-b py-3">
+    <div className="min-w-0">
+      <p className="break-words font-medium">{doc.file_name}</p>
+      <p className="text-xs text-muted-foreground"><span className="capitalize">{kind}</span>{doc.uploaded_at ? ` · Uploaded ${fmtDate(doc.uploaded_at)}` : ""}{status ? ` · ${status}` : ""}</p>
+    </div>
+    {canOpen && <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
+      setBusy(true);
+      try { const r = await open({ data: { onboardingId: onboardingId!, id: doc.id } }); const a = document.createElement("a"); a.href = r.url; a.download = ""; a.rel = "noreferrer"; a.click(); }
+      catch (e) { toast.error(e instanceof Error ? e.message : "The document could not be opened."); }
+      finally { setBusy(false); }
+    }}>{busy ? "Opening…" : "Download"}</Button>}
+  </div>;
 }

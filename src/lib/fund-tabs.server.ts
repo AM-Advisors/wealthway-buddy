@@ -157,8 +157,8 @@ export async function investorDetail(fundId: string, onboardingId: string) {
     d.from("side_letters").select("id, status, effective_date, terms").eq("onboarding_id", onboardingId),
     d.from("investment_readiness_tasks").select("title, resolved_at").eq("onboarding_id", onboardingId).order("created_at"),
     o.application_id
-      ? d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").or(`application_id.eq.${o.application_id},onboarding_id.eq.${onboardingId}`)
-      : d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").eq("onboarding_id", onboardingId),
+      ? d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status, onboarding_id").or(`application_id.eq.${o.application_id},onboarding_id.eq.${onboardingId}`)
+      : d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status, onboarding_id").eq("onboarding_id", onboardingId),
   ]);
   const p = o.persons ?? {};
   const grid = (await investorGrid(fundId, onboardingId)).find((r) => r.id === onboardingId);
