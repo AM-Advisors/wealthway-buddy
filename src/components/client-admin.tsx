@@ -1,4 +1,5 @@
 import { verificationLabel } from "@/lib/verification-status";
+import { scopeDiff, selectAllFunds, type ScopePair } from "@/lib/scope-checklist";
 import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { addFundTitle } from "@/lib/drive-labels";
 import { useMemo, useState } from "react";
@@ -245,7 +246,13 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
               Portal fund access (from the access system): {p.portalFunds.length ? p.portalFunds.map((id: string) => fundName.get(id) ?? "Fund").join(", ") : "none"}
             </p>
             {caps.includes("manage_roles") && (d.funds as any[]).length ? (
-              <ScopeAdder funds={d.funds as any[]} onAdd={(offeringId, role) => scope({ data: { clientId, contactId: p.id, offeringId, role: role as any, add: true } }).then(refresh, err)} />
+              <FundScopeChecklist funds={d.funds as any[]} scopes={p.scopes} onSave={async (add, remove) => {
+                try {
+                  for (const x of add) await scope({ data: { clientId, contactId: p.id, offeringId: x.offeringId, role: x.role as any, add: true } });
+                  for (const x of remove) await scope({ data: { clientId, contactId: p.id, offeringId: x.offeringId, companyId: null, role: x.role as any, add: false } });
+                  toast.success("Saved.");
+                } catch (e) { err(e as any); } finally { refresh(); }
+              }} />
             ) : null}
           </div>
         ))}
@@ -327,19 +334,49 @@ function InviteMenu({ clientId, person, funds, onDone }: { clientId: string; per
   );
 }
 
-function ScopeAdder({ funds, onAdd }: { funds: { id: string; name: string }[]; onAdd: (offeringId: string, role: string) => void }) {
-  const [fund, setFund] = useState("");
-  const [role, setRole] = useState("fund_manager");
+function FundScopeChecklist({ funds, scopes, onSave }: { funds: { id: string; name: string }[]; scopes: any[]; onSave: (add: ScopePair[], remove: ScopePair[]) => Promise<void> }) {
+  const current: ScopePair[] = scopes.filter((x) => x.offeringId).map((x) => ({ offeringId: x.offeringId, role: x.role }));
+  const [open, setOpen] = useState(false);
+  const [ticked, setTicked] = useState<ScopePair[]>(current);
+  const [busy, setBusy] = useState(false);
+  const has = (f: string, r: string) => ticked.some((p) => p.offeringId === f && p.role === r);
+  const flip = (f: string, r: string) => setTicked((t) => has(f, r) ? t.filter((p) => !(p.offeringId === f && p.role === r)) : [...t, { offeringId: f, role: r }]);
+  const ids = funds.map((f) => f.id);
+  const diff = scopeDiff(current, ticked);
+  if (!open) return <Button size="sm" variant="outline" className="mt-2" onClick={() => { setTicked(current); setOpen(true); }}>Choose funds and roles</Button>;
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-      <select aria-label="Fund" className="h-8 rounded-md border bg-background px-2" value={fund} onChange={(e) => setFund(e.target.value)}>
-        <option value="">Associate with fund…</option>
-        {funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-      </select>
-      <select aria-label="Role" className="h-8 rounded-md border bg-background px-2" value={role} onChange={(e) => setRole(e.target.value)}>
-        {CLIENT_RELATIONSHIP_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-      </select>
-      <Button size="sm" variant="outline" disabled={!fund} onClick={() => onAdd(fund, role)}>Add</Button>
+    <div className="mt-3 overflow-x-auto rounded-md border p-3">
+      <table className="w-full text-sm">
+        <thead>
+          <tr>
+            <th className="py-1 text-left font-medium">Fund</th>
+            {CLIENT_RELATIONSHIP_ROLES.map((r) => <th key={r.value} className="px-2 py-1 text-center font-medium">{r.label}</th>)}
+          </tr>
+          <tr className="border-b">
+            <td className="py-1 text-muted-foreground">Select all funds</td>
+            {CLIENT_RELATIONSHIP_ROLES.map((r) => {
+              const all = ids.length > 0 && ids.every((f) => has(f, r.value));
+              return <td key={r.value} className="px-2 py-1 text-center"><Checkbox aria-label={`All funds as ${r.label}`} checked={all} onCheckedChange={(v) => setTicked((t) => selectAllFunds(t, ids, r.value, Boolean(v)))} /></td>;
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {funds.map((f) => (
+            <tr key={f.id} className="border-b last:border-0">
+              <td className="py-1">{f.name}</td>
+              {CLIENT_RELATIONSHIP_ROLES.map((r) => <td key={r.value} className="px-2 py-1 text-center"><Checkbox aria-label={`${f.name} as ${r.label}`} checked={has(f.id, r.value)} onCheckedChange={() => flip(f.id, r.value)} /></td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Button size="sm" disabled={busy || (!diff.add.length && !diff.remove.length)} onClick={async () => {
+          if (!window.confirm(`Save ${diff.add.length} addition(s) and ${diff.remove.length} removal(s)? These are labels only and grant no access.`)) return;
+          setBusy(true); try { await onSave(diff.add, diff.remove); setOpen(false); } finally { setBusy(false); }
+        }}>Save</Button>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+        <span className="text-xs text-muted-foreground">{diff.add.length} to add · {diff.remove.length} to remove</span>
+      </div>
     </div>
   );
 }

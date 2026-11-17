@@ -6,10 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { myHiddenTabsFn, setTabAccessFn, staffTabAccessFn } from "@/lib/client-tab-access.functions";
-import { tabForPath } from "@/lib/client-tab-access";
+import { SERVICE_TAB_KEYS, tabForPath } from "@/lib/client-tab-access";
+import { useEffect } from "react";
+import { ClientServicesPanel } from "@/components/client-services-panel";
+import { SetupFeeWaiverCard } from "@/components/setup-fee-waiver-card";
+import { ClientViewAsCard } from "@/components/client-view-as-card";
+import { ClientContractsPanel } from "@/components/client-contracts";
+import { ClientServicesPricingPanel } from "@/components/client-admin";
+import { Button } from "@/components/ui/button";
 
 /** Staff-only: switch each client area on or off. Off hides it from the client completely. */
-export function ClientTabAccessPanel({ clientId }: { clientId: string }) {
+export function ClientTabAccessPanel({ clientId, only, title = "What this client can see", note = "Turn an area off and it disappears from the client's menu and pages. Nothing is deleted; turning it back on brings it back.", showHistory = true }: { clientId: string; only?: (key: string) => boolean; title?: string; note?: string; showHistory?: boolean }) {
   const qc = useQueryClient();
   const load = useServerFn(staffTabAccessFn);
   const save = useServerFn(setTabAccessFn);
@@ -25,11 +32,11 @@ export function ClientTabAccessPanel({ clientId }: { clientId: string }) {
   return (
     <section className="space-y-4 rounded-lg border bg-card p-5">
       <div>
-        <h2 className="font-heading text-xl font-semibold">What this client can see</h2>
-        <p className="text-base text-muted-foreground">Turn an area off and it disappears from the client's menu and pages. Nothing is deleted; turning it back on brings it back.</p>
+        <h2 className="font-heading text-xl font-semibold">{title}</h2>
+        <p className="text-base text-muted-foreground">{note}</p>
       </div>
       <ul className="divide-y">
-        {(d.tabs as any[]).map((t) => (
+        {(d.tabs as any[]).filter((t) => !only || only(t.key)).map((t) => (
           <li key={t.key} className="flex items-center justify-between gap-4 py-3">
             <div>
               <p className="text-base font-medium">{t.label}</p>
@@ -45,7 +52,7 @@ export function ClientTabAccessPanel({ clientId }: { clientId: string }) {
           </li>
         ))}
       </ul>
-      {(d.events as any[]).length > 0 && (
+      {showHistory && (d.events as any[]).length > 0 && (
         <div>
           <h3 className="text-sm font-semibold">Recent changes</h3>
           <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
@@ -98,4 +105,47 @@ export function TabAccessGate({ children }: { children: React.ReactNode }) {
     );
   }
   return <>{children}</>;
+}
+
+const SECTIONS = [
+  { id: "svc-have", label: "What they have" },
+  { id: "svc-agreements", label: "Agreements" },
+  { id: "svc-billing", label: "Billing & payments" },
+  { id: "svc-access", label: "Access" },
+];
+
+/** One Services tab: what they have (with its access switch), agreements, billing and remaining access. */
+export function ClientServicesTab({ clientId, focus }: { clientId: string; focus?: string }) {
+  useEffect(() => {
+    const target = focus === "contracts" ? "svc-agreements" : focus === "access" ? "svc-access" : null;
+    if (target) document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [focus]);
+  const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  return (
+    <div className="space-y-8">
+      <nav aria-label="Services sections" className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b bg-background py-1">
+        {SECTIONS.map((s) => <Button key={s.id} size="sm" variant="ghost" className="shrink-0" onClick={() => jump(s.id)}>{s.label}</Button>)}
+      </nav>
+      <section id="svc-have" className="scroll-mt-14 space-y-4">
+        <h2 className="font-heading text-xl font-semibold">What they have</h2>
+        <ClientTabAccessPanel clientId={clientId} only={(k) => SERVICE_TAB_KEYS.includes(k as any)} title="Service access" note="Off means they don't have it and can't see it. Turning it on shows it in their menu." showHistory={false} />
+        <ClientServicesPricingPanel clientId={clientId} />
+      </section>
+      <section id="svc-agreements" className="scroll-mt-14 space-y-3">
+        <h2 className="font-heading text-xl font-semibold">Agreements</h2>
+        <p className="text-sm text-muted-foreground">The MSA, SOWs and quotes for this client, with signed dates.</p>
+        <ClientContractsPanel clientId={clientId} />
+      </section>
+      <section id="svc-billing" className="scroll-mt-14 space-y-4">
+        <h2 className="font-heading text-xl font-semibold">Billing & payments</h2>
+        <ClientServicesPanel clientId={clientId} />
+        <SetupFeeWaiverCard clientId={clientId} />
+      </section>
+      <section id="svc-access" className="scroll-mt-14 space-y-4">
+        <h2 className="font-heading text-xl font-semibold">Access</h2>
+        <ClientTabAccessPanel clientId={clientId} only={(k) => !SERVICE_TAB_KEYS.includes(k as any)} title="Other areas" />
+        <ClientViewAsCard clientId={clientId} />
+      </section>
+    </div>
+  );
 }

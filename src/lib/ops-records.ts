@@ -34,7 +34,7 @@ export const RECORD_AREA: Record<OpsRecordType, OpsArea> = {
 export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
   client: [
     { id: "overview", title: "Overview", area: "clients" },
-    { id: "services", title: "Agreements & Services", area: "clients" },
+    { id: "services", title: "Services", area: "clients" },
     { id: "contacts", title: "People & Team", area: "clients" },
     // Foundation Administration: feature-flagged. Hidden here; the record page shows it only while the flag is on.
     { id: "foundation", title: "Foundation", area: "clients", hidden: true },
@@ -42,7 +42,7 @@ export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
     { id: "companies", title: "Companies / Cap Tables", area: "companies" },
     { id: "documents", title: "Documents", area: "documents" },
     { id: "tasks", title: "Tasks & Activity", area: "tasks" },
-    { id: "access", title: "Client access", area: "clients" },
+    { id: "access", title: "Client access", area: "clients", hidden: true },
     // Kept so existing deep links still open; not shown in the tab bar.
     { id: "relationships", title: "Relationships", area: "clients", hidden: true },
     { id: "investors", title: "Investors", area: "investors", hidden: true },

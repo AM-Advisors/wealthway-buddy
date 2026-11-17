@@ -41,3 +41,6 @@ export function filterByHiddenTabs<T extends { url: string }>(links: T[], hidden
   if (!hidden.length) return links;
   return links.filter((l) => { const k = tabForPath(l.url); return !k || !hidden.includes(k); });
 }
+
+/** Areas that belong to a purchasable service; their switch sits on the service card. */
+export const SERVICE_TAB_KEYS: readonly ClientTabKey[] = ["funds", "investments", "cap_table", "wealth"];
