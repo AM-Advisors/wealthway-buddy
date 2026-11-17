@@ -20,6 +20,7 @@ import {
 
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { FundAddMenu } from "@/components/fund-add-menu";
+import { ViewAsBanner, useActiveViewAs } from "@/components/view-as";
 import { regTypeLabel } from "@/lib/reg-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,9 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
     queryKey: ["manager-fund-home", fundId],
     queryFn: () => load({ data: { offeringId: fundId } }),
   });
+  // Client View for a fund manager is this same page, read-only, under the Client View banner.
+  const viewAs = useActiveViewAs();
+  const clientView = (viewAs.data as any)?.perspective === "fund_manager" && (viewAs.data as any)?.offeringId === fundId ? viewAs.data : null;
 
   if (query.isLoading) {
     return <main className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Loading fund…</main>;
@@ -79,6 +83,7 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
 
   return (
     <main className="min-w-0 bg-background">
+      {clientView ? <ViewAsBanner ctx={clientView} /> : null}
       <header className="border-b bg-card">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6">
           <Link to="/manager" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
@@ -95,7 +100,7 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
                 {[fund.legalEntityName, fund.fundType, fund.stateFormed].filter(Boolean).join(" · ") || "Fund workspace"}
               </p>
             </div>
-            <FundAddMenu fundId={fundId} />
+            {clientView ? null : <FundAddMenu fundId={fundId} />}
             <div className="grid min-w-64 grid-cols-2 gap-3 rounded-lg border bg-background p-3">
               <div className="col-span-2">
                 <div className="flex items-center justify-between text-xs">
@@ -140,9 +145,16 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
           ))}
         </nav>
       </header>
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <Outlet />
-      </div>
+      {clientView ? (
+        // Read-only: sections can be switched above, nothing below can be clicked or changed. Staff-only notes are hidden.
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 [&_[data-staff-only]]:hidden" aria-readonly="true" data-mode="client-view" inert>
+          <Outlet />
+        </div>
+      ) : (
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+          <Outlet />
+        </div>
+      )}
     </main>
   );
 }

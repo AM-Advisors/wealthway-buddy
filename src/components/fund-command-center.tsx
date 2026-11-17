@@ -86,7 +86,7 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
           <div><dt className="text-xs text-muted-foreground">Approvals / Information</dt><dd>{Math.max(d.counts.CLIENT_APPROVAL_REQUIRED, d.approvalsAwaiting.length)} / {d.counts.CLIENT_INFORMATION_REQUIRED}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Open requests</dt><dd>{onNavigate ? <button className="underline" onClick={() => onNavigate("requests")}>{d.requests.open}</button> : d.requests.open}</dd></div>
         </dl>
-        {d.internal && <p className="mt-3 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">Staff only: {d.internal.internalOnly} internal-only open tasks · {d.internal.slaRisk} at SLA risk (due within 2 days)</p>}
+        {d.internal && <p data-staff-only className="mt-3 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">Staff only: {d.internal.internalOnly} internal-only open tasks · {d.internal.slaRisk} at SLA risk (due within 2 days)</p>}
       </section>
 
       <div className="grid gap-4 lg:grid-cols-3">

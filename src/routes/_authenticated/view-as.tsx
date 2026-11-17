@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InvestorDashboard, useInvestorDashboard } from "@/components/investor-dashboard";
 import { FundReadiness } from "@/components/investment-readiness";
@@ -34,6 +34,8 @@ function ViewAsPage() {
   if (q.isPending) return <Skeleton className="m-6 h-40" />;
   const ctx = q.data as any;
   if (!ctx) return <NoActiveViewAs />;
+  // Fund managers have one view: the same fund page they use, shown read-only.
+  if (ctx.perspective === "fund_manager" && ctx.offeringId) return <Navigate to="/manager/fund/$fundId" params={{ fundId: ctx.offeringId }} replace />;
   // Every page in the client's own menu; display only, never grants access.
   const pages = clientNavigation(ctx.perspective === "investor" ? "investor" : "fund_manager");
   const current = pages.find((p) => p.url === page) ?? pages[0]!;

@@ -78,3 +78,18 @@ export const EDIT_CONTEXT_COPY = {
   cameFrom: (name: string, role: string) => `You came from Client View for ${name} · ${role}`,
   recorded: "Changes are recorded as Harmonious administrative actions.",
 } as const;
+
+/** One choice only: open it straight away instead of asking staff to pick it. */
+export function autoPickPerspective<T>(items: readonly T[]): T | null {
+  return items.length === 1 ? items[0]! : null;
+}
+
+/**
+ * Fund manager Client View opens the same fund page fund managers use (one view, not a
+ * second look-alike); investors keep the investor Client View.
+ */
+export function clientViewDestination(p: { perspective: Perspective; offeringId: string | null }):
+  | { to: "/manager/fund/$fundId"; fundId: string }
+  | { to: "/view-as" } {
+  return p.perspective === "fund_manager" && p.offeringId ? { to: "/manager/fund/$fundId", fundId: p.offeringId } : { to: "/view-as" };
+}

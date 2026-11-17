@@ -98,3 +98,17 @@ describe("Edit as Harmonious", () => {
     expect(reasonRequired("theme")).toBe(false);
   });
 });
+
+describe("one fund manager view", () => {
+  it("fund manager Client View opens the real fund manager fund page", async () => {
+    const { clientViewDestination } = await import("./view-as");
+    expect(clientViewDestination({ perspective: "fund_manager", offeringId: "f1" })).toEqual({ to: "/manager/fund/$fundId", fundId: "f1" });
+    expect(clientViewDestination({ perspective: "investor", offeringId: "f1" })).toEqual({ to: "/view-as" });
+  });
+  it("a single available person opens straight away; several still ask", async () => {
+    const { autoPickPerspective } = await import("./view-as");
+    expect(autoPickPerspective([{ id: "a" }])).toEqual({ id: "a" });
+    expect(autoPickPerspective([{ id: "a" }, { id: "b" }])).toBeNull();
+    expect(autoPickPerspective([])).toBeNull();
+  });
+});

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Eye, LogOut, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { activeEditContextFn, exitEditContextFn, returnToClientViewFn, activeViewAsFn, beginEditAsHarmoniousFn, endViewAsFn, listPerspectivesFn, startViewAsFn } from "@/lib/view-as.functions";
-import { EDIT_CONTEXT_COPY, PERSPECTIVE_LABEL, VIEW_AS_COPY } from "@/lib/view-as";
+import { autoPickPerspective, clientViewDestination, EDIT_CONTEXT_COPY, PERSPECTIVE_LABEL, VIEW_AS_COPY } from "@/lib/view-as";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -27,11 +27,20 @@ export function ViewAsPicker({ onboardingId, offeringId, label = "View as…" }:
       await start({ data: { perspective: p.perspective, subjectUserId: p.subjectUserId, offeringId: p.offeringId, onboardingId: p.onboardingId, preview: !!p.preview } });
       qc.removeQueries({ queryKey: ["view-as"] });
       setOpen(false);
-      navigate({ to: "/view-as" });
+      const dest = clientViewDestination(p);
+      if (dest.to === "/view-as") navigate({ to: "/view-as" });
+      else navigate({ to: "/manager/fund/$fundId", params: { fundId: dest.fundId } });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not open client view.");
     }
   };
+  // Only one person to view as: open it straight away, no extra pick.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!open) { autoStarted.current = false; return; }
+    const only = q.data ? autoPickPerspective(q.data as any[]) : null;
+    if (only && !autoStarted.current) { autoStarted.current = true; void go(only); }
+  }, [open, q.data]);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
