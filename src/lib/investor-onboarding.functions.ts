@@ -235,17 +235,26 @@ export const resolveExceptionFn = createServerFn({ method: "POST" })
     return out;
   });
 
+export const openExceptionsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(onboardingInput.parse)
+  .handler(async ({ data, context }) => (await engine()).listOpenExceptions(context.userId, data.onboardingId));
+
 export const applyBankActivityFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(
     z.object({ bankTransactionId: z.string().min(1), onboardingId: z.string().nullish() }).parse,
   )
-  .handler(async ({ data, context }) =>
-    reconciled(data.onboardingId, context.userId, "applyBankActivity", (await engine()).applyBankActivity(context.userId, {
+  .handler(async ({ data, context }) => {
+    const out = await reconciled(data.onboardingId, context.userId, "applyBankActivity", (await engine()).applyBankActivity(context.userId, {
       bankTransactionId: data.bankTransactionId,
       onboardingId: data.onboardingId ?? null,
-    })),
-  );
+    }));
+    // An automatic match names its investment only in the result; reconcile that one too.
+    const matchedId = (out as { onboardingId?: string }).onboardingId;
+    if (!data.onboardingId && matchedId) await (await engine()).reconcileAfter([matchedId], { actorUserId: context.userId, trigger: "applyBankActivity" });
+    return out;
+  });
 
 export const recordManualReceiptFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

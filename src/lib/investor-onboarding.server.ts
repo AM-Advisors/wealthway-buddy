@@ -1946,6 +1946,53 @@ export async function resolveException(
   return { resolved: true };
 }
 
+/**
+ * After money is recorded: close shortfall/overage alerts whose amounts are now out of date and
+ * raise a current one only when the amount still does not match (fundingExceptionPlan). Each
+ * automatic close is recorded with its reason; an overage is never closed by a full match.
+ */
+async function settleFundingExceptions(userId: string, actorUserId: string, onboardingId: string, status: string, expected: number, funded: number) {
+  const { fundingExceptionPlan } = await import("@/lib/onboarding-exception-reason");
+  const open = (await openExceptions(onboardingId)).map((e) => ({ id: String(e.id), type: String(e.exception_type) }));
+  const plan = fundingExceptionPlan({ status, expectedCents: expected, receivedCents: funded, open });
+  for (const r of plan.resolve) {
+    const { data: closed } = await db()
+      .from("investor_onboarding_exceptions")
+      .update({ status: "resolved", resolution: r.resolution, resolved_by: actorUserId, resolved_at: nowIso() })
+      .eq("id", r.id)
+      .eq("status", "open")
+      .select("id");
+    if (!(closed ?? []).length) continue;
+    await recordEvent({
+      onboardingId,
+      event: "exception_resolved",
+      subjectTable: "investor_onboarding_exceptions",
+      subjectId: r.id,
+      detail: { resolution: r.resolution, automatic: true, trigger: "funding_recorded" },
+      actorUserId,
+      actorRole: "harmonious",
+    });
+  }
+  if (plan.raise) await raiseException(userId, { onboardingId, type: plan.raise.type, severity: "blocking", detail: plan.raise.detail });
+}
+
+/** Staff only: open issues on one investment, worded for the person resolving them. */
+export async function listOpenExceptions(userId: string, onboardingId: string) {
+  await assertStaff(userId);
+  const { exceptionLabel, exceptionReason } = await import("@/lib/onboarding-exception-reason");
+  return (await openExceptions(onboardingId))
+    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+    .map((e) => ({
+      id: String(e.id),
+      type: String(e.exception_type),
+      label: exceptionLabel(String(e.exception_type)),
+      reason: exceptionReason({ type: e.exception_type, detail: e.detail }),
+      severity: String(e.severity),
+      owner: (e.owner ?? null) as string | null,
+      raisedAt: String(e.created_at),
+    }));
+}
+
 // ------------------------------------------------ funding reconciliation
 
 /**
@@ -2033,14 +2080,7 @@ export async function applyBankActivity(
     actorRole: "harmonious",
   });
 
-  if (status === "overfunded" || status === "partially_funded") {
-    await raiseException(userId, {
-      onboardingId: row.id,
-      type: status === "overfunded" ? "overfunding" : "underfunding",
-      severity: "blocking",
-      detail: `Expected ${expected} cents, received ${funded} cents.`,
-    });
-  }
+  await settleFundingExceptions(userId, actor.userId, row.id, status, expected, funded);
   await syncInvitation(row);
   return { matched: true, onboardingId: row.id, fundingStatus: status, fundedAmountCents: funded };
 }
@@ -2089,14 +2129,7 @@ export async function recordManualReceipt(
     actorUserId: actor.userId,
     actorRole: "harmonious",
   });
-  if (status === "overfunded" || status === "partially_funded") {
-    await raiseException(userId, {
-      onboardingId: row.id,
-      type: status === "overfunded" ? "overfunding" : "underfunding",
-      severity: "blocking",
-      detail: `Expected ${expected} cents, received ${funded} cents.`,
-    });
-  }
+  await settleFundingExceptions(userId, actor.userId, row.id, status, expected, funded);
   await syncInvitation(row);
   return { fundingStatus: status, fundedAmountCents: funded, expectedAmountCents: expected };
 }
@@ -2834,7 +2867,7 @@ export async function computeReadinessFor(row: any, closeAmountCents?: number | 
     acceptedAt: row.accepted_at ?? null,
     acceptedAmountCents: row.accepted_amount_cents ?? null,
     closedAt: row.closed_at ?? null,
-    exceptions: exceptions.map((e) => ({ severity: String(e.severity), owner: e.owner ?? null, type: e.exception_type ?? null })),
+    exceptions: exceptions.map((e) => ({ severity: String(e.severity), owner: e.owner ?? null, type: e.exception_type ?? null, detail: e.detail ?? null })),
     requestedCloseDate: row.requested_close_date ?? null,
     closeAmountCents: closeAmountCents ?? null,
     priorSubscription: confirmed ? { fundedCents: confirmed.funded_cents, signedOn: confirmed.signed_on } : null,

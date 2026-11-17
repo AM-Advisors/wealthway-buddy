@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AcceptCloseCard } from "@/components/accept-close-card";
 import { ManualReceiptCard } from "@/components/manual-receipt-card";
+import { ResolveExceptionsDialog } from "@/components/resolve-exceptions-dialog";
 import { BsaProfilePanel } from "@/components/bsa-profile-panel";
 import { InvestorSessionActivity } from "@/components/investor-session-activity";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const onOps = useRouterState({ select: (st) => st.location.pathname.startsWith("/ops") });
   // Real tabs: the header stays on top and only the chosen tab's content shows below it.
   const [tab, setTab] = useState<VisibleTab>(visibleTab(initial));
+  const [resolvingIssues, setResolvingIssues] = useState(false);
   useEffect(() => { if (initial) setTab(visibleTab(initial)); }, [initial]);
   const contactRef = useRef<HTMLDivElement>(null);
   const correctDetails = () => {
@@ -89,7 +91,9 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       return;
     }
     if (t.kind === "ops_onboarding") {
-      if (staff) navigate({ to: "/admin/investor-onboarding" });
+      // Open issues resolve right here; acceptance keeps its existing page.
+      if (staff && key === "exceptions") setResolvingIssues(true);
+      else if (staff) navigate({ to: "/admin/investor-onboarding" });
       else toast.message("Harmonious handles this step. It's already on their list.");
       return;
     }
@@ -231,6 +235,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       <h3 id="ir-sec-bsa" className="scroll-mt-14 pt-2 text-lg font-semibold">BSA (staff only)</h3>
       <BsaProfilePanel onboardingId={onboardingId} />
       </> : null}
+      {staff ? <ResolveExceptionsDialog onboardingId={onboardingId} open={resolvingIssues} onOpenChange={setResolvingIssues} onResolved={refresh} /> : null}
     </section>
   );
 }

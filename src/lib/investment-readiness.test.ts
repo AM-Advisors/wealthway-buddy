@@ -166,3 +166,15 @@ describe("subscription signed outside the platform", () => {
     expect(item(computeReadiness(input({ outsideSubscription: { signedOn: "2026-09-01" } }, reqs({ sig: false, tax: "missing" }))), "tax_documentation").status).toBe("needs_investor");
   });
 });
+
+describe("blocked issue reason", () => {
+  it("shows why the record is blocked to staff, never to the investor or fund manager", async () => {
+    const { readinessView } = await import("@/lib/investment-readiness");
+    const r = computeReadiness(input({ approvedToFundAt: NOW, fundingStatus: "funded", exceptions: [{ severity: "blocking", owner: "harmonious", type: "underfunding", detail: "Expected 225000000 cents, received 150000000 cents." }] }));
+    const ex = r.items.find((i) => i.key === "exceptions")!;
+    expect(ex.status).toBe("blocked");
+    expect(ex.reason).toBe("Underfunding: expected $2,250,000, received $1,500,000 (short $750,000)");
+    expect((readinessView(r, "investor").items.find((i: any) => i.key === "exceptions") as any).reason).toBeUndefined();
+    expect((readinessView(r, "manager").items.find((i: any) => i.key === "exceptions") as any).reason).toBeUndefined();
+  });
+});

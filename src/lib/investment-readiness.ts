@@ -6,6 +6,7 @@
  */
 import type { RequirementKey, RequirementResult, RequirementState, FundingStatus } from "@/lib/investor-onboarding-model";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { blockedReason } from "@/lib/onboarding-exception-reason";
 
 export const READINESS_RULE_VERSION = "readiness-v1";
 
@@ -148,7 +149,7 @@ export interface ReadinessInput {
   acceptedAmountCents: number | null;
   closedAt: string | null;
   /** Open exceptions only; owner uses the existing exception-owner vocabulary. */
-  exceptions: { severity: string; owner: string | null; type?: string | null }[];
+  exceptions: { severity: string; owner: string | null; type?: string | null; detail?: string | null }[];
   requestedCloseDate?: string | null;
   /** When evaluating inside a Close Request: the amount that close expects. */
   closeAmountCents?: number | null;
@@ -302,7 +303,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     label: "No open blocking issues",
     source: REQUIREMENT_SOURCE["exceptions"]!,
     ...(blockingEx.length
-      ? { status: "blocked" as const, owner: exOwner(blockingEx[0]!.owner), action: exOwner(blockingEx[0]!.owner) === "fund_manager" ? "Resolve issue raised for the fund" : exOwner(blockingEx[0]!.owner) === "investor" ? "Resolve issue raised for the investor" : "Resolve open review issue" }
+      ? { status: "blocked" as const, reason: blockedReason(blockingEx), owner: exOwner(blockingEx[0]!.owner), action: exOwner(blockingEx[0]!.owner) === "fund_manager" ? "Resolve issue raised for the fund" : exOwner(blockingEx[0]!.owner) === "investor" ? "Resolve issue raised for the investor" : "Resolve open review issue" }
       : { status: "complete" as const, owner: null, action: null }),
   });
   const funded = isReconciledFunding(input.fundingStatus);
@@ -408,7 +409,8 @@ export function readinessView(r: ReadinessResult, viewer: ReadinessViewer) {
       required: i.required,
       blocking: i.blocking,
       action: i.action,
-      ...(viewer === "investor" && i.reason ? { reason: i.reason } : {}),
+      // Open issue wording is for staff; investors keep their own step reasons only.
+      ...(viewer === "investor" && i.reason && i.key !== "exceptions" ? { reason: i.reason } : {}),
     })),
     stages: r.stages.map((s) => ({ ...s, ...(viewer === "manager" ? { safeLabel: SAFE_LABEL[s.stage][s.status] ?? STATUS_LABELS[s.status] } : {}) })),
   };
