@@ -255,7 +255,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
             return [<TableRow key={`h-${g}`}><TableCell colSpan={6} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{g === "annual" ? "Recurring fees" : FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}</TableCell><TableCell className="bg-muted/40" /></TableRow>,
               ...rows.flatMap(({ l, i }) => [
             <TableRow key={i}>
-              <TableCell>{l.label}</TableCell>
+              <TableCell>{l.label}{isFoundationKey(l.serviceKey) && !l.foundation && <Button type="button" size="sm" variant="outline" className="ml-2" onClick={() => { setLines(lines.filter((_, j) => j !== i)); setFoundationStart(l.serviceKey.split(":")[1] as ComponentKey); setShowFoundation(true); }}>Set up foundation details</Button>}</TableCell>
               <TableCell><Input disabled={!!l.bookkeeping || !!l.foundation} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
               <TableCell><Input disabled={!!l.bookkeeping || !!l.foundation} inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x)))} /></TableCell>
               <TableCell><Select disabled={!!l.bookkeeping || !!l.foundation} value={l.billingFrequency ?? "one_time"} onValueChange={(value) => {
