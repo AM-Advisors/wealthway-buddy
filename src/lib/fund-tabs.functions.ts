@@ -72,9 +72,12 @@ export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([r
       if (error) throw new Error("Couldn't save.");
       memberId = (ins as any).id;
     }
+    // A Manager/GP named on this fund is invited as its fund manager automatically (that fund only).
+    const { autoInviteFundManager } = await import("@/lib/fund-manager-auto-invite.server");
+    const managerInvite = await autoInviteFundManager({ actorId: context.userId, offeringId: data.fundId, email: data.email, name: data.fullName, source: "team", teamRole: data.teamRole });
     const { syncTeamMemberSignatory } = await import("@/lib/fund-signatories.server");
     const sync = await syncTeamMemberSignatory(context.userId, data.fundId, memberId!);
-    return { ok: true, signerNote: sync.note };
+    return { ok: true, signerNote: sync.note, managerInvite: { status: managerInvite.status, note: managerInvite.note } };
   });
 
 export const removeTeamMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: uuid }).parse)

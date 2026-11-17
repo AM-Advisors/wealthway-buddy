@@ -228,6 +228,16 @@ async function personForContact(userId: string, c: any, confirmSeparate: boolean
   });
 }
 
+/** A fund signer is invited as that fund's manager automatically (see fund-manager-auto-invite.server.ts). */
+async function inviteSignerAsManager(userId: string, offeringId: string, personId: string | null, contactId: string | null, callerAuthorized = false) {
+  const [{ data: p }, { data: c }] = await Promise.all([
+    personId ? db().from("persons").select("email, legal_first_name, legal_last_name, preferred_name").eq("id", personId).maybeSingle() : Promise.resolve({ data: null }),
+    contactId ? db().from("client_contacts").select("email, full_name").eq("id", contactId).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  const { autoInviteFundManager } = await import("@/lib/fund-manager-auto-invite.server");
+  return autoInviteFundManager({ actorId: userId, offeringId, email: p?.email || c?.email, name: c?.full_name || (p ? nameOf(p) : ""), source: "signer", callerAuthorized });
+}
+
 export type AddSignatoryInput = {
   offeringId: string;
   candidateKey?: string | null | undefined;
@@ -302,13 +312,14 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
   if (primary) await syncPrimary(input.offeringId);
   await audit(input.offeringId, userId, "fund_signatory_added", "Fund signatory added", { personId, contactId, primary });
   await ensureTeamSignatoryPermission(userId, input.offeringId, personId!);
-  let invited = false;
-  if (input.sendInvite && contactId) {
+  const managerInvite = await inviteSignerAsManager(userId, input.offeringId, personId, contactId);
+  let invited = managerInvite.status === "invited";
+  if (input.sendInvite && contactId && !invited) {
     await sendContactInvite(userId, contactId);
     await audit(input.offeringId, userId, "fund_person_invited", "Identity check and onboarding invitation sent", { contactId, personId });
     invited = true;
   }
-  return { ok: true, invited };
+  return { ok: true, invited, managerInvite: { status: managerInvite.status, note: managerInvite.note } };
 }
 
 export async function updateFundSignatory(userId: string, input: { offeringId: string; id: string; title?: string | null | undefined; capacity?: string | null | undefined; preferredName?: string | null | undefined; email?: string | null | undefined; makePrimary?: boolean | undefined; remove?: boolean | undefined }) {
@@ -507,6 +518,8 @@ export async function addRequestedSignatory(userId: string, offeringId: string, 
     if (primary) await syncPrimary(offeringId);
     await audit(offeringId, userId, "fund_signatory_added", "Fund signatory recorded from the client's fund request", { personId, contactId, primary, source: "client_request" });
     await ensureTeamSignatoryPermission(userId, offeringId, personId);
+    // Callers authorized the request already (the client's own submission or Operations conversion).
+    await inviteSignerAsManager(userId, offeringId, personId, contactId, true);
     return { added: true, note: null };
   } catch (e) {
     return { added: false, note: (e instanceof Error ? e.message : String(e)).replace(/^Forbidden:\s*/i, "") };

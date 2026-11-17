@@ -159,10 +159,15 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
     onSuccess: async (res: any) => {
       if (res?.signerNote) toast.warning(res.signerNote);
       qc.invalidateQueries({ queryKey: ["fund-signatories", fundId] });
-      if (sendInvite) {
+      const mi = res?.managerInvite;
+      if (mi?.status === "invited") toast.success(`Saved. ${mi.note}`);
+      else if (mi?.note) toast.warning(mi.note);
+      if (mi?.status === "invited" || mi?.status === "access_given") {
+        // The fund manager invitation already covers signing in; no second email.
+      } else if (sendInvite) {
         try { await invite({ data: { offeringId: fundId, contactKey: pick.startsWith("contact:") ? pick : null, fullName: f.fullName, email: f.email } }); toast.success("Saved and invitation sent"); }
         catch (e: any) { toast.error(`Saved, but the invitation wasn't sent: ${e.message}`); }
-      } else toast.success("Saved");
+      } else if (!mi?.note) toast.success("Saved");
       done();
     }, onError: (e: Error) => toast.error(e.message),
   });

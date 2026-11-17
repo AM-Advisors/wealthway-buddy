@@ -108,6 +108,14 @@ export async function applyRequestToFund(input: {
   if (rows.length) {
     const { error } = await db.from("fund_team_members").insert(rows as any);
     if (error) issues.push({ title: "Team contacts not copied", description: `Add these people on the Team tab: ${rows.map((x) => x.full_name).join(", ")}.` });
+    else {
+      // Managers named on the request get fund manager access to this fund and their invitation now.
+      const { autoInviteFundManager } = await import("@/lib/fund-manager-auto-invite.server");
+      for (const row of rows) {
+        const res = await autoInviteFundManager({ actorId, offeringId, email: row.email, name: row.full_name, source: "team", teamRole: row.team_role, callerAuthorized: true });
+        if (res.status === "failed" || res.status === "access_given") issues.push({ title: "Fund manager invitation not sent", description: res.note });
+      }
+    }
   }
   if (r.signatory?.name?.trim()) {
     const { addRequestedSignatory } = await import("@/lib/fund-signatories.server");

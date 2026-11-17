@@ -33,12 +33,17 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
   const submit = async (confirmSeparate = false) => {
     setBusy(true);
     try {
-      await add({ data: {
+      const res: any = await add({ data: {
         offeringId, candidateKey: mode === "pick" ? key || null : null,
         newPerson: mode === "new" ? { fullName: np.fullName, email: np.email || null, title: np.title || null } : null,
         title: title || np.title || null, capacity: capacity || null, confirmSeparate, sendInvite,
       } });
-      toast.success(sendInvite ? "Signatory added and invitation sent" : "Signatory added");
+      const mi = res?.managerInvite;
+      if (mi?.status === "invited") toast.success(`Signatory added. ${mi.note}`);
+      else {
+        toast.success(sendInvite ? "Signatory added and invitation sent" : "Signatory added");
+        if (mi?.note) toast.warning(mi.note);
+      }
       setSendInvite(false);
       setKey(""); setNp({ fullName: "", email: "", title: "" }); setTitle(""); setCapacity(""); setReview(null);
       done();
