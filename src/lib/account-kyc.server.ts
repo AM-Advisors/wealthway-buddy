@@ -1,7 +1,7 @@
 // Server-only: account-level identity verification that gates every non-staff account.
 // Investment-level KYC (kyc_verifications) stays separate; an approved one counts here.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, gateOpen, isSessionDecisionFor, limitedAccessWhileInReview, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
+import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, gateOpen, isSessionDecisionFor, limitedAccessWhileInReview, personProviderCheckOpensAccount, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
 export { isAccountDecisionEvent } from "@/lib/account-kyc-model";
 
 const db = () => supabaseAdmin as any;
@@ -21,7 +21,11 @@ async function grandfathered(uid: string): Promise<boolean> {
   const ors = [appIds.length ? `application_id.in.(${appIds.join(",")})` : null, person?.["id"] ? `person_id.eq.${person["id"]}` : null].filter(Boolean);
   if (!ors.length) return false;
   const { data } = await db().from("kyc_verifications").select("id").eq("status", "approved").or(ors.join(",")).limit(1);
-  return (data ?? []).length > 0;
+  if ((data ?? []).length > 0) return true;
+  // A completed provider check staff attached to this person (before they had a login) counts too.
+  if (!person?.["id"]) return false;
+  const { data: reqs } = await db().from("person_kyc_requests").select("mode, status, id_status, session_id").eq("person_id", person["id"]).eq("mode", "link").limit(20);
+  return personProviderCheckOpensAccount(person, (reqs ?? []) as any[]);
 }
 
 async function latest(uid: string) {

@@ -53,3 +53,20 @@ export function outsideReportApprovalError(input: { addedBy: string | null | und
   if (input.isSuperAdmin && input.note?.trim()) return null;
   return input.isSuperAdmin ? "Add a reason to approve a report you added yourself." : "Someone other than the person who added this report must approve it.";
 }
+
+/**
+ * A completed identity check from the verification provider that staff attached to the person
+ * (full link session: ID, selfie and face match) counts for that person's own login, the same
+ * way an approved fund KYC does. Document-only checks, recorded prior results and screening
+ * reruns never count, and the person must still be identity-approved and screening-approved.
+ */
+export function personProviderCheckOpensAccount(
+  person: { kyc_status?: string | null; aml_status?: string | null } | null | undefined,
+  requests: { mode?: string | null; status?: string | null; id_status?: string | null; session_id?: string | null }[],
+): boolean {
+  if (!person || person.kyc_status !== "approved" || person.aml_status !== "approved") return false;
+  return requests.some((r) =>
+    r.mode === "link" && !!r.session_id &&
+    ["approved", "completed"].includes(String(r.status ?? "").toLowerCase()) &&
+    String(r.id_status ?? "").toLowerCase() === "approved");
+}

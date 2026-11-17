@@ -40,3 +40,15 @@ describe("limited access during an open review", () => {
     expect(limitedAccessWhileInReview({ status: "declined", review_details: pass })).toBe(false);
   });
 });
+
+import { personProviderCheckOpensAccount } from "./account-kyc-model";
+describe("verification already attached to the person by staff", () => {
+  const ok = { kyc_status: "approved", aml_status: "approved" };
+  const link = { mode: "link", status: "approved", id_status: "Approved", session_id: "s1" };
+  it("opens the person's own login after a completed provider check", () => expect(personProviderCheckOpensAccount(ok, [link])).toBe(true));
+  it("counts an automatically applied completed check", () => expect(personProviderCheckOpensAccount(ok, [{ ...link, status: "completed", id_status: "approved" }])).toBe(true));
+  it("never counts a recorded prior result", () => expect(personProviderCheckOpensAccount(ok, [{ mode: "prior", status: "recorded", id_status: null, session_id: null }])).toBe(false));
+  it("never counts a document-only check", () => expect(personProviderCheckOpensAccount(ok, [{ ...link, mode: "document" }])).toBe(false));
+  it("never counts a link that was only sent", () => expect(personProviderCheckOpensAccount(ok, [{ ...link, status: "sent", id_status: null }])).toBe(false));
+  it("stays closed while screening needs review", () => expect(personProviderCheckOpensAccount({ kyc_status: "approved", aml_status: "review" }, [link])).toBe(false));
+});
