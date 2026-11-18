@@ -57,3 +57,9 @@ export function countLinkStates(states: LinkSessionState[]): Record<LinkSessionS
 export function needsFollowUp(status: string | null | undefined): boolean {
   return FINISHED.has(String(status ?? "").toLowerCase());
 }
+
+/** Staff may add someone from the link once they finished, or started and gave a first and last name. */
+export function canAddFromLink(status: string | null | undefined, hasName: boolean): boolean {
+  if (needsFollowUp(status)) return true;
+  return hasName && String(status ?? "").toLowerCase() === "in progress";
+}

@@ -76,7 +76,7 @@ function Row({ r, fundId, onAdd, onDismiss, onUndo }: { r: any; fundId?: string;
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant={TONE[r.state as LinkSessionState]}>{LINK_STATE_LABEL[r.state as LinkSessionState]}</Badge>
-        {r.state === "needs_adding" && !r.possibleMatch && onAdd ? <Button size="sm" onClick={onAdd}>Add to fund</Button> : null}
+        {(r.state === "needs_adding" || (r.state === "in_progress" && r.fullName)) && !r.possibleMatch && onAdd ? <Button size="sm" onClick={onAdd}>Add to fund</Button> : null}
         {r.state === "needs_adding" && onDismiss ? <Button size="sm" variant="outline" onClick={onDismiss}>Not an investor</Button> : null}
         {r.state === "not_investor" && onUndo ? <Button size="sm" variant="outline" onClick={onUndo}>Undo</Button> : null}
         {r.state === "on_fund" && r.onboardingId && fundId ? (

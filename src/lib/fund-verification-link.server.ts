@@ -6,7 +6,7 @@
  * syncProviderSession; staff "not an investor" decisions are append-only.
  */
 import {
-  classifyLinkSession, countLinkStates, needsFollowUp, sessionStatus,
+  canAddFromLink, classifyLinkSession, countLinkStates, needsFollowUp, sessionStatus,
   type LinkSessionEvent, type LinkSessionState,
 } from "@/lib/fund-verification-link-model";
 
@@ -19,7 +19,7 @@ async function isStaff(userId: string) {
   try { await (await import("@/lib/investor-onboarding.server")).assertStaff(userId); return true; } catch { return false; }
 }
 
-function detailsFrom(decision: any) {
+export function detailsFrom(decision: any) {
   const id = (Array.isArray(decision?.id_verifications) ? decision.id_verifications[0] : decision?.id_verification) ?? {};
   return {
     firstName: s(id?.first_name), lastName: s(id?.last_name),
@@ -28,12 +28,12 @@ function detailsFrom(decision: any) {
   };
 }
 
-async function workflowFor(offeringId: string) {
+export async function workflowFor(offeringId: string) {
   const { data } = await (await db()).from("offerings").select("id, name, didit_workflow_id").eq("id", offeringId).maybeSingle();
   return { name: (data?.name as string | undefined) ?? null, workflowId: s(data?.didit_workflow_id) };
 }
 
-async function loadSessions(offeringId: string, workflowId: string) {
+export async function loadSessions(offeringId: string, workflowId: string) {
   const d = await db();
   const [{ data: evs, error }, { data: dec }] = await Promise.all([
     d.from("didit_webhook_events").select("session_id, status, received_at, decision:payload->decision").eq("payload->>workflow_id", workflowId).not("session_id", "is", null).limit(5000),
@@ -57,13 +57,18 @@ async function loadSessions(offeringId: string, workflowId: string) {
     d.from("investor_onboardings").select("id, person_id, questionnaire_didit_session_id").eq("offering_id", offeringId).is("removed_at", null).in("questionnaire_didit_session_id", ids),
     d.from("person_kyc_requests").select("person_id, session_id").in("session_id", ids),
   ]) : [{ data: [] }, { data: [] }];
-  const { data: fundPeople } = await d.from("investor_onboardings").select("id, person_id, persons(email, legal_first_name, legal_last_name)").eq("offering_id", offeringId).is("removed_at", null).limit(2000);
+  // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
+  const { data: fundPeople } = await d.from("investor_onboardings").select("id, person_id").eq("offering_id", offeringId).is("removed_at", null).limit(2000);
+  const pids = [...new Set(((fundPeople ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
+  const { data: ppl } = pids.length ? await d.from("persons").select("id, email, legal_first_name, legal_last_name").in("id", pids) : { data: [] };
+  const personById = new Map(((ppl ?? []) as any[]).map((p) => [p.id, p]));
   const onFundPerson = new Map<string, string>();
   const byEmail = new Map<string, { onboardingId: string; name: string }>();
   for (const o of (fundPeople ?? []) as any[]) {
     if (o.person_id) onFundPerson.set(o.person_id, o.id);
-    const em = s(o.persons?.email)?.toLowerCase();
-    if (em) byEmail.set(em, { onboardingId: o.id, name: [o.persons?.legal_first_name, o.persons?.legal_last_name].filter(Boolean).join(" ") || em });
+    const p: any = personById.get(o.person_id);
+    const em = s(p?.email)?.toLowerCase();
+    if (em) byEmail.set(em, { onboardingId: o.id, name: [p?.legal_first_name, p?.legal_last_name].filter(Boolean).join(" ") || em });
   }
   const linked = new Map<string, string>();
   for (const o of (onb ?? []) as any[]) linked.set(o.questionnaire_didit_session_id, o.id);
@@ -101,8 +106,13 @@ export async function fundLinkSessions(userId: string, offeringId: string) {
   return { staff: true as const, connected: true as const, fundName: f.name, counts: countLinkStates(rows.map((r) => r.state)), rows };
 }
 
-/** Add someone who finished the fund's link as a new investor, then apply their check. */
-export async function addLinkSessionInvestor(userId: string, input: { offeringId: string; sessionId: string; profileType: "individual" | "trust" | "entity"; legalName?: string | null | undefined }) {
+/**
+ * Add someone who used the fund's link as a new investor, then apply their check.
+ * Finished checks and started checks that already carry a first and last name qualify.
+ * `personId` reuses an existing person (for example someone earlier removed from the
+ * fund) only when their recorded name matches the check's name.
+ */
+export async function addLinkSessionInvestor(userId: string, input: { offeringId: string; sessionId: string; profileType: "individual" | "trust" | "entity"; legalName?: string | null | undefined; personId?: string | null | undefined }) {
   const { assertStaff } = await import("@/lib/investor-onboarding.server");
   await assertStaff(userId);
   const f = await workflowFor(input.offeringId);
@@ -111,25 +121,41 @@ export async function addLinkSessionInvestor(userId: string, input: { offeringId
   const decision: any = await fetchDiditSessionDecision(input.sessionId);
   if (!decision) throw new Error("That verification session couldn't be read.");
   if (s(decision.workflow_id) !== f.workflowId) throw new Error("That session didn't come from this fund's verification link.");
-  if (!needsFollowUp(decision.status)) throw new Error("This person hasn't finished the identity check yet.");
+  const det = detailsFrom(decision);
+  if (!canAddFromLink(decision.status, Boolean(det.firstName && det.lastName))) throw new Error("This person hasn't given their name in the identity check yet.");
   const { linked } = await loadSessions(input.offeringId, f.workflowId);
   if (linked.has(input.sessionId)) throw new Error("This person is already on the fund.");
-  const det = detailsFrom(decision);
   if (!det.firstName || !det.lastName) throw new Error("The check has no first and last name, so add this person with Add investor instead.");
   if (input.profileType !== "individual" && !s(input.legalName)) throw new Error("Enter the trust or company's legal name.");
+  const d = await db();
+  if (input.personId) {
+    const { data: p } = await d.from("persons").select("id, legal_first_name, legal_last_name").eq("id", input.personId).maybeSingle();
+    if (!p || !sameName(p, det)) throw new Error("That existing person's name doesn't match the identity check.");
+    const { data: active } = await d.from("investor_onboardings").select("id").eq("offering_id", input.offeringId).eq("person_id", input.personId).is("removed_at", null).limit(1);
+    if ((active ?? []).length) throw new Error("This person is already on the fund.");
+  }
   const { createInvestor } = await import("@/lib/investor-record.server");
   const created = await createInvestor(userId, {
     offeringId: input.offeringId,
+    ...(input.personId ? { personId: input.personId } : {}),
     person: { firstName: det.firstName, lastName: det.lastName, ...(det.email ? { email: det.email } : {}) },
     profile: { type: input.profileType, legalName: input.profileType === "individual" ? null : s(input.legalName) },
     investment: { amountCents: null },
     source: "provider",
     allowMissingEmail: !det.email,
   });
+  // The record was created from this very check, so the session is theirs; link it, then apply it.
+  await d.from("investor_onboardings").update({ questionnaire_didit_session_id: input.sessionId }).eq("id", created.onboardingId).is("questionnaire_didit_session_id", null);
   const { syncProviderSession } = await import("@/lib/prior-verification.server");
-  const applied = await syncProviderSession(userId, created.onboardingId, input.sessionId);
+  const applied = await syncProviderSession(userId, created.onboardingId).catch((e: any) => ({ applied: false, kyc: null, aml: null, error: String(e?.message ?? e) }));
   await closeFollowUp(input.offeringId, input.sessionId);
   return { onboardingId: created.onboardingId, applied: applied.applied, kyc: applied.kyc, aml: applied.aml };
+}
+
+const norm = (v: unknown) => String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+function sameName(p: { legal_first_name?: string | null; legal_last_name?: string | null }, det: { firstName: string | null; lastName: string | null }) {
+  const first = norm(p.legal_first_name), last = norm(p.legal_last_name);
+  return !!first && !!last && norm(det.lastName) === last && norm(det.firstName).startsWith(first);
 }
 
 /** Staff decision that a finished session is not an investor of this fund (append-only, reversible). */

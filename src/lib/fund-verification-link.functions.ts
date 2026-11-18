@@ -10,7 +10,7 @@ export const fundLinkSessionsFn = createServerFn({ method: "GET" }).middleware([
   .handler(async ({ data, context }) => (await srv()).fundLinkSessions(context.userId, data.offeringId));
 
 export const addLinkSessionInvestorFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(z.object({ offeringId: uuid, sessionId: uuid, profileType: z.enum(["individual", "trust", "entity"]), legalName: z.string().trim().max(200).nullable().optional() }).parse)
+  .validator(z.object({ offeringId: uuid, sessionId: uuid, profileType: z.enum(["individual", "trust", "entity"]), legalName: z.string().trim().max(200).nullable().optional(), personId: uuid.nullable().optional() }).parse)
   .handler(async ({ data, context }) => (await srv()).addLinkSessionInvestor(context.userId, data));
 
 export const setLinkSessionDismissedFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

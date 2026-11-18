@@ -22,6 +22,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { FundVerificationLinkCard } from "@/components/fund-verification-link-card";
+import { FundInviteActivityCard } from "@/components/fund-invite-activity-card";
 import { ManagerAddInvestor } from "@/components/manager-add-investor";
 import { approveToFundFn, fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { STAGE_LABELS, type OnboardingStage } from "@/lib/investor-onboarding-model";
@@ -206,6 +207,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
         </DialogContent>
       </Dialog>
     </Card>
+    <FundInviteActivityCard fundId={fundId} />
     <FundVerificationLinkCard fundId={fundId} />
     <FundOnboardingLinkCard fundId={fundId} />
     <InvestorLevelsCard fundId={fundId} />

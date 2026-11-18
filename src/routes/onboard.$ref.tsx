@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { OnboardMessage, OnboardShell } from "@/components/onboard-portal";
 import { supabase } from "@/integrations/supabase/client";
 import { claimOnboardInvitationFn } from "@/lib/investor-onboarding.functions";
+import { noteInvitationOpenedFn } from "@/lib/fund-invite-activity.functions";
 
 /**
  * The single emailed entry point: onboard.harmonious.co/onboard/<reference>.
@@ -24,7 +25,9 @@ export const Route = createFileRoute("/onboard/$ref")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async ({ location, params }) => {
+    // Lets the fund manager see the invitation was clicked, even before sign-in.
+    void noteInvitationOpenedFn({ data: { reference: params.ref } }).catch(() => null);
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/auth", search: { next: location.pathname } as never });
   },
