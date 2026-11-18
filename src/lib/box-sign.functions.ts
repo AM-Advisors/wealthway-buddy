@@ -3,6 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 
+/** Requests sent from this time carry guided (pre-placed) signature fields. */
+const GUIDED_SIGNING_SINCE = "2026-11-18T21:00:00Z";
+
 const startSchema = z.object({ offering_document_id: z.string().uuid(), onboarding_id: z.string().uuid().optional() });
 
 /** Is real e-signing available (Box credentials present)? */
@@ -149,7 +152,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const { data: existing } = await supabaseAdmin
       .from("document_signatures")
-      .select("id, provider, provider_agreement_id, provider_status, snapshot_id, signer_email")
+      .select("id, provider, provider_agreement_id, provider_status, snapshot_id, signer_email, provider_sent_at")
       .eq("application_id", application.id)
       .eq("offering_document_id", doc.id)
       .maybeSingle();
@@ -162,7 +165,9 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       existing.provider_agreement_id &&
       existing.provider_status === "out_for_signature" &&
       String((existing as any).signer_email ?? "").toLowerCase() === signerEmail.toLowerCase() &&
-      (!gateSnapshot || (existing as any).snapshot_id === gateSnapshot.id)
+      (!gateSnapshot || (existing as any).snapshot_id === gateSnapshot.id) &&
+      // Requests sent before guided signing have no placed fields; replace them.
+      new Date(String((existing as any).provider_sent_at ?? 0)).getTime() >= Date.parse(GUIDED_SIGNING_SINCE)
     ) {
       const live = await getSignRequest(existing.provider_agreement_id).catch(() => null);
       if (namedSigner) {
@@ -177,11 +182,17 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       }
     }
 
+    // An unsigned older request is cancelled so only the guided copy stays open.
+    if (existing?.provider === "box_sign" && existing.provider_agreement_id && existing.provider_status === "out_for_signature") {
+      const { cancelSignRequest } = await import("@/lib/box.server");
+      await cancelSignRequest(existing.provider_agreement_id).catch(() => null);
+    }
+
     const { investmentDocumentSource } = await import("@/lib/investment-document-source.server");
     const snapshot = gateSnapshot ? await (supabaseAdmin as any).from("investor_document_snapshots").select("merge_values").eq("id", gateSnapshot.id).single() : { data: null };
     const source = await investmentDocumentSource(supabaseAdmin, doc.id, application.id, snapshot.data?.merge_values);
     const { buildOfferingPdf } = await import("@/lib/offering-pdf.server");
-    const pdfBytes = source.bytes ?? await buildOfferingPdf({
+    const rawPdfBytes = source.bytes ?? await buildOfferingPdf({
       offeringName: offering?.name ?? "Harmonious",
       regType: offering?.reg_type ?? "506b",
       title: doc.title,
@@ -189,6 +200,23 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       body: source.kind === "text" ? source.body : doc.body,
       requiresSignature: Boolean(doc.requires_signature),
     });
+
+    // Guided signing: each signer's own line gets a locked Box field (investor on the
+    // Individuals or Entities page, fund signatory on the Acceptance page).
+    let pdfBytes = rawPdfBytes;
+    {
+      const { data: obp } = await supabaseAdmin.from("investor_onboardings").select("investment_profile_id")
+        .eq("application_id", application.id).not("stage", "in", "(closed,declined,cancelled)").maybeSingle();
+      const profileId = (obp as any)?.investment_profile_id ?? null;
+      const { data: ip } = profileId ? await supabaseAdmin.from("investment_profiles").select("profile_type").eq("id", profileId).maybeSingle() : { data: null };
+      const pt = String((ip as any)?.profile_type ?? "individual");
+      const { tagPdfSignatureLines } = await import("@/lib/pdf-sign-tags.server");
+      const tagged = await tagPdfSignatureLines(rawPdfBytes, {
+        investorIsEntity: !["individual", "joint"].includes(pt),
+        fundCountersigns: (doc as any).signing_mode === "dual",
+      });
+      pdfBytes = tagged.bytes;
+    }
 
     const safeTitle = doc.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
     const { signingFileName } = await import("@/lib/box.server");
