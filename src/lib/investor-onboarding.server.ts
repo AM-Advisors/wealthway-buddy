@@ -903,10 +903,15 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
   const { usPersonFromVerification } = await import("@/lib/subscription-prefill");
   const usPerson = k ? (usPersonFromVerification({ isIndividual, citizenshipCountry: person?.citizenship_country, documentCountry: k.document_issuing_country, entityCountry: profile?.country }) ?? usPersonFrom(tax, person)) : null;
   const routing = resolveTaxForm({ profileType, usPerson });
+  let loginEmail: string | null = acct?.email ?? null;
+  if (!person?.email && !loginEmail && row.investor_user_id) {
+    const { accountContactFor } = await import("@/lib/account-contact.server");
+    loginEmail = (await accountContactFor(db() as any, row.investor_user_id).catch(() => null))?.email ?? null;
+  }
   const locked = lockedAnswers({
     verifiedName,
     commitmentCents: (row.accepted_amount_cents ?? row.requested_amount_cents ?? null) as number | null,
-    email: person?.email ?? acct?.email ?? null,
+    email: person?.email ?? loginEmail,
     phone: person?.phone ?? acct?.phone ?? null,
     profileType,
     taxFormType: routing.status === "determined" ? routing.formType : null,
@@ -2669,11 +2674,33 @@ export async function onboardPortalDetail(userId: string, onboardingId: string) 
  * sessions hang off. Create the one record (reusing any existing one) so
  * verification can start. Changes nothing about signatures, money or results.
  */
-export async function ensureVerificationApplication(row: { id: string; investor_user_id: string | null; offering_id: string }, authenticatedDb: any): Promise<string | null> {
+export async function ensureVerificationApplication(row: { id: string; investor_user_id: string | null; offering_id: string; person_id?: string | null }, authenticatedDb: any): Promise<string | null> {
   if (!row.investor_user_id) return null;
+  await linkPersonIfMissing(row);
   const { data, error } = await authenticatedDb.rpc("ensure_exact_investment_application", { p_onboarding_id: row.id });
   if (error || typeof data !== "string") fail("We couldn't safely link this investment's verification. Please contact Harmonious.");
   return data;
+}
+
+/**
+ * Investments claimed before their person was linked: attach the login's one
+ * unmerged person (never guesses between several), logged as a record change.
+ */
+export async function linkPersonIfMissing(row: { id: string; investor_user_id: string | null; offering_id: string; person_id?: string | null }) {
+  if (row.person_id || !row.investor_user_id) return;
+  const { data: fresh } = await db().from("investor_onboardings").select("person_id").eq("id", row.id).maybeSingle();
+  if ((fresh as any)?.person_id) { row.person_id = (fresh as any).person_id; return; }
+  const { data: people } = await db().from("persons").select("id").eq("user_id", row.investor_user_id).is("merged_into_person_id", null).limit(2);
+  const list = (people ?? []) as any[];
+  if (list.length !== 1) return;
+  const personId = String(list[0].id);
+  const { error } = await db().from("investor_onboardings").update({ person_id: personId, updated_at: nowIso() }).eq("id", row.id).is("person_id", null);
+  if (error) return;
+  row.person_id = personId;
+  await db().from("investor_record_changes").insert({
+    offering_id: row.offering_id, onboarding_id: row.id, subject_table: "investor_onboardings", subject_id: row.id,
+    field: "person_id", old_value: null, new_value: personId, source: "verification_person_link", actor_user_id: row.investor_user_id, manager_visible: true,
+  } as any).then(() => null, () => null);
 }
 
 /**

@@ -21,6 +21,8 @@ export const confirmAccreditationStepFn = createServerFn({ method: "POST" })
     if (!row.application_id) {
       // Identity reused from the login: link this investment's own record now
       // through the same guarded step the other saving paths use.
+      const { linkPersonIfMissing } = await import("@/lib/investor-onboarding.server");
+      await linkPersonIfMissing({ id: row.id, investor_user_id: row.investor_user_id, offering_id: row.offering_id, person_id: null }).catch(() => null);
       const { data: linked, error } = await (context.supabase as any).rpc("ensure_exact_investment_application", { p_onboarding_id: row.id });
       if (error || typeof linked !== "string") throw new Error("We couldn't link this step to your investment. Please contact Harmonious.");
       row.application_id = linked;

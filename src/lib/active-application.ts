@@ -169,6 +169,10 @@ export async function linkedApplicationForInvestment(
 ): Promise<string> {
   if (investment.application_id) return investment.application_id;
   if (!opts.link) return NO_APPLICATION;
+  try {
+    const { data: full } = await supabase.from("investor_onboardings").select("id, investor_user_id, offering_id, person_id").eq("id", investment.id).maybeSingle();
+    if (full && !full.person_id) await (await import("@/lib/investor-onboarding.server")).linkPersonIfMissing(full);
+  } catch { /* the guarded link below still decides */ }
   const { data, error } = await supabase.rpc("ensure_exact_investment_application", { p_onboarding_id: investment.id });
   if (error || typeof data !== "string") {
     throw new Error("We couldn't link this step to your investment. Please contact Harmonious.");

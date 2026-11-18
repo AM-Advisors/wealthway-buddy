@@ -49,7 +49,15 @@ export async function sendInvestorWelcome(
         : Promise.resolve({ data: null as any }),
     ]);
 
-  const email = (profile?.email as string | null) ?? null;
+  // Newer accounts may have no legacy profile row: fall back to the confirmed login or linked person.
+  let email = (profile?.email as string | null) ?? null;
+  let fallbackName: string | null = null;
+  if (!email && app.user_id) {
+    const { accountContactFor } = await import("@/lib/account-contact.server");
+    const c = await accountContactFor(supabaseAdmin as any, app.user_id as string).catch(() => null);
+    email = c?.email ?? null;
+    fallbackName = c?.legalName ?? null;
+  }
   if (!email) return { sent: false, reason: "no_email_on_file" };
 
   const offeringName = (offering?.name as string | null) ?? "your fund";
@@ -67,7 +75,7 @@ export async function sendInvestorWelcome(
   const result = await sendTemplateEmail("investor-welcome", email, {
     idempotencyKey: `investor-welcome-${app.id}`,
     templateData: {
-      investorName: (profile?.legal_name as string | null) || "Investor",
+      investorName: (profile?.legal_name as string | null) || fallbackName || "Investor",
       offeringName,
       portalUrl: `${PORTAL_ORIGIN}/portal`,
       ...(diligenceUrl ? { diligenceUrl } : {}),

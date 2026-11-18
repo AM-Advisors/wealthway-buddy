@@ -87,9 +87,14 @@ export async function drainProgressEmails(limit = 100) {
         if (lookupError) throw new Error(lookupError.message)
         const [{ data: onboarding }, { data: managers }, { data: recipient }, accountNames, { data: fund }, { data: pref }] = results as any[]
         const allowed = onboarding && !onboarding.removed_at && onboarding.offering_id === first.offering_id && progressRecipientAllowed(meta.audience, meta.recipient_user_id, onboarding.investor_user_id, (managers ?? []).map((m: any) => m.user_id))
-        if (frequency !== 'off' && allowed && recipient?.email && pref?.alerts_enabled !== false) {
+        let recipientEmail: string | null = recipient?.email ?? null
+        if (!recipientEmail && meta.recipient_user_id) {
+          const { accountContactFor } = await import('./account-contact.server')
+          recipientEmail = (await accountContactFor(db as any, meta.recipient_user_id).catch(() => null))?.email ?? null
+        }
+        if (frequency !== 'off' && allowed && recipientEmail && pref?.alerts_enabled !== false) {
           const { sendTemplateEmail } = await import('./email-templates/send-email')
-          await sendTemplateEmail('investor-progress', recipient.email, {
+          await sendTemplateEmail('investor-progress', recipientEmail, {
             idempotencyKey: `investor-progress:${ids.sort().join(':')}`,
             inboxForAnyUser: true,
             templateData: { name: accountNames.get(meta.recipient_user_id) ?? 'there', fundName: fund?.name ?? 'your fund', investorName: accountNames.get(first.investor_user_id) ?? 'Your investor', manager: meta.audience === 'manager', completedSteps: claimed.map((r: any) => r.metadata.step_label), portalUrl: meta.audience === 'investor' ? `https://app.harmonious.co/investment/${meta.onboarding_id}` : `https://app.harmonious.co/manager/fund/${first.offering_id}/investor/${meta.onboarding_id}` },
