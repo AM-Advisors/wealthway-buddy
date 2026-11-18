@@ -19,3 +19,14 @@ describe("client tab access", () => {
     expect(tabEnabled("funds", { funds: false }, ["fund_platform"])).toBe(false);
   });
 });
+
+describe("Report Cards menu", () => {
+  it("shows only when the client has Report Cards, unless staff override it", async () => {
+    const { tabEnabled, tabForPath } = await import("./client-tab-access");
+    expect(tabForPath("/manager/report-cards")).toBe("report_cards");
+    expect(tabForPath("/client/report-cards")).toBe("report_cards");
+    expect(tabEnabled("report_cards", {}, ["fund_platform"])).toBe(false);
+    expect(tabEnabled("report_cards", {}, ["report_cards"])).toBe(true);
+    expect(tabEnabled("report_cards", { report_cards: false }, ["report_cards"])).toBe(false);
+  });
+});

@@ -9,6 +9,7 @@ export const CLIENT_TABS = [
   { key: "investments", label: "Investments & reporting", prefixes: ["/investor-reporting", "/distributions", "/activity", "/my-portfolio"], needs: "fund_platform" },
   { key: "cap_table", label: "Cap Table", prefixes: ["/client/cap-table", "/manager/cap-table"], needs: "cap_table" },
   { key: "wealth", label: "Wealth", prefixes: ["/wealth"], needs: "wealth" },
+  { key: "report_cards", label: "Report Cards", prefixes: ["/client/report-cards", "/manager/report-cards"], needs: "report_cards" },
   { key: "banking", label: "Banking & wires", prefixes: ["/client/banking", "/client/wires"] },
   { key: "tax", label: "Tax", prefixes: ["/tax"], needs: "fund_platform" },
   { key: "documents", label: "Documents", prefixes: ["/documents"], needs: "fund_platform" },
@@ -43,4 +44,4 @@ export function filterByHiddenTabs<T extends { url: string }>(links: T[], hidden
 }
 
 /** Areas that belong to a purchasable service; their switch sits on the service card. */
-export const SERVICE_TAB_KEYS: readonly ClientTabKey[] = ["funds", "investments", "cap_table", "wealth"];
+export const SERVICE_TAB_KEYS: readonly ClientTabKey[] = ["funds", "investments", "cap_table", "wealth", "report_cards"];

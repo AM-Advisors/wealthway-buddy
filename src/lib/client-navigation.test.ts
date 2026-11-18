@@ -73,6 +73,7 @@ describe("client navigation by workspace", () => {
       "Transactions",
       "Documents",
       "Reports",
+      "Report Cards",
       "Statements of work",
       "Settings",
       "Help",

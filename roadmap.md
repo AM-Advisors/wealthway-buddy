@@ -1,5 +1,15 @@
 # Roadmap
 
+## Report Cards complete build (2026-11-18)
+- [x] Report Cards as a service: whole client (standalone) or one fund (add-on); staff always
+- [x] PDF, spreadsheet, Excel and data-file downloads with permanent download history
+- [x] Investor progress funnel per fund
+- [x] Grade change alerts and figures-to-check alerts
+- [x] Compare two report cards side by side
+- [x] Request access to a published report card; approver or fund manager decides (up to 30 days)
+- [x] Company menu Report Cards page for standalone clients
+
+
 ## Investor verification and certification (2026-11-18)
 - [x] Identity card shows verified once the ID check passes (onboarding portal)
 - [x] Same on the investor app journey Verify card

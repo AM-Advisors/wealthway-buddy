@@ -2,7 +2,7 @@ import { RISK_QUESTIONS } from './investor-risk-questions';
 export { RISK_QUESTIONS };
 export type AssessmentMetric = { label: string; score: number | null; weight: number; evidence: string };
 export const DEFAULT_THRESHOLDS = [95,90,87,83,80,77,73,70,67,60];
-const GRADES = ['A+','A','A−','B+','B','B−','C+','C','C−','D','F'];
+export const GRADES = ['A+','A','A−','B+','B','B−','C+','C','C−','D','F'];
 export function assessmentGrade(metrics: AssessmentMetric[], thresholds = DEFAULT_THRESHOLDS) {
   const eligible = metrics.filter(m => m.score !== null && Number.isFinite(m.score) && m.score >= 0 && m.score <= 100 && m.weight > 0 && m.evidence.trim());
   const weight = eligible.reduce((s,m) => s + m.weight,0);

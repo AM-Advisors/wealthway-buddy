@@ -43401,6 +43401,76 @@ export type Database = {
         }
         Relationships: []
       }
+      report_card_access_decisions: {
+        Row: {
+          actor_id: string
+          created_at: string
+          decision: string
+          expires_at: string | null
+          id: string
+          reason: string
+          request_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          decision: string
+          expires_at?: string | null
+          id?: string
+          reason?: string
+          request_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          decision?: string
+          expires_at?: string | null
+          id?: string
+          reason?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_card_access_decisions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "report_card_access_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_card_access_requests: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          reason: string
+          requester_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          reason?: string
+          requester_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          requester_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_card_access_requests_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "report_card_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_card_configuration_versions: {
         Row: {
           actor_id: string
@@ -43472,6 +43542,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      report_card_downloads: {
+        Row: {
+          actor_id: string
+          card_ids: string[]
+          created_at: string
+          format: string
+          id: string
+          label: string
+          scope: string
+        }
+        Insert: {
+          actor_id: string
+          card_ids: string[]
+          created_at?: string
+          format: string
+          id?: string
+          label?: string
+          scope: string
+        }
+        Update: {
+          actor_id?: string
+          card_ids?: string[]
+          created_at?: string
+          format?: string
+          id?: string
+          label?: string
+          scope?: string
+        }
+        Relationships: []
       }
       report_card_evidence: {
         Row: {

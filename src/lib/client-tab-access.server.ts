@@ -14,6 +14,7 @@ async function purchasedKeys(d: any, clientId: string): Promise<string[] | null>
   const keys = ((ents ?? []) as any[]).map((e) => String(e.service_key));
   const out = menuKeysFromServices(keys);
   if (keys.some((k) => k.startsWith("wealth") || k.startsWith("portfolio") || k.startsWith("report_card"))) out.push("wealth");
+  if (keys.includes("report_cards")) out.push("report_cards");
   return out;
 }
 

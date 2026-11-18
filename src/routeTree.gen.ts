@@ -172,6 +172,7 @@ import { Route as AuthenticatedClientHomeRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClientInboxRouteImport } from './routes/_authenticated/client.inbox'
 import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client.invoices'
 import { Route as AuthenticatedClientPaymentsRouteImport } from './routes/_authenticated/client.payments'
+import { Route as AuthenticatedClientReportCardsRouteImport } from './routes/_authenticated/client.report-cards'
 import { Route as AuthenticatedClientSetupOptionsRouteImport } from './routes/_authenticated/client.setup-options'
 import { Route as AuthenticatedClientSignOffsRouteImport } from './routes/_authenticated/client.sign-offs'
 import { Route as AuthenticatedClientStatementsOfWorkRouteImport } from './routes/_authenticated/client.statements-of-work'
@@ -1387,6 +1388,12 @@ const AuthenticatedClientPaymentsRoute =
   AuthenticatedClientPaymentsRouteImport.update({
     id: '/payments',
     path: '/payments',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientReportCardsRoute =
+  AuthenticatedClientReportCardsRouteImport.update({
+    id: '/report-cards',
+    path: '/report-cards',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedClientSetupOptionsRoute =
@@ -3495,6 +3502,7 @@ export interface FileRoutesByFullPath {
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/client/report-cards': typeof AuthenticatedClientReportCardsRoute
   '/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/client/statements-of-work': typeof AuthenticatedClientStatementsOfWorkRoute
@@ -3984,6 +3992,7 @@ export interface FileRoutesByTo {
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/client/report-cards': typeof AuthenticatedClientReportCardsRoute
   '/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/client/statements-of-work': typeof AuthenticatedClientStatementsOfWorkRoute
@@ -4481,6 +4490,7 @@ export interface FileRoutesById {
   '/_authenticated/client/inbox': typeof AuthenticatedClientInboxRoute
   '/_authenticated/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/_authenticated/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/_authenticated/client/report-cards': typeof AuthenticatedClientReportCardsRoute
   '/_authenticated/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/_authenticated/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/_authenticated/client/statements-of-work': typeof AuthenticatedClientStatementsOfWorkRoute
@@ -4979,6 +4989,7 @@ export interface FileRouteTypes {
     | '/client/inbox'
     | '/client/invoices'
     | '/client/payments'
+    | '/client/report-cards'
     | '/client/setup-options'
     | '/client/sign-offs'
     | '/client/statements-of-work'
@@ -5468,6 +5479,7 @@ export interface FileRouteTypes {
     | '/client/inbox'
     | '/client/invoices'
     | '/client/payments'
+    | '/client/report-cards'
     | '/client/setup-options'
     | '/client/sign-offs'
     | '/client/statements-of-work'
@@ -5964,6 +5976,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/inbox'
     | '/_authenticated/client/invoices'
     | '/_authenticated/client/payments'
+    | '/_authenticated/client/report-cards'
     | '/_authenticated/client/setup-options'
     | '/_authenticated/client/sign-offs'
     | '/_authenticated/client/statements-of-work'
@@ -7530,6 +7543,13 @@ declare module '@tanstack/react-router' {
       path: '/payments'
       fullPath: '/client/payments'
       preLoaderRoute: typeof AuthenticatedClientPaymentsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/report-cards': {
+      id: '/_authenticated/client/report-cards'
+      path: '/report-cards'
+      fullPath: '/client/report-cards'
+      preLoaderRoute: typeof AuthenticatedClientReportCardsRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/client/setup-options': {
@@ -9971,6 +9991,7 @@ interface AuthenticatedClientRouteChildren {
   AuthenticatedClientInboxRoute: typeof AuthenticatedClientInboxRoute
   AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
   AuthenticatedClientPaymentsRoute: typeof AuthenticatedClientPaymentsRoute
+  AuthenticatedClientReportCardsRoute: typeof AuthenticatedClientReportCardsRoute
   AuthenticatedClientSetupOptionsRoute: typeof AuthenticatedClientSetupOptionsRoute
   AuthenticatedClientSignOffsRoute: typeof AuthenticatedClientSignOffsRoute
   AuthenticatedClientStatementsOfWorkRoute: typeof AuthenticatedClientStatementsOfWorkRoute
@@ -9997,6 +10018,7 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientInboxRoute: AuthenticatedClientInboxRoute,
   AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
   AuthenticatedClientPaymentsRoute: AuthenticatedClientPaymentsRoute,
+  AuthenticatedClientReportCardsRoute: AuthenticatedClientReportCardsRoute,
   AuthenticatedClientSetupOptionsRoute: AuthenticatedClientSetupOptionsRoute,
   AuthenticatedClientSignOffsRoute: AuthenticatedClientSignOffsRoute,
   AuthenticatedClientStatementsOfWorkRoute:
