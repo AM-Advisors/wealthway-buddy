@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { fundRegulatoryFn, saveFranchiseFeeFn, removeFranchiseFeeFn } from "@/lib/fund-regulatory.functions";
 import { usd, fmtDate, toCents } from "./shared";
 import { FundFilingStatusCard } from "@/components/fund-filing-status";
+import { StateFilingsCard } from "./state-filings-card";
 
 const statusLabel = (s: string) => ({ prepared: "Prepared", filed: "Filed", not_required: "Not required", recorded: "Recorded" } as Record<string, string>)[s] ?? s;
 
@@ -44,6 +45,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
           <CardContent><FundFilingStatusCard fundId={fundId} overview={filingStatus} staff={staff} onChanged={() => { refresh(); void qc.invalidateQueries({ queryKey: ["ops-regulatory-tracker"] }); }} /></CardContent>
         </Card>
       )}
+      <StateFilingsCard fundId={fundId} />
       <Card>
         <CardHeader><CardTitle>Regulatory calendar</CardTitle><CardDescription>Upcoming and past deadlines for this fund. Dates are estimates; Harmonious confirms each one.</CardDescription></CardHeader>
         <CardContent>
@@ -87,7 +89,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
 
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-2">
-          <div><CardTitle>State franchise fees</CardTitle><CardDescription>Track each state's franchise tax or annual fee, its cost and filing date. Recording here doesn't pay anything.</CardDescription></div>
+          <div><CardTitle>Other state fees</CardTitle><CardDescription>Track each state's franchise tax or annual fee, its cost and filing date. Recording here doesn't pay anything.</CardDescription></div>
           <Button size="sm" onClick={() => setEdit({})}>Add fee</Button>
         </CardHeader>
         <CardContent className="overflow-x-auto">

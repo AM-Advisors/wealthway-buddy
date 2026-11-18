@@ -25654,6 +25654,90 @@ export type Database = {
           },
         ]
       }
+      fund_state_filing_events: {
+        Row: {
+          actor: string
+          confirmation_number: string | null
+          created_at: string
+          filed_event_id: string | null
+          filed_on: string | null
+          filing_year: number | null
+          id: string
+          kind: string
+          note: string | null
+          offering_id: string
+          receipt_path: string | null
+          state: string
+        }
+        Insert: {
+          actor: string
+          confirmation_number?: string | null
+          created_at?: string
+          filed_event_id?: string | null
+          filed_on?: string | null
+          filing_year?: number | null
+          id?: string
+          kind: string
+          note?: string | null
+          offering_id: string
+          receipt_path?: string | null
+          state: string
+        }
+        Update: {
+          actor?: string
+          confirmation_number?: string | null
+          created_at?: string
+          filed_event_id?: string | null
+          filed_on?: string | null
+          filing_year?: number | null
+          id?: string
+          kind?: string
+          note?: string | null
+          offering_id?: string
+          receipt_path?: string | null
+          state?: string
+        }
+        Relationships: []
+      }
+      fund_state_filings: {
+        Row: {
+          applies: boolean
+          basis: string
+          created_at: string
+          filer: string | null
+          id: string
+          not_applicable_reason: string | null
+          offering_id: string
+          state: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          applies?: boolean
+          basis?: string
+          created_at?: string
+          filer?: string | null
+          id?: string
+          not_applicable_reason?: string | null
+          offering_id: string
+          state: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          applies?: boolean
+          basis?: string
+          created_at?: string
+          filer?: string | null
+          id?: string
+          not_applicable_reason?: string | null
+          offering_id?: string
+          state?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       fund_status_events: {
         Row: {
           action: string

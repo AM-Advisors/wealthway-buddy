@@ -33,7 +33,7 @@ export const CALENDAR_TEMPLATES: CalendarTemplate[] = [
   { key: "annual_tax", feature: "TAX_COORDINATION", title: "Annual tax package (1065 / K-1s)", category: "TAX", cadence: "ANNUAL", month: 3, day: 15, team: "finance", task: true, lead: 45 },
   { key: "annual_audit", feature: "AUDIT_COORDINATION", title: "Annual audit cycle", category: "AUDIT", cadence: "ANNUAL", month: 4, day: 30, team: "finance", task: true, lead: 60 },
   { key: "regulatory_annual", feature: "REGULATORY_CALENDAR", title: "Annual regulatory filings review (e.g. Form ADV)", category: "REGULATORY", cadence: "ANNUAL", month: 3, day: 31, team: "compliance", task: true, lead: 30 },
-  { key: "entity_annual", feature: "ENTITY_COMPLIANCE_CALENDAR", title: "Entity annual report & franchise tax", category: "ENTITY", cadence: "ANNUAL", month: 6, day: 1, team: "operations", task: true, lead: 30 },
+  { key: "entity_annual", feature: "ENTITY_COMPLIANCE_CALENDAR", title: "Entity annual report & franchise tax (see State filings for exact state dates)", category: "ENTITY", cadence: "ANNUAL", month: 6, day: 1, team: "operations", task: false, lead: 30 },
 ];
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);

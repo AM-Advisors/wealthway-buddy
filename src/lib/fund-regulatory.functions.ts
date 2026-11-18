@@ -61,6 +61,8 @@ export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([r
     const lastFiledD = [...formDs.filter((f) => f.filed_on).map((f) => f.filed_on), ...((setupF ?? []) as any[]).filter((f) => /form.?d/i.test(f.filing_type) && f.filing_date).map((f) => f.filing_date)].sort().pop();
     if (lastFiledD) cal.push({ date: addYears(lastFiledD, 1), title: "Annual Form D amendment", detail: "Due yearly while the offering is ongoing", kind: "form_d", done: false });
     for (const f of (fees ?? []) as any[]) if (f.due_date) cal.push({ date: f.due_date, title: `${f.state} franchise fee`, detail: f.description || "State franchise tax / annual fee", kind: "franchise", done: !!f.filed_on });
+    const sf = await (await import("@/lib/state-filings.functions")).loadStateFilings(d, data.fundId, context.userId, a.staff);
+    for (const r of sf.rows) if (r.applies && r.nextDue) cal.push({ date: r.nextDue, title: `${r.state} ${r.rule?.filing ?? "yearly state filing"}`, detail: `${r.nextYear} filing${r.rule?.feeCents != null ? `, about $${(r.rule.feeCents / 100).toLocaleString()}` : ", fee varies"}`, kind: "franchise", done: false });
     cal.sort((x, y) => x.date.localeCompare(y.date));
     return { staff: a.staff, filings, fees: (fees ?? []) as any[], calendar: cal, filingStatus };
   });
