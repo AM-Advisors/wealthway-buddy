@@ -186,7 +186,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
         <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Everyone investing in this fund. Click a name to see everything about that investor.</p></div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button className="flex-1 sm:flex-none" onClick={() => setChooser(true)}><Plus className="mr-1 h-4 w-4" />Add investor</Button>
-          <Button variant="outline" onClick={copyLink}><LinkIcon className="mr-1 h-4 w-4" />Copy link</Button>
+          <Button variant="outline" data-view-safe onClick={copyLink}><LinkIcon className="mr-1 h-4 w-4" />Copy link</Button>
           {isStaff && <FundDriveIntakeButton fundId={fundId} onApplied={() => { void qc.invalidateQueries(); }} />}
         </div>
       </div>

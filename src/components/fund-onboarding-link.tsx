@@ -37,7 +37,7 @@ export function FundOnboardingLinkCard({ fundId }: { fundId: string }) {
       {d.url ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/40 px-3 py-2 text-xs">{d.url}</code>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-view-safe>
             <Button size="sm" onClick={() => copyText(d.url!, "Link copied")}><Copy className="mr-1 h-3.5 w-3.5" />Copy Link</Button>
             <Button size="sm" variant="outline" asChild><a href={d.url} target="_blank" rel="noreferrer"><ExternalLink className="mr-1 h-3.5 w-3.5" />Preview Investor Experience</a></Button>
             <Button size="sm" variant="outline" onClick={() => copyText(invitationMessage(d.fundName, d.url!), "Invitation message copied")}><MessageSquare className="mr-1 h-3.5 w-3.5" />Copy Invitation Message</Button>

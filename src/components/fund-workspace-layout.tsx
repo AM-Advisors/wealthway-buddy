@@ -25,6 +25,47 @@ import { regTypeLabel } from "@/lib/reg-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { readOnlyAllowsKey, readOnlyAllowsTarget } from "@/lib/read-only-view";
+import type { ReactNode, SyntheticEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
+
+/**
+ * Client View content. Blocks every click, key and edit except on elements
+ * marked data-view-safe (copy a link, open a preview), which change nothing.
+ * Replaces the HTML inert attribute, which cannot make any exception.
+ */
+function ReadOnlyRegion({ className, children }: { className: string; children: ReactNode }) {
+  const block = (e: SyntheticEvent) => {
+    if (readOnlyAllowsTarget(e.target as HTMLElement)) return;
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const blockKey = (e: ReactKeyboardEvent) => {
+    if (readOnlyAllowsKey(e.key, { ctrlOrMeta: e.ctrlKey || e.metaKey, target: e.target as HTMLElement })) return;
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  return (
+    <div
+      className={className}
+      aria-readonly="true"
+      data-mode="client-view"
+      onPointerDownCapture={block}
+      onMouseDownCapture={block}
+      onClickCapture={block}
+      onDoubleClickCapture={block}
+      onAuxClickCapture={block}
+      onKeyDownCapture={blockKey}
+      onBeforeInputCapture={block}
+      onPasteCapture={block}
+      onCutCapture={block}
+      onDropCapture={block}
+      onDragStartCapture={block}
+      onSubmitCapture={block}
+    >
+      {children}
+    </div>
+  );
+}
 
 const groups = [
   { label: "Fund", items: [
@@ -146,10 +187,10 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
         </nav>
       </header>
       {clientView ? (
-        // Read-only: sections can be switched above, nothing below can be clicked or changed. Staff-only notes are hidden.
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 [&_[data-staff-only]]:hidden" aria-readonly="true" data-mode="client-view" inert>
+        // Read-only: sections can be switched above, nothing below can be clicked or changed except copy/preview actions marked data-view-safe. Staff-only notes are hidden.
+        <ReadOnlyRegion className="mx-auto max-w-7xl px-4 py-6 sm:px-6 [&_[data-staff-only]]:hidden">
           <Outlet />
-        </div>
+        </ReadOnlyRegion>
       ) : (
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
           <Outlet />
