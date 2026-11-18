@@ -120,12 +120,12 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       .eq("id", application.offering_id)
       .maybeSingle();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("legal_name, email")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (!profile?.email) throw new Error("Add your email to your profile before signing.");
+    // Newer invited investors may have no legacy profiles row; use the confirmed login email.
+    const { accountContactFor } = await import("@/lib/account-contact.server");
+    const { supabaseAdmin: contactDb } = await import("@/integrations/supabase/client.server");
+    const contact = await accountContactFor(contactDb as any, userId);
+    if (!contact.email) throw new Error("Add your email to your profile before signing.");
+    const profile = { email: contact.email, legal_name: contact.legalName };
 
     // Named signer from "Completed by" (e.g. the GP of an investing fund or family office):
     // they receive the signature request by email; the investor never receives their signing link.

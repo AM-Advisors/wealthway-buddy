@@ -95,7 +95,10 @@ export async function docContext(userId: string, onboardingId: string) {
   const address = [sp.address_line1, sp.address_line2, sp.city, [sp.region, sp.postal_code].filter(Boolean).join(" "), sp.country]
     .map((v: unknown) => String(v ?? "").trim()).filter(Boolean).join(", ");
   if (address) profile["address"] = address;
-  if ((me as any)?.email) profile["email"] = (me as any).email;
+  // Newer invited investors may have no legacy profiles row; fall back to the confirmed login email.
+  const { accountContactFor } = await import("@/lib/account-contact.server");
+  const contactEmail = (me as any)?.email || (ob.investor_user_id ? (await accountContactFor(db as any, ob.investor_user_id)).email : null);
+  if (contactEmail) profile["email"] = contactEmail;
   for (const [k, p] of Object.entries(prov)) profile[k] = p.currentValue;
   profile["profile_type"] = pt;
   const profileType = pt;

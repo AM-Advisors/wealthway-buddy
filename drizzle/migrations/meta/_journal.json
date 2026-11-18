@@ -2948,6 +2948,13 @@
       "when": 1795028142499,
       "tag": "0420_snoretox_accreditation_not_required_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 421,
+      "version": "7",
+      "when": 1795036525104,
+      "tag": "0421_ensure_account_profiles",
+      "breakpoints": true
     }
   ]
 }
