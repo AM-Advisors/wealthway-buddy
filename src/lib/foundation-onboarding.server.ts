@@ -421,7 +421,7 @@ export async function getFoundationReleaseControls(userId: string) {
   const events = await releaseEvents(db);
   const state = releaseState(events);
   return {
-    userId, canRequest: a.roles.some((r) => r === "admin" || r === "super_admin"), canApprove: a.superAdmin,
+    userId, canRequest: a.roles.some((r) => r === "admin" || r === "super_admin"), canApprove: a.superAdmin, superAdmin: a.superAdmin,
     flags: await foundationFlags(db),
     components: FOUNDATION_COMPONENTS.map((c) => ({ key: c.key, name: c.name, capability: c.readiness.capability, available: c.readiness.available, missing: c.readiness.missing, state: state[c.key] })),
     events: [...events].reverse().slice(0, 100),
@@ -449,7 +449,10 @@ export async function decideFoundationRelease(userId: string, d: { component: Co
   const st = state[d.component][d.dimension];
   if (d.reason.trim().length < 10) throw new Error("Give the reason (at least 10 characters).");
   if (d.action === "approved") {
-    const problem = releaseApprovalProblem({ request: st.openRequest, approverId: userId, roles: a.roles, deliveryReleased: state[d.component].delivery.released });
+    // Existing Super Admin exception: approving one's own request needs a reason recorded first (same as the database rule).
+    const own = !!st.openRequest && st.openRequest.actor_id === userId;
+    const waived = own && (await (await import("@/lib/self-approval.server")).selfApprove(userId, "foundation_release", [st.openRequest!.id]));
+    const problem = releaseApprovalProblem({ request: st.openRequest, approverId: waived ? "__other__" : userId, roles: a.roles, deliveryReleased: state[d.component].delivery.released });
     if (problem) throw new Error(problem);
   }
   if (d.action === "withdrawn" && (!st.openRequest || (st.openRequest.actor_id !== userId && !a.superAdmin))) throw new Error("Only the requester or a Super Admin can withdraw an open request.");

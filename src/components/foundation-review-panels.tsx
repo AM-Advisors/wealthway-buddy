@@ -187,11 +187,12 @@ export function FoundationReleaseControls() {
   const reqFn = useServerFn(requestFoundationRelease);
   const decFn = useServerFn(decideFoundationRelease);
   const q = useQuery({ queryKey: ["foundation-release-controls"], queryFn: () => loadFn() });
+  const d0 = () => q.data as any;
   const [form, setForm] = useState<{ component: string; dimension: ReleaseDimension } | null>(null);
   const [ev, setEv] = useState<ReleaseEvidenceInput>({});
   const [reason, setReason] = useState("");
   const refresh = () => qc.invalidateQueries({ queryKey: ["foundation-release-controls"] });
-  const request = useMutation({ mutationFn: () => reqFn({ data: { component: form!.component as any, dimension: form!.dimension, evidence: ev, reason } }), onSuccess: () => { toast.success("Release requested. A different Super Admin must approve it."); setForm(null); setEv({}); setReason(""); refresh(); }, onError: errMsg });
+  const request = useMutation({ mutationFn: () => reqFn({ data: { component: form!.component as any, dimension: form!.dimension, evidence: ev, reason } }), onSuccess: () => { toast.success(d0()?.superAdmin ? "Release requested. Approve it next; as a Super Admin you'll be asked for a reason." : "Release requested. A different Super Admin must approve it."); setForm(null); setEv({}); setReason(""); refresh(); }, onError: errMsg });
   const decide = useMutation({ mutationFn: (v: any) => decFn({ data: v }), onSuccess: () => { toast.success("Recorded"); refresh(); }, onError: errMsg });
   if (q.isPending) return <Skeleton className="h-24 w-full" />;
   if (q.error) return null;
@@ -205,7 +206,7 @@ export function FoundationReleaseControls() {
         {st.openRequest && <p className="text-xs text-muted-foreground">Requested {new Date(st.openRequest.created_at).toLocaleDateString()}: {st.openRequest.reason}</p>}
         <div className="flex flex-wrap gap-1">
           {!st.released && !st.openRequest && d.canRequest && <Button size="sm" variant="outline" onClick={() => { setForm({ component: c.key, dimension: dim }); setEv({}); setReason(""); }}>Request</Button>}
-          {st.openRequest && d.canApprove && st.openRequest.actor_id !== d.userId && <Button size="sm" disabled={decide.isPending || (dim === "commercial" && !c.state.delivery.released)} onClick={() => { const r = ask("Reason for approving this release (at least 10 characters)"); if (r && window.confirm("Approve this release?")) decide.mutate({ component: c.key, dimension: dim, action: "approved", reason: r }); }}>Approve</Button>}
+          {st.openRequest && d.canApprove && (st.openRequest.actor_id !== d.userId || d.superAdmin) && <Button size="sm" disabled={decide.isPending || (dim === "commercial" && !c.state.delivery.released)} onClick={() => { const r = ask("Reason for approving this release (at least 10 characters)"); if (r && window.confirm("Approve this release?")) decide.mutate({ component: c.key, dimension: dim, action: "approved", reason: r }); }}>Approve</Button>}
           {st.openRequest && (st.openRequest.actor_id === d.userId || d.canApprove) && <Button size="sm" variant="ghost" onClick={() => { const r = ask("Why withdraw this request?"); if (r) decide.mutate({ component: c.key, dimension: dim, action: "withdrawn", reason: r }); }}>Withdraw</Button>}
           {st.released && d.canApprove && <Button size="sm" variant="ghost" onClick={() => { const r = ask("Why revoke this release?"); if (r && window.confirm("Revoke? Blocks apply again immediately.")) decide.mutate({ component: c.key, dimension: dim, action: "revoked", reason: r }); }}>Revoke</Button>}
         </div>
@@ -216,7 +217,7 @@ export function FoundationReleaseControls() {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Service release controls</CardTitle>
-        <CardDescription className="text-base">Each component is released on its own, first for delivery and then commercially, with recorded evidence and a different Super Admin's approval. Turning a switch on never releases anything.</CardDescription>
+        <CardDescription className="text-base">Each component is released on its own, first for delivery and then commercially, with recorded evidence and a different Super Admin's approval (a Super Admin may approve their own request with a written reason). Turning a switch on never releases anything.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="overflow-x-auto"><table className="w-full text-sm">
