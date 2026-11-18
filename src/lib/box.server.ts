@@ -491,3 +491,33 @@ export async function cancelSignRequest(signRequestId: string): Promise<BoxSignD
   });
   return parseSignDetail(await res.json());
 }
+
+// ---- Folder reading for fund intake (read-only) ----
+const sharedHeader = (sharedUrl?: string | null): Record<string, string> => (sharedUrl ? { BoxApi: `shared_link=${sharedUrl}` } : {});
+
+/** Resolves a shared link to the item it points at. */
+export async function resolveSharedItem(sharedUrl: string): Promise<{ id: string; type: string; name: string }> {
+  const res = await boxFetch(`${API}/shared_items?fields=id,type,name`, { headers: sharedHeader(sharedUrl) });
+  const j = (await res.json()) as any;
+  return { id: String(j.id), type: String(j.type), name: String(j.name ?? "") };
+}
+
+export type BoxEntry = { id: string; type: "file" | "folder" | string; name: string; size: number | null };
+
+/** Lists one folder's items (up to 1,000), through a shared link when given. */
+export async function listFolderItems(folderId: string, sharedUrl?: string | null): Promise<BoxEntry[]> {
+  const out: BoxEntry[] = [];
+  for (let offset = 0; offset < 1000; offset += 200) {
+    const res = await boxFetch(`${API}/folders/${encodeURIComponent(folderId)}/items?fields=id,type,name,size&limit=200&offset=${offset}`, { headers: sharedHeader(sharedUrl) });
+    const j = (await res.json()) as any;
+    for (const e of j.entries ?? []) out.push({ id: String(e.id), type: String(e.type), name: String(e.name ?? ""), size: e.size ?? null });
+    if ((j.entries ?? []).length < 200) break;
+  }
+  return out;
+}
+
+/** Downloads a file's bytes, through a shared link when given. */
+export async function downloadSharedFile(fileId: string, sharedUrl?: string | null): Promise<Uint8Array> {
+  const res = await boxFetch(`${API}/files/${encodeURIComponent(fileId)}/content`, { headers: sharedHeader(sharedUrl) });
+  return new Uint8Array(await res.arrayBuffer());
+}
