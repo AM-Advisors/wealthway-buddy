@@ -22,3 +22,23 @@ describe("wix contact sync", () => {
     expect(r.rows).toHaveLength(0);
   });
 });
+
+describe("wix name fill", () => {
+  it("fills an entity contact's first and last name when both are blank", () => {
+    const r = planSync([h({ id: "a", profile: "Advanced Investment Corporation", person: { email: "b@x.com" } })],
+      [w({ id: "x", full: "Benjamin Bassichis", entity: "Advanced Investment Corporation", email: "b@x.com", details: { firstName: "Benjamin", lastName: "Bassichis" } })]);
+    expect(r.rows[0]!.fills.slice(0, 2)).toEqual([
+      { field: "legal_first_name", label: "First name", value: "Benjamin" },
+      { field: "legal_last_name", label: "Last name", value: "Bassichis" },
+    ]);
+  });
+  it("never replaces a name that is already partly entered", () => {
+    const r = planSync([h({ id: "a", first: "Ben", profile: "Advanced Investment Corporation" })],
+      [w({ id: "x", entity: "Advanced Investment Corporation", details: { firstName: "Benjamin", lastName: "Bassichis" } })]);
+    expect(r.rows[0]!.fills.some((f) => f.field.startsWith("legal_"))).toBe(false);
+  });
+  it("skips joint names it cannot split safely", () => {
+    const r = planSync([h({ id: "a", person: { email: "v@x.com" } })], [w({ id: "x", full: "Victor/Gabriela Barrionuevo", email: "v@x.com" })]);
+    expect(r.rows[0]!.fills.some((f) => f.field.startsWith("legal_"))).toBe(false);
+  });
+});

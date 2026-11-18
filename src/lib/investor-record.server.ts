@@ -646,7 +646,7 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
         openConflicts: open.filter((s) => s.source !== "fund_manager").length, openReviews: open.filter((s) => s.source === "fund_manager").length,
       });
       return {
-        onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? "Investor", email: p?.email ?? null,
+        onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? pr?.display_label ?? "Investor", nameMissing: !personName(p), email: p?.email ?? null,
         profileLabel: pr?.display_label ?? null, profileType: pr ? PROFILE_TYPE_LABELS[formProfileType(pr.profile_type)] : null,
         amountCents: r.requested_amount_cents, commitmentCents: r.commitment_amount_cents,
         ...(actor.isStaff ? { acceptedCents: r.accepted_amount_cents } : {}),
@@ -705,7 +705,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   } : null;
   return {
     viewer: role, fund: offering,
-    overview: { name: personName(person) ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at), investorUserId: actor.isStaff ? row.investor_user_id ?? null : null },
+    overview: { name: personName(person) ?? profile?.display_label ?? profile?.legal_name ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at), investorUserId: actor.isStaff ? row.investor_user_id ?? null : null },
     person: safePerson,
     profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null } : null,
     related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status })),

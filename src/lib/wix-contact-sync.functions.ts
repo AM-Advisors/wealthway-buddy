@@ -1,4 +1,4 @@
-/** Staff-only: fill blank investor contact details in a linked Harmonious fund from the Wix copy. Never overwrites, never emails. */
+/** Staff-only: fill blank investor names and contact details in a linked Harmonious fund from the Wix copy. Never overwrites, never emails. */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
@@ -38,6 +38,8 @@ export const applyWixContactSync = createServerFn({ method: "POST" }).middleware
       // Blank-only guard at write time: re-read and drop anything filled since the preview.
       const { data: cur } = await a.from("persons").select("*").eq("id", r.personId).maybeSingle();
       for (const k of Object.keys(patch)) if (cur && cur[k] != null && String(cur[k]).trim() !== "") delete patch[k];
+      // A name entered since the preview keeps both name parts as they are.
+      if (cur && (String(cur.legal_first_name ?? "").trim() || String(cur.legal_last_name ?? "").trim())) { delete patch["legal_first_name"]; delete patch["legal_last_name"]; }
       if (!Object.keys(patch).length) continue;
       const { error } = await a.from("persons").update(patch).eq("id", r.personId);
       if (error) throw new Error(`Couldn't update ${r.investor}.`);

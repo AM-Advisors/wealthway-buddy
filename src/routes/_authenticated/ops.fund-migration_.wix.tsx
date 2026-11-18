@@ -197,7 +197,7 @@ function InvestorTable({ invs, data, currentFundId }: { invs: Inv[]; data: Data;
       <Table>
         <TableHeader><TableRow>
           <TableHead className="w-8"><Checkbox aria-label="Select all" checked={invs.length > 0 && picked.size === invs.length} onCheckedChange={(c) => setPicked(c ? new Set(invs.map((i) => i.id)) : new Set())} /></TableHead>
-          <TableHead>Investor</TableHead><TableHead>Email</TableHead><TableHead className="text-right">Committed</TableHead><TableHead className="text-right">Received</TableHead><TableHead>Added in Wix</TableHead>
+          <TableHead>Investor</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead className="text-right">Committed</TableHead><TableHead className="text-right">Received</TableHead><TableHead>Added in Wix</TableHead>
         </TableRow></TableHeader>
         <TableBody>{invs.map((i) => (
           <TableRow key={i.id}>
@@ -227,12 +227,13 @@ type Fill = SyncPlan["rows"][number]["fills"][number];
 function splitFills(fills: Fill[]) {
   const pick = (re: RegExp) => fills.find((f) => re.test(f.label))?.value ?? "";
   const email = pick(/^email/i), phone = pick(/^phone/i);
+  const name = [pick(/^first name/i), pick(/^last name/i)].filter(Boolean).join(" ");
   const line1 = [pick(/^address$/i), pick(/address line 2/i)].filter(Boolean).join(", ");
   const cityLine = [pick(/^city/i), [pick(/^state/i), pick(/^postal/i)].filter(Boolean).join(" ")].filter(Boolean).join(", ");
   const country = pick(/^country/i);
-  const known = /^(email|phone|address$|address line 2|city|state|postal|country)/i;
+  const known = /^(first name|last name|email|phone|address$|address line 2|city|state|postal|country)/i;
   const other = fills.filter((f) => !known.test(f.label));
-  return { email, phone, line1, cityLine, country, other };
+  return { name, email, phone, line1, cityLine, country, other };
 }
 function ContactSync({ wixFundId }: { wixFundId: string }) {
   const preview = useServerFn(previewWixContactSync), apply = useServerFn(applyWixContactSync);
@@ -252,7 +253,7 @@ function ContactSync({ wixFundId }: { wixFundId: string }) {
     <div className="space-y-3 border-t pt-3">
       <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" disabled={busy} onClick={load}>{busy && !plan ? "Checking…" : plan ? "Check again" : "Fill investor details from Wix"}</Button>
-        <span className="text-xs text-muted-foreground">Fills empty email, phone and address only. Nothing already in Harmonious is replaced and no one is emailed.</span>
+        <span className="text-xs text-muted-foreground">Fills empty names, email, phone and address only. Nothing already in Harmonious is replaced and no one is emailed.</span>
       </div>
       {plan && (
         <div className="space-y-3 rounded-md border p-3 text-sm">
@@ -268,12 +269,13 @@ function ContactSync({ wixFundId }: { wixFundId: string }) {
               {shown.length === 0 ? <p className="text-muted-foreground">{withFills.length ? "No investors match your search." : "Nothing to fill. Every matched investor already has these details."}</p> : (
                 <div className="max-h-[28rem] overflow-auto rounded-md border">
                   <Table>
-                    <TableHeader><TableRow><TableHead>Investor</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead><TableHead>Address</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Investor</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead><TableHead>Address</TableHead></TableRow></TableHeader>
                     <TableBody>{shown.map((r) => {
                       const s = splitFills(r.fills);
                       return (
                         <TableRow key={r.onboardingId} className="align-top">
                           <TableCell className="font-medium">{r.investor}</TableCell>
+                          <TableCell>{s.name || empty}</TableCell>
                           <TableCell className="break-all">{s.email ? s.email.toLowerCase() : empty}</TableCell>
                           <TableCell className="whitespace-nowrap">{s.phone || empty}</TableCell>
                           <TableCell>

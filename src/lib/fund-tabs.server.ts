@@ -116,7 +116,8 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
     if (docs !== "Signed" && docs !== "Signed (outside platform)") missing.push("Signed subscription");
     return {
       id: o.id as string,
-      name: personName(p),
+      // No contact name yet: show the investing entity's name rather than a placeholder.
+      name: personName(p) === "Unnamed investor" && o.investment_profiles?.legal_name ? o.investment_profiles.legal_name : personName(p),
       profileName: o.investment_profiles?.legal_name ?? null,
       email: p.email ?? null,
       phone: p.phone ?? null,
