@@ -416,6 +416,35 @@ export function signingGate(input: {
   return { ok: true, snapshotId: s.id, version: s.version };
 }
 
+/**
+ * Investor-entered (no staff-prepared draft) investments: the explicit "Review & Sign" request
+ * records the exact current document version as reviewed by that investor, and the signing
+ * ceremony shows the full document before any signature. Staff-prepared drafts keep the
+ * separate "I've reviewed this document" step. Missing information is never papered over.
+ */
+export function ownEntrySnapshotPlan(input: {
+  hasPreparedDraft: boolean; missing: number; latest: SnapshotRow | null;
+  currentMergeValues: Record<string, string>; investorUserId: string;
+}): "none" | "create" | "mark_reviewed" {
+  if (input.hasPreparedDraft || input.missing > 0) return "none";
+  const s = input.latest;
+  if (!s || ["stale", "superseded"].includes(s.status)) return "create";
+  const current = { ...input.currentMergeValues, effective_date: s.merge_values?.["effective_date"] ?? input.currentMergeValues["effective_date"] ?? "" };
+  if (fingerprint(s.merge_values) !== fingerprint(current)) return "create";
+  if (s.status === "prepared") return "mark_reviewed";
+  const reviewed = (s.status === "reviewed" || s.status === "sent_for_signature") && s.reviewed_by === input.investorUserId && s.reviewed_fingerprint === fingerprint(s.merge_values);
+  return reviewed ? "none" : "create";
+}
+
+/** Investing-party name for documents: the investment profile, then the linked person, then the login profile. */
+export function investingPartyName(input: {
+  investmentProfileLegalName?: string | null; personFirst?: string | null; personLast?: string | null; loginLegalName?: string | null;
+}): string | null {
+  const t = (v?: string | null) => (v ?? "").trim();
+  const person = [t(input.personFirst), t(input.personLast)].filter(Boolean).join(" ");
+  return t(input.investmentProfileLegalName) || person || t(input.loginLegalName) || null;
+}
+
 /** A Box completion counts only for the current snapshot version. */
 export function completionSatisfiesCurrent(sig: { snapshot_id?: string | null } | null, currentSnapshotId: string | null): boolean {
   if (!sig) return false;

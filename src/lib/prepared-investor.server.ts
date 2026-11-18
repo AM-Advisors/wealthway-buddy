@@ -1,5 +1,5 @@
 import type { PreparedField } from "@/lib/investor-prep-model";
-import { type FieldProvenance, confirmedFacts, docApplies, effectiveResolverFacts, initialProvenance, mergeDocument, requiredMergeFields, reviewField, signatureConfig } from "@/lib/prepared-investor-workflow";
+import { type FieldProvenance, confirmedFacts, docApplies, effectiveResolverFacts, fingerprint, initialProvenance, investingPartyName, mergeDocument, ownEntrySnapshotPlan, requiredMergeFields, reviewField, signatureConfig } from "@/lib/prepared-investor-workflow";
 
 type ProvOnboarding = { id: string; offering_id: string; invitation_id: string | null };
 
@@ -62,10 +62,10 @@ export async function docContext(userId: string, onboardingId: string) {
   const c = await ownContext(userId, onboardingId);
   const { db, ob, draft, prov } = c;
   const { data: fund } = await db.from("offerings").select("id, name, legal_entity_name").eq("id", ob.offering_id).maybeSingle();
-  const { data: investment, error: investmentError } = await db.from("investor_onboardings").select("investment_profile_id, offering_class_key").eq("id", ob.id).single();
+  const { data: investment, error: investmentError } = await db.from("investor_onboardings").select("investment_profile_id, offering_class_key, person_id").eq("id", ob.id).single();
   if (investmentError || !investment) throw new Error("Investment document context isn't available.");
   const { data: storedProfile, error: profileError } = investment.investment_profile_id
-    ? await db.from("investment_profiles").select("profile_type").eq("id", investment.investment_profile_id).maybeSingle()
+    ? await db.from("investment_profiles").select("profile_type, legal_name, person_id, address_line1, address_line2, city, region, postal_code, country").eq("id", investment.investment_profile_id).maybeSingle()
     : { data: null, error: null };
   if (profileError) throw new Error("Investment profile isn't available.");
   const { data: docs, error: docsError } = await db.from("offering_documents")
@@ -80,7 +80,21 @@ export async function docContext(userId: string, onboardingId: string) {
   );
   const profile: Record<string, unknown> = {};
   const { data: me } = await db.from("profiles").select("legal_name, email").eq("user_id", ob.investor_user_id).maybeSingle();
-  if ((me as any)?.legal_name) profile["legal_name"] = (me as any).legal_name;
+  // The investing party (investment profile / its person) names the documents; the login profile is only a last fallback.
+  const personId = (storedProfile as any)?.person_id ?? (investment as any).person_id ?? null;
+  const { data: person } = personId
+    ? await db.from("persons").select("legal_first_name, legal_last_name").eq("id", personId).maybeSingle()
+    : { data: null };
+  const partyName = investingPartyName({
+    investmentProfileLegalName: (storedProfile as any)?.legal_name, personFirst: (person as any)?.legal_first_name,
+    personLast: (person as any)?.legal_last_name, loginLegalName: (me as any)?.legal_name,
+  });
+  if (partyName) profile["legal_name"] = partyName;
+  const sp: any = storedProfile ?? {};
+  if (!["unknown", "individual", "joint"].includes(String(sp.profile_type ?? "individual")) && sp.legal_name) profile["entity_name"] = sp.legal_name;
+  const address = [sp.address_line1, sp.address_line2, sp.city, [sp.region, sp.postal_code].filter(Boolean).join(" "), sp.country]
+    .map((v: unknown) => String(v ?? "").trim()).filter(Boolean).join(", ");
+  if (address) profile["address"] = address;
   if ((me as any)?.email) profile["email"] = (me as any).email;
   for (const [k, p] of Object.entries(prov)) profile[k] = p.currentValue;
   profile["profile_type"] = pt;
@@ -95,3 +109,37 @@ export async function currentMerge(x: Awaited<ReturnType<typeof docContext>>, d:
   return mergeDocument({ profile: { ...x.profile }, investment: { commitment_cents: x.commitment }, fund: { name: x.fund?.name ?? "", legal_entity_name: x.fund?.legal_entity_name ?? null }, effectiveDate: new Date().toISOString().slice(0, 10) }, requiredMergeFields(x.profileType, cfg.mode));
 }
 
+
+/**
+ * Investor-entered investments (no staff-prepared draft): before the signing gate, record the
+ * exact current document version as reviewed by this investor. Append-only: older versions are
+ * superseded, never rewritten. Staff-prepared drafts are untouched (their review step remains).
+ */
+export async function ensureOwnEntrySnapshot(
+  x: Awaited<ReturnType<typeof docContext>>, d: any, merged: Awaited<ReturnType<typeof currentMerge>>, userId: string,
+) {
+  const { data: snaps } = await x.db.from("investor_document_snapshots").select("*")
+    .eq("onboarding_id", x.ob.id).eq("document_id", d.id).order("version", { ascending: false }).limit(1);
+  const latest = ((snaps ?? []) as any[])[0] ?? null;
+  const plan = ownEntrySnapshotPlan({ hasPreparedDraft: !!x.draft, missing: merged.missing.length, latest, currentMergeValues: merged.values, investorUserId: userId });
+  if (plan === "none") return;
+  const now = new Date().toISOString();
+  if (plan === "mark_reviewed") {
+    const { error } = await x.db.from("investor_document_snapshots")
+      .update({ status: "reviewed", reviewed_at: now, reviewed_by: userId, reviewed_fingerprint: fingerprint(latest.merge_values) })
+      .eq("id", latest.id).eq("status", "prepared");
+    if (error) throw new Error("The document couldn't be prepared for signing. Please try again.");
+    return;
+  }
+  if (latest && latest.status !== "superseded" && latest.status !== "sent_for_signature") {
+    await x.db.from("investor_document_snapshots").update({ status: "superseded" }).eq("id", latest.id);
+  }
+  const cfg = signatureConfig({ ...d, template_ready: true });
+  const { error } = await x.db.from("investor_document_snapshots").insert({
+    onboarding_id: x.ob.id, offering_id: x.ob.offering_id, document_id: d.id, version: (latest?.version ?? 0) + 1,
+    template_ref: String(d.template_key ?? d.file_path ?? d.id), profile_fingerprint: fingerprint(x.profile),
+    merge_values: merged.values, merge_sources: merged.sources, signing_mode: cfg.mode, created_by: userId,
+    status: "reviewed", reviewed_at: now, reviewed_by: userId, reviewed_fingerprint: fingerprint(merged.values),
+  });
+  if (error) throw new Error("The document couldn't be prepared for signing. Please try again.");
+}

@@ -94,6 +94,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         const docRow = x.chosen.find((d: any) => d.id === doc.id);
         if (!docRow) throw new Error("Signing unavailable, this document doesn't apply to your investment.");
         const merged = await pis.currentMerge(x, docRow);
+        await pis.ensureOwnEntrySnapshot(x, docRow, merged, userId);
         const { data: snaps } = await g.from("investor_document_snapshots").select("*")
           .eq("onboarding_id", (ob as any).id).eq("document_id", doc.id).order("version", { ascending: false }).limit(1);
         const latest = ((snaps ?? []) as any[])[0] ?? null;
