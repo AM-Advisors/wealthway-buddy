@@ -409,9 +409,9 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                   {peopleHits.map((p) => (
                     <SidebarMenuItem key={p.id}>
                       <SidebarMenuButton asChild className="h-auto py-1.5">
-                        <Link to="/ops/people/$userId" params={{ userId: p.id }} onClick={close} className="flex flex-col items-start">
+                        <Link to="/ops/people/$userId" params={{ userId: p.userId ?? p.id }} onClick={close} className="flex flex-col items-start">
                           <span className="truncate text-sm">{p.name || p.email}</span>
-                          <span className="truncate text-[11px] text-sidebar-foreground/60">{p.email || "Person record"}</span>
+                          <span className="truncate text-[11px] text-sidebar-foreground/60">{p.email || "Person record"}{p.userId ? "" : " · no login yet"}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

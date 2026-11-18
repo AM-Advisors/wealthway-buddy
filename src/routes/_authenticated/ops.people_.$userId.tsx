@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getPersonActivity } from "@/lib/user-access.functions";
+import { getAccountSubject, getPersonActivity } from "@/lib/user-access.functions";
 import { UserInsights } from "@/components/user-insights";
 import { PersonKycUpdate } from "@/components/person-kyc-update";
 import { PersonAccountsCard } from "@/components/person-accounts-card";
@@ -35,6 +35,27 @@ const SESSION_LABELS = { unknown: "Status unknown", sign_in_recorded: "Sign-in r
 
 function PersonActivityPage() {
   const { userId } = Route.useParams();
+  const navigate = useNavigate();
+  const resolve = useServerFn(getAccountSubject);
+  const subject = useQuery({ queryKey: ["account-subject", userId], queryFn: () => resolve({ data: { id: userId } }), retry: false, staleTime: 300_000 });
+  const s = subject.data;
+  // Older links and search results may carry a person record id; open that person's login account instead.
+  useEffect(() => {
+    if (s?.kind === "person_with_login" && s.userId !== userId) void navigate({ to: "/ops/people/$userId", params: { userId: s.userId }, replace: true });
+  }, [s, userId, navigate]);
+  if (subject.isLoading || s?.kind === "person_with_login") return <main className="mx-auto max-w-5xl px-4 py-10"><p className="text-sm text-muted-foreground">Loading…</p></main>;
+  if (subject.error) return <main className="mx-auto max-w-5xl px-4 py-10"><p className="text-sm text-destructive">{(subject.error as Error).message}</p></main>;
+  if (s?.kind === "person_without_login" || s?.kind === "unknown") return (
+    <main className="mx-auto max-w-5xl space-y-4 px-4 py-10">
+      <Link to="/ops/people-access" search={{ tab: "others" }} className="text-sm text-primary hover:underline">← People & Access</Link>
+      <h1 className="text-3xl">{s.kind === "person_without_login" ? (s.name || s.email || "Person record") : "Account not found"}</h1>
+      <p className="text-sm">{s.kind === "person_without_login" ? "This person hasn't created a login yet, so there is no sign-in or activity to show. Activity appears here once they sign in." : "No login account or person record matches this address."}</p>
+    </main>
+  );
+  return <AccountActivity userId={userId} />;
+}
+
+function AccountActivity({ userId }: { userId: string }) {
   const load = useServerFn(getPersonActivity);
   const [cursor, setCursor] = useState<string | undefined>();
   const [from, setFrom] = useState("");

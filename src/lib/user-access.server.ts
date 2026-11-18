@@ -389,6 +389,17 @@ export function isTestRow(t: { users: Set<string>; persons: Set<string>; clients
   return (r.client_id && t.clients.has(r.client_id)) || (r.investor_user_id && t.users.has(r.investor_user_id)) || (r.owner_user_id && t.users.has(r.owner_user_id)) || (r.user_id && t.users.has(r.user_id)) || (r.person_id && t.persons.has(r.person_id));
 }
 
+/** View account address id → login account (person record ids resolve to their linked login). Read-only. */
+export async function accountSubject(viewer: string, id: string) {
+  const db = await requireAccessViewer(viewer);
+  const [{ data: auth }, { data: person }] = await Promise.all([
+    db.auth.admin.getUserById(id).catch(() => ({ data: null })),
+    db.from("persons").select("user_id, legal_first_name, legal_last_name, preferred_name, email").eq("id", id).maybeSingle(),
+  ]);
+  const { resolveAccountSubject } = await import("@/lib/account-subject-model");
+  return resolveAccountSubject(id, { loginExists: !!(auth as any)?.user, person: (person as any) ?? null });
+}
+
 /** Full activity trail for one user: account, pages, clicks, actions and access changes. Read-only. */
 export async function personActivity(viewer: string, subjectId: string, options: { before?: string | undefined; from?: string | undefined; to?: string | undefined } = {}) {
   const db = await requireAccessViewer(viewer);

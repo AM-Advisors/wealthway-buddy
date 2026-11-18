@@ -33,7 +33,7 @@ export const opsQuickSearchFn = createServerFn({ method: "GET" })
       d.from("clients").select("id, name").ilike("name", `%${s}%`).order("name").limit(5),
       d
         .from("persons")
-        .select("id, legal_first_name, legal_last_name, preferred_name, email")
+        .select("id, user_id, legal_first_name, legal_last_name, preferred_name, email")
         .or(`email.ilike.%${s}%,legal_first_name.ilike.%${s}%,legal_last_name.ilike.%${s}%,preferred_name.ilike.%${s}%`)
         .order("updated_at", { ascending: false })
         .limit(5),
@@ -43,6 +43,6 @@ export const opsQuickSearchFn = createServerFn({ method: "GET" })
     return {
       funds: ((funds.data ?? []) as any[]).map((f) => ({ id: f.id, name: f.name, open: !!f.is_open })),
       clients: ((clients.data ?? []) as any[]).map((c) => ({ id: c.id, name: c.name ?? "" })),
-      people: ((people.data ?? []) as any[]).map((p) => ({ id: p.id, name: personName(p), email: p.email ?? "" })),
+      people: ((people.data ?? []) as any[]).map((p) => ({ id: p.id, userId: (p.user_id as string | null) ?? null, name: personName(p), email: p.email ?? "" })),
     };
   });

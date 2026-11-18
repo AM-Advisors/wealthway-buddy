@@ -52,6 +52,10 @@ export const getAccessHistory = createServerFn({ method: "POST" }).middleware([r
   .validator((d) => z.object({ subjectId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).accessHistory(context.userId, data.subjectId));
 
+export const getAccountSubject = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).accountSubject(context.userId, data.id));
+
 export const getPersonActivity = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ userId: z.string().uuid(), before: z.string().datetime().optional(), from: z.string().datetime().optional(), to: z.string().datetime().optional() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).personActivity(context.userId, data.userId, data));
