@@ -20,6 +20,9 @@ export function InvestorPortalFrame({ onSignOut, children }: { onSignOut: () => 
             <Button asChild variant="ghost" size="sm">
               <Link to="/investor/tax" activeProps={{ className: "bg-accent" }}>Tax</Link>
             </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/feedback" search={{ from: typeof window !== "undefined" ? window.location.pathname : undefined }}>Report a problem</Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={onSignOut}>Sign out</Button>
           </nav>
         </div>

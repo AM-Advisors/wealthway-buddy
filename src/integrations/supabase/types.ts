@@ -50526,6 +50526,237 @@ export type Database = {
         }
         Relationships: []
       }
+      tech_backlog_items: {
+        Row: {
+          area: string
+          created_at: string
+          created_by: string | null
+          custom_service_id: string | null
+          id: string
+          kind: string
+          priority: string
+          roadmap_column: string
+          software_issue_id: string | null
+          source: string
+          source_ref: string | null
+          summary: string
+          target_month: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string
+          created_at?: string
+          created_by?: string | null
+          custom_service_id?: string | null
+          id?: string
+          kind: string
+          priority?: string
+          roadmap_column?: string
+          software_issue_id?: string | null
+          source?: string
+          source_ref?: string | null
+          summary?: string
+          target_month?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          created_by?: string | null
+          custom_service_id?: string | null
+          id?: string
+          kind?: string
+          priority?: string
+          roadmap_column?: string
+          software_issue_id?: string | null
+          source?: string
+          source_ref?: string | null
+          summary?: string
+          target_month?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_backlog_items_custom_service_id_fkey"
+            columns: ["custom_service_id"]
+            isOneToOne: false
+            referencedRelation: "sales_custom_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tech_backlog_items_software_issue_id_fkey"
+            columns: ["software_issue_id"]
+            isOneToOne: false
+            referencedRelation: "software_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tech_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          subject_id: string
+          subject_type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          subject_id: string
+          subject_type: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          subject_id?: string
+          subject_type?: string
+        }
+        Relationships: []
+      }
+      tech_feedback: {
+        Row: {
+          audience: string
+          backlog_item_id: string | null
+          browser: string | null
+          created_at: string
+          details: string
+          id: string
+          kind: string
+          merged_into: string | null
+          page: string | null
+          reporter_user_id: string
+          screenshot_path: string | null
+          status: string
+          status_note: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience: string
+          backlog_item_id?: string | null
+          browser?: string | null
+          created_at?: string
+          details: string
+          id?: string
+          kind: string
+          merged_into?: string | null
+          page?: string | null
+          reporter_user_id: string
+          screenshot_path?: string | null
+          status?: string
+          status_note?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          backlog_item_id?: string | null
+          browser?: string | null
+          created_at?: string
+          details?: string
+          id?: string
+          kind?: string
+          merged_into?: string | null
+          page?: string | null
+          reporter_user_id?: string
+          screenshot_path?: string | null
+          status?: string
+          status_note?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_feedback_backlog_item_id_fkey"
+            columns: ["backlog_item_id"]
+            isOneToOne: false
+            referencedRelation: "tech_backlog_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tech_feedback_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "tech_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tech_release_note_items: {
+        Row: {
+          backlog_item_id: string
+          note_id: string
+        }
+        Insert: {
+          backlog_item_id: string
+          note_id: string
+        }
+        Update: {
+          backlog_item_id?: string
+          note_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_release_note_items_backlog_item_id_fkey"
+            columns: ["backlog_item_id"]
+            isOneToOne: false
+            referencedRelation: "tech_backlog_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tech_release_note_items_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "tech_release_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tech_release_notes: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          published_at: string | null
+          published_by: string | null
+          title: string
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       texas_capital_packet_events: {
         Row: {
           actor_id: string | null
@@ -52835,6 +53066,7 @@ export type Database = {
         | "compliance_reviewer"
         | "executive_approver"
         | "product_reviewer"
+        | "tech_team"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -53337,6 +53569,7 @@ export const Constants = {
         "compliance_reviewer",
         "executive_approver",
         "product_reviewer",
+        "tech_team",
       ],
       assisted_draft_status: [
         "awaiting_client_review",

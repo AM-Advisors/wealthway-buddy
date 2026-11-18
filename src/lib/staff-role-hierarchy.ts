@@ -2,7 +2,7 @@
  * Harmonious leadership & commercial role hierarchy (pure).
  * Decides who may assign which managed role. Server re-checks every change.
  */
-export const MANAGED_ROLES = ["super_admin", "executive", "cro", "sales_management", "account_executive", "bdr", "sales", "account_manager", "marketing_manager", "marketing_specialist", "marketing_contributor", "compliance_reviewer", "executive_approver", "leadership", "product_reviewer"] as const;
+export const MANAGED_ROLES = ["super_admin", "executive", "cro", "sales_management", "account_executive", "bdr", "sales", "account_manager", "marketing_manager", "marketing_specialist", "marketing_contributor", "compliance_reviewer", "executive_approver", "leadership", "product_reviewer", "tech_team"] as const;
 export type ManagedRole = (typeof MANAGED_ROLES)[number];
 
 export const MANAGED_ROLE_LABEL: Record<ManagedRole, string> = {
@@ -21,6 +21,7 @@ export const MANAGED_ROLE_LABEL: Record<ManagedRole, string> = {
   executive_approver: "Executive Approver (Marketing)",
   leadership: "Leadership",
   product_reviewer: "Product Reviewer",
+  tech_team: "Tech team",
 };
 
 export const MANAGED_ROLE_SEES: Record<ManagedRole, string> = {
@@ -39,11 +40,12 @@ export const MANAGED_ROLE_SEES: Record<ManagedRole, string> = {
   executive_approver: "Marketing Studio: give CEO/executive approval (never own items)",
   leadership: "Read-only view of everything: dashboards, people, activity and audit; changes nothing",
   product_reviewer: "Custom services: decide whether new Sales services need design or build, belong in a product, or aren't tech related (never their own)",
+  tech_team: "Tech: triage bug reports and ideas, plan the roadmap and publish What's new",
 };
 
 /** Higher number = more authority. */
 export const ROLE_RANK: Record<ManagedRole, number> = {
-  super_admin: 100, executive: 90, cro: 80, sales_management: 70, account_executive: 30, bdr: 20, sales: 10, account_manager: 10, marketing_manager: 40, marketing_specialist: 15, marketing_contributor: 10, compliance_reviewer: 35, executive_approver: 45, leadership: 50, product_reviewer: 30,
+  super_admin: 100, executive: 90, cro: 80, sales_management: 70, account_executive: 30, bdr: 20, sales: 10, account_manager: 10, marketing_manager: 40, marketing_specialist: 15, marketing_contributor: 10, compliance_reviewer: 35, executive_approver: 45, leadership: 50, product_reviewer: 30, tech_team: 15,
 };
 
 /** Roles that need an Individual account classification. */

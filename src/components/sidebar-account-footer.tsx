@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, ShieldCheck, Sun, UserRound, ExternalLink, Video } from "lucide-react";
+import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, ShieldCheck, Sun, UserRound, ExternalLink, Video, MessageSquareWarning } from "lucide-react";
 import { getNavigation } from "@/lib/navigation";
 import { useThemeMode, type ThemeMode } from "@/lib/theme-mode";
 
@@ -132,6 +132,9 @@ export function SidebarAccountFooter({
                 ))}
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/feedback" search={{ from: typeof window !== "undefined" ? window.location.pathname : undefined }} className="flex items-center gap-2"><MessageSquareWarning className="size-4" /> Report a problem or idea</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("hm:record-screen"))} className="flex items-center gap-2">
                 <Video className="size-4" /> Record my screen
               </DropdownMenuItem>

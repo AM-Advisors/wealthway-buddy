@@ -209,3 +209,24 @@ export async function notifyCustomService(n: { serviceId: string; name: string; 
     console.error("custom service slack notify", e);
   }
 }
+
+/** Tech workspace notice (new report or a caught error spike). Title and context only, never what was typed beyond the title. */
+export async function notifyTech(n: { key: string; head: string; title: string; context: string; path: string }): Promise<void> {
+  try {
+    const db = await admin();
+    const { error: dup } = await db.from("ops_slack_notifications").insert({ dedupe_key: `tech:${n.key}`, kind: "tech", status: "pending" });
+    if (dup) return;
+    const { appUrl } = await import("@/lib/app-origins");
+    const r = await slack("chat.postMessage", {
+      channel: OPS_SLACK_CHANNEL, unfurl_links: false, text: `${n.head} · ${n.title}`,
+      blocks: [
+        { type: "section", text: { type: "mrkdwn", text: `*${n.head}*\n${n.title}` } },
+        { type: "context", elements: [{ type: "mrkdwn", text: n.context }] },
+        { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Open Tech" }, url: appUrl("ops", n.path) }] },
+      ],
+    });
+    await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null }).eq("dedupe_key", `tech:${n.key}`);
+  } catch (e) {
+    console.error("tech slack notify", e);
+  }
+}

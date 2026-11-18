@@ -45,6 +45,7 @@ import { Route as AuthenticatedCapitalRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedClientRouteImport } from './routes/_authenticated/client'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
+import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated/feedback'
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
@@ -309,6 +310,7 @@ import { Route as AuthenticatedOpsTaxRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authenticated/ops.tax-review'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
+import { Route as AuthenticatedOpsTechRouteImport } from './routes/_authenticated/ops.tech'
 import { Route as AuthenticatedOpsValuationsRouteImport } from './routes/_authenticated/ops.valuations'
 import { Route as AuthenticatedOpsVerificationsRouteImport } from './routes/_authenticated/ops.verifications'
 import { Route as AuthenticatedOpsWebhookLogRouteImport } from './routes/_authenticated/ops.webhook-log'
@@ -680,6 +682,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFeedbackRoute = AuthenticatedFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFundDocumentsRoute =
@@ -2192,6 +2199,11 @@ const AuthenticatedOpsTeamRoute = AuthenticatedOpsTeamRouteImport.update({
   path: '/ops/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsTechRoute = AuthenticatedOpsTechRouteImport.update({
+  id: '/ops/tech',
+  path: '/ops/tech',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpsValuationsRoute =
   AuthenticatedOpsValuationsRouteImport.update({
     id: '/ops/valuations',
@@ -3351,6 +3363,7 @@ export interface FileRoutesByFullPath {
   '/client': typeof AuthenticatedClientRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/feedback': typeof AuthenticatedFeedbackRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -3608,6 +3621,7 @@ export interface FileRoutesByFullPath {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/ops/tech': typeof AuthenticatedOpsTechRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/ops/verifications': typeof AuthenticatedOpsVerificationsRoute
   '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
@@ -3841,6 +3855,7 @@ export interface FileRoutesByTo {
   '/capital': typeof AuthenticatedCapitalRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/feedback': typeof AuthenticatedFeedbackRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -4094,6 +4109,7 @@ export interface FileRoutesByTo {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/ops/tech': typeof AuthenticatedOpsTechRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/ops/verifications': typeof AuthenticatedOpsVerificationsRoute
   '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
@@ -4331,6 +4347,7 @@ export interface FileRoutesById {
   '/_authenticated/client': typeof AuthenticatedClientRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/feedback': typeof AuthenticatedFeedbackRoute
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
@@ -4588,6 +4605,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/_authenticated/ops/tech': typeof AuthenticatedOpsTechRoute
   '/_authenticated/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/_authenticated/ops/verifications': typeof AuthenticatedOpsVerificationsRoute
   '/_authenticated/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
@@ -4826,6 +4844,7 @@ export interface FileRouteTypes {
     | '/client'
     | '/dashboard'
     | '/documents'
+    | '/feedback'
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
@@ -5083,6 +5102,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/tax-review'
     | '/ops/team'
+    | '/ops/tech'
     | '/ops/valuations'
     | '/ops/verifications'
     | '/ops/webhook-log'
@@ -5316,6 +5336,7 @@ export interface FileRouteTypes {
     | '/capital'
     | '/dashboard'
     | '/documents'
+    | '/feedback'
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
@@ -5569,6 +5590,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/tax-review'
     | '/ops/team'
+    | '/ops/tech'
     | '/ops/valuations'
     | '/ops/verifications'
     | '/ops/webhook-log'
@@ -5805,6 +5827,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client'
     | '/_authenticated/dashboard'
     | '/_authenticated/documents'
+    | '/_authenticated/feedback'
     | '/_authenticated/fund-documents'
     | '/_authenticated/fund-memo'
     | '/_authenticated/home'
@@ -6062,6 +6085,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/tax-review'
     | '/_authenticated/ops/team'
+    | '/_authenticated/ops/tech'
     | '/_authenticated/ops/valuations'
     | '/_authenticated/ops/verifications'
     | '/_authenticated/ops/webhook-log'
@@ -6604,6 +6628,13 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/documents'
       preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/feedback': {
+      id: '/_authenticated/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof AuthenticatedFeedbackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/fund-documents': {
@@ -8454,6 +8485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/tech': {
+      id: '/_authenticated/ops/tech'
+      path: '/ops/tech'
+      fullPath: '/ops/tech'
+      preLoaderRoute: typeof AuthenticatedOpsTechRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/valuations': {
       id: '/_authenticated/ops/valuations'
       path: '/ops/valuations'
@@ -10095,6 +10133,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientRoute: typeof AuthenticatedClientRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRoute
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
@@ -10310,6 +10349,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTaxReviewRoute: typeof AuthenticatedOpsTaxReviewRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
+  AuthenticatedOpsTechRoute: typeof AuthenticatedOpsTechRoute
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
   AuthenticatedOpsVerificationsRoute: typeof AuthenticatedOpsVerificationsRoute
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
@@ -10420,6 +10460,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientRoute: AuthenticatedClientRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedFeedbackRoute: AuthenticatedFeedbackRoute,
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
@@ -10671,6 +10712,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTaxReviewRoute: AuthenticatedOpsTaxReviewRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
+  AuthenticatedOpsTechRoute: AuthenticatedOpsTechRoute,
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
   AuthenticatedOpsVerificationsRoute: AuthenticatedOpsVerificationsRoute,
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
