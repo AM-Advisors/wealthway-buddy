@@ -291,6 +291,7 @@ import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsPortfolioRouteImport } from './routes/_authenticated/ops.portfolio'
 import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticated/ops.queue'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
+import { Route as AuthenticatedOpsRegulatoryFilingsRouteImport } from './routes/_authenticated/ops.regulatory-filings'
 import { Route as AuthenticatedOpsRemindersRouteImport } from './routes/_authenticated/ops.reminders'
 import { Route as AuthenticatedOpsReportCardsRouteImport } from './routes/_authenticated/ops.report-cards'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
@@ -2091,6 +2092,12 @@ const AuthenticatedOpsReadinessRoute =
     path: '/ops/readiness',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsRegulatoryFilingsRoute =
+  AuthenticatedOpsRegulatoryFilingsRouteImport.update({
+    id: '/ops/regulatory-filings',
+    path: '/ops/regulatory-filings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsRemindersRoute =
   AuthenticatedOpsRemindersRouteImport.update({
     id: '/ops/reminders',
@@ -3602,6 +3609,7 @@ export interface FileRoutesByFullPath {
   '/ops/portfolio': typeof AuthenticatedOpsPortfolioRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/ops/regulatory-filings': typeof AuthenticatedOpsRegulatoryFilingsRoute
   '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/report-cards': typeof AuthenticatedOpsReportCardsRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
@@ -4090,6 +4098,7 @@ export interface FileRoutesByTo {
   '/ops/portfolio': typeof AuthenticatedOpsPortfolioRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/ops/regulatory-filings': typeof AuthenticatedOpsRegulatoryFilingsRoute
   '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/report-cards': typeof AuthenticatedOpsReportCardsRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
@@ -4586,6 +4595,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/portfolio': typeof AuthenticatedOpsPortfolioRoute
   '/_authenticated/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/_authenticated/ops/regulatory-filings': typeof AuthenticatedOpsRegulatoryFilingsRoute
   '/_authenticated/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/_authenticated/ops/report-cards': typeof AuthenticatedOpsReportCardsRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
@@ -5083,6 +5093,7 @@ export interface FileRouteTypes {
     | '/ops/portfolio'
     | '/ops/queue'
     | '/ops/readiness'
+    | '/ops/regulatory-filings'
     | '/ops/reminders'
     | '/ops/report-cards'
     | '/ops/reporting'
@@ -5571,6 +5582,7 @@ export interface FileRouteTypes {
     | '/ops/portfolio'
     | '/ops/queue'
     | '/ops/readiness'
+    | '/ops/regulatory-filings'
     | '/ops/reminders'
     | '/ops/report-cards'
     | '/ops/reporting'
@@ -6066,6 +6078,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/portfolio'
     | '/_authenticated/ops/queue'
     | '/_authenticated/ops/readiness'
+    | '/_authenticated/ops/regulatory-filings'
     | '/_authenticated/ops/reminders'
     | '/_authenticated/ops/report-cards'
     | '/_authenticated/ops/reporting'
@@ -8352,6 +8365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsReadinessRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/regulatory-filings': {
+      id: '/_authenticated/ops/regulatory-filings'
+      path: '/ops/regulatory-filings'
+      fullPath: '/ops/regulatory-filings'
+      preLoaderRoute: typeof AuthenticatedOpsRegulatoryFilingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/reminders': {
       id: '/_authenticated/ops/reminders'
       path: '/ops/reminders'
@@ -10330,6 +10350,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsPortfolioRoute: typeof AuthenticatedOpsPortfolioRoute
   AuthenticatedOpsQueueRoute: typeof AuthenticatedOpsQueueRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
+  AuthenticatedOpsRegulatoryFilingsRoute: typeof AuthenticatedOpsRegulatoryFilingsRoute
   AuthenticatedOpsRemindersRoute: typeof AuthenticatedOpsRemindersRoute
   AuthenticatedOpsReportCardsRoute: typeof AuthenticatedOpsReportCardsRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
@@ -10690,6 +10711,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsPortfolioRoute: AuthenticatedOpsPortfolioRoute,
   AuthenticatedOpsQueueRoute: AuthenticatedOpsQueueRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
+  AuthenticatedOpsRegulatoryFilingsRoute:
+    AuthenticatedOpsRegulatoryFilingsRoute,
   AuthenticatedOpsRemindersRoute: AuthenticatedOpsRemindersRoute,
   AuthenticatedOpsReportCardsRoute: AuthenticatedOpsReportCardsRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,

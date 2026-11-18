@@ -6,6 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import type { FundFilingOverview } from "@/lib/regulatory-filings-model";
 
 const srv = () => import("@/lib/fund-tabs.server");
 const fund = z.object({ fundId: z.string().uuid() });
@@ -16,7 +17,7 @@ export type CalendarItem = { date: string; title: string; detail: string; kind: 
 const addDays = (d: string, n: number) => { const x = new Date(d + "T00:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 const addYears = (d: string, n: number) => { const x = new Date(d + "T00:00:00Z"); x.setUTCFullYear(x.getUTCFullYear() + n); return x.toISOString().slice(0, 10); };
 
-export type RegulatoryData = { staff: boolean; filings: any[]; fees: any[]; calendar: CalendarItem[] };
+export type RegulatoryData = { staff: boolean; filings: any[]; fees: any[]; calendar: CalendarItem[]; filingStatus: FundFilingOverview | null };
 export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((v: unknown) => fund.parse(v))
   .handler(async ({ data, context }): Promise<RegulatoryData> => {
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); const d = await s.db();
@@ -48,11 +49,20 @@ export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([r
       const first = reqDate.get(f.close_request_id);
       if (first) cal.push({ date: addDays(first, 15), title: `${f.jurisdiction} Blue Sky notice due`, detail: "Most states: 15 days after first sale in the state. Harmonious confirms.", kind: "blue_sky", done: f.status === "filed" || f.status === "not_required" });
     }
+    const filingStatus = await (await import("@/lib/regulatory-tracker.server")).fundStatusFor(d, data.fundId);
+    const st = filingStatus?.status;
+    if (st?.formD.dueOn && st.formD.stage !== "not_needed" && !((closeF ?? []) as any[]).some((f) => f.filing_type === "form_d" && reqDate.get(f.close_request_id))) {
+      cal.push({ date: st.formD.dueOn, title: "Form D due", detail: "15 days after the recorded date of first sale", kind: "form_d", done: st.formD.stage === "filed" });
+    }
+    if (st?.formD.dueOn) for (const code of st.blueSky.required) {
+      if (((closeF ?? []) as any[]).some((f) => f.filing_type === "blue_sky" && f.jurisdiction === code && reqDate.get(f.close_request_id))) continue;
+      cal.push({ date: st.formD.dueOn, title: `${code} Blue Sky notice due`, detail: "Estimated from the fund's first sale. Most states: 15 days after the first sale in the state. Harmonious confirms.", kind: "blue_sky", done: !st.blueSky.outstanding.includes(code) });
+    }
     const lastFiledD = [...formDs.filter((f) => f.filed_on).map((f) => f.filed_on), ...((setupF ?? []) as any[]).filter((f) => /form.?d/i.test(f.filing_type) && f.filing_date).map((f) => f.filing_date)].sort().pop();
     if (lastFiledD) cal.push({ date: addYears(lastFiledD, 1), title: "Annual Form D amendment", detail: "Due yearly while the offering is ongoing", kind: "form_d", done: false });
     for (const f of (fees ?? []) as any[]) if (f.due_date) cal.push({ date: f.due_date, title: `${f.state} franchise fee`, detail: f.description || "State franchise tax / annual fee", kind: "franchise", done: !!f.filed_on });
     cal.sort((x, y) => x.date.localeCompare(y.date));
-    return { staff: a.staff, filings, fees: (fees ?? []) as any[], calendar: cal };
+    return { staff: a.staff, filings, fees: (fees ?? []) as any[], calendar: cal, filingStatus };
   });
 
 export const saveFranchiseFeeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

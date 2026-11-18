@@ -53,8 +53,9 @@ export const generateCloseFilings = createServerFn({ method: "POST" })
     const { data: onbs } = await db.from("investor_onboardings")
       .select("id, accepted_amount_cents, commitment_amount_cents, persons(region), investment_profiles(legal_name, profile_type)")
       .in("id", ids).eq("offering_id", req.offering_id);
+    const { normalizeUsState } = await import("@/lib/regulatory-filings-model");
     const investors = ((onbs ?? []) as any[]).map((o) => ({
-      state: String(o.persons?.region ?? "").trim().toUpperCase() || "UNKNOWN",
+      state: normalizeUsState(o.persons?.region) ?? "UNKNOWN",
       amount: Number(o.accepted_amount_cents ?? o.commitment_amount_cents ?? 0),
       name: o.investment_profiles?.legal_name ?? null,
       type: o.investment_profiles?.profile_type ?? null,
@@ -110,7 +111,7 @@ export const recordCloseFiling = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context.userId);
-    const { data: f } = await db.from("fund_close_filings").select("id, status, prepared_by, close_request_id, filing_type, jurisdiction, fee_needs_review").eq("id", data.id).maybeSingle();
+    const { data: f } = await db.from("fund_close_filings").select("id, status, prepared_by, close_request_id, offering_id, filing_type, jurisdiction, fee_needs_review").eq("id", data.id).maybeSingle();
     if (!f) throw new Error("Filing not found.");
     if (f.status !== "prepared") throw new Error("This filing is already recorded.");
     if (f.prepared_by === context.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "close_filing", [f.id]))) throw new Error("Someone other than the preparer must record this filing.");
@@ -123,7 +124,9 @@ export const recordCloseFiling = createServerFn({ method: "POST" })
     const { data: upd } = await db.from("fund_close_filings").update(patch).eq("id", data.id).eq("status", "prepared").select("id");
     if (!upd?.length) throw new Error("This filing changed. Refresh and try again.");
     const label = f.filing_type === "form_d" ? "Form D" : `${f.jurisdiction} state filing`;
-    await db.from("fund_close_request_events").insert({ close_request_id: f.close_request_id, actor_id: context.userId, from_status: "approved", to_status: "approved", note: `${label} recorded as ${data.outcome === "filed" ? "filed" : "not required"}.` });
+    const note = `${label} recorded as ${data.outcome === "filed" ? "filed" : "not required"}.`;
+    if (f.close_request_id) await db.from("fund_close_request_events").insert({ close_request_id: f.close_request_id, actor_id: context.userId, from_status: "approved", to_status: "approved", note });
+    else await db.from("fund_regulatory_events").insert({ offering_id: f.offering_id, actor_id: context.userId, kind: "filing_recorded", detail: { filingId: f.id, outcome: data.outcome, note } });
     return { ok: true };
   });
 
@@ -137,10 +140,10 @@ export const getFilingForm = createServerFn({ method: "POST" })
     const [{ data: offering }, { data: team }, { data: req }] = await Promise.all([
       db.from("offerings").select("*").eq("id", filing.offering_id).maybeSingle(),
       db.from("fund_team_members").select("full_name, team_role").eq("offering_id", filing.offering_id).in("team_role", ["gp", "manager"]).is("removed_at", null),
-      db.from("fund_close_requests").select("target_date, created_at").eq("id", filing.close_request_id).maybeSingle(),
+      filing.close_request_id ? db.from("fund_close_requests").select("target_date, created_at").eq("id", filing.close_request_id).maybeSingle() : Promise.resolve({ data: null }),
     ]);
     const related = ((team ?? []) as any[]).map((t) => ({ name: t.full_name, role: t.team_role === "gp" ? "Promoter (General Partner / Manager)" : "Executive Officer" }));
     if (!related.length && offering?.gp_entity_name) related.push({ name: offering.gp_entity_name, role: "Promoter (General Partner / Manager)" });
     const { buildFilingForm } = await import("@/lib/filing-forms");
-    return buildFilingForm({ filing, offering, related, firstSaleDate: req?.target_date ?? null });
+    return buildFilingForm({ filing, offering, related, firstSaleDate: offering?.first_sale_on ?? req?.target_date ?? null });
   });

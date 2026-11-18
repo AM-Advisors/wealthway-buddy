@@ -21267,7 +21267,7 @@ export type Database = {
       fund_close_filings: {
         Row: {
           amount_cents: number
-          close_request_id: string
+          close_request_id: string | null
           confirmation_number: string | null
           fee_cents: number | null
           fee_needs_review: boolean
@@ -21288,7 +21288,7 @@ export type Database = {
         }
         Insert: {
           amount_cents?: number
-          close_request_id: string
+          close_request_id?: string | null
           confirmation_number?: string | null
           fee_cents?: number | null
           fee_needs_review?: boolean
@@ -21309,7 +21309,7 @@ export type Database = {
         }
         Update: {
           amount_cents?: number
-          close_request_id?: string
+          close_request_id?: string | null
           confirmation_number?: string | null
           fee_cents?: number | null
           fee_needs_review?: boolean
@@ -24228,6 +24228,41 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "fund_regulatory_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_regulatory_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+          offering_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+          offering_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_regulatory_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -36977,6 +37012,9 @@ export type Database = {
           ein_setup_by: string | null
           ein_workflow_status: string | null
           entity_type: string | null
+          first_sale_on: string | null
+          first_sale_recorded_at: string | null
+          first_sale_recorded_by: string | null
           form_d_responsibility: string | null
           fund_origin: string | null
           fund_signatory_person_id: string | null
@@ -37067,6 +37105,9 @@ export type Database = {
           ein_setup_by?: string | null
           ein_workflow_status?: string | null
           entity_type?: string | null
+          first_sale_on?: string | null
+          first_sale_recorded_at?: string | null
+          first_sale_recorded_by?: string | null
           form_d_responsibility?: string | null
           fund_origin?: string | null
           fund_signatory_person_id?: string | null
@@ -37157,6 +37198,9 @@ export type Database = {
           ein_setup_by?: string | null
           ein_workflow_status?: string | null
           entity_type?: string | null
+          first_sale_on?: string | null
+          first_sale_recorded_at?: string | null
+          first_sale_recorded_by?: string | null
           form_d_responsibility?: string | null
           fund_origin?: string | null
           fund_signatory_person_id?: string | null

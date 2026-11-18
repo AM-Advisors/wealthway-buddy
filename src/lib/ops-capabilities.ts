@@ -202,6 +202,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     id: "investors", title: "Investors", url: "/ops/investors", icon: "people", group: "records", queues: ["investors", "onboarding"],
     screens: [
       { title: "Close requests", url: "/ops/close-requests", description: "Fund close requests from fund managers, reviewed by Harmonious", cap: "onboarding", step: "Start" },
+      { title: "Form D & Blue Sky", url: "/ops/regulatory-filings", description: "Form D and state notice filings across every fund, with due dates", cap: "onboarding", step: "Track" },
       { title: "Investor onboarding", url: "/admin/investor-onboarding", description: "Investments in progress, KYC/KYB and accreditation", cap: "onboarding", step: "Review" },
       { title: "Applications", url: "/admin", description: "Fund applications waiting for review", cap: "onboarding", step: "Review" },
       { title: "Investor directory", url: "/ops/investors", description: "All investors across funds", step: "Reference" },

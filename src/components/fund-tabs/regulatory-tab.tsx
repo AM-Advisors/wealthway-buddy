@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { fundRegulatoryFn, saveFranchiseFeeFn, removeFranchiseFeeFn } from "@/lib/fund-regulatory.functions";
 import { usd, fmtDate, toCents } from "./shared";
+import { FundFilingStatusCard } from "@/components/fund-filing-status";
 
 const statusLabel = (s: string) => ({ prepared: "Prepared", filed: "Filed", not_required: "Not required", recorded: "Recorded" } as Record<string, string>)[s] ?? s;
 
@@ -26,7 +27,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
 
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
-  const { filings, fees, calendar } = q.data!;
+  const { filings, fees, calendar, filingStatus, staff } = q.data!;
 
   const submit = async () => {
     try {
@@ -37,6 +38,12 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
 
   return (
     <div className="space-y-5">
+      {filingStatus && (
+        <Card>
+          <CardHeader><CardTitle>Form D and Blue Sky status</CardTitle><CardDescription>Where this fund's filings stand. Harmonious files by hand on EDGAR and the state system; nothing is submitted or paid automatically.</CardDescription></CardHeader>
+          <CardContent><FundFilingStatusCard fundId={fundId} overview={filingStatus} staff={staff} onChanged={() => { refresh(); void qc.invalidateQueries({ queryKey: ["ops-regulatory-tracker"] }); }} /></CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader><CardTitle>Regulatory calendar</CardTitle><CardDescription>Upcoming and past deadlines for this fund. Dates are estimates; Harmonious confirms each one.</CardDescription></CardHeader>
         <CardContent>
@@ -57,7 +64,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Form D and Blue Sky filings</CardTitle><CardDescription>Harmonious prepares and submits these by hand. The $160 Form D fee is the Harmonious Form D Filing Fee.</CardDescription></CardHeader>
+        <CardHeader><CardTitle>Filing history</CardTitle><CardDescription>Every Form D and Blue Sky record for this fund. The $160 Form D fee is the Harmonious Form D Filing Fee.</CardDescription></CardHeader>
         <CardContent className="overflow-x-auto">
           {filings.length === 0 ? <p className="text-sm text-muted-foreground">No filings yet.</p> : (
             <table className="w-full text-sm">

@@ -8,24 +8,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FilingFormDialog } from "@/components/filing-form-dialog";
 import { generateCloseFilings, getFilingForm, listCloseFilings, recordCloseFiling } from "@/lib/close-filings.functions";
+import { listFundFilings, prepareFundFilings } from "@/lib/regulatory-tracker.functions";
 
 const money = (c: number | null | undefined) =>
   c == null ? "needs review" : `$${(c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export function CloseFilingsPanel({ requestId, canPrepare }: { requestId: string; canPrepare: boolean }) {
+/** Filing packets for one close request, or (fundId) every packet for the fund. */
+export function CloseFilingsPanel({ requestId, fundId, canPrepare, onChanged }: { requestId?: string; fundId?: string; canPrepare: boolean; onChanged?: () => void }) {
   const qc = useQueryClient();
   const list = useServerFn(listCloseFilings);
+  const listFund = useServerFn(listFundFilings);
   const gen = useServerFn(generateCloseFilings);
-  const key = ["close-filings", requestId];
-  const q = useQuery({ queryKey: key, queryFn: () => list({ data: { id: requestId } }) });
+  const genFund = useServerFn(prepareFundFilings);
+  const key = fundId ? ["fund-filings", fundId] : ["close-filings", requestId];
+  const q = useQuery({ queryKey: key, queryFn: () => (fundId ? listFund({ data: { fundId } }) : list({ data: { id: requestId! } })) });
   const [busy, setBusy] = useState(false);
   async function prepare() {
     setBusy(true);
     try {
-      const res = await gen({ data: { id: requestId } });
+      const res = fundId ? await genFund({ data: { fundId } }) : await gen({ data: { id: requestId! } });
+      if (fundId && res.prepared === 0) { toast.info("Nothing new to prepare. Every sold state already has a packet or a recorded filing."); return; }
       if (res.missing.length) toast.warning(`Prepared, but missing: ${res.missing.join(", ")}.`);
       else toast.success("Filing packets prepared.");
       await qc.invalidateQueries({ queryKey: key });
+      onChanged?.();
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't prepare filings.");
     } finally {
@@ -67,7 +73,7 @@ export function CloseFilingsPanel({ requestId, canPrepare }: { requestId: string
         )}
         {canPrepare && (
           <Button size="sm" variant="outline" disabled={busy} onClick={prepare}>
-            {rows.length ? "Prepare any missing filings" : "Generate Form D and state filings"}
+            {rows.length ? "Prepare any missing filings" : "Prepare Form D and state filings"}
           </Button>
         )}
         </div>
@@ -82,7 +88,7 @@ export function CloseFilingsPanel({ requestId, canPrepare }: { requestId: string
       ) : !rows.length ? (
         <p className="text-xs text-muted-foreground">No filings prepared yet.</p>
       ) : (
-        rows.map((f: any) => <FilingRow key={f.id} f={f} onDone={() => qc.invalidateQueries({ queryKey: key })} />)
+        rows.map((f: any) => <FilingRow key={f.id} f={f} onDone={() => { void qc.invalidateQueries({ queryKey: key }); onChanged?.(); }} />)
       )}
     </div>
   );
