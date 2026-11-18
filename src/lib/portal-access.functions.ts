@@ -32,6 +32,28 @@ export const checkInviteEligibility = createServerFn({ method: "POST" })
     );
     if (hasInvite) return { eligible: true };
 
+    // Listed on a fund team, as a client contact, or invited to a client: a login with this
+    // email connects to those entries automatically (connect_listed_entries), so no separate
+    // fund invitation is needed. Exact match only; ilike alone treats "_" as a wildcard.
+    const exact = (rows: any[] | null, col = "email") => (rows ?? []).some((r) => String(r[col] ?? "").trim().toLowerCase() === email);
+    const pattern = email.replace(/[\\%_]/g, (m) => `\\${m}`);
+    // Already connected to a login under another address: creating a second account would split
+    // their records. Staff correct the email on View account instead.
+    const { data: linkedPeople } = await supabaseAdmin
+      .from("persons").select("email, user_id, merged_into_person_id").ilike("email", pattern).not("user_id", "is", null).limit(5);
+    const linkedIds = (linkedPeople ?? []).filter((r: any) => !r.merged_into_person_id && String(r.email).trim().toLowerCase() === email).map((r: any) => r.user_id);
+    if (linkedIds.length) {
+      const { data: logins } = await supabaseAdmin.from("profiles").select("email").in("user_id", linkedIds);
+      if ((logins ?? []).some((l: any) => String(l.email ?? "").trim().toLowerCase() !== email)) return { eligible: false, reason: "different_login" as const };
+    }
+    const [team, contacts, clientInv] = await Promise.all([
+      supabaseAdmin.from("fund_team_members").select("email").ilike("email", pattern).is("removed_at", null).limit(5),
+      supabaseAdmin.from("client_contacts").select("email").ilike("email", pattern).eq("status", "active").is("invite_cancelled_at", null).limit(5),
+      supabaseAdmin.from("client_invitations").select("email, expires_at").ilike("email", pattern).eq("status", "pending").limit(5),
+    ]);
+    if (exact(team.data as any[]) || exact(contacts.data as any[])) return { eligible: true };
+    if ((clientInv.data ?? []).some((r: any) => String(r.email).toLowerCase() === email && (!r.expires_at || new Date(r.expires_at) > new Date()))) return { eligible: true };
+
     // Someone who already has a profile with access (added manually by an admin).
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -50,7 +72,7 @@ export const checkInviteEligibility = createServerFn({ method: "POST" })
       if ((roles ?? []).length > 0 || (access ?? []).length > 0) return { eligible: true };
     }
 
-    return { eligible: false };
+    return { eligible: false, reason: "no_invitation" as const };
   });
 
 export interface PortalAccess {

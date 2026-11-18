@@ -13,6 +13,7 @@ import { KycReport } from "@/components/kyc-report";
 import { SidebarAccessCard } from "@/components/sidebar-access-card";
 import { RefreshCw } from "lucide-react";
 import { MfaResetPanel } from "@/components/mfa-reset-panel";
+import { EmailCorrectionCard } from "@/components/email-correction-card";
 
 export const Route = createFileRoute("/_authenticated/ops/people_/$userId")({
   head: () => ({
@@ -50,6 +51,7 @@ function PersonActivityPage() {
       <Link to="/ops/people-access" search={{ tab: "others" }} className="text-sm text-primary hover:underline">← People & Access</Link>
       <h1 className="text-3xl">{s.kind === "person_without_login" ? (s.name || s.email || "Person record") : "Account not found"}</h1>
       <p className="text-sm">{s.kind === "person_without_login" ? "This person hasn't created a login yet. Emails and invitation-link opens are listed below; sign-ins, pages and clicks appear here automatically once they sign in." : "No login account or person record matches this address."}</p>
+      {s.kind === "person_without_login" && <EmailCorrectionCard userId={null} personId={userId} />}
       {s.kind === "person_without_login" && (
         <section className="rounded-lg border">
           <h2 className="border-b p-4 text-lg">Activity ({s.events.length})</h2>
@@ -91,6 +93,7 @@ function AccountActivity({ userId }: { userId: string }) {
           <p className="text-xs text-muted-foreground">Updated {when(d.checkedAt)} · A recorded sign-out applies to that session; other devices may still be signed in. Current online presence is not confirmed.</p>
         </section>
         {d.email && <MfaResetPanel email={d.email} userId={userId} />}
+        <EmailCorrectionCard userId={userId} personId={null} />
         <AccountOverview d={d} />
         {d.roles.length > 0 && <SidebarAccessCard userId={userId} />}
         <KycReport d={d} userId={userId} />

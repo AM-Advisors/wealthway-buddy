@@ -68,7 +68,9 @@ function RegisterPage() {
       const check = await checkEligibility({ data: { email: email.trim() } });
       if (!check.eligible) {
         toast.error(
-          "We could not find a fund invitation for that email address. Ask your fund contact to invite you, or use the address your invitation was sent to.",
+          "reason" in check && check.reason === "different_login"
+            ? "This email is connected to an account that signs in with a different address. Ask Harmonious to update your email, then sign in."
+            : "We could not find a fund invitation for that email address. Check the spelling, use the address your invitation was sent to, or ask your fund contact to invite you.",
         );
         return;
       }

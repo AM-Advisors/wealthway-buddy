@@ -248,26 +248,69 @@ export const setAccountState = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Change an account's sign-in email. Same authority and audit as account state; Super Admin targets need a Super Admin. */
+/** Change an account's sign-in email. Same authority and audit as account state; Super Admin targets need a Super Admin.
+ * Delegates to the connected correction so the login, person, client and fund entries never drift apart. */
 export const changeAccountEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), email: z.string().trim().toLowerCase().email().max(255), reason }).parse(d))
+  .handler(async ({ context, data }) => correctEmail(context, { userId: data.targetUserId, personId: null, email: data.email, reason: data.reason }));
+
+const emailSubject = z.object({ userId: z.string().uuid().nullable(), personId: z.string().uuid().nullable() }).refine((s) => !!(s.userId || s.personId), "Pick a person or account.");
+
+/** Every live place this person's email is on file (login, person, client, fund, invitations). Access administrators only. */
+export const getEmailFootprint = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => emailSubject.parse(d))
   .handler(async ({ context, data }) => {
-    const p = await prepare(context);
-    await gate(p, { kind: "account_state", targetUserId: data.targetUserId, suspended: false }, data.reason, { emailChange: true });
-    const target = authzFactsFor(p.b, data.targetUserId);
-    if (target.roles.includes("super_admin") && !p.actor.roles.includes("super_admin")) throw new Error("Only a Super Administrator can change a Super Administrator's email.");
-    const db = await admin();
-    const { data: existing } = await db.from("profiles").select("user_id").ilike("email", data.email).neq("user_id", data.targetUserId).limit(1);
-    if (existing?.length) throw new Error("Another account already uses that email.");
-    const before = p.b.users.find((u: any) => u.id === data.targetUserId)?.email ?? null;
-    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: "Account email changed", previous: { email: before }, next: { email: data.email }, reason: data.reason, correlationId: p.correlationId });
-    const { error } = await db.auth.admin.updateUserById(data.targetUserId, { email: data.email, email_confirm: true });
-    if (error) throw new Error(error.message?.includes("already") ? "Another account already uses that email." : "Could not change the email.");
-    await db.from("profiles").update({ email: data.email }).eq("user_id", data.targetUserId);
-    await db.from("persons").update({ email: data.email }).eq("user_id", data.targetUserId);
-    return { ok: true };
+    await requireAccessViewer(context);
+    const { loadEmailFootprint } = await import("@/lib/email-correction.server");
+    const { emailsOnFile } = await import("@/lib/email-correction-model");
+    const fp = await loadEmailFootprint(await admin(), data);
+    return { rows: fp.rows.map((r) => ({ ...r, email: r.email ?? null })), emails: emailsOnFile(fp.rows), loginEmail: fp.loginEmail, hasLogin: !!fp.userId };
   });
+
+/** Correct one person's email everywhere it is live. History keeps the original address. */
+export const correctEmailEverywhere = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => emailSubject.and(z.object({ email: z.string().trim().toLowerCase().max(255), reason })).parse(d))
+  .handler(async ({ context, data }) => correctEmail(context, data));
+
+async function correctEmail(context: any, data: { userId: string | null; personId: string | null; email: string; reason: string }) {
+  const p = await prepare(context);
+  const db = await admin();
+  const { loadEmailFootprint, correctionConflicts, applyEmailCorrection } = await import("@/lib/email-correction.server");
+  const { emailCorrectionProblem, emailsOnFile, summarizeCorrection } = await import("@/lib/email-correction-model");
+  // A person record id with a login is corrected through that login.
+  let userId = data.userId;
+  if (!userId && data.personId) {
+    const { data: person } = await db.from("persons").select("user_id").eq("id", data.personId).maybeSingle();
+    userId = (person as any)?.user_id ?? null;
+  }
+  if (userId) {
+    await gate(p, { kind: "account_state", targetUserId: userId, suspended: false }, data.reason, { emailChange: true });
+    const target = authzFactsFor(p.b, userId);
+    if (target.roles.includes("super_admin") && !p.actor.roles.includes("super_admin")) throw new Error("Only a Super Administrator can change a Super Administrator's email.");
+  } else if (!authorize(p.actor, "administration.manage_access", { type: "global", id: null }).allowed) {
+    throw new Error("Only Harmonious access administrators can correct a person's email.");
+  }
+  const fp = await loadEmailFootprint(db, { userId, personId: data.personId });
+  const personIds = fp.rows.filter((r) => r.area === "person").map((r) => r.id);
+  const conflicts = await correctionConflicts(db, { userId, personIds }, data.email);
+  const problem = emailCorrectionProblem({ newEmail: data.email, rows: fp.rows, conflicts });
+  if (problem) throw new Error(problem);
+  const before = emailsOnFile(fp.rows).map((e) => e.email);
+  const { done, failed } = await applyEmailCorrection(db, fp, data.email);
+  const changed = summarizeCorrection(done);
+  await recordAccessEvent({
+    actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: userId,
+    action: "Email corrected everywhere",
+    previous: { emails: before, personIds },
+    next: { email: data.email.trim().toLowerCase(), changed, failed },
+    reason: data.reason, correlationId: p.correlationId,
+  });
+  if (failed.length) throw new Error(`Saved most places, but these could not be updated: ${failed.join(", ")}. Try again or contact Tech.`);
+  return { ok: true, changed };
+}
 
 // ------------------------------------------------------------ role definitions (versioned)
 
