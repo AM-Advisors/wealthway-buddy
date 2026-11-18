@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId, linkedApplicationForInvestment } from "@/lib/active-application";
 import { pickAccreditationInvestment } from "@/lib/accreditation-investment";
+import { accreditationIdentityLocked } from "@/lib/accreditation-step";
 
 const onboardingRef = z.string().uuid().optional();
 
@@ -111,7 +112,7 @@ async function loadApplication(supabase: any, userId: string, onboardingId?: str
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found. Reload and try again.");
   const [c] = await canonicalizeApplications(supabase, [data as any], userId);
-  if (c.kyc_status === "not_started" || c.aml_status === "not_started") {
+  if (accreditationIdentityLocked(c)) {
     throw new Error("Complete identity verification and the AML questionnaire first.");
   }
   return data as AppRow;
@@ -150,6 +151,14 @@ export const getAccreditation = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .eq("id", await resolveApplicationId(supabase, userId, onboardingId))
       .maybeSingle();
+
+    if (application) {
+      // The verified identity lives on the person record; the application row can
+      // still say not_started when the check was reused. Read the canonical result.
+      const [canonical] = await canonicalizeApplications(supabase, [{ ...application, user_id: userId } as any], userId);
+      application.kyc_status = canonical.kyc_status;
+      application.aml_status = canonical.aml_status;
+    }
 
     if (!application) {
       // Not linked yet: still show the fund's own rules (never a default form).

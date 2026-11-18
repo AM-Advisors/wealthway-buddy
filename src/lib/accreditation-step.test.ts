@@ -51,3 +51,19 @@ describe("evidence required for each answer", () => {
     expect(isAccreditationQuestion("email")).toBe(false);
   });
 });
+
+import { accreditationIdentityLocked } from "@/lib/accreditation-step";
+describe("accreditation page identity gate", () => {
+  it("opens when the verified person record shows approved identity and screening", () => {
+    expect(accreditationIdentityLocked({ kyc_status: "approved", aml_status: "approved" })).toBe(false);
+  });
+  it("stays locked while identity has not started", () => {
+    expect(accreditationIdentityLocked({ kyc_status: "not_started", aml_status: "approved" })).toBe(true);
+  });
+  it("stays locked while screening has not started", () => {
+    expect(accreditationIdentityLocked({ kyc_status: "approved", aml_status: "not_started" })).toBe(true);
+  });
+  it("does not lock an investment that has no linked record yet", () => {
+    expect(accreditationIdentityLocked(null)).toBe(false);
+  });
+});

@@ -53,3 +53,14 @@ export function accreditationSetGuard(input: { currentApproved: boolean; decisio
   if (input.decision === "review" && input.currentApproved) return "This accreditation is already verified. Verified stays verified.";
   return null;
 }
+
+/**
+ * The standalone accreditation page waits for identity and screening only when
+ * the investor's canonical (person-level) results say they haven't started.
+ * Callers must pass statuses already merged with the verified person record,
+ * never the raw application row, which can lag behind a reused identity check.
+ */
+export function accreditationIdentityLocked(app: { kyc_status?: string | null; aml_status?: string | null } | null | undefined): boolean {
+  if (!app) return false;
+  return app.kyc_status === "not_started" || app.aml_status === "not_started";
+}

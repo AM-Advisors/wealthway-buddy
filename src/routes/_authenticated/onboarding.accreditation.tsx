@@ -1,5 +1,6 @@
 import { safeOnboardReturnPath } from "@/lib/onboard-portal-model";
 import { regTypeLabel, requiresVerifiedAccreditation } from "@/lib/reg-types";
+import { accreditationIdentityLocked } from "@/lib/accreditation-step";
 import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -104,7 +105,8 @@ function AccreditationPage() {
   // Never guess the fund's rules: without a fund there is no form to show.
   const missing = !isLoading && !data?.offering;
   const regType = data?.offering?.reg_type ?? "506b";
-  const locked = data?.application?.kyc_status === "not_started";
+  // The server already merged the verified person record into these statuses.
+  const locked = accreditationIdentityLocked(data?.application);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">

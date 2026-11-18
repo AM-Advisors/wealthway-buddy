@@ -390,7 +390,8 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
                     : "Your identity is verified. The last part is confirming you're an accredited investor."}
                 </p>
                 {eligibilityOpen ? <EligibilityPanel onboardingId={onboardingId} done={() => void qc.invalidateQueries()} /> : null}
-                {accreditationOpen ? <Button asChild><a href={`/onboarding/accreditation?onboarding=${onboardingId}`}>Confirm accreditation</a></Button> : null}
+                {/* Accreditation is confirmed right here, never on a separate page that re-checks identity. */}
+                {accreditationOpen ? <AccreditationStep d={d} onboardingId={onboardingId} questionnaireDone done={() => void qc.invalidateQueries()} /> : null}
               </>
             ) : (
               <>

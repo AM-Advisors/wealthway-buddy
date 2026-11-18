@@ -2934,6 +2934,20 @@
       "when": 1795026141784,
       "tag": "0418_snoretox_requires_accreditation",
       "breakpoints": true
+    },
+    {
+      "idx": 419,
+      "version": "7",
+      "when": 1795028091900,
+      "tag": "0419_snoretox_accreditation_not_required",
+      "breakpoints": true
+    },
+    {
+      "idx": 420,
+      "version": "7",
+      "when": 1795028142499,
+      "tag": "0420_snoretox_accreditation_not_required_fix",
+      "breakpoints": true
     }
   ]
 }

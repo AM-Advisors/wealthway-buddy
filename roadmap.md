@@ -1190,3 +1190,6 @@
 - [x] Upload a list or documents: up to 25 documents read into rows for the existing preview and confirm
 - [ ] Save the uploaded files onto the new investor's record automatically (not built; files are read only)
 - [x] Review & Sign buttons open signing directly on investment, documents tab and Documents page
+
+- [x] Accreditation: confirm inside Verification card; standalone page reads verified identity
+- [x] Turn off accreditation requirement on 4D Snoretox SPV (as it was before)
