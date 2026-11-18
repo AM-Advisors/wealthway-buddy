@@ -21,6 +21,7 @@ import { BulkInvestorRecords } from "@/components/bulk-investor-records";
 import { CreateInvestor } from "@/components/create-investor";
 import { FundOnboardingSettings } from "@/components/fund-onboarding-settings";
 import { ManagerAddInvestor } from "@/components/manager-add-investor";
+import { FundDriveIntakeButton } from "@/components/fund-drive-intake";
 import { PrepareInvestor } from "@/components/prepare-investor";
 import { copyText, FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { getFundInvestorActions, removeFundAccess, removeLegacyApplicationFromFund } from "@/lib/invitations.functions";
@@ -183,9 +184,10 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
     <section className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Everyone investing in this fund. Click a name to see everything about that investor.</p></div>
-        <div className="flex w-full gap-2 sm:w-auto">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button className="flex-1 sm:flex-none" onClick={() => setChooser(true)}><Plus className="mr-1 h-4 w-4" />Add investor</Button>
           <Button variant="outline" onClick={copyLink}><LinkIcon className="mr-1 h-4 w-4" />Copy link</Button>
+          {isStaff && <FundDriveIntakeButton fundId={fundId} onApplied={() => { void qc.invalidateQueries(); }} />}
         </div>
       </div>
 
