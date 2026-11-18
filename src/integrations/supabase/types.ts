@@ -22587,6 +22587,150 @@ export type Database = {
         }
         Relationships: []
       }
+      fund_intake_decisions: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          file_id: string | null
+          id: string
+          run_id: string
+          subject: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          file_id?: string | null
+          id?: string
+          run_id: string
+          subject: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          file_id?: string | null
+          id?: string
+          run_id?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_intake_decisions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "fund_intake_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_intake_files: {
+        Row: {
+          applied: Json
+          created_at: string
+          error: string | null
+          folder_path: string | null
+          fund_reading: Json | null
+          id: string
+          investor_reading: Json | null
+          mime_type: string | null
+          name: string
+          offering_id: string
+          provider: string
+          read_at: string | null
+          run_id: string
+          size_bytes: number | null
+          sort: string
+          source_file_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applied?: Json
+          created_at?: string
+          error?: string | null
+          folder_path?: string | null
+          fund_reading?: Json | null
+          id?: string
+          investor_reading?: Json | null
+          mime_type?: string | null
+          name: string
+          offering_id: string
+          provider: string
+          read_at?: string | null
+          run_id: string
+          size_bytes?: number | null
+          sort?: string
+          source_file_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applied?: Json
+          created_at?: string
+          error?: string | null
+          folder_path?: string | null
+          fund_reading?: Json | null
+          id?: string
+          investor_reading?: Json | null
+          mime_type?: string | null
+          name?: string
+          offering_id?: string
+          provider?: string
+          read_at?: string | null
+          run_id?: string
+          size_bytes?: number | null
+          sort?: string
+          source_file_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_intake_files_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "fund_intake_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_intake_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          offering_id: string
+          sources: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offering_id: string
+          sources?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offering_id?: string
+          sources?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_intake_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_investment_transactions: {
         Row: {
           asset_id: string | null

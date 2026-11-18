@@ -36,7 +36,6 @@ const srcText = (s: { fileName: string; page: number | null }[]) => s.map((x) =>
 export function FundSetupAiReader({ offeringId }: { offeringId: string }) {
   const read = useServerFn(readFundSetupDocumentFn);
   const loadCurrent = useServerFn(fundSetupAiCurrentValuesFn);
-  const apply = useServerFn(applyFundSetupSuggestionFn);
   const createDoc = useServerFn(createSetupDocumentFn);
   const uploadVersion = useServerFn(uploadDocumentVersionFn);
   const qc = useQueryClient();
@@ -44,8 +43,6 @@ export function FundSetupAiReader({ offeringId }: { offeringId: string }) {
   const [files, setFiles] = useState<FileRead[]>([]);
   const [rows, setRows] = useState<FieldRow[]>([]);
   const [multiClass, setMultiClass] = useState(false);
-  const [decided, setDecided] = useState<Record<string, { d: Decision; value?: string }>>({});
-  const [editing, setEditing] = useState<{ key: string; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const refresh = async (list: FileRead[]) => {
@@ -58,7 +55,6 @@ export function FundSetupAiReader({ offeringId }: { offeringId: string }) {
     const picked = Array.from(list ?? []).slice(0, FUND_DOC_MAX_FILES);
     if (!picked.length) return;
     setProgress({ done: 0, total: picked.length });
-    setDecided({});
     const out: FileRead[] = [];
     let next = 0;
     const worker = async () => {
@@ -83,17 +79,6 @@ export function FundSetupAiReader({ offeringId }: { offeringId: string }) {
     setProgress(null);
   };
 
-  const decide = async (row: FieldRow, action: "approve" | "update" | "deny", value: string | null) => {
-    setBusy(row.key);
-    try {
-      const sources = row.candidates.flatMap((c) => (value == null || c.value === value || action === "deny" ? c.sources : []));
-      await apply({ data: { offeringId, field: row.key, action, value, expectedCurrent: row.current, sources: sources.length ? sources : row.candidates.flatMap((c) => c.sources) } });
-      setDecided((d) => ({ ...d, [row.key]: { d: (action === "deny" ? "denied" : action === "update" ? "updated" : "approved") as Decision, ...(value != null ? { value } : {}) } }));
-      setEditing(null);
-      if (action !== "deny") { invalidateFund(qc, offeringId); toast.success(`${row.label} saved${row.group === "fees" ? " as a draft for approval" : ""}.`); }
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
-  };
-
   const addToDocuments = async (fr: FileRead) => {
     const category = fr.reading ? documentCategoryFor(fr.reading.documentKind) : null;
     if (!category) return;
@@ -112,7 +97,6 @@ export function FundSetupAiReader({ offeringId }: { offeringId: string }) {
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
   };
 
-  const groups = (Object.keys(GROUP_LABEL) as FundFieldGroup[]).map((g) => ({ g, items: rows.filter((r) => r.group === g) })).filter((x) => x.items.length);
 
   return (
     <Card>
@@ -149,6 +133,40 @@ export function FundSetupAiReader({ offeringId }: { offeringId: string }) {
           </ul>
         )}
 
+        <FundFieldReview offeringId={offeringId} rows={rows} multiClass={multiClass} resetKey={files.map((f) => f.file.name).join("|")} />
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Approve, deny or update each suggested setup detail; saves only through the existing setup savers. */
+export function FundFieldReview({ offeringId, rows, multiClass, resetKey }: { offeringId: string; rows: FieldRow[]; multiClass: boolean; resetKey?: string }) {
+  const apply = useServerFn(applyFundSetupSuggestionFn);
+  const qc = useQueryClient();
+  const [decided, setDecided] = useState<Record<string, { d: Decision; value?: string }>>({});
+  const [editing, setEditing] = useState<{ key: string; text: string } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [seen, setSeen] = useState(resetKey);
+  if (seen !== resetKey) { setSeen(resetKey); setDecided({}); }
+  const decide = async (row: FieldRow, action: "approve" | "update" | "deny", value: string | null) => {
+    setBusy(row.key);
+    try {
+      const sources = row.candidates.flatMap((c) => (value == null || c.value === value || action === "deny" ? c.sources : []));
+      await apply({ data: { offeringId, field: row.key, action, value, expectedCurrent: row.current, sources: sources.length ? sources : row.candidates.flatMap((c) => c.sources) } });
+      setDecided((d) => ({ ...d, [row.key]: { d: (action === "deny" ? "denied" : action === "update" ? "updated" : "approved") as Decision, ...(value != null ? { value } : {}) } }));
+      setEditing(null);
+      if (action !== "deny") { invalidateFund(qc, offeringId); toast.success(`${row.label} saved${row.group === "fees" ? " as a draft for approval" : ""}.`); }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
+  };
+
+  const groups = (Object.keys(GROUP_LABEL) as FundFieldGroup[]).map((g) => ({ g, items: rows.filter((r) => r.group === g) })).filter((x) => x.items.length);
+  const agreeing = rows.filter((r) => r.status === "suggested" && !decided[r.key]);
+  const approveAgreeing = async () => { for (const r of agreeing) await decide(r, "approve", r.candidates[0]!.value); };
+  return (
+    <>
+      {agreeing.length > 1 && (
+        <Button variant="outline" disabled={!!busy} onClick={() => void approveAgreeing()}>Approve all {agreeing.length} details where the files agree</Button>
+      )}
         {multiClass && rows.some((r) => r.group === "fees") && (
           <p className="rounded-md bg-muted p-3 text-sm">This fund has more than one class. Fees here save to the default terms. Set each class on Fees and terms.</p>
         )}
@@ -205,7 +223,6 @@ export function FundSetupAiReader({ offeringId }: { offeringId: string }) {
             </div>
           </div>
         ))}
-      </CardContent>
-    </Card>
+    </>
   );
 }
