@@ -10,6 +10,7 @@ import { LoadError } from "@/components/load-error";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OfferingDocumentReader } from "@/components/offering-document-reader";
+import { SignDocumentButton } from "@/components/sign-document-button";
 
 /**
  * Investor Sign-stage list: only documents that apply to this investment, plain actions.
@@ -53,6 +54,8 @@ export function InvestmentOfferingDocuments({ onboardingId, acknowledgeOnly = fa
               <Badge variant="outline">No signature on file</Badge>
             ) : d.action === "Acknowledge" ? (
               <Button size="sm" onClick={() => acknowledge(d.id)}>I acknowledge and agree</Button>
+            ) : d.action && d.action.includes("Sign") ? (
+              <SignDocumentButton onboardingId={onboardingId} documentId={d.id} prepared={false} />
             ) : d.action ? (
               <Button asChild size="sm" variant={d.action.includes("Sign") ? "default" : "outline"}>
                 <Link to="/investment/$onboardingId" params={{ onboardingId }} search={{ tab: "onboarding", step: "sign" }}>

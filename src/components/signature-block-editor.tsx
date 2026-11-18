@@ -54,9 +54,12 @@ const typeLabel = (t: SignatureBlockType) =>
 export function SignatureBlockEditor({
   documentId,
   onClose,
+  onSaved,
 }: {
   documentId: string;
   onClose?: () => void;
+  /** Called after spots save so the caller can refresh readiness. */
+  onSaved?: () => void;
 }) {
   const loadBlocks = useServerFn(listSignatureBlocks);
   const saveBlocks = useServerFn(saveSignatureBlocks);
@@ -180,6 +183,7 @@ export function SignatureBlockEditor({
       });
       toast.success("Signature blocks saved.");
       void meta.refetch();
+      onSaved?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save those blocks.");
     } finally {

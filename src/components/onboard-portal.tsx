@@ -26,6 +26,7 @@ import {
 import { revealWireInstructionsFn } from "@/lib/fund-onboarding.functions";
 import { fundStepState, WIRE_FRAUD_WARNING } from "@/lib/fund-onboarding-model";
 import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-portal-model";
+import { identityCheckState } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
 import { kycFieldsFor } from "@/lib/kyc-fields";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
@@ -179,7 +180,9 @@ function VerificationStep({ d, onboardingId, done }: { d: any; onboardingId: str
     onSuccess: (r: any) => { if (r?.url) window.location.assign(r.url); },
     onError: (e) => toast.error(errText(e)),
   });
-  const state = stepState(d, "verification");
+  const stepDone = ["complete", "not_applicable"].includes(String(stepState(d, "verification")));
+  // The card reflects the identity check only; questions in the same step have their own panels.
+  const state = identityCheckState((d.requirements ?? []) as any[]);
   const owners = (d.requirements as any[]).find((r) => r.key === "beneficial_owners");
   const needsOwners = owners && (owners.state === "missing" || owners.state === "refresh_required");
 
@@ -192,7 +195,10 @@ function VerificationStep({ d, onboardingId, done }: { d: any; onboardingId: str
       </CardHeader>
       <CardContent className="space-y-4">
         {state === "complete" || state === "not_applicable" ? (
-          <p className="text-sm">Verification complete.</p>
+          <div className="space-y-1">
+            <p className="flex items-center gap-2 text-sm font-medium"><Check className="h-4 w-4 text-primary" /> Your identity is verified.</p>
+            {!stepDone ? <p className="text-sm text-muted-foreground">Finish the questions on this page to complete this step.</p> : null}
+          </div>
         ) : state === "in_review" ? (
           <p className="flex items-center gap-2 text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Your verification is being confirmed. This page updates automatically.</p>
         ) : (

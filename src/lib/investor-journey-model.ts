@@ -77,6 +77,8 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   let verify: StepState = hasProfile ? stateFor(pick("verify")) : "locked";
   const verifyOpen = pick("verify").filter((r) => r.state !== "valid" && r.state !== "not_applicable");
   const onlyAccreditation = verifyOpen.length > 0 && verifyOpen.every((r) => r.key === "accreditation");
+  // Identity check finished; only eligibility questions (and maybe accreditation) remain.
+  const onlyQuestions = verifyOpen.length > 0 && verifyOpen.every((r) => r.key === "accreditation" || r.key === "eligibility");
   const aboutReason = pick("about").find((r) => r.state !== "valid" && r.state !== "not_applicable")?.reason;
   const refresh = pick("verify").some((r) => r.state === "refresh_required");
 
@@ -133,7 +135,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
             : refresh
               ? "Some verification has expired and needs to be renewed."
               : verify === "action_required"
-                ? (onlyAccreditation ? "Identity verified. Confirm your accreditation to continue." : "Start verification to continue.")
+                ? (onlyAccreditation ? "Identity verified. Confirm your accreditation to continue." : onlyQuestions ? "Identity verified. Answer the eligibility questions to continue." : "Start verification to continue.")
                 : verificationAllowsSigning(requirements)
                   ? "Identity approved. Compliance screening is pending; you can continue to Sign."
                   : "Verification in progress.",

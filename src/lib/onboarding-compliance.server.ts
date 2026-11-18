@@ -4,7 +4,7 @@
  * functions after the caller's access to the onboarding is checked.
  */
 import { usPersonFromVerification } from "@/lib/subscription-prefill";
-import { financialBackgroundKnown } from "@/lib/investor-financial-background";
+import { citizenshipToRecord, financialBackgroundKnown } from "@/lib/investor-financial-background";
 import { taxIntakeDefaults, taxReviewDetails } from "@/lib/investor-step-prefill";
 import { pendingTaxUpload, taxStateWithUpload, classificationWithUpload, type TaxUpload } from "@/lib/tax-upload-state";
 import {
@@ -709,10 +709,29 @@ export async function submitAml(userId: string, input: { onboardingId: string; a
   const keep: Record<string, string> = {};
   for (const f of amlFields(policy, facts)) keep[f] = String(input.answers[f] ?? "").slice(0, 600);
   const id = await insertResponse(d, ob, userId, "bsa_aml", keep, input.certifiedName, ev.reviewStatus);
+  await recordCertifiedCitizenship(d, ob, person, profile.profile_type, keep["citizenship"], userId);
   if (ev.reviewStatus === "review_required") {
     await raiseOpsException(ob.id, "aml_review", `Compliance Review Required: ${ev.reasons.join("; ")}`, userId);
   }
   return { ok: true, id, reviewStatus: ev.reviewStatus };
+}
+
+/** Fills a blank citizenship on the investor's own person record from their certified answer, with a logged change. */
+export async function recordCertifiedCitizenship(d: any, ob: any, person: any, profileType: string | null | undefined, answer: unknown, userId: string) {
+  const value = person?.id ? citizenshipToRecord({ profileType, current: person.citizenship_country, answer }) : null;
+  if (!value) return;
+  const { data: updated, error } = await d
+    .from("persons")
+    .update({ citizenship_country: value, updated_at: new Date().toISOString() })
+    .eq("id", person.id)
+    .or("citizenship_country.is.null,citizenship_country.eq.")
+    .select("id");
+  if (error) { console.error("citizenship sync failed", error.message); return; }
+  if (!(updated ?? []).length) return;
+  await d.from("investor_record_changes").insert({
+    offering_id: ob.offering_id, onboarding_id: ob.id, subject_table: "persons", subject_id: person.id,
+    field: "citizenship_country", old_value: null, new_value: value, source: "investor", actor_user_id: userId, manager_visible: true,
+  });
 }
 
 /** Optional demographics. Never read by the checklist, KYC, AML, accreditation, eligibility or admission. */

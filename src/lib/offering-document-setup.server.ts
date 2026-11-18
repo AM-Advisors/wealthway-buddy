@@ -73,9 +73,16 @@ async function event(offeringId: string, documentId: string | null, version: num
 export async function listSetupDocuments(userId: string, offeringId: string) {
   const actor = await assertRead(userId, offeringId);
   const [{ data: docs }, { data: versions }] = await Promise.all([
-    db().from("offering_documents").select("id, title, doc_type, document_category, usage, applicability, active_version, current_version, requires_signature").eq("offering_id", offeringId).is("removed_at", null).order("sort_order"),
+    db().from("offering_documents").select("id, title, doc_type, document_category, usage, applicability, active_version, current_version, requires_signature, signing_mode, countersigner_user_id").eq("offering_id", offeringId).is("removed_at", null).order("sort_order"),
     db().from("offering_document_versions").select("*").eq("offering_id", offeringId).order("version", { ascending: false }),
   ]);
+  // Placed signature spots are what the signing send gate checks (box-sign.functions.ts); read them so this screen shows the same answer.
+  const docIds = ((docs ?? []) as any[]).map((d) => d.id);
+  const { data: placedBlocks, error: blocksError } = docIds.length
+    ? await db().from("offering_document_signature_blocks").select("offering_document_id, signer_role, block_type").in("offering_document_id", docIds)
+    : { data: [], error: null };
+  if (blocksError) throw new Error("Could not check signature spots.");
+  const { signingConfigComplete } = await import("@/lib/fund-onboarding-model");
   const sealed = await (await import("./sealed-records.server")).sealedIds(db(), "offering_document_versions");
   const vs = ((versions ?? []) as any[]).filter((v) => !sealed.has(v.id));
   const templates = await approvedTemplateVersions(offeringId);
@@ -109,6 +116,11 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       applicability: (d.applicability ?? {}) as Applicability,
       activeVersion: d.active_version as number | null,
       versions: view,
+      placement: signingConfigComplete({
+        mode: (d.signing_mode ?? "investor_only") as "investor_only" | "dual",
+        countersignerUserId: d.countersigner_user_id ?? null,
+        blocks: ((placedBlocks ?? []) as any[]).filter((b) => b.offering_document_id === d.id),
+      }),
     };
   });
   const status = offeringDocumentsSetupStatus(

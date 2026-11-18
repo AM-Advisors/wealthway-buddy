@@ -67,24 +67,16 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       throw new Error("Document not found for this offering.");
     }
 
-    // Server-side send gate: a document must be fully prepared for signature.
-    // The readiness badge is advisory; this check is the control.
+    // Server-side send gate: the document must take a signature and, when the fund
+    // countersigns, have its signatory chosen. Signature spots are optional; the
+    // signing provider places the fields (same as the openSigningSession path).
     if (!doc.requires_signature) throw new Error("This document does not take a signature.");
     {
-      const { supabaseAdmin: gateDb } = await import("@/integrations/supabase/client.server");
-      const { data: blocks } = await gateDb
-        .from("offering_document_signature_blocks")
-        .select("signer_role, block_type")
-        .eq("offering_document_id", doc.id);
       const { signingConfigComplete } = await import("@/lib/fund-onboarding-model");
       const mode = ((doc as any).signing_mode ?? "investor_only") as "investor_only" | "dual";
-      const cfg = signingConfigComplete({
-        mode,
-        countersignerUserId: (doc as any).countersigner_user_id ?? null,
-        blocks: (blocks ?? []) as any[],
-      });
+      const cfg = signingConfigComplete({ mode, countersignerUserId: (doc as any).countersigner_user_id ?? null });
       if (!cfg.ready) {
-        throw new Error(`This document isn't prepared for signature yet (missing: ${cfg.missing.join(", ")}).`);
+        throw new Error("This document isn't ready to sign yet, the fund still needs to choose who countersigns it.");
       }
     }
 

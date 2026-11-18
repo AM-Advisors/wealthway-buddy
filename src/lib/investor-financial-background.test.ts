@@ -24,3 +24,17 @@ describe("applicable financial background", () => {
     expect(evaluateAml({}, { profileType: "individual", commitmentCents: 1, known: { citizenship: "US", residence: "US", occupation: "Engineer" }, answers: { sourceOfFunds: "employment_income", fundsOriginCountry: "US", thirdPartyFunding: "yes", politicallyExposed: "no", expectedActivity: "single_investment" } })).toMatchObject({ complete: true, reviewStatus: "review_required" });
   });
 });
+describe("certified citizenship fills the person record", async () => {
+  const { citizenshipToRecord } = await import("./investor-financial-background");
+  it("fills a blank citizenship for an individual", () => {
+    expect(citizenshipToRecord({ profileType: "individual", current: null, answer: "India" })).toBe("India");
+    expect(citizenshipToRecord({ profileType: "individual", current: "  ", answer: " India " })).toBe("India");
+  });
+  it("never overwrites a recorded citizenship", () => {
+    expect(citizenshipToRecord({ profileType: "individual", current: "USA", answer: "India" })).toBeNull();
+  });
+  it("never applies joint or entity answers to one person", () => {
+    expect(citizenshipToRecord({ profileType: "joint", current: null, answer: "India" })).toBeNull();
+    expect(citizenshipToRecord({ profileType: "llc", current: null, answer: "India" })).toBeNull();
+  });
+});

@@ -209,3 +209,19 @@ describe("documentTitleFor", () => {
     expect(documentTitleFor("other", "")).toBeNull();
   });
 });
+
+describe("offering documents - signature placement readiness", () => {
+  it("a confirmed signature document still missing its fund signatory is not Ready for Use", async () => {
+    const { documentVersionBadge } = await import("./offering-document-model");
+    expect(documentVersionBadge({ state: "ready_for_use", usage: "signature", placementReady: false })).toEqual({ label: "Needs Fund Signatory", ready: false });
+    expect(documentVersionBadge({ state: "ready_for_use", usage: "signature", placementReady: true })).toEqual({ label: "Ready for Use", ready: true });
+  });
+  it("review-only documents need no signature spots", async () => {
+    const { documentVersionBadge } = await import("./offering-document-model");
+    expect(documentVersionBadge({ state: "ready_for_use", usage: "acknowledgment", placementReady: false }).ready).toBe(true);
+  });
+  it("setup list reads placed spots with the same rule the signing send gate uses", () => {
+    expect(server).toMatch(/offering_document_signature_blocks/);
+    expect(server).toMatch(/signingConfigComplete\(/);
+  });
+});

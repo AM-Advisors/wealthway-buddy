@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SignDocumentButton } from "@/components/sign-document-button";
 import { myDocumentInboxFn } from "@/lib/offering-document-send.functions";
 
 /** Documents shared with the signed-in investor, grouped by investment. */
@@ -39,7 +40,9 @@ export function InvestorDocumentInbox() {
                       {[d.versionLabel, d.sentAt ? `Sent ${new Date(d.sentAt).toLocaleDateString()}` : null].filter(Boolean).join(" · ")}
                     </span>
                   </span>
-                  <Badge variant={d.action === "Completed" ? "secondary" : d.action === "No signature on file" ? "outline" : "default"}>{d.action}</Badge>
+                  {/sign/i.test(String(d.action)) && d.action !== "No signature on file" && !g.closed ? (
+                    <SignDocumentButton onboardingId={g.onboardingId} documentId={d.id} prepared={false} label={d.action} />
+                  ) : <Badge variant={d.action === "Completed" ? "secondary" : d.action === "No signature on file" ? "outline" : "default"}>{d.action}</Badge>}
                 </li>
               ))}
             </ul>

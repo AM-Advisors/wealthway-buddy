@@ -49,6 +49,20 @@ function stateOf(results: RequirementResult[]): PortalStepState {
 
 const done = (s: PortalStepState) => s === "complete" || s === "not_applicable";
 
+/** The identity check itself (ID, company check, owners, screening), without the questions grouped into the same step. */
+const IDENTITY_CHECK_KEYS: readonly RequirementKey[] = ["identity_verification", "entity_verification", "beneficial_owners", "aml"];
+
+/**
+ * State of the "Verify Your Identity" card. A finished identity check reads as
+ * finished even while financial background or tax questions in the same step
+ * are still open; the step itself stays open until those are answered.
+ */
+export function identityCheckState(requirements: RequirementResult[]): PortalStepState {
+  return stateOf(requirements.filter((r) => IDENTITY_CHECK_KEYS.includes(r.key)));
+}
+
+export const identityCheckDone = (requirements: RequirementResult[]) => done(identityCheckState(requirements));
+
 /**
  * Steps unlock in order. A signature is only ever counted when the engine
  * reports it valid, which requires provider-confirmed completion.

@@ -134,3 +134,18 @@ describe("domain behavior", () => {
     expect(surfaceForPath("/onboarding/kyc")).toBe("client");
   });
 });
+
+describe("identity card reflects the identity check only", () => {
+  it("shows verified once ID and screening pass, even with financial questions still open", async () => {
+    const { identityCheckState, identityCheckDone } = await import("@/lib/onboard-portal-model");
+    const reqs = [...base({ identity_verification: "valid", aml: "valid" }), r("bsa_aml", "missing")];
+    expect(identityCheckState(reqs)).toBe("complete");
+    expect(identityCheckDone(reqs)).toBe(true);
+    expect(portalSteps(reqs).find((s) => s.key === "verification")!.state).toBe("action_required");
+  });
+  it("still asks to start when the ID check is missing", async () => {
+    const { identityCheckState } = await import("@/lib/onboard-portal-model");
+    expect(identityCheckState(base())).toBe("action_required");
+    expect(identityCheckState(base({ identity_verification: "review_required", aml: "valid" }))).toBe("in_review");
+  });
+});

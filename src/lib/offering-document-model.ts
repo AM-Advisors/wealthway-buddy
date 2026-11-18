@@ -97,6 +97,25 @@ export function versionState(input: {
   return "signing_setup_required";
 }
 
+/** Plain words for what the signing send gate still needs (fund-onboarding-model signingConfigComplete). */
+export function placementMissingLabel(missing: string): string {
+  if (missing === "An investor signature field") return "Investor signature spot";
+  if (missing === "A fund manager signature field") return "Fund manager signature spot";
+  if (missing === "An authorized fund signatory") return "Fund signatory (choose who countersigns)";
+  return missing;
+}
+
+/**
+ * Badge for a document version. Signature spots are optional; a signature document is only
+ * held back when the fund still has to choose who countersigns it.
+ */
+export function documentVersionBadge(input: { state: VersionState; usage: DocumentUsage | null; placementReady: boolean }): { label: string; ready: boolean } {
+  if (input.state === "ready_for_use" && input.usage === "signature" && !input.placementReady) {
+    return { label: "Needs Fund Signatory", ready: false };
+  }
+  return { label: VERSION_STATE_LABELS[input.state], ready: input.state === "ready_for_use" };
+}
+
 /** A new version never inherits "confirmed" signing setup - it must be reviewed. */
 export function signingStatusForNewVersion(previous: SigningConfig | null | undefined): SigningConfigStatus {
   return previous && previous.signers.length ? "needs_review" : "not_configured";

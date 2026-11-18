@@ -87,19 +87,19 @@ export function canCountersign(input: {
   return { allowed: true };
 }
 
-/** Before an investor receives a document, the preparation must be complete. */
+/**
+ * Before an investor receives a document, the preparation must be complete.
+ * Placed signature spots are optional: the signing provider places signature
+ * fields itself (how every earlier fund, Erebor and LaaSy included, signed).
+ * Only a two-signer document still needs its fund countersigner chosen.
+ */
 export function signingConfigComplete(input: {
   mode: SigningMode;
   countersignerUserId: string | null;
-  blocks: { signer_role: SignerRole; block_type: string }[];
+  blocks?: { signer_role: SignerRole; block_type: string }[];
 }): { ready: boolean; missing: string[] } {
   const missing: string[] = [];
-  const has = (r: SignerRole) => input.blocks.some((b) => b.signer_role === r && b.block_type === "signature");
-  if (!has("investor")) missing.push("An investor signature field");
-  if (input.mode === "dual") {
-    if (!input.countersignerUserId) missing.push("An authorized fund signatory");
-    if (!has("fund_manager")) missing.push("A fund manager signature field");
-  }
+  if (input.mode === "dual" && !input.countersignerUserId) missing.push("An authorized fund signatory");
   return { ready: missing.length === 0, missing };
 }
 

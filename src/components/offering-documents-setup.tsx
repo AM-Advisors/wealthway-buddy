@@ -31,6 +31,8 @@ import {
   SIGNER_ROLE_LABELS,
   VERSION_STATE_LABELS,
   ROLLOUT_LABELS,
+  documentVersionBadge,
+  placementMissingLabel,
   type RolloutScope,
   type BlockField,
   type DocumentCategory,
@@ -48,6 +50,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { listSendableDocumentsFn, sendDocumentsFn } from "@/lib/offering-document-send.functions";
 import { OfferingDocumentPreview, OfferingDocumentViewButton } from "@/components/offering-document-preview";
+import { SignatureBlockEditor } from "@/components/signature-block-editor";
 
 const CORE: DocumentCategory[] = ["operating_agreement", "subscription_agreement", "ppm"];
 const PROFILE_TYPES = ["individual", "joint", "trust", "llc", "corporation", "partnership", "ira"];
@@ -143,7 +146,12 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
   const [showRequest, setShowRequest] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [viewVersion, setViewVersion] = useState<number | null>(null);
+  const [placing, setPlacing] = useState(false);
   const latest = doc.versions[0];
+  const placementReady = doc.placement.ready;
+  const needsPlacement = needsSigning && !!latest && !placementReady;
+  const latestBadge = latest ? documentVersionBadge({ state: latest.state, usage: doc.usage, placementReady }) : null;
+  const openPlacement = () => { setOpen(true); setPlacing(true); };
   const active = doc.versions.find((v) => v.isActive);
   const previewVersion = active ?? latest;
   const run = async (fn: () => Promise<unknown>, ok: string) => {
@@ -207,8 +215,11 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         <div className="flex flex-wrap items-center gap-2">
           {doc.resignOpen.length > 0 && <Badge variant="destructive">{doc.resignOpen.length} re-sign needed</Badge>}
           {pendingRequests.length > 0 && <Badge variant="secondary">{pendingRequests.length} change request(s)</Badge>}
-          {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
+          {latest && latestBadge && <Badge variant={latestBadge.ready ? "default" : latestBadge.label === "Needs Fund Signatory" ? "destructive" : "secondary"}>{latestBadge.label}</Badge>}
           {previewVersion && <OfferingDocumentViewButton onClick={() => setViewVersion(previewVersion.version)} />}
+          {needsSigning && latest && data.canRelease && (
+            <Button size="sm" variant="outline" onClick={openPlacement}>Signature spots (optional)</Button>
+          )}
           {data.canEdit && latest?.approval === "uploaded_review_required" && !latest.approvedTemplate && (!latest.reviewState || latest.canReview || isSuper) && latest.reviewState !== "returned" && (
             <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: latest.version } }), "Document approved")}>Mark approved</Button>
           )}
@@ -221,6 +232,13 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           <Button size="sm" variant={latest ? "ghost" : "default"} onClick={() => setOpen(!open)}>{open ? "Hide" : latest ? "Manage" : "Set up"}</Button>
         </div>
       </div>
+
+      {needsPlacement && (
+        <p className="mt-2 text-xs text-destructive">
+          Investors can't sign this yet. Still needed: {doc.placement.missing.map(placementMissingLabel).join(", ")}.
+          {data.canRelease && <> Choose who countersigns in <span className="font-medium">Investor Onboarding Settings, Documents &amp; signing</span>.</>}
+        </p>
+      )}
 
       {sendOpen && active && <SendDocDialog doc={doc} offeringId={offeringId} onClose={() => setSendOpen(false)} onSent={onChanged} />}
       {viewVersion !== null && <OfferingDocumentPreview offeringId={offeringId} documentId={doc.id} version={viewVersion} title={doc.title} onClose={() => setViewVersion(null)} />}
@@ -284,9 +302,22 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           </Step>
 
           {needsSigning && (
-            <Step n={3} title="Signature blocks" done={latest?.signingStatus === "confirmed"}>
+            <Step n={3} title="Signature blocks and spots on the PDF" done={latest?.signingStatus === "confirmed" && placementReady}>
               {!latest ? <p className="text-sm text-muted-foreground">Upload the document first, then add its signature blocks here.</p>
                 : <SigningEditor key={`${latest.version}-${latest.signingStatus}`} doc={doc} version={latest} data={{ ...data, canEdit: data.canRelease }} onChanged={onChanged} />}
+              {latest && (
+                <div className="mt-2 space-y-2 border-t pt-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-medium">
+                      Signature spots on the PDF{" "}
+                      {placementReady ? <span className="text-muted-foreground">· optional, signers place their signature in the signing window</span> : <span className="text-destructive">· still needed: {doc.placement.missing.map(placementMissingLabel).join(", ")}</span>}
+                    </p>
+                    {data.canRelease && <Button size="sm" variant={placing ? "ghost" : "outline"} onClick={() => setPlacing(!placing)}>{placing ? "Close" : "Signature spots (optional)"}</Button>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Optional: drag the investor signature (and the fund manager signature when the fund countersigns) onto exact lines of the PDF. Signing works without this.</p>
+                  {placing && data.canRelease && <SignatureBlockEditor documentId={doc.id} onSaved={onChanged} onClose={() => { setPlacing(false); onChanged(); }} />}
+                </div>
+              )}
             </Step>
           )}
 
@@ -447,7 +478,7 @@ function SigningEditor({ doc, version, data, onChanged }: { doc: Doc; version: D
           <Button size="sm" onClick={() => submit(true)}>Confirm signing setup</Button>
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Field placement on the page is done in the signing provider's editor for this version.</p>
+      <p className="text-xs text-muted-foreground">This sets who signs. Place their signature spots on the PDF below.</p>
     </div>
   );
 }

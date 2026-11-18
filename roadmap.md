@@ -1,5 +1,13 @@
 # Roadmap
 
+## Investor verification and certification (2026-11-18)
+- [x] Identity card shows verified once the ID check passes (onboarding portal)
+- [x] Same on the investor app journey Verify card
+- [x] Certified citizenship fills a blank profile citizenship (plus one-time fill)
+- [x] 4D Snoretox requires accreditation confirmation (option 2)
+- [x] Staff screens say "Not required" instead of done when a fund doesn't require accreditation (option 3)
+- [x] Certify buttons: each shows Certified on its own; no three-at-once blinking
+
 ## Investor blocked issues (2026-11-17)
 - [x] "Resolve exception" on the investor page resolves the issue right there (no trip to the review queue)
 - [x] A later wire that completes the amount clears its own out-of-date shortfall alert
@@ -1181,3 +1189,4 @@
 - [x] Add one investor: upload documents, AI fills blank boxes for review; tax ID never read
 - [x] Upload a list or documents: up to 25 documents read into rows for the existing preview and confirm
 - [ ] Save the uploaded files onto the new investor's record automatically (not built; files are read only)
+- [x] Review & Sign buttons open signing directly on investment, documents tab and Documents page

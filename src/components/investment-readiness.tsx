@@ -127,7 +127,9 @@ export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer
           const pending = items.filter((i: any) => ACTIVE.has(i.status)).length;
           const current = r.currentStage === s.stage;
           const isOpen = open === s.stage;
-          const label = s.safeLabel ?? plainStatus(s.status, viewer);
+          // A fund that doesn't require accreditation says so, instead of reading as if it were completed.
+          const accreditationNotRequired = r.items.some((i: any) => i.key === "accreditation" && i.stage === s.stage && i.status === "not_applicable");
+          const label = `${s.safeLabel ?? plainStatus(s.status, viewer)}${accreditationNotRequired ? " · accreditation not required" : ""}`;
           return (
             <li key={s.stage} data-stage={s.stage} data-status={s.status} data-open={isOpen ? "true" : "false"} className="relative pl-9">
               {idx < r.stages.length - 1 ? <span className="absolute left-3 top-8 h-[calc(100%-1.5rem)] w-px bg-border" /> : null}
@@ -151,7 +153,13 @@ export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer
                         <span className={tone(i.status)}>{plainStatus(i.status, viewer)}</span>
                       </span>
                     </li>
-                  )) : <li className="text-xs text-muted-foreground">Nothing required at this stage.</li>}
+                  )) : accreditationNotRequired ? null : <li className="text-xs text-muted-foreground">Nothing required at this stage.</li>}
+                  {accreditationNotRequired ? (
+                    <li className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="min-w-0">Accreditation</span>
+                      <span className="text-xs text-muted-foreground">Not required by this fund</span>
+                    </li>
+                  ) : null}
                 </ul>
               ) : null}
             </li>

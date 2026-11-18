@@ -123,7 +123,7 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
                             </SelectContent>
                           </SearchablePeoplePicker>
                         )}
-                        <Button size="sm" variant="outline" onClick={() => setPreparing(preparing === doc.id ? null : doc.id)}>Prepare for Signature</Button>
+                        <Button size="sm" variant="outline" onClick={() => setPreparing(preparing === doc.id ? null : doc.id)}>Signature spots (optional)</Button>
                       </div>
                     )}
                     {!doc.readiness.ready && <p className="text-xs text-muted-foreground">Still needed: {doc.readiness.missing.join(", ")}.</p>}

@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -451,13 +452,25 @@ export function CertificationsPanel({ onboardingId, done }: { onboardingId: stri
   const qc = useQueryClient();
   const fn = useServerFn(certifyFn);
   const [name, setName] = useState("");
+  // Each statement saves on its own: only the clicked button shows saving, and a saved
+  // statement reads "Certified" right away instead of waiting for the page to reload.
+  const [savingKeys, setSavingKeys] = useState<string[]>([]);
+  const [savedKeys, setSavedKeys] = useState<string[]>([]);
   const m = useMutation({
     mutationFn: (key: string) => fn({ data: { onboardingId, key: key as any, certifiedName: name } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
+    onMutate: (key) => setSavingKeys((k) => [...k, key]),
+    onSuccess: (_r, key) => {
+      setSavedKeys((k) => (k.includes(key) ? k : [...k, key]));
+      void qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] });
+      done();
+    },
     onError: (e: Error) => toast.error(e.message),
+    onSettled: (_r, _e, key) => setSavingKeys((k) => k.filter((x) => x !== key)),
   });
-  if (!q.data || q.data.certifications.missing.length === 0) return null;
+  if (!q.data) return null;
   const certifications = q.data.certifications;
+  // Hidden only when nothing is left and nothing was certified on this visit.
+  if (certifications.missing.length === 0 && savedKeys.length === 0) return null;
   return (
     <Card>
       <CardHeader>
@@ -468,7 +481,8 @@ export function CertificationsPanel({ onboardingId, done }: { onboardingId: stri
         {certifications.required.some((c) => !c.approvedWording) && <Pending />}
         <div><Label>Your full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={200} /></div>
         {certifications.required.map((c) => {
-          const missing = certifications.missing.includes(c.key as any);
+          const missing = certifications.missing.includes(c.key as any) && !savedKeys.includes(c.key);
+          const saving = savingKeys.includes(c.key);
           return (
             <div key={c.key} className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 flex-1 space-y-2">
@@ -476,9 +490,9 @@ export function CertificationsPanel({ onboardingId, done }: { onboardingId: stri
                 {c.approvedWording && <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{c.approvedWording}</p>}
               </div>
               {missing ? (
-                <Button size="sm" className="shrink-0" disabled={!c.approvedWording || m.isPending || name.trim().length < 2} onClick={() => m.mutate(c.key)}>I certify</Button>
+                <Button size="sm" className="shrink-0" disabled={!c.approvedWording || saving || name.trim().length < 2} onClick={() => m.mutate(c.key)}>{saving ? "Saving…" : "I certify"}</Button>
               ) : (
-                <span className="text-sm text-muted-foreground">Certified</span>
+                <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary"><Check className="h-4 w-4" /> Certified</span>
               )}
             </div>
           );

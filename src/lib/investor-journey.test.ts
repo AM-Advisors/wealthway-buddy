@@ -196,3 +196,18 @@ describe("Action Center deep links", () => {
     expect(read("src/lib/navigation.ts")).not.toMatch(/label: "Onboarding"/);
   });
 });
+
+describe("identity done never asks to start verification again", () => {
+  it("only eligibility questions open: says identity verified", () => {
+    const rr = (key: any, state: any) => ({ key, label: key, state });
+    const reqs = [rr("investment_profile", "valid"), rr("account", "valid"), rr("identity_verification", "valid"), rr("aml", "valid"), rr("eligibility", "missing"), rr("accreditation", "not_applicable")] as any;
+    const v = journeySteps(reqs, { stage: "verification", approvedToFund: false, fundingStatus: null, investorReportsSent: false }).find((s) => s.key === "verify")!;
+    expect(v.message).toBe("Identity verified. Answer the eligibility questions to continue.");
+  });
+  it("identity still missing: asks to start verification", () => {
+    const rr = (key: any, state: any) => ({ key, label: key, state });
+    const reqs = [rr("investment_profile", "valid"), rr("identity_verification", "missing"), rr("eligibility", "missing")] as any;
+    const v = journeySteps(reqs, { stage: "verification", approvedToFund: false, fundingStatus: null, investorReportsSent: false }).find((s) => s.key === "verify")!;
+    expect(v.message).toBe("Start verification to continue.");
+  });
+});

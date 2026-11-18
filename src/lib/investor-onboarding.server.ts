@@ -962,6 +962,15 @@ export async function saveQuestionnaire(
     const { autoApplyDiditForOnboarding } = await import("@/lib/didit-auto-apply.server");
     await autoApplyDiditForOnboarding(row.id, actor.userId);
   } catch (e) { console.error("[didit-auto]", (e as Error).message); }
+  // A citizenship the investor confirmed in the questionnaire fills a blank profile citizenship.
+  const citizenshipQ = input.submit ? questions.find((q: any) => q.prefillKey === "citizenship_country" || q.key === "citizenship_country" || q.key === "citizenship") : null;
+  if (citizenshipQ && row.person_id) {
+    try {
+      const { data: person } = await db().from("persons").select("id, citizenship_country").eq("id", row.person_id).maybeSingle();
+      const { recordCertifiedCitizenship } = await import("@/lib/onboarding-compliance.server");
+      await recordCertifiedCitizenship(db(), row, person, locks.profileType, answers[citizenshipQ.key], actor.userId);
+    } catch (e) { console.error("[citizenship-sync]", (e as Error).message); }
+  }
   await recordEvent({
     onboardingId: row.id,
     offeringId: row.offering_id,

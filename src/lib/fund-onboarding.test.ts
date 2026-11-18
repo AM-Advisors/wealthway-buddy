@@ -37,6 +37,10 @@ describe("dual signature sequencing", () => {
   });
   it("preparation must be complete before sending", () => {
     expect(signingConfigComplete({ mode: "dual", countersignerUserId: null, blocks: [{ signer_role: "investor", block_type: "signature" }] }).ready).toBe(false);
+    // Signature spots are optional: the signing provider places the fields.
+    expect(signingConfigComplete({ mode: "investor_only", countersignerUserId: null, blocks: [] })).toEqual({ ready: true, missing: [] });
+    expect(signingConfigComplete({ mode: "dual", countersignerUserId: "u", blocks: [] })).toEqual({ ready: true, missing: [] });
+    expect(signingConfigComplete({ mode: "dual", countersignerUserId: null, blocks: [] }).missing).toEqual(["An authorized fund signatory"]);
     expect(signingConfigComplete({ mode: "dual", countersignerUserId: "u", blocks: [{ signer_role: "investor", block_type: "signature" }, { signer_role: "fund_manager", block_type: "signature" }] }).ready).toBe(true);
   });
 });
@@ -126,6 +130,7 @@ describe("requirements engine - profile-specific roles", () => {
   it("Box send path enforces preparation server-side", () => {
     const src = readFileSync("src/lib/box-sign.functions.ts", "utf8");
     expect(src).toMatch(/signingConfigComplete\(/);
-    expect(src).toMatch(/isn't prepared for signature yet/);
+    expect(src).toMatch(/choose who countersigns it/);
+    expect(src).not.toMatch(/offering_document_signature_blocks/);
   });
 });

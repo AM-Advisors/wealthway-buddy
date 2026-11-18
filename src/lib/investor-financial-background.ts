@@ -21,3 +21,15 @@ export function financialBackgroundFields(base: AmlField[], answers: Partial<Aml
   }
   return fields;
 }
+/**
+ * Citizenship the investor certified in the financial background questions,
+ * to fill a blank citizenship on their own person record. Individuals only
+ * (a joint or entity answer is not one person's fact); never overwrites a
+ * value that is already recorded.
+ */
+export function citizenshipToRecord(input: { profileType: string | null | undefined; current: unknown; answer: unknown }): string | null {
+  if (String(input.profileType ?? "") !== "individual") return null;
+  if (typeof input.current === "string" && input.current.trim()) return null;
+  const a = typeof input.answer === "string" ? input.answer.trim() : "";
+  return a ? a.slice(0, 60) : null;
+}

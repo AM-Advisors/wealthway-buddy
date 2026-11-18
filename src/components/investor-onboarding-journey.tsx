@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
-import { prepareThenOpen } from "@/lib/investor-step-prefill";
+import { SignDocumentButton } from "@/components/sign-document-button";
 import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
 import { confirmAccreditationStepFn } from "@/lib/accreditation-step.functions";
 import { ACCREDITATION_QUESTION_KEY, basisFromAnswer, evidenceForBasis, isAccreditationQuestion, selfCertificationAllowed } from "@/lib/accreditation-step";
@@ -8,7 +8,7 @@ import { recordEvidence } from "@/lib/accreditation.functions";
 import { ProfessionalRequestPanel } from "@/components/accreditation-professional-request";
 import standardQuestions from "@/lib/standard-investor-questionnaire.json";
 import { InvestorBankVerify } from "@/components/investor-bank-verify";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check } from "lucide-react";
@@ -24,7 +24,6 @@ import {
   investorReportsFundsSentFn,
   investorFundingLedgerFn,
   onboardingDetailFn,
-  prepareSubscriptionDocumentsFn,
   recordSubscriptionSignatureFn,
   saveQuestionnaireFn,
   setInvestmentAmountFn,
@@ -44,7 +43,7 @@ import { cn } from "@/lib/utils";
 import { isReconciledFunding } from "@/lib/funding-status";
 import { WIRE_FIELD_LABELS } from "@/lib/wire-scope";
 import { FeeAcceptanceCard, OnboardingUploadsCard, useFeesAccepted } from "@/components/investor-onboarding-extras";
-import { CertificationsPanel, FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { CertificationsPanel, EligibilityPanel, FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 import { buildSignTasks, taskForError, type SignTaskKey, type SignTaskState } from "@/lib/sign-step-tasks";
 
 const money = (cents: number | null | undefined) =>
@@ -366,7 +365,10 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
   const status = d.verification as string;
   const verifyKeys = ["identity_verification", "entity_verification", "aml", "eligibility", "accreditation"];
   const open = ((d.requirements ?? []) as any[]).filter((r) => verifyKeys.includes(r.key) && r.state !== "valid" && r.state !== "not_applicable");
-  const accreditationOnly = open.length > 0 && open.every((r) => r.key === "accreditation");
+  // Once the identity check itself is done, never ask to start it again for questions that remain.
+  const identityDone = open.length > 0 && open.every((r) => r.key === "accreditation" || r.key === "eligibility");
+  const eligibilityOpen = open.some((r) => r.key === "eligibility");
+  const accreditationOpen = open.some((r) => r.key === "accreditation");
   return (
     <Card>
       <CardHeader>
@@ -380,10 +382,15 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
           <p className="text-sm">Verification in progress. We'll let you know if we need anything else.</p>
         ) : (
           <>
-            {accreditationOnly ? (
+            {identityDone ? (
               <>
-                <p className="text-sm">Your identity is verified. The last part is confirming you're an accredited investor.</p>
-                <Button asChild><a href={`/onboarding/accreditation?onboarding=${onboardingId}`}>Confirm accreditation</a></Button>
+                <p className="text-sm">
+                  {eligibilityOpen
+                    ? "Your identity is verified. Answer the eligibility questions below to finish this step."
+                    : "Your identity is verified. The last part is confirming you're an accredited investor."}
+                </p>
+                {eligibilityOpen ? <EligibilityPanel onboardingId={onboardingId} done={() => void qc.invalidateQueries()} /> : null}
+                {accreditationOpen ? <Button asChild><a href={`/onboarding/accreditation?onboarding=${onboardingId}`}>Confirm accreditation</a></Button> : null}
               </>
             ) : (
               <>
@@ -678,20 +685,12 @@ const TASK_BADGE: Record<SignTaskState, { label: string; variant: "default" | "o
 };
 
 function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
-  const navigate = useNavigate();
   const questionnaireFn = useServerFn(saveQuestionnaireFn);
-  const prepareFn = useServerFn(prepareSubscriptionDocumentsFn);
   const confirmFn = useServerFn(recordSubscriptionSignatureFn);
   const [signer, setSigner] = useState("");
   const [open, setOpen] = useState<SignTaskKey | null>(null);
   const [userPicked, setUserPicked] = useState(false);
   const saveQ = useAction(questionnaireFn, "Answers saved.", done);
-  const prepare = useMutation({
-    mutationFn: () => prepareThenOpen(Boolean(d.documentTemplateVersion), () => prepareFn({ data: { onboardingId } }), () => {
-      void navigate({ to: "/fund/$offeringId/documents", params: { offeringId: d.offering.id } });
-    }),
-    onError: (e: Error) => toast.error(e.message),
-  });
   const confirm = useMutation({
     mutationFn: (v: any) => (confirmFn as any)(v),
     onSuccess: () => { toast.success("Thank you. Harmonious will now review your subscription."); done(); },
@@ -757,6 +756,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                     <span>{doc.title}</span>
                     {doc.requiresAcknowledgment && !doc.acknowledged && !doc.signed ? (
                       <Button size="sm" disabled={ack.isPending} onClick={() => ack.mutate({ data: { onboardingId, documentId: doc.id } } as any)}>I acknowledge and agree</Button>
+                    ) : doc.requiresSignature && !doc.signed && !doc.investorSigned && !signed ? (
+                      <SignDocumentButton onboardingId={onboardingId} documentId={doc.id} prepared={Boolean(d.documentTemplateVersion)} />
                     ) : (
                       <Badge variant={complete ? "default" : "outline"}>{status}</Badge>
                     )}
@@ -783,9 +784,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
               ) : null}
             </ol>
             {!signed && docs.some((x) => x.requiresSignature && !x.signed && !x.investorSigned) ? (
-              <Button disabled={prepare.isPending} onClick={() => prepare.mutate()}>
-                {prepare.isPending ? "Opening documents…" : "Review & Sign Documents"}
-              </Button>
+              <p className="text-sm text-muted-foreground">Select Review &amp; Sign next to each document to sign it here.</p>
             ) : null}
             <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it, this can take a minute.</p>
           </div>
