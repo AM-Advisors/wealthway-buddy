@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.17"
-  }
   public: {
     Tables: {
       access_account_classifications: {
@@ -41414,6 +41409,64 @@ export type Database = {
         }
         Relationships: []
       }
+      prior_signed_document_withdrawals: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at: string
+          document_id: string
+          id: string
+          offering_id: string
+          onboarding_id: string
+          reason: string
+        }
+        Insert: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at?: string
+          document_id: string
+          id?: string
+          offering_id: string
+          onboarding_id: string
+          reason: string
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          offering_id?: string
+          onboarding_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prior_signed_document_withdrawals_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "prior_signed_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prior_signed_document_withdrawals_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prior_signed_document_withdrawals_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prior_signed_documents: {
         Row: {
           created_at: string
@@ -53891,3 +53944,4 @@ export const Constants = {
     },
   },
 } as const
+

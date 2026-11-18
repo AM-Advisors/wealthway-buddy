@@ -44,7 +44,7 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
       docIds.length ? db.from("offering_document_versions").select("id, offering_document_id, version, file_name, created_at, superseded_at").in("offering_document_id", docIds) : none,
       docIds.length ? db.from("investment_document_acknowledgments").select("offering_document_id, version, onboarding_id, acknowledged_at").in("offering_document_id", docIds) : none,
       docIds.length ? db.from("document_signatures").select("offering_document_id, application_id, signature_template_version, signed_at").in("offering_document_id", docIds).is("cancelled_at", null).not("signed_at", "is", null) : none,
-      obIds.length ? db.from("prior_signed_documents").select("onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : none,
+      obIds.length ? db.from("prior_signed_documents").select("id, onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : none,
     ]);
     const sealed = await (await import("@/lib/sealed-records.server")).sealedIds(db, "offering_document_versions");
     if (versR.data) versR.data = (versR.data as any[]).filter((x) => !sealed.has(x.id));
@@ -63,6 +63,7 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
     const sideLetters = ((slR.data ?? []) as any[]).filter((s) => ["terminated", "withdrawn", "expired"].includes(String(s.status))).map((s) => ({
       id: s.id, status: s.status, version: s.current_version, onboardingId: s.onboarding_id, investor: s.onboarding_id ? names[s.onboarding_id] ?? s.investor_label : s.investor_label,
     }));
-    const priorSigned = ((prior2.data ?? []) as any[]).map((p) => ({ onboardingId: p.onboarding_id, investor: names[p.onboarding_id] ?? "Unnamed investor", title: p.title, signedOn: p.signed_on }));
+    const priorWithdrawn = await (await import("@/lib/prior-signed-documents.server")).withdrawnPriorDocIds(db, obIds);
+    const priorSigned = ((prior2.data ?? []) as any[]).filter((p) => !priorWithdrawn.has(p.id)).map((p) => ({ onboardingId: p.onboarding_id, investor: names[p.onboarding_id] ?? "Unnamed investor", title: p.title, signedOn: p.signed_on }));
     return { items, sideLetters, priorSigned };
   });

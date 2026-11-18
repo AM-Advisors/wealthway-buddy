@@ -31,3 +31,7 @@ export const outsideSubscriptionFn = createServerFn({ method: "POST" }).middlewa
 export const markOutsideSubscriptionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(base.extend({ marked: z.boolean(), signedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(), note: z.string().max(500).nullish() }).parse)
   .handler(async ({ data, context }) => (await srv()).markOutsideSubscription(await db(), context.userId, data));
+
+export const setPriorDocWithdrawnFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(base.extend({ documentId: z.string().uuid(), withdrawn: z.boolean(), reason: z.string().trim().min(1).max(500) }).parse)
+  .handler(async ({ data, context }) => (await srv()).setPriorDocWithdrawn(await db(), context.userId, data));

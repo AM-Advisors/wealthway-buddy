@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listPriorDocsFn, markOutsideSubscriptionFn, openPriorDocFn, outsideSubscriptionFn, recordPriorDocFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
+import { listPriorDocsFn, markOutsideSubscriptionFn, openPriorDocFn, outsideSubscriptionFn, recordPriorDocFn, setPriorDocWithdrawnFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
 
 const refreshFund = (qc: ReturnType<typeof useQueryClient>) => qc.invalidateQueries({ predicate: (q) => ["fund-investor", "fund-investor-grid", "fund-readiness", "investment-readiness", "investor-record", "onboarding", "readiness-queue"].includes(String(q.queryKey[0])) });
 
@@ -71,7 +71,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
   };
 
   // An active signed Subscription Agreement is changed only through Replace, never loaded a second time.
-  const hasActiveSub = (q.data ?? []).some((d) => d.kind === "subscription_agreement" && !d.replaced);
+  const hasActiveSub = (q.data ?? []).some((d) => d.kind === "subscription_agreement" && !d.replaced && !d.withdrawn);
   const outside = useQuery({ queryKey: ["prior-signed-docs", onboardingId, "outside"], queryFn: () => getOutside({ data: { fundId, onboardingId } }) });
   const outsideDone = !!outside.data?.marked && !!outside.data?.complete;
   const kindOptions = Object.entries(KINDS).filter(([k]) => !(hasActiveSub && !replacesId && k === "subscription_agreement"));
@@ -83,23 +83,25 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
         <h4 className="font-medium">Signed before joining Harmonious</h4>
         {!adding && <Button size="sm" variant="outline" onClick={() => openForm(() => { if (hasActiveSub) setKind("other"); })}>{(q.data ?? []).length ? "Load another document" : "Load a completed document"}</Button>}
       </div>
-      <p className="text-xs text-muted-foreground">Upload documents this investor already completed elsewhere. They are kept permanently for the record and don't change the investor's steps.</p>
+      <p className="text-xs text-muted-foreground">Upload documents this investor already completed elsewhere. They are kept permanently for the record and don't change the investor's steps. Loaded one by mistake? Use Undo: the copy stays on file but no longer counts.</p>
       {q.isError ? <p className="text-destructive">{(q.error as Error).message} <Button size="sm" variant="link" onClick={() => q.refetch()}>Retry</Button></p>
         : q.isLoading ? <p className="text-muted-foreground">Loading…</p>
         : (q.data ?? []).length ? (q.data ?? []).map((d) => (
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
             <div className="min-w-0">
               <p className="break-words font-medium">{d.title}</p>
-              <p className="text-xs text-muted-foreground">{d.kindLabel !== d.title ? `${d.kindLabel} · ` : ""}Signed {d.signedOn} · Loaded by {d.uploadedBy}{outsideDone && d.kind === "subscription_agreement" && !d.replaced ? " · Signed outside the platform" : ""}{d.replaced ? " · Replaced, retained copy" : ""}</p>
+              <p className="text-xs text-muted-foreground">{d.kindLabel !== d.title ? `${d.kindLabel} · ` : ""}Signed {d.signedOn} · Loaded by {d.uploadedBy}{outsideDone && d.kind === "subscription_agreement" && !d.replaced && !d.withdrawn ? " · Signed outside the platform" : ""}{d.replaced ? " · Replaced, retained copy" : ""}{d.withdrawn ? " · Undone, retained copy" : ""}</p>
               {d.note && <p className="text-xs text-muted-foreground">{d.note}</p>}
+              {d.withdrawn && d.withdrawnReason && <p className="text-xs text-muted-foreground">Undo reason: {d.withdrawnReason}</p>}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" onClick={async () => {
                 try { const r = await open({ data: { fundId, onboardingId, documentId: d.id } }); const a = document.createElement("a"); a.href = r.url; a.download = ""; a.rel = "noreferrer"; a.click(); }
                 catch (e) { toast.error(e instanceof Error ? e.message : "The document could not be opened."); }
               }}>Download</Button>
-              {!d.replaced && <Button size="sm" variant="ghost" onClick={() => openForm(() => { setReplacesId(d.id); setKind(d.kind as Kind); setTitle(d.title); if (d.signedOn) setSignedOn(d.signedOn); })}>Replace</Button>}
-              {outsideDone && d.kind === "subscription_agreement" && !d.replaced && <UndoOutside fundId={fundId} onboardingId={onboardingId} />}
+              {!d.replaced && !d.withdrawn && <Button size="sm" variant="ghost" onClick={() => openForm(() => { setReplacesId(d.id); setKind(d.kind as Kind); setTitle(d.title); if (d.signedOn) setSignedOn(d.signedOn); })}>Replace</Button>}
+              {outsideDone && d.kind === "subscription_agreement" && !d.replaced && !d.withdrawn && <UndoOutside fundId={fundId} onboardingId={onboardingId} />}
+              {!d.replaced && !(outsideDone && d.kind === "subscription_agreement" && !d.withdrawn) && <UndoDocument fundId={fundId} onboardingId={onboardingId} documentId={d.id} kind={d.kind} withdrawn={d.withdrawn} blockRestore={d.kind === "subscription_agreement" && hasActiveSub} />}
             </div>
           </div>
         )) : !adding && <p className="text-muted-foreground">No documents loaded.</p>}
@@ -199,4 +201,41 @@ function UndoOutside({ fundId, onboardingId }: { fundId: string; onboardingId: s
     }}>{busy ? "Saving…" : "Confirm undo"}</Button>
     <Button size="sm" variant="ghost" disabled={busy} onClick={() => setOpen(false)}>Cancel</Button>
   </div>;
+}
+
+/** Undo a loaded document by mistake (or restore it). Reason required; the copy is never deleted. */
+function UndoDocument({ fundId, onboardingId, documentId, kind, withdrawn, blockRestore }: { fundId: string; onboardingId: string; documentId: string; kind: string; withdrawn: boolean; blockRestore: boolean }) {
+  const qc = useQueryClient();
+  const set = useServerFn(setPriorDocWithdrawnFn);
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (withdrawn && blockRestore) return null;
+  const label = withdrawn ? "Restore" : "Undo";
+  if (!open) return <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>{label}</Button>;
+  return <div className="flex w-full flex-wrap items-center gap-2">
+    <p className="w-full text-xs text-muted-foreground">{withdrawn ? "This puts the document back in use." : `This takes the document back. The copy stays on file as a retained copy${kind === "subscription_agreement" ? " and the Sign step reopens if it relied on this copy" : ""}.`}</p>
+    <Input className="min-w-48 flex-1" aria-label="Reason" placeholder={withdrawn ? "Reason for restoring (required)" : "Reason for undoing (required)"} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} />
+    <Button size="sm" variant="outline" disabled={busy || !reason.trim()} onClick={async () => {
+      setBusy(true);
+      try {
+        await set({ data: { fundId, onboardingId, documentId, withdrawn: !withdrawn, reason: reason.trim() } });
+        toast.success(withdrawn ? "Document restored." : "Document undone. The copy stays on file.");
+        setOpen(false); setReason("");
+        await qc.invalidateQueries({ queryKey: ["prior-signed-docs", onboardingId] });
+        await refreshFund(qc);
+      } catch (e) { toast.error(e instanceof Error ? e.message : "This could not be saved."); }
+      finally { setBusy(false); }
+    }}>{busy ? "Saving…" : withdrawn ? "Confirm restore" : "Confirm undo"}</Button>
+    <Button size="sm" variant="ghost" disabled={busy} onClick={() => setOpen(false)}>Cancel</Button>
+  </div>;
+}
+
+/** Shown under "Signed on Harmonious" when nothing was signed here, pointing to documents loaded from elsewhere. */
+export function PlatformSignedEmpty({ fundId, onboardingId }: { fundId: string; onboardingId: string }) {
+  const list = useServerFn(listPriorDocsFn);
+  const q = useQuery({ queryKey: ["prior-signed-docs", onboardingId], queryFn: () => list({ data: { fundId, onboardingId } }) });
+  const active = (q.data ?? []).filter((d) => !d.replaced && !d.withdrawn).length;
+  if (active) return <p className="text-muted-foreground">Nothing has been signed on Harmonious yet. {active === 1 ? "1 document signed elsewhere is" : `${active} documents signed elsewhere are`} on file below under “Signed before joining Harmonious”.</p>;
+  return <p className="text-muted-foreground">Nothing has been signed on Harmonious yet, and no documents signed elsewhere have been loaded.</p>;
 }

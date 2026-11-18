@@ -36,7 +36,7 @@ import { InviteInvestorButton, PersonalInvestmentLinkCard, PersonalLinkCopyButto
 import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
 import { InvestorPeopleAndContacts } from "@/components/investor-people-contacts";
 import { InvestorPriorVerification } from "@/components/investor-prior-verification";
-import { PriorSignedDocuments } from "@/components/prior-signed-documents";
+import { PlatformSignedEmpty, PriorSignedDocuments } from "@/components/prior-signed-documents";
 import { ClassAssignmentCard } from "@/components/fund-setup-phase3";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { InvestmentChecklist } from "@/components/investment-readiness";
@@ -449,8 +449,8 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
             </TabsContent>
             <TabsContent value="documents" className="space-y-6">
           {d.reviewEvidence && <>
-            <section className="space-y-3" aria-label="Signed fund documents">
-              <h4 className="font-medium">Signed fund documents</h4>
+            <section className="space-y-3" aria-label="Signed on Harmonious">
+              <h4 className="font-medium">Signed on Harmonious</h4>
               {d.reviewEvidence.signedDocuments.length ? d.reviewEvidence.signedDocuments.map((doc) => <div key={doc.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
                 <div className="min-w-0"><p className="break-words font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">{doc.version != null ? `Version ${versionLabel(doc.version)}` : "Version not recorded"} · {fmtDate(doc.signedAt)}{doc.replaced ? " · Replaced, retained copy" : " · Signed"}</p></div>
                 {doc.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
@@ -460,7 +460,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
                   catch (error) { toast.error(error instanceof Error ? error.message : "The signed copy could not be opened."); }
                   finally { setDownloading(null); }
                 }}>{downloading === doc.id ? "Opening…" : "Download signed copy"}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
-              </div>) : <p className="text-muted-foreground">No submitted signed documents yet.</p>}
+              </div>) : id ? <PlatformSignedEmpty fundId={fundId} onboardingId={id} /> : <p className="text-muted-foreground">Nothing has been signed on Harmonious yet.</p>}
               {(d.reviewEvidence.taxForms ?? []).map((tf: { id: string; label: string; certifiedAt: string | null; hasCopy: boolean }) => <div key={tf.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
                 <div className="min-w-0"><p className="font-medium">Tax form ({tf.label})</p><p className="text-xs text-muted-foreground">{tf.certifiedAt ? `${fmtDate(tf.certifiedAt)} · ` : ""}Signed</p></div>
                 {tf.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {

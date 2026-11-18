@@ -106,11 +106,12 @@ async function existingDocs(onboardingId: string) {
   const d = supabaseAdmin as any;
   const [{ data: up }, { data: prior }] = await Promise.all([
     d.from("investor_documents").select("file_name, doc_kind, uploaded_at").eq("onboarding_id", onboardingId),
-    d.from("prior_signed_documents").select("file_name, document_kind, created_at").eq("onboarding_id", onboardingId),
+    d.from("prior_signed_documents").select("id, file_name, document_kind, created_at").eq("onboarding_id", onboardingId),
   ]);
+  const withdrawn = await (await import("@/lib/prior-signed-documents.server")).withdrawnPriorDocIds(d, [onboardingId]);
   return [
     ...((up ?? []) as any[]).map((r) => ({ fileName: String(r.file_name ?? ""), kind: String(r.doc_kind), savedAt: String(r.uploaded_at ?? "").slice(0, 10) })),
-    ...((prior ?? []) as any[]).map((r) => ({ fileName: String(r.file_name ?? ""), kind: String(r.document_kind), savedAt: String(r.created_at ?? "").slice(0, 10) })),
+    ...((prior ?? []) as any[]).filter((r) => !withdrawn.has(r.id)).map((r) => ({ fileName: String(r.file_name ?? ""), kind: String(r.document_kind), savedAt: String(r.created_at ?? "").slice(0, 10) })),
   ];
 }
 

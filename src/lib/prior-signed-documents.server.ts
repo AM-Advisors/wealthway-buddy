@@ -1,9 +1,12 @@
 /**
  * Documents an investor completed in another system before joining Harmonious.
  * Harmonious staff or that fund's managers upload the finished copy; records are permanent
- * (DB trigger), corrections upload a replacement. Evidence only: never marks a step signed,
+ * (DB trigger), corrections upload a replacement, and Undo appends a reasoned withdrawal
+ * (prior_signed_document_withdrawals) that keeps the copy on file. Evidence only: never marks a step signed,
  * funded or verified.
  */
+import { withdrawalRefusal, withdrawnPriorDocs } from "@/lib/prior-doc-withdrawal";
+
 const STAFF = ["admin", "super_admin", "operations", "fund_administration"];
 const BUCKET = "signed-documents";
 
@@ -32,16 +35,30 @@ async function access(db: any, userId: string, fundId: string, onboardingId: str
   return staff ? "harmonious" : "fund_manager";
 }
 
+/** Documents currently undone for these investments (latest withdrawal entry wins). Unreadable → none. */
+export async function withdrawnPriorDocIds(db: any, onboardingIds: string[]): Promise<Map<string, { reason: string | null; at: string }>> {
+  const ids = [...new Set(onboardingIds)];
+  const rows: any[] = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const r = await db.from("prior_signed_document_withdrawals").select("document_id, action, reason, created_at").in("onboarding_id", ids.slice(i, i + 100));
+    if (r.error) { console.error("prior document withdrawals read failed (treated as none)"); continue; }
+    rows.push(...(r.data ?? []));
+  }
+  return withdrawnPriorDocs(rows);
+}
+
 export async function listPriorDocs(db: any, userId: string, input: { fundId: string; onboardingId: string }) {
   await access(db, userId, input.fundId, input.onboardingId);
   const { data, error } = await db.from("prior_signed_documents").select("id, document_kind, title, signed_on, file_name, note, uploaded_by_role, replaces_id, created_at")
     .eq("onboarding_id", input.onboardingId).order("created_at", { ascending: false });
   if (error) throw new Error("Previously signed documents could not be loaded.");
   const replaced = new Set(((data ?? []) as any[]).map((d) => d.replaces_id).filter(Boolean));
+  const withdrawn = await withdrawnPriorDocIds(db, [input.onboardingId]);
   return ((data ?? []) as any[]).map((d) => ({
     id: d.id as string, kind: d.document_kind as PriorDocKind, kindLabel: PRIOR_DOC_KINDS[d.document_kind as PriorDocKind] ?? "Document",
     title: d.title as string, signedOn: d.signed_on as string, fileName: d.file_name as string, note: d.note as string | null,
     uploadedBy: d.uploaded_by_role === "harmonious" ? "Harmonious" : "Fund manager", uploadedAt: d.created_at as string, replaced: replaced.has(d.id),
+    withdrawn: withdrawn.has(d.id), withdrawnReason: withdrawn.get(d.id)?.reason ?? null, withdrawnAt: withdrawn.get(d.id)?.at ?? null,
   }));
 }
 
@@ -66,6 +83,7 @@ export async function recordPriorDoc(db: any, userId: string, input: { fundId: s
     const { data: prev } = await db.from("prior_signed_documents").select("id, onboarding_id").eq("id", input.replacesId).maybeSingle();
     if (!prev || prev.onboarding_id !== input.onboardingId) throw new Error("The document being replaced wasn't found.");
     if (!(input.note ?? "").trim()) throw new Error("Give a reason for the replacement.");
+    if ((await withdrawnPriorDocIds(db, [input.onboardingId])).has(input.replacesId)) throw new Error("That document was undone. Load a new document instead.");
   }
   const { data, error } = await db.from("prior_signed_documents").insert({
     offering_id: input.fundId, onboarding_id: input.onboardingId, document_kind: input.kind, title: input.title.trim(),
@@ -88,6 +106,33 @@ export async function openPriorDoc(db: any, userId: string, input: { fundId: str
   return { url: r.data.signedUrl as string };
 }
 
+/** Undo (withdraw) or restore a loaded document. Reason required; the file and record stay on file. */
+export async function setPriorDocWithdrawn(db: any, userId: string, input: { fundId: string; onboardingId: string; documentId: string; withdrawn: boolean; reason: string }) {
+  const role = await access(db, userId, input.fundId, input.onboardingId);
+  const { data: doc } = await db.from("prior_signed_documents").select("id, onboarding_id, document_kind").eq("id", input.documentId).maybeSingle();
+  if (!doc || doc.onboarding_id !== input.onboardingId) throw new Error("That document wasn't found.");
+  const [{ data: rep, error: repErr }, current] = await Promise.all([
+    db.from("prior_signed_documents").select("id").eq("replaces_id", input.documentId).limit(1),
+    withdrawnPriorDocIds(db, [input.onboardingId]),
+  ]);
+  if (repErr) throw new Error("This could not be checked. Try again.");
+  const action = input.withdrawn ? "withdrawn" : "restored";
+  const refusal = withdrawalRefusal({ action, reason: input.reason, replaced: (rep ?? []).length > 0, withdrawn: current.has(input.documentId) });
+  if (refusal) throw new Error(refusal);
+  if (!input.withdrawn && doc.document_kind === "subscription_agreement") {
+    const { data: others } = await db.from("prior_signed_documents").select("id, replaces_id").eq("onboarding_id", input.onboardingId).eq("document_kind", "subscription_agreement");
+    const replacedIds = new Set(((others ?? []) as any[]).map((o) => o.replaces_id).filter(Boolean));
+    if (((others ?? []) as any[]).some((o) => o.id !== input.documentId && !replacedIds.has(o.id) && !current.has(o.id))) throw new Error("Another Subscription Agreement is already in use. Replace that one instead.");
+  }
+  const { error } = await db.from("prior_signed_document_withdrawals").insert({
+    document_id: input.documentId, onboarding_id: input.onboardingId, offering_id: input.fundId, action, reason: input.reason.trim(), actor_user_id: userId, actor_role: role,
+  });
+  if (error) throw new Error("This could not be saved.");
+  await db.from("investor_onboarding_events").insert({ onboarding_id: input.onboardingId, offering_id: input.fundId, event: input.withdrawn ? "prior_signed_document_withdrawn" : "prior_signed_document_restored", actor_user_id: userId, actor_role: role, detail: { document_id: input.documentId, kind: doc.document_kind } }).then(() => null, () => null);
+  if (doc.document_kind === "subscription_agreement") await reconcileOutside(input.onboardingId, userId);
+  return { ok: true };
+}
+
 /**
  * Subscription Agreement completed outside the platform. Staff or the fund's managers mark it;
  * it counts as signed only once Harmonious has loaded the copy. Never touches funding.
@@ -107,10 +152,11 @@ export async function outsideSubscriptionStates(db: any, onboardingIds: string[]
     marks.push(...(m.data ?? [])); docs.push(...(d.data ?? []));
   }
   const replaced = new Set(docs.map((d) => d.replaces_id).filter(Boolean));
+  const withdrawn = await withdrawnPriorDocIds(db, ids);
   for (const id of ids) {
     const latest = marks.find((m) => m.onboarding_id === id);
     const marked = latest?.action === "marked";
-    const copy = docs.find((d) => d.onboarding_id === id && d.uploaded_by_role === "harmonious" && !replaced.has(d.id));
+    const copy = docs.find((d) => d.onboarding_id === id && d.uploaded_by_role === "harmonious" && !replaced.has(d.id) && !withdrawn.has(d.id));
     const copyLoaded = Boolean(copy);
     out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: marked && copyLoaded });
   }
