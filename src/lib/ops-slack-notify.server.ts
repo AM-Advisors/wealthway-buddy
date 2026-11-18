@@ -8,6 +8,7 @@ import { operationsNoticeUrl, verificationNotice, type VerificationCheck } from 
 const GATEWAY = "https://connector-gateway.lovable.dev/slack/api";
 export const OPS_SLACK_CHANNEL = "C057SPLASCR"; // #operations
 export const COMPLIANCE_SLACK_CHANNEL = "C0C9TBQTXNY"; // #compliance-regulatory
+export const TECH_SLACK_CHANNEL = "C0CKHUVVB32"; // #harmonious-platform: Tech section reports and error spikes
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
@@ -218,7 +219,7 @@ export async function notifyTech(n: { key: string; head: string; title: string; 
     if (dup) return;
     const { appUrl } = await import("@/lib/app-origins");
     const r = await slack("chat.postMessage", {
-      channel: OPS_SLACK_CHANNEL, unfurl_links: false, text: `${n.head} · ${n.title}`,
+      channel: TECH_SLACK_CHANNEL, unfurl_links: false, text: `${n.head} · ${n.title}`,
       blocks: [
         { type: "section", text: { type: "mrkdwn", text: `*${n.head}*\n${n.title}` } },
         { type: "context", elements: [{ type: "mrkdwn", text: n.context }] },
