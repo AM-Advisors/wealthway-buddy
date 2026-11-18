@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OfferingDocumentReader } from "@/components/offering-document-reader";
 import { SignDocumentButton } from "@/components/sign-document-button";
+import { AcknowledgeDocumentDialog } from "@/components/acknowledge-document-dialog";
 
 /**
  * Investor Sign-stage list: only documents that apply to this investment, plain actions.
@@ -35,25 +36,26 @@ export function InvestmentOfferingDocuments({ onboardingId, acknowledgeOnly = fa
       qc.invalidateQueries({ queryKey: ["onboarding", onboardingId] });
     } catch (e: any) {
       toast.error(e.message);
+      throw e;
     }
   };
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">{acknowledgeOnly ? "Also needed: acknowledge these documents" : "Documents"}</CardTitle>
-        {acknowledgeOnly ? <CardDescription>These don't need a signature. Read each one, then select I acknowledge and agree.</CardDescription> : null}
+        {acknowledgeOnly ? <CardDescription>These don't need a signature. Open each one, read it to the end, then select I acknowledge and agree.</CardDescription> : null}
       </CardHeader>
       <CardContent className="space-y-2">
         {rows.map((d) => (
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
             <span className="text-sm">{d.title}{d.action !== "Completed" && d.approvalLabel ? <Badge variant="outline" className="mt-1 block w-fit">{d.approvalLabel}</Badge> : null}</span>
-            {d.canRead && <Button size="sm" variant="outline" onClick={() => setReading({ id: d.id, title: d.title })}>Read document</Button>}
+            {d.canRead && d.action !== "Acknowledge" && <Button size="sm" variant="outline" onClick={() => setReading({ id: d.id, title: d.title })}>Read document</Button>}
             {d.action === "Completed" ? (
               <Badge variant="secondary">Completed</Badge>
             ) : d.action === "No signature on file" ? (
               <Badge variant="outline">No signature on file</Badge>
             ) : d.action === "Acknowledge" ? (
-              <Button size="sm" onClick={() => acknowledge(d.id)}>I acknowledge and agree</Button>
+              <AcknowledgeDocumentDialog onboardingId={onboardingId} documentId={d.id} title={d.title} acknowledged={false} onAcknowledge={() => acknowledge(d.id)} />
             ) : d.action && d.action.includes("Sign") ? (
               <SignDocumentButton onboardingId={onboardingId} documentId={d.id} prepared={false} />
             ) : d.action ? (

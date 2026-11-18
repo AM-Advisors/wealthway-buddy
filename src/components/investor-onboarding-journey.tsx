@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
 import { SignDocumentButton } from "@/components/sign-document-button";
+import { AcknowledgeDocumentDialog } from "@/components/acknowledge-document-dialog";
 import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
 import { confirmAccreditationStepFn } from "@/lib/accreditation-step.functions";
 import { ACCREDITATION_QUESTION_KEY, basisFromAnswer, evidenceForBasis, isAccreditationQuestion, selfCertificationAllowed } from "@/lib/accreditation-step";
@@ -757,8 +758,11 @@ export function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; 
                 return (
                   <li key={doc.id} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
                     <span>{doc.title}</span>
-                    {doc.requiresAcknowledgment && !doc.acknowledged && !doc.signed ? (
-                      <Button size="sm" disabled={ack.isPending} onClick={() => ack.mutate({ data: { onboardingId, documentId: doc.id } } as any)}>I acknowledge and agree</Button>
+                    {doc.requiresAcknowledgment && !doc.signed ? (
+                      <span className="flex flex-wrap items-center gap-2">
+                        {doc.acknowledged ? <Badge variant="default">Acknowledged</Badge> : null}
+                        <AcknowledgeDocumentDialog onboardingId={onboardingId} documentId={doc.id} title={doc.title} acknowledged={!!doc.acknowledged} pending={ack.isPending} onAcknowledge={() => ack.mutateAsync({ data: { onboardingId, documentId: doc.id } } as any)} />
+                      </span>
                     ) : doc.requiresSignature && !doc.signed && !doc.investorSigned && !signed ? (
                       <SignDocumentButton onboardingId={onboardingId} documentId={doc.id} prepared={Boolean(d.documentTemplateVersion)} />
                     ) : (
