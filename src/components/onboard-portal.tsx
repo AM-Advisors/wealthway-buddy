@@ -28,7 +28,7 @@ import { kycFieldsFor } from "@/lib/kyc-fields";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
 import { EligibilityPanel, FinancialBackgroundPanel, TaxAndCompliancePanel } from "@/components/onboard-compliance-panels";
 import { OnboardingUploadsCard } from "@/components/investor-onboarding-extras";
-import { Sign } from "@/components/investor-onboarding-journey";
+import { AccreditationStep as PortalAccreditationStep, Sign } from "@/components/investor-onboarding-journey";
 import { investorHomeSummary, minutesLeft, type JourneyStepView } from "@/lib/investor-journey-model";
 import { isReconciledFunding } from "@/lib/funding-status";
 
@@ -185,7 +185,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
 
       {view === "verification" ? <VerificationStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "verification" ? <TaxAndCompliancePanel onboardingId={onboardingId} done={refresh} /> : null}
-      {view === "accreditation" ? <AccreditationStep d={d} onboardingId={onboardingId} /> : null}
+      {view === "accreditation" ? <AccreditationStep d={d} onboardingId={onboardingId} onChanged={refresh} /> : null}
       {view === "accreditation" ? <EligibilityPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <ReviewPreparedDocuments onboardingId={onboardingId} /> : null}
       {view === "documents" ? <SharedReviewAndSign onboardingId={onboardingId} onChanged={refresh} /> : null}
@@ -317,30 +317,37 @@ function ProfileChooser({ onboardingId, done }: { onboardingId: string; done: ()
   );
 }
 
-function AccreditationStep({ d, onboardingId }: { d: any; onboardingId: string }) {
+/**
+ * The portal's own inline accreditation card (category dropdown, 506(b) self-confirmation,
+ * 506(c) proof upload or professional letter), read through the same authorized investment detail.
+ */
+function AccreditationStep({ d, onboardingId, onChanged }: { d: any; onboardingId: string; onChanged: () => void }) {
+  const qc = useQueryClient();
+  const fullFn = useServerFn(onboardingDetailFn);
   const state = stepState(d, "accreditation");
-  if (state === "complete" || state === "not_applicable") {
+  const full = useQuery({
+    queryKey: ["onboarding", onboardingId],
+    queryFn: () => fullFn({ data: { onboardingId } }),
+    enabled: state !== "not_applicable",
+    refetchInterval: 15_000,
+  });
+  const done = () => {
+    void qc.invalidateQueries({ queryKey: ["onboarding", onboardingId] });
+    onChanged();
+  };
+  if (state === "not_applicable") {
     return <OnboardMessage title="Accreditation" body="Nothing further is needed here." />;
   }
-  if (state === "in_review") {
-    return <OnboardMessage title="Accreditation in review" body="Harmonious is reviewing your accreditation. This page updates automatically." />;
+  if (full.isLoading) return <p className="text-sm text-muted-foreground">Loading accreditation…</p>;
+  if (full.error || !full.data) return <OnboardMessage title="Accreditation" body={full.error ? errText(full.error) : "Please refresh the page."} />;
+  const req = ((full.data as any).requirements ?? []).find((r: any) => r.key === "accreditation");
+  if (!req || req.state === "not_applicable") {
+    return <OnboardMessage title="Accreditation" body="Nothing further is needed here." />;
   }
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{d.accreditationVerified ? "Accreditation Verification Required" : "Accreditation"}</CardTitle>
-        <CardDescription>
-          {d.accreditationVerified
-            ? "This offering requires independent verification that you are an accredited investor. A self-certification alone can't satisfy it."
-            : "Please confirm your accredited investor status for this offering."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button asChild className="w-full sm:w-auto">
-          <a href={`/onboarding/accreditation?return=${encodeURIComponent(`/onboard/i/${onboardingId}`)}`}>
-            {d.accreditationVerified ? "Start Accreditation Verification" : "Continue"}
-          </a>
-        </Button>
+      <CardContent className="pt-6">
+        <PortalAccreditationStep d={full.data} onboardingId={onboardingId} questionnaireDone done={done} />
       </CardContent>
     </Card>
   );

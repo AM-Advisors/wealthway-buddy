@@ -560,7 +560,8 @@ export function QuestionnaireForm({ d, done, locked, onSave, saving, financialBa
 const STANDARD_ACCREDITATION_OPTIONS: string[] =
   (standardQuestions as any).questions?.find((q: any) => q.key === ACCREDITATION_QUESTION_KEY)?.options ?? [];
 
-function AccreditationStep({ d, onboardingId, done }: { d: any; onboardingId: string; questionnaireDone: boolean; done: () => void }) {
+/** Inline accreditation card; also rendered by the direct onboarding link so both flows match. */
+export function AccreditationStep({ d, onboardingId, done }: { d: any; onboardingId: string; questionnaireDone: boolean; done: () => void }) {
   const req = (d.requirements ?? []).find((r: any) => r.key === "accreditation");
   const confirmFn = useServerFn(confirmAccreditationStepFn);
   const confirm = useAction(confirmFn, "Accreditation confirmed.", done);
