@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId, linkedApplicationForInvestment } from "@/lib/active-application";
 import { pickAccreditationInvestment } from "@/lib/accreditation-investment";
-import { accreditationIdentityLocked } from "@/lib/accreditation-step";
+import { accreditationIdentityLocked, selfCertificationAllowed } from "@/lib/accreditation-step";
 
 const onboardingRef = z.string().uuid().optional();
 
@@ -210,6 +210,22 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const application = await loadApplication(supabase, userId, data.onboarding_id);
 
+    // Self-certification only completes accreditation on a 506(b) fund; a
+    // 506(c) fund needs paperwork reviewed by the manager or Harmonious.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { data: appRow } = await admin
+      .from("investor_applications")
+      .select("id, user_id, offering_id, accreditation_status")
+      .eq("id", application.id)
+      .maybeSingle();
+    if (!appRow || appRow.user_id !== userId) throw new Error("No application found. Reload and try again.");
+    const { data: fund } = await admin.from("offerings").select("reg_type").eq("id", appRow.offering_id).maybeSingle();
+    if (!fund || !selfCertificationAllowed((fund as any).reg_type)) {
+      throw new Error("This fund requires verified accreditation. Upload proof or a verification letter.");
+    }
+    if (appRow.accreditation_status === "approved") return { ok: true, status: "approved" as const };
+
     const qualifies =
       data.income_last_two_years ||
       data.net_worth_over_1m ||
@@ -243,24 +259,24 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
       updated_at: now,
     };
 
-    const existing = await supabase
+    const existing = await admin
       .from("accreditation_records")
       .select("id")
       .eq("application_id", application.id)
       .maybeSingle();
 
     if (existing.data) {
-      const { error } = await supabase
+      const { error } = await admin
         .from("accreditation_records")
         .update(payload)
         .eq("id", existing.data.id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabase.from("accreditation_records").insert(payload);
+      const { error } = await admin.from("accreditation_records").insert(payload);
       if (error) throw new Error(error.message);
     }
 
-    const { error: appError } = await supabase
+    const { error: appError } = await admin
       .from("investor_applications")
       .update({ accreditation_status: "approved", current_step: "documents", updated_at: now })
       .eq("id", application.id);

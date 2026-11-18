@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +17,6 @@ export function PacketEmailCard({ fundId }: { fundId: string }) {
   const send = useServerFn(emailPacketToInvestor);
 
   const [selected, setSelected] = useState("");
-  const [manualEmail, setManualEmail] = useState("");
   const [includeWire, setIncludeWire] = useState(true);
   const [note, setNote] = useState("");
 
@@ -28,7 +26,7 @@ export function PacketEmailCard({ fundId }: { fundId: string }) {
   });
   const recipients = data?.recipients ?? [];
   const chosen = recipients.find((r) => r.email === selected);
-  const email = selected === "__other" || recipients.length === 0 ? manualEmail.trim() : selected;
+  const email = chosen ? chosen.email : "";
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -82,28 +80,14 @@ export function PacketEmailCard({ fundId }: { fundId: string }) {
                   {r.name} - {r.email}
                 </option>
               ))}
-              <option value="__other">Someone else…</option>
             </select>
           ) : (
             <p className="text-muted-foreground text-sm">
-              No investors are linked to this fund yet, type an address below.
+              No investors or invited people are on this fund yet. Add or invite an investor on the
+              fund first, then send the packet.
             </p>
           )}
         </div>
-
-        {(selected === "__other" || recipients.length === 0) && (
-          <div className="space-y-2">
-            <Label htmlFor="packet-email">Email address</Label>
-            <Input
-              id="packet-email"
-              type="email"
-              placeholder="investor@example.com"
-              value={manualEmail}
-              maxLength={255}
-              onChange={(event) => setManualEmail(event.target.value)}
-            />
-          </div>
-        )}
 
         <div className="flex items-center justify-between rounded-md border p-3">
           <div>
@@ -129,7 +113,7 @@ export function PacketEmailCard({ fundId }: { fundId: string }) {
 
         <Button
           onClick={() => mutation.mutate()}
-          disabled={mutation.isPending || !email.includes("@")}
+          disabled={mutation.isPending || !chosen}
         >
           {mutation.isPending ? "Sending…" : "Send the packet"}
         </Button>

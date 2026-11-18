@@ -153,29 +153,12 @@ export const listPacketRecipients = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);
 
-    const [{ data: apps }, { data: access }] = await Promise.all([
-      supabase.from("investor_applications").select("user_id").eq("offering_id", data.fundId),
-      supabase.from("investor_fund_access").select("user_id").eq("offering_id", data.fundId),
-    ]);
-
-    const ids = Array.from(
-      new Set([...(apps ?? []), ...(access ?? [])].map((r: any) => r.user_id as string)),
-    );
-    if (ids.length === 0) return { recipients: [] as { userId: string; email: string; name: string }[] };
-
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, email, legal_name")
-      .in("user_id", ids);
-
-    const recipients = (profiles ?? [])
-      .filter((p: any) => !!p.email)
-      .map((p: any) => ({
-        userId: p.user_id as string,
-        email: p.email as string,
-        name: (p.legal_name as string | null) ?? (p.email as string),
-      }))
-      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+    const { fundPacketRecipients } = await import("@/lib/offering-packet-recipients.server");
+    const recipients = (await fundPacketRecipients(data.fundId)).map((r) => ({
+      userId: r.key,
+      email: r.email,
+      name: r.name,
+    }));
 
     return { recipients };
   });
@@ -207,30 +190,23 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
     const offeringName = (offering as any)?.name ?? "Harmonious";
     const recipientEmail = data.email.trim().toLowerCase();
 
-    // People already connected to this fund may be sent the packet a few
-    // times; any other address gets a tighter cap. Either way the caller's
-    // total sends are bounded and checked before a link is created.
-    const { data: recipientProfile } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .ilike("email", recipientEmail.replace(/[\\%_]/g, "\\$&"))
-      .maybeSingle();
-    let connected = false;
-    if ((recipientProfile as any)?.user_id) {
-      const rid = (recipientProfile as any).user_id as string;
-      const [{ data: appRow }, { data: accessRow }] = await Promise.all([
-        supabase.from("investor_applications").select("id").eq("offering_id", data.fundId).eq("user_id", rid).limit(1),
-        supabase.from("investor_fund_access").select("user_id").eq("offering_id", data.fundId).eq("user_id", rid).limit(1),
-      ]);
-      connected = (appRow ?? []).length > 0 || (accessRow ?? []).length > 0;
+    // The packet (fund documents and wire instructions) only goes to people
+    // recorded on this fund: investors, with or without a login, and people
+    // with an open or accepted fund invitation. Any other address is refused.
+    const { fundPacketRecipients } = await import("@/lib/offering-packet-recipients.server");
+    const allowed = await fundPacketRecipients(data.fundId);
+    if (!allowed.some((r) => r.email === recipientEmail)) {
+      throw new Error(
+        "That email isn't an investor or invited person on this fund. Add or invite them on the fund first, then send the packet.",
+      );
     }
     const { reserveOutboundEmail } = await import("@/lib/outbound-email-guard.server");
     await reserveOutboundEmail({
       actorId: userId,
-      action: connected ? "offering_packet" : "offering_packet_unlisted",
+      action: "offering_packet",
       scopeKey: `${data.fundId}:${recipientEmail}`,
       recipient: recipientEmail,
-      limits: connected ? { perScope: 3, perActor: 100 } : { perScope: 1, perActor: 100 },
+      limits: { perScope: 3, perActor: 100 },
     });
     const { plainEmailText, plainEmailLine } = await import("@/lib/outbound-email-guard");
     const note = plainEmailText(data.note, 2000);

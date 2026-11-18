@@ -225,12 +225,23 @@ export async function threadAction(call: Caller, threadId: string, action: Threa
 
 /** Find the staff member assigned to the client a sender belongs to. */
 async function autoAssignee(db: any, fromEmail: string): Promise<{ clientId: string | null; userId: string | null }> {
-  if (!fromEmail) return { clientId: null, userId: null };
-  const { data: contact } = await db.from("client_contacts").select("client_id").ilike("email", fromEmail).is("deactivated_at", null).limit(1).maybeSingle();
+  // The sender address comes from an inbound email header, so it is untrusted:
+  // accept only a plain address and match it literally (wildcards escaped),
+  // never by building a filter string from it.
+  const sender = String(fromEmail ?? "").trim().toLowerCase();
+  if (!sender || sender.length > 254 || !/^[a-z0-9._%+'-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(sender)) {
+    return { clientId: null, userId: null };
+  }
+  const pattern = sender.replace(/[\\%_]/g, "\\$&");
+  const { data: contact } = await db.from("client_contacts").select("client_id").ilike("email", pattern).is("deactivated_at", null).limit(1).maybeSingle();
   let clientId: string | null = contact?.client_id ?? null;
   if (!clientId) {
-    const { data: c } = await db.from("clients").select("id").or(`primary_contact_email.ilike.${fromEmail},billing_contact_email.ilike.${fromEmail}`).limit(1).maybeSingle();
-    clientId = c?.id ?? null;
+    const { data: c1 } = await db.from("clients").select("id").ilike("primary_contact_email", pattern).limit(1).maybeSingle();
+    clientId = c1?.id ?? null;
+  }
+  if (!clientId) {
+    const { data: c2 } = await db.from("clients").select("id").ilike("billing_contact_email", pattern).limit(1).maybeSingle();
+    clientId = c2?.id ?? null;
   }
   if (!clientId) return { clientId: null, userId: null };
   const { data: team } = await db.from("client_team_assignments").select("user_id, team_role").eq("client_id", clientId);

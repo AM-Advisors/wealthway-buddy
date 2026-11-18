@@ -2962,6 +2962,13 @@
       "when": 1795044696786,
       "tag": "0422_report_card_downloads_and_access_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 423,
+      "version": "7",
+      "when": 1795046360242,
+      "tag": "0423_lock_cap_records_and_accreditation_approval",
+      "breakpoints": true
     }
   ]
 }

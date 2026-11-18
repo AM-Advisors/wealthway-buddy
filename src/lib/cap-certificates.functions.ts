@@ -424,6 +424,16 @@ export const createHolderLink = createServerFn({ method: "POST" })
     const { newToken, hashToken } = await import("@/lib/cap-certificates.server");
     const { PORTAL_ORIGIN } = await import("@/lib/account-invite.server");
 
+    // The shareholder must belong to this company; a link can never expose
+    // another company's share records.
+    const { data: holder } = await supabaseAdmin
+      .from("cap_stakeholders")
+      .select("id")
+      .eq("id", data.stakeholderId)
+      .eq("client_id", data.clientId)
+      .maybeSingle();
+    if (!holder) throw new Error("That shareholder no longer exists.");
+
     const token = newToken();
     const expires = new Date(Date.now() + data.days * 86_400_000).toISOString();
     const { error } = await supabaseAdmin.from("cap_holder_access").insert({
@@ -517,12 +527,16 @@ export const getSharesByToken = createServerFn({ method: "POST" })
       return { ok: false as const, reason: "This link has expired." };
     }
 
+    // Every read is pinned to the link's own company as well as its
+    // shareholder, so a link only ever shows that company's records.
+    const linkClientId = String((row as any).client_id);
     const [{ data: holder }, { data: company }, { data: holdings }, { data: certificates }] =
       await Promise.all([
         supabaseAdmin
           .from("cap_stakeholders")
           .select("id, name")
           .eq("id", (row as any).stakeholder_id)
+          .eq("client_id", linkClientId)
           .maybeSingle(),
         supabaseAdmin
           .from("clients")
@@ -533,13 +547,16 @@ export const getSharesByToken = createServerFn({ method: "POST" })
           .from("cap_holdings")
           .select("*")
           .eq("stakeholder_id", (row as any).stakeholder_id)
+          .eq("client_id", linkClientId)
           .order("issued_on", { ascending: false }),
         supabaseAdmin
           .from("cap_certificates")
           .select("*")
           .eq("stakeholder_id", (row as any).stakeholder_id)
+          .eq("client_id", linkClientId)
           .order("created_at", { ascending: false }),
       ]);
+    if (!holder) return { ok: false as const, reason: "This link is not valid." };
 
     await supabaseAdmin
       .from("cap_holder_access")
@@ -579,6 +596,7 @@ export const getMyShares = createServerFn({ method: "GET" })
             .from("cap_stakeholders")
             .select("id, name")
             .eq("id", grant.stakeholder_id)
+            .eq("client_id", grant.client_id)
             .maybeSingle(),
           supabaseAdmin
             .from("clients")
@@ -589,11 +607,13 @@ export const getMyShares = createServerFn({ method: "GET" })
             .from("cap_holdings")
             .select("*")
             .eq("stakeholder_id", grant.stakeholder_id)
+            .eq("client_id", grant.client_id)
             .order("issued_on", { ascending: false }),
           supabaseAdmin
             .from("cap_certificates")
             .select("*")
             .eq("stakeholder_id", grant.stakeholder_id)
+            .eq("client_id", grant.client_id)
             .order("created_at", { ascending: false }),
         ]);
       positions.push(
