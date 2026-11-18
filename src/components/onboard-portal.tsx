@@ -11,14 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { startBoxSigning } from "@/lib/box-sign.functions";
 import {
   chooseProfileFn,
   eligibleProfilesFn,
+  onboardingDetailFn,
   onboardPortalDetailFn,
-  prepareSubscriptionDocumentsFn,
-  recordSubscriptionSignatureFn,
-  saveQuestionnaireFn,
   startPortalVerificationFn,
   investorReportsFundsSentFn,
 } from "@/lib/investor-onboarding.functions";
@@ -29,9 +26,10 @@ import { identityCheckState } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
 import { kycFieldsFor } from "@/lib/kyc-fields";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
-import { CertificationsPanel, EligibilityPanel, FinancialBackgroundPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { EligibilityPanel, FinancialBackgroundPanel, TaxAndCompliancePanel } from "@/components/onboard-compliance-panels";
 import { OnboardingUploadsCard } from "@/components/investor-onboarding-extras";
-import { QuestionnaireForm } from "@/components/investor-onboarding-journey";
+import { Sign } from "@/components/investor-onboarding-journey";
+import { investorHomeSummary, minutesLeft, type JourneyStepView } from "@/lib/investor-journey-model";
 import { isReconciledFunding } from "@/lib/funding-status";
 
 const money = (cents: number | null | undefined) =>
@@ -104,6 +102,10 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
     : chosen && chosen !== "completed" && steps.find((s) => s.key === chosen)?.state !== "locked"
       ? chosen
       : d.resume;
+  // Same progress, time estimate and next action as the portal page: both read the server's journey steps.
+  const journey: JourneyStepView[] = d.journey ?? [];
+  const h = investorHomeSummary(journey);
+  const left = minutesLeft(journey);
 
   return (
     <div className="space-y-6">
@@ -114,43 +116,70 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
         {d.profileLabel ? <p className="text-sm text-muted-foreground">Investing as {d.profileLabel}</p> : null}
       </header>
 
-      <ol className="flex items-stretch gap-2" aria-label="Progress">
-        {steps.map((s, i) => {
-          const done = s.state === "complete" || s.state === "not_applicable";
-          return (
-            <li key={s.key} className="flex-1">
-              <button
-                type="button"
-                disabled={s.state === "locked" || d.complete}
-                onClick={() => setChosen(s.key)}
-                aria-current={view === s.key ? "step" : undefined}
-                className={cn(
-                  "flex w-full flex-col items-center gap-1 rounded-md border p-2 text-center text-xs sm:text-sm",
-                  view === s.key ? "border-primary bg-primary/5" : "",
-                  s.state === "locked" ? "opacity-50" : "",
-                )}
-              >
-                {done ? <Check className="h-4 w-4 text-primary" /> : s.state === "locked" ? <Lock className="h-4 w-4" /> : <span className="text-muted-foreground">{i + 1}</span>}
-                <span className="font-medium">{s.label}</span>
-                <span className="text-muted-foreground">
-                  {s.state === "not_applicable" ? "Not needed" : done ? "Done" : s.state === "in_review" ? "In review" : s.state === "locked" ? "Later" : "To do"}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-        <li className="flex-1">
-          <div className={cn("flex w-full flex-col items-center gap-1 rounded-md border p-2 text-center text-xs sm:text-sm", d.complete ? "border-primary bg-primary/5" : "opacity-50")}>
-            {isReconciledFunding(d.fundingStatus) ? <Check className="h-4 w-4 text-primary" /> : d.complete ? <span className="text-muted-foreground">4</span> : <Lock className="h-4 w-4" />}
-            <span className="font-medium">Fund</span>
-            <span className="text-muted-foreground">{isReconciledFunding(d.fundingStatus) ? "Received" : d.complete ? "To do" : "Later"}</span>
+      <Card>
+        <CardContent className="space-y-5 pt-6">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">Progress</span>
+              <span className="text-muted-foreground">{h.progressPercent}%{!h.complete && left > 0 ? ` · about ${left} min left` : ""}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${h.progressPercent}%` }} /></div>
           </div>
-        </li>
-      </ol>
+
+          <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Steps">
+            {steps.map((s, i) => {
+              const done = s.state === "complete" || s.state === "not_applicable";
+              return (
+                <li key={s.key}>
+                  <button
+                    type="button"
+                    disabled={s.state === "locked" || d.complete}
+                    onClick={() => setChosen(s.key)}
+                    aria-current={view === s.key ? "step" : undefined}
+                    className={cn(
+                      "flex h-full w-full flex-col rounded-md border p-3 text-left text-sm transition-colors disabled:opacity-50",
+                      view === s.key ? "border-primary bg-primary/5" : "hover:bg-muted/50",
+                    )}
+                  >
+                    <span className="flex items-center gap-2 font-medium">
+                      {done ? <Check className="h-4 w-4 text-primary" /> : s.state === "locked" ? <Lock className="h-4 w-4 text-muted-foreground" /> : <span className="text-muted-foreground">{i + 1}.</span>}
+                      {s.label}
+                    </span>
+                    <span className="mt-1 text-xs text-muted-foreground">
+                      {s.state === "not_applicable" ? "Not needed" : done ? "Done" : s.state === "in_review" ? "In review" : s.state === "locked" ? "Later" : "To do"}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+            <li>
+              <div className={cn("flex h-full w-full flex-col rounded-md border p-3 text-left text-sm", d.complete ? "border-primary bg-primary/5" : "opacity-50")}>
+                <span className="flex items-center gap-2 font-medium">
+                  {isReconciledFunding(d.fundingStatus) ? <Check className="h-4 w-4 text-primary" /> : d.complete ? <span className="text-muted-foreground">{steps.length + 1}.</span> : <Lock className="h-4 w-4 text-muted-foreground" />}
+                  Fund
+                </span>
+                <span className="mt-1 text-xs text-muted-foreground">{isReconciledFunding(d.fundingStatus) ? "Received" : d.complete ? "To do" : "Later"}</span>
+              </div>
+            </li>
+          </ol>
+
+          {h.complete ? null : (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+              {h.caughtUp ? (
+                <div><p className="font-medium">You're caught up</p><p className="text-sm text-muted-foreground">{h.waitingOn}</p></div>
+              ) : (
+                <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Next action</p><p className="font-medium">{h.nextAction}</p></div>
+              )}
+              {!d.complete && d.resume !== view ? <Button size="sm" onClick={() => setChosen(d.resume)}>Continue</Button> : null}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {!d.complete ? <section aria-label="Investor questionnaire" className="space-y-4">
         <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
-        <FinancialBackgroundPanel onboardingId={onboardingId} done={refresh} />
+        {/* The Review & Sign checklist asks the financial background inside its questionnaire. */}
+        {view !== "documents" ? <FinancialBackgroundPanel onboardingId={onboardingId} done={refresh} /> : null}
       </section> : null}
 
 
@@ -158,10 +187,8 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
       {view === "verification" ? <TaxAndCompliancePanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "accreditation" ? <AccreditationStep d={d} onboardingId={onboardingId} /> : null}
       {view === "accreditation" ? <EligibilityPanel onboardingId={onboardingId} done={refresh} /> : null}
-      {view === "documents" ? <TaxSignPanel onboardingId={onboardingId} done={refresh} /> : null}
-      {view === "documents" ? <CertificationsPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <ReviewPreparedDocuments onboardingId={onboardingId} /> : null}
-      {view === "documents" ? <DocumentsStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
+      {view === "documents" ? <SharedReviewAndSign onboardingId={onboardingId} onChanged={refresh} /> : null}
       <OnboardingUploadsCard onboardingId={onboardingId} />
       {view === "completed" ? <FundStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <Completed d={d} /> : null}
@@ -319,76 +346,26 @@ function AccreditationStep({ d, onboardingId }: { d: any; onboardingId: string }
   );
 }
 
-function DocumentsStep({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
-  const qFn = useServerFn(saveQuestionnaireFn);
-  const prepareFn = useServerFn(prepareSubscriptionDocumentsFn);
-  const signFn = useServerFn(startBoxSigning);
-  const confirmFn = useServerFn(recordSubscriptionSignatureFn);
-  const [signer, setSigner] = useState("");
-  const saveQ = useMutation({
-    mutationFn: (v: { answers: Record<string, string>; submit: boolean }) => qFn({ data: { onboardingId, answers: v.answers, submit: v.submit } }),
-    onSuccess: (_r, v) => { if (v.submit) done(); },
-    onError: (e) => toast.error(errText(e)),
+/**
+ * The portal's own Review & Sign checklist (same tasks, "X of Y done" bar and signing buttons),
+ * read through the same authorized investment detail the portal page uses.
+ */
+function SharedReviewAndSign({ onboardingId, onChanged }: { onboardingId: string; onChanged: () => void }) {
+  const qc = useQueryClient();
+  const fullFn = useServerFn(onboardingDetailFn);
+  const full = useQuery({
+    queryKey: ["onboarding", onboardingId],
+    queryFn: () => fullFn({ data: { onboardingId } }),
+    // Signing confirmations arrive from the signing service; keep the checklist current.
+    refetchInterval: 15_000,
   });
-  const sign = useMutation({
-    mutationFn: async (docId: string) => {
-      await prepareFn({ data: { onboardingId } }).catch(() => null);
-      return signFn({ data: { offering_document_id: docId, onboarding_id: onboardingId } });
-    },
-    onSuccess: (r: any) => {
-      if (r?.url) window.location.assign(r.url);
-      else if (r?.sentTo) { toast.success(`Sent to ${r.sentTo} to sign. They'll get an email with a secure signing link.`); done(); }
-    },
-    onError: (e) => toast.error(errText(e)),
-  });
-  const confirm = useMutation({ mutationFn: () => confirmFn({ data: { onboardingId, signerName: signer.trim() } }), onSuccess: done, onError: (e) => toast.error(errText(e)) });
-  const reqs: any[] = d.requirements;
-  const qNeeded = d.questionnaire && reqs.find((r) => r.key === "subscription_questionnaire")?.state === "missing";
-  const signatureValid = reqs.find((r) => r.key === "signature")?.state === "valid";
-  const docs: any[] = d.documents;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Review &amp; Sign</CardTitle>
-        <CardDescription>Only the documents required for this investment are shown.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {qNeeded ? (
-          <QuestionnaireForm d={d} onboardingId={onboardingId} done={false} locked={false} saving={saveQ.isPending} onSave={(answers, submit) => saveQ.mutate({ answers, submit })} />
-        ) : null}
-        <ul className="space-y-2">
-          {docs.map((doc) => (
-            <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm">
-              <span className="flex items-center gap-2">
-                {doc.signed ? <Check className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
-                {doc.title}
-              </span>
-              {!doc.signed && doc.requiresSignature && !qNeeded && (d.signing ?? []).find((x: any) => x.documentId === doc.id)?.stage !== "awaiting_fund_manager" ? (
-                <Button size="sm" disabled={sign.isPending} onClick={() => sign.mutate(doc.id)}>Review &amp; Sign Documents</Button>
-              ) : (
-                <span className="text-xs text-muted-foreground">
-                  {(d.signing ?? []).find((x: any) => x.documentId === doc.id)?.stage === "awaiting_fund_manager"
-                    ? "Waiting for Fund Manager signature"
-                    : doc.signed ? "Fully executed" : doc.requiresSignature ? "To sign" : "For review"}
-                </span>
-              )}
-            </li>
-          ))}
-          {docs.length === 0 ? <li className="text-sm text-muted-foreground">Your documents are being prepared. We'll email you when they're ready.</li> : null}
-        </ul>
-        {signatureValid && !d.executed ? (
-          <div className="space-y-3 rounded-md border p-4">
-            <p className="text-sm">All documents are signed. Confirm the signer's name to finish.</p>
-            <Label htmlFor="ob-signer">Signer's full legal name</Label>
-            <Input id="ob-signer" value={signer} onChange={(e) => setSigner(e.target.value)} />
-            <Button className="w-full sm:w-auto" disabled={signer.trim().length < 2 || confirm.isPending} onClick={() => confirm.mutate()}>Finish</Button>
-          </div>
-        ) : null}
-        <p className="text-xs text-muted-foreground">A document shows as signed only after the signing service confirms it. This can take a minute.</p>
-      </CardContent>
-    </Card>
-  );
+  const done = () => {
+    void qc.invalidateQueries({ queryKey: ["onboarding", onboardingId] });
+    onChanged();
+  };
+  if (full.isLoading) return <p className="text-sm text-muted-foreground">Loading your documents…</p>;
+  if (full.error || !full.data) return <OnboardMessage title="Review & Sign" body={full.error ? errText(full.error) : "Please refresh the page."} />;
+  return <Sign d={full.data} onboardingId={onboardingId} done={done} />;
 }
 
 function Completed({ d }: { d: any }) {

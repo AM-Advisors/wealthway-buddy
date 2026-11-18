@@ -2666,6 +2666,8 @@ export async function onboardPortalDetail(userId: string, onboardingId: string) 
     fundingStatus: (detail.fundingStatus ?? null) as string | null,
     investorReportsSent: Boolean(detail.investorReportsSent),
     signing: await portalSigningStages(row),
+    // The portal page's four steps, so the direct link shows the same progress and next action.
+    journey: detail.journey ?? [],
     steps,
     resume: portalResumeStep(steps),
     complete: portalComplete(steps),

@@ -686,7 +686,8 @@ const TASK_BADGE: Record<SignTaskState, { label: string; variant: "default" | "o
   locked: { label: "Locked", variant: "secondary" },
 };
 
-function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
+/** Review & Sign checklist; also rendered by the direct onboarding link so both flows match. */
+export function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
   const questionnaireFn = useServerFn(saveQuestionnaireFn);
   const confirmFn = useServerFn(recordSubscriptionSignatureFn);
   const [signer, setSigner] = useState("");
