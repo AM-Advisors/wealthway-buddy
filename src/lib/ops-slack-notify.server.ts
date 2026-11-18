@@ -182,7 +182,7 @@ export async function notifyComplianceClear(n: { personId: string; personName: s
  * decide whether it needs design or build, belongs in an existing product, or isn't tech related.
  * Best-effort and deduplicated per service version; carries only the name, writer and a link, never prices.
  */
-export async function notifyCustomService(n: { serviceId: string; name: string; createdBy: string; version: string; reopened?: boolean }): Promise<void> {
+export async function notifyCustomService(n: { serviceId: string; name: string; createdBy: string; version: string; reopened?: boolean; stage?: "ready" | "released" }): Promise<void> {
   try {
     const db = await admin();
     const key = `custom_service:${n.serviceId}:${n.version}`;
@@ -192,15 +192,16 @@ export async function notifyCustomService(n: { serviceId: string; name: string; 
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const { appUrl } = await import("@/lib/app-origins");
     const url = appUrl("ops", `/sales/custom-services?service=${encodeURIComponent(n.serviceId)}`);
-    const head = n.reopened ? "Custom service changed, review again" : "New custom service from Sales";
+    const head = n.stage === "ready" ? "Custom service built, ready to release to quotes" : n.stage === "released" ? "Custom service released to quotes" : n.reopened ? "Custom service changed, review again" : "New custom service from Sales";
+    const ask = n.stage === "ready" ? "CEO or CRO: set the standard price and release it" : n.stage === "released" ? "Sales can now add it to client quotes at the standard price" : "Decide: needs design or build, add to a product, or not tech related";
     const r = await slack("chat.postMessage", {
       channel: OPS_SLACK_CHANNEL,
       unfurl_links: false,
       text: `${head} · ${n.name}`,
       blocks: [
         { type: "section", text: { type: "mrkdwn", text: `*${head}*\n${n.name}` } },
-        { type: "context", elements: [{ type: "mrkdwn", text: `Written by ${sub.name || sub.email || "Sales"} · ${when} · Decide: needs design or build, add to a product, or not tech related` }] },
-        { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Review in Harmonious" }, url }] },
+        { type: "context", elements: [{ type: "mrkdwn", text: `Written by ${sub.name || sub.email || "Sales"} · ${when} · ${ask}` }] },
+        { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: n.stage === "released" ? "Open in Harmonious" : "Review in Harmonious" }, url }] },
       ],
     });
     await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null }).eq("dedupe_key", key);

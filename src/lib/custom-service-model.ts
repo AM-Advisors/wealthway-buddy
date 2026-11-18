@@ -3,8 +3,10 @@
  * A custom service is a shared, reusable quote line with no rate-card price: every price
  * typed for it needs CEO or CRO approval. The product review only classifies the service
  * (design/build, add to a product, not tech related); it never approves prices or quotes.
+ * A "Needs design or build" service is then tracked through building; once ready, the CEO or CRO
+ * releases it to quotes with a standard price, after which it prices like a rate-card service.
  */
-import { canDraftQuote, salesScope, type QuoteLineInput } from "@/lib/sales-model";
+import { canDraftQuote, EXEC_PRICE_ROLES, salesScope, type QuoteLineInput } from "@/lib/sales-model";
 
 export const CUSTOM_SERVICE_PREFIX = "CUSTOM:";
 export const customServiceKey = (id: string) => `${CUSTOM_SERVICE_PREFIX}${id}`;
@@ -89,19 +91,63 @@ export function editReopensReview(status: CustomReviewStatus, before: ReturnType
   return before.name !== after.name || before.summary !== after.summary || !same(before.included, after.included) || !same(before.excluded, after.excluded);
 }
 
+export const BUILD_STAGES = ["not_started", "designing", "building", "testing", "ready"] as const;
+export type BuildStage = (typeof BUILD_STAGES)[number];
+export const BUILD_STAGE_LABEL: Record<BuildStage, string> = {
+  not_started: "Not started", designing: "Designing", building: "Building", testing: "Testing", ready: "Ready to release",
+};
+
+/** CEO, CRO and Super Admin set standard prices, so they release a built service to quotes. */
+export const canReleaseCustomService = (roles: readonly string[]) => roles.some((r) => EXEC_PRICE_ROLES.includes(r));
+
+/** Reviewers move build progress; only for "Needs design or build" services not yet released. */
+export function buildUpdateProblem(args: { roles: readonly string[]; reviewStatus: CustomReviewStatus; archived?: boolean; released?: boolean; stage: string }): string | null {
+  if (!canReviewCustomServices(args.roles)) return "Only Super Admin, CEO, CRO, Operations or a Product Reviewer can update build progress.";
+  if (args.archived) return "This custom service was retired.";
+  if (args.released) return "This service is already on quotes.";
+  if (args.reviewStatus !== "design_build") return "Only services marked Needs design or build are tracked through building.";
+  if (!(BUILD_STAGES as readonly string[]).includes(args.stage)) return "Choose where the build is.";
+  return null;
+}
+
+/** Releasing to quotes (or changing the standard price later): CEO or CRO, never the person who wrote it. */
+export function releaseProblem(args: { actorId: string; roles: readonly string[]; createdBy: string; reviewStatus: CustomReviewStatus; buildStage: string | null; archived?: boolean; priceCents?: number | null; billing?: string | null }): string | null {
+  if (!canReleaseCustomService(args.roles)) return "Only the CEO, CRO or Super Admin can release a service to quotes with a standard price.";
+  if (args.archived) return "This custom service was retired.";
+  if (args.actorId === args.createdBy) return "Someone other than the person who wrote this service needs to release it.";
+  if (args.reviewStatus !== "design_build") return "Only services marked Needs design or build are released this way.";
+  if (args.buildStage !== "ready") return "Mark the build Ready to release first.";
+  if (args.priceCents !== undefined && !(Number(args.priceCents) > 0)) return "Enter the standard price.";
+  if (args.billing !== undefined && !(CUSTOM_BILLING as readonly string[]).includes(args.billing ?? "")) return "Choose how it's billed.";
+  return null;
+}
+
+export type CustomRelease = { listPriceCents: number; listBilling: CustomBilling };
+/** The standard price, only when the service was released to quotes. */
+export function releaseOf(s: { releasedAt?: string | null; listPriceCents?: number | null; listBilling?: string | null }): CustomRelease | null {
+  if (!s.releasedAt || !(Number(s.listPriceCents) > 0) || !(CUSTOM_BILLING as readonly string[]).includes(s.listBilling ?? "")) return null;
+  return { listPriceCents: Number(s.listPriceCents), listBilling: s.listBilling as CustomBilling };
+}
+
 /**
- * Prices a custom quote line. There is no rate card, so the typed price is the baseline and
- * the quote always needs CEO or CRO approval. A price is required (never $0).
+ * Prices a custom quote line. Unreleased: no rate card, so the typed price is the baseline and the
+ * quote always needs CEO or CRO approval. Released: the standard price is the baseline for the same
+ * billing; at or above it needs no executive approval, below it (or another billing) does. Never $0.
  */
-export function priceCustomLine(line: Pick<QuoteLineInput, "unitCents" | "quantity">, serviceName: string): { unitCents: number; quantity: number; needsExecApproval: true } {
+export function priceCustomLine(line: Pick<QuoteLineInput, "unitCents" | "quantity"> & { billingFrequency?: string | null | undefined }, serviceName: string, release: CustomRelease | null = null): { unitCents: number; quantity: number; baselineUnitCents: number; needsExecApproval: boolean } {
   const unit = Math.max(0, Math.round(Number(line.unitCents) || 0));
-  if (unit <= 0) throw new Error(`Enter a price for "${serviceName}". Custom services have no rate card price, so CEO or CRO approves it.`);
-  return { unitCents: unit, quantity: Math.max(1, Number(line.quantity) || 1), needsExecApproval: true };
+  const quantity = Math.max(1, Number(line.quantity) || 1);
+  if (unit <= 0) throw new Error(release ? `Enter a price for "${serviceName}".` : `Enter a price for "${serviceName}". Custom services have no rate card price, so CEO or CRO approves it.`);
+  if (!release) return { unitCents: unit, quantity, baselineUnitCents: unit, needsExecApproval: true };
+  const sameBilling = (line.billingFrequency ?? release.listBilling) === release.listBilling;
+  if (!sameBilling) return { unitCents: unit, quantity, baselineUnitCents: unit, needsExecApproval: true };
+  return { unitCents: unit, quantity, baselineUnitCents: release.listPriceCents, needsExecApproval: unit < release.listPriceCents };
 }
 
 /** A new quote line from a saved custom service; the service wording becomes the line's SOW wording. */
-export function customQuoteLine(s: { id: string; name: string; summary: string; included: readonly string[]; excluded: readonly string[]; billingFrequency: CustomBilling; suggestedPriceCents: number | null }): QuoteLineInput {
-  const unit = s.suggestedPriceCents ?? 0;
-  return { serviceKey: customServiceKey(s.id), label: s.name, quantity: 1, unitCents: unit, baselineUnitCents: unit, billingFrequency: s.billingFrequency,
+export function customQuoteLine(s: { id: string; name: string; summary: string; included: readonly string[]; excluded: readonly string[]; billingFrequency: CustomBilling; suggestedPriceCents: number | null; releasedAt?: string | null; listPriceCents?: number | null; listBilling?: string | null }): QuoteLineInput {
+  const release = releaseOf(s);
+  const unit = release?.listPriceCents ?? s.suggestedPriceCents ?? 0;
+  return { serviceKey: customServiceKey(s.id), label: s.name, quantity: 1, unitCents: unit, baselineUnitCents: unit, billingFrequency: release?.listBilling ?? s.billingFrequency,
     details: { scope: s.summary, included: [...s.included], excluded: [...s.excluded] } };
 }

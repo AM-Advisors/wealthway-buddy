@@ -7,7 +7,8 @@ import { generateResponse, GatewayError, PaymentRequiredError, RateLimitError } 
 import { SERVICE_CATEGORIES } from "@/lib/service-catalog.functions";
 import {
   canChangeCustomService, canCreateCustomService, canReviewCustomServices, canSeeCustomServices, cleanCustomService, customServiceKey,
-  customServiceProblem, editReopensReview, reviewProblem, type CustomReviewStatus, type CustomServiceInput,
+  customServiceProblem, editReopensReview, reviewProblem, buildUpdateProblem, releaseProblem, canReleaseCustomService,
+  type BuildStage, type CustomBilling, type CustomReviewStatus, type CustomServiceInput,
 } from "@/lib/custom-service-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -36,6 +37,11 @@ const shape = (row: any, nm: Map<string, string>, uses: Map<string, number>) => 
   reviewedByName: row.reviewed_by ? nm.get(row.reviewed_by) ?? "Team member" : null, reviewedAt: (row.reviewed_at ?? null) as string | null,
   createdBy: row.created_by as string, createdByName: nm.get(row.created_by) ?? "Team member", createdAt: row.created_at as string,
   updatedAt: row.updated_at as string, archivedAt: (row.archived_at ?? null) as string | null, quoteUses: uses.get(customServiceKey(row.id)) ?? 0,
+  buildStage: (row.build_stage ?? null) as BuildStage | null, buildNote: (row.build_note ?? null) as string | null,
+  buildUpdatedAt: (row.build_updated_at ?? null) as string | null, buildUpdatedByName: row.build_updated_by ? nm.get(row.build_updated_by) ?? "Team member" : null,
+  listPriceCents: row.list_price_cents == null ? null : Number(row.list_price_cents), listBilling: (row.list_billing ?? null) as CustomBilling | null,
+  releasedAt: (row.released_at ?? null) as string | null, releasedByName: row.released_by ? nm.get(row.released_by) ?? "Team member" : null,
+  releaseNote: (row.release_note ?? null) as string | null,
 });
 export type CustomService = ReturnType<typeof shape>;
 
@@ -65,7 +71,7 @@ export async function listCustomServices(userId: string, opts: { includeRetired?
   const ids = rows.map((r) => r.id);
   const { data: evs } = ids.length ? await db.from("sales_custom_service_events").select("*").in("service_id", ids).order("created_at", { ascending: false }).limit(1000) : { data: [] };
   const { names } = await import("@/lib/sales-hub.server");
-  const nm = await names([...rows.flatMap((r) => [r.created_by, r.reviewed_by]), ...((evs ?? []) as any[]).map((e) => e.actor_id)]);
+  const nm = await names([...rows.flatMap((r) => [r.created_by, r.reviewed_by, r.build_updated_by, r.released_by]), ...((evs ?? []) as any[]).map((e) => e.actor_id)]);
   const history = new Map<string, { event: string; actorName: string; at: string; detail: any }[]>();
   for (const e of (evs ?? []) as any[]) {
     const list = history.get(e.service_id) ?? [];
@@ -73,9 +79,12 @@ export async function listCustomServices(userId: string, opts: { includeRetired?
     history.set(e.service_id, list);
   }
   return {
-    canCreate: canCreateCustomService(roles), canReview: canReviewCustomServices(roles), userId,
+    canCreate: canCreateCustomService(roles), canReview: canReviewCustomServices(roles), canRelease: canReleaseCustomService(roles), userId,
     services: rows.map((r) => ({ ...shape(r, nm, uses), canChange: canChangeCustomService({ actorId: userId, roles, createdBy: r.created_by }) && !r.archived_at,
-      reviewBlocker: reviewProblem({ actorId: userId, roles, createdBy: r.created_by, decision: "not_tech", archived: !!r.archived_at }), history: history.get(r.id) ?? [] })),
+      reviewBlocker: r.released_at ? "This service is on quotes at a standard price, so its decision is final." : reviewProblem({ actorId: userId, roles, createdBy: r.created_by, decision: "not_tech", archived: !!r.archived_at }),
+      buildBlocker: buildUpdateProblem({ roles, reviewStatus: r.review_status, archived: !!r.archived_at, released: !!r.released_at, stage: "ready" }),
+      releaseBlocker: releaseProblem({ actorId: userId, roles, createdBy: r.created_by, reviewStatus: r.review_status, buildStage: r.build_stage ?? null, archived: !!r.archived_at }),
+      history: history.get(r.id) ?? [] })),
   };
 }
 
@@ -111,6 +120,7 @@ export async function updateCustomService(userId: string, d: CustomServiceInput 
   const problem = customServiceProblem(c);
   if (problem) throw new Error(problem);
   const reopen = editReopensReview(row.review_status, toInput(row), c);
+  if (row.released_at && reopen) throw new Error("This service is on quotes at a standard price, so its wording is fixed. Retire it and add a new one to change what it is.");
   const now = new Date().toISOString();
   const { data: saved, error } = await db.from("sales_custom_services").update({
     name: c.name, category: c.category, summary: c.summary, included: c.included, excluded: c.excluded, billing_frequency: c.billingFrequency,
@@ -135,17 +145,74 @@ export async function reviewCustomService(userId: string, d: { id: string; decis
   if (!row) throw new Error("Custom service not found.");
   const problem = reviewProblem({ actorId: userId, roles, createdBy: row.created_by, decision: d.decision, productTarget: d.productTarget, archived: !!row.archived_at });
   if (problem) throw new Error(problem);
+  if (row.released_at) throw new Error("This service is on quotes at a standard price, so its decision is final.");
   if (row.updated_at !== d.expectedUpdatedAt) throw new Error("Someone else changed this service. Refresh and try again.");
   const now = new Date().toISOString();
   const note = (d.note ?? "").trim().slice(0, 2000) || null;
   const target = d.decision === "add_to_product" ? (d.productTarget ?? "").trim().slice(0, 200) : null;
   const { data: saved, error } = await db.from("sales_custom_services").update({
     review_status: d.decision, product_target: target, review_note: note, reviewed_by: userId, reviewed_at: now, updated_by: userId, updated_at: now,
+    // "Needs design or build" starts the build tracker (keeping earlier progress); other decisions have nothing to build.
+    build_stage: d.decision === "design_build" ? row.build_stage ?? "not_started" : null,
   }).eq("id", d.id).eq("updated_at", d.expectedUpdatedAt).select("id").maybeSingle();
   if (error) throw new Error("Couldn't save the decision.");
   if (!saved) throw new Error("Someone else changed this service. Refresh and try again.");
   await event(d.id, "reviewed", userId, { decision: d.decision, previous: row.review_status, productTarget: target, note });
   return { ok: true };
+}
+
+/** Reviewers record where the build is. Reaching Ready tells the CEO and CRO it can be released to quotes. */
+export async function updateCustomServiceBuild(userId: string, d: { id: string; stage: string; note?: string | null | undefined; expectedUpdatedAt: string }) {
+  const roles = await rolesOf(userId);
+  const db = await admin();
+  const { data: row } = await db.from("sales_custom_services").select("*").eq("id", d.id).maybeSingle();
+  if (!row) throw new Error("Custom service not found.");
+  const problem = buildUpdateProblem({ roles, reviewStatus: row.review_status, archived: !!row.archived_at, released: !!row.released_at, stage: d.stage });
+  if (problem) throw new Error(problem);
+  if (row.updated_at !== d.expectedUpdatedAt) throw new Error("Someone else changed this service. Refresh and try again.");
+  const now = new Date().toISOString();
+  const note = (d.note ?? "").trim().slice(0, 2000) || null;
+  const { data: saved, error } = await db.from("sales_custom_services").update({
+    build_stage: d.stage, build_note: note ?? row.build_note ?? null, build_updated_by: userId, build_updated_at: now, updated_by: userId, updated_at: now,
+  }).eq("id", d.id).eq("updated_at", d.expectedUpdatedAt).select("id").maybeSingle();
+  if (error) throw new Error("Couldn't save the build progress.");
+  if (!saved) throw new Error("Someone else changed this service. Refresh and try again.");
+  await event(d.id, "build_updated", userId, { stage: d.stage, previous: row.build_stage, note });
+  if (d.stage === "ready" && row.build_stage !== "ready") {
+    const { notifyCustomService } = await import("@/lib/ops-slack-notify.server");
+    await notifyCustomService({ serviceId: d.id, name: row.name, createdBy: row.created_by, version: `ready:${now}`, stage: "ready" });
+  }
+  return { ok: true };
+}
+
+/**
+ * CEO or CRO releases a built service to quotes with a standard price, or changes that price later.
+ * Quotes at or above it on the same billing need no executive approval; quotes already saved keep their prices.
+ */
+export async function releaseCustomService(userId: string, d: { id: string; listPriceCents: number; listBilling: string; note?: string | null | undefined; expectedUpdatedAt: string }) {
+  const roles = await rolesOf(userId);
+  const db = await admin();
+  const { data: row } = await db.from("sales_custom_services").select("*").eq("id", d.id).maybeSingle();
+  if (!row) throw new Error("Custom service not found.");
+  const problem = releaseProblem({ actorId: userId, roles, createdBy: row.created_by, reviewStatus: row.review_status, buildStage: row.build_stage ?? null, archived: !!row.archived_at, priceCents: d.listPriceCents, billing: d.listBilling });
+  if (problem) throw new Error(problem);
+  if (row.updated_at !== d.expectedUpdatedAt) throw new Error("Someone else changed this service. Refresh and try again.");
+  const now = new Date().toISOString();
+  const note = (d.note ?? "").trim().slice(0, 2000) || null;
+  const first = !row.released_at;
+  const price = Math.round(Number(d.listPriceCents));
+  const { data: saved, error } = await db.from("sales_custom_services").update({
+    list_price_cents: price, list_billing: d.listBilling, release_note: note ?? row.release_note ?? null, updated_by: userId, updated_at: now,
+    ...(first ? { released_at: now, released_by: userId } : {}),
+  }).eq("id", d.id).eq("updated_at", d.expectedUpdatedAt).select("id").maybeSingle();
+  if (error) throw new Error("Couldn't release the service.");
+  if (!saved) throw new Error("Someone else changed this service. Refresh and try again.");
+  await event(d.id, first ? "released" : "price_changed", userId, { listPriceCents: price, listBilling: d.listBilling, previousPriceCents: row.list_price_cents ?? null, previousBilling: row.list_billing ?? null, note });
+  if (first) {
+    const { notifyCustomService } = await import("@/lib/ops-slack-notify.server");
+    await notifyCustomService({ serviceId: d.id, name: row.name, createdBy: row.created_by, version: `released:${now}`, stage: "released" });
+  }
+  return { ok: true, released: first };
 }
 
 export async function retireCustomService(userId: string, d: { id: string; reason: string }) {

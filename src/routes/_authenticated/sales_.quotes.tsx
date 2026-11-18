@@ -32,7 +32,7 @@ import { FoundationConfigurator } from "@/components/sales/foundation-configurat
 import { isFoundationKey, type ComponentKey } from "@/lib/foundation-admin-model";
 import { isQuoteSectionShown, quoteLockFacts, quoteSectionBody, quoteSectionDef, sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import type { Section } from "@/lib/sales-documents-model";
-import { customQuoteLine, isCustomServiceKey } from "@/lib/custom-service-model";
+import { customQuoteLine, isCustomServiceKey, priceCustomLine, releaseOf } from "@/lib/custom-service-model";
 import { CustomServiceForm } from "@/components/sales/custom-service-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -185,7 +185,12 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const clientName = (c.data?.clients ?? []).find((x: any) => x.id === clientId)?.legal_name ?? null;
   const facts = quoteLockFacts({ organization: clientName, contactName: null, lines });
   const displayLines = lines.map(l => {
-    if (isCustomServiceKey(l.serviceKey)) return { ...l, baselineUnitCents: l.unitCents };
+    if (isCustomServiceKey(l.serviceKey)) {
+      const svc = (c.data?.customServices ?? []).find((x: any) => x.serviceKey === l.serviceKey);
+      const release = svc ? releaseOf(svc) : null;
+      if (!release || !(l.unitCents > 0)) return { ...l, baselineUnitCents: l.unitCents };
+      return { ...l, baselineUnitCents: priceCustomLine(l, l.label, release).baselineUnitCents };
+    }
     const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
     return rate && !l.bookkeeping ? normalizeQuoteBilling(l, rate) : l;
   });
@@ -200,7 +205,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
     const svc = (c.data?.customServices ?? []).find((x: any) => x.id === id);
     if (svc && !lines.some((l) => l.serviceKey === svc.serviceKey)) setLines([...lines, customQuoteLine(svc)]);
   };
-  const hasCustom = lines.some((l) => isCustomServiceKey(l.serviceKey));
+  const hasCustom = lines.some((l) => isCustomServiceKey(l.serviceKey) && !releaseOf((c.data?.customServices ?? []).find((x: any) => x.serviceKey === l.serviceKey) ?? {}));
   return (
     <Panel title={initial ? "Edit quote" : "New quote"}>
       <div className="grid gap-3 sm:grid-cols-4">
@@ -251,7 +256,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
           <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX) && !String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Select value="" onValueChange={addCustom}><SelectTrigger className="w-72" aria-label="Add a custom service"><SelectValue placeholder={(c.data?.customServices ?? []).length ? "Add a custom service" : "No custom services yet"} /></SelectTrigger>
-            <SelectContent>{(c.data?.customServices ?? []).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}{x.suggestedPriceCents ? ` · suggested ${money(x.suggestedPriceCents)}` : ""}</SelectItem>)}</SelectContent></Select>
+            <SelectContent>{(c.data?.customServices ?? []).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}{releaseOf(x) ? ` · standard ${money(x.listPriceCents)}` : x.suggestedPriceCents ? ` · suggested ${money(x.suggestedPriceCents)}` : ""}</SelectItem>)}</SelectContent></Select>
           <Button type="button" variant="outline" onClick={() => setWritingCustom(true)}>Write a new custom service</Button>
         </div>
         <Dialog open={writingCustom} onOpenChange={setWritingCustom}>
@@ -293,7 +298,13 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
                 return !rate || !recurringQuoteRate(rate) || f.id === "quarterly" || f.id === "annual" || f.id === l.billingFrequency || f.id === "monthly" && hasRoasWhiteGloveCadences(offeringId, l.serviceKey);
               }).map(f => <SelectItem key={f.id} value={f.id}>{f.label}</SelectItem>)}</SelectContent></Select></TableCell>
               <TableCell><Input disabled={!!l.bookkeeping || !!l.foundation} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
-              <TableCell className="text-right text-muted-foreground">{isCustomServiceKey(l.serviceKey) ? <Badge variant="outline">Custom · needs CEO or CRO</Badge> : l.foundation && !c.data?.lines.some((x: any) => x.serviceKey === l.serviceKey && Number(x.baselineCents) > 0) ? <Badge variant="outline">Negotiated · needs CEO or CRO</Badge> : <>{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</>}</TableCell>
+              <TableCell className="text-right text-muted-foreground">{isCustomServiceKey(l.serviceKey) ? (() => {
+                const svc = (c.data?.customServices ?? []).find((x: any) => x.serviceKey === l.serviceKey);
+                const release = svc ? releaseOf(svc) : null;
+                if (!release) return <Badge variant="outline">Custom · needs CEO or CRO</Badge>;
+                if ((l.billingFrequency ?? release.listBilling) !== release.listBilling) return <Badge variant="outline">Different billing · needs CEO or CRO</Badge>;
+                return <>{money(release.listPriceCents)}{l.unitCents < release.listPriceCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</>;
+              })() : l.foundation && !c.data?.lines.some((x: any) => x.serviceKey === l.serviceKey && Number(x.baselineCents) > 0) ? <Badge variant="outline">Negotiated · needs CEO or CRO</Badge> : <>{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</>}</TableCell>
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}{l.billingFrequency && l.billingFrequency !== "one_time" && <span className="block text-xs text-muted-foreground">per {l.billingFrequency === "annual" ? "year" : l.billingFrequency === "quarterly" ? "quarter" : "month"}</span>}</TableCell>
               <TableCell className="whitespace-nowrap">
                 <Button size="sm" variant="ghost" onClick={() => setOpenDetails(openDetails === i ? null : i)}>{l.details ? "Details ✓" : "Details"}</Button>

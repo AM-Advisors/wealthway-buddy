@@ -44297,14 +44297,23 @@ export type Database = {
           archived_at: string | null
           archived_by: string | null
           billing_frequency: string
+          build_note: string | null
+          build_stage: string | null
+          build_updated_at: string | null
+          build_updated_by: string | null
           category: string
           created_at: string
           created_by: string
           excluded: string[]
           id: string
           included: string[]
+          list_billing: string | null
+          list_price_cents: number | null
           name: string
           product_target: string | null
+          release_note: string | null
+          released_at: string | null
+          released_by: string | null
           review_note: string | null
           review_status: string
           reviewed_at: string | null
@@ -44319,14 +44328,23 @@ export type Database = {
           archived_at?: string | null
           archived_by?: string | null
           billing_frequency?: string
+          build_note?: string | null
+          build_stage?: string | null
+          build_updated_at?: string | null
+          build_updated_by?: string | null
           category?: string
           created_at?: string
           created_by: string
           excluded?: string[]
           id?: string
           included?: string[]
+          list_billing?: string | null
+          list_price_cents?: number | null
           name: string
           product_target?: string | null
+          release_note?: string | null
+          released_at?: string | null
+          released_by?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
@@ -44341,14 +44359,23 @@ export type Database = {
           archived_at?: string | null
           archived_by?: string | null
           billing_frequency?: string
+          build_note?: string | null
+          build_stage?: string | null
+          build_updated_at?: string | null
+          build_updated_by?: string | null
           category?: string
           created_at?: string
           created_by?: string
           excluded?: string[]
           id?: string
           included?: string[]
+          list_billing?: string | null
+          list_price_cents?: number | null
           name?: string
           product_target?: string | null
+          release_note?: string | null
+          released_at?: string | null
+          released_by?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null

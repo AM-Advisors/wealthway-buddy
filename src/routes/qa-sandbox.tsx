@@ -304,6 +304,7 @@ function QaCustomServicesArea() {
         <span className="text-sm text-muted-foreground">Signed in as:</span>
         <Button size="sm" variant={actor === "writer" ? "default" : "outline"} onClick={() => pick("writer")}>Sales writer</Button>
         <Button size="sm" variant={actor === "reviewer" ? "default" : "outline"} onClick={() => pick("reviewer")}>Product reviewer</Button>
+        <Button size="sm" variant={actor === "ceo" ? "default" : "outline"} onClick={() => pick("ceo")}>CEO</Button>
       </div>
       {cs.notices.length > 0 && <p className="text-xs text-muted-foreground" aria-label="Fictional notices">Notices that would go to the review team: {cs.notices.join(" · ")}</p>}
       <CustomServicesWorkspace key={actor} hideTabs />

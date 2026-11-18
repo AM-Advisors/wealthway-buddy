@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildUpdateProblem, canReleaseCustomService, releaseOf, releaseProblem } from "@/lib/custom-service-model";
 import { canChangeCustomService, canCreateCustomService, canReviewCustomServices, cleanCustomService, customQuoteLine, customServiceIdFromKey, customServiceKey, customServiceProblem, editReopensReview, isCustomServiceKey, priceCustomLine, reviewProblem } from "@/lib/custom-service-model";
 
 const base = cleanCustomService({ name: "Board pack prep", summary: "Quarterly board pack assembly for the fund.", included: "Deck\nMinutes" });
@@ -66,5 +67,46 @@ describe("pricing on quotes", () => {
     expect(l.serviceKey).toBe("CUSTOM:s1");
     expect(l.unitCents).toBe(150000);
     expect(l.details).toEqual({ scope: "What it is", included: ["Deck"], excluded: ["Audit"] });
+  });
+});
+
+describe("building a Needs design or build service", () => {
+  it("only reviewers move build progress, only for design or build services", () => {
+    expect(buildUpdateProblem({ roles: ["product_reviewer"], reviewStatus: "design_build", stage: "building" })).toBeNull();
+    expect(buildUpdateProblem({ roles: ["account_executive"], reviewStatus: "design_build", stage: "building" })).not.toBeNull();
+    expect(buildUpdateProblem({ roles: ["operations"], reviewStatus: "not_tech", stage: "building" })).toMatch(/Needs design or build/);
+    expect(buildUpdateProblem({ roles: ["operations"], reviewStatus: "design_build", released: true, stage: "testing" })).toMatch(/already on quotes/);
+  });
+});
+
+describe("releasing a built service to quotes", () => {
+  const ok = { actorId: "ceo", roles: ["executive"], createdBy: "writer", reviewStatus: "design_build" as const, buildStage: "ready", priceCents: 500000, billing: "annual" };
+  it("only the CEO, CRO or Super Admin release", () => {
+    expect(canReleaseCustomService(["executive"])).toBe(true);
+    expect(canReleaseCustomService(["cro"])).toBe(true);
+    expect(canReleaseCustomService(["product_reviewer"])).toBe(false);
+    expect(releaseProblem({ ...ok, roles: ["operations"] })).toMatch(/CEO, CRO/);
+  });
+  it("needs a ready build, a price and someone other than the writer", () => {
+    expect(releaseProblem(ok)).toBeNull();
+    expect(releaseProblem({ ...ok, buildStage: "testing" })).toMatch(/Ready to release/);
+    expect(releaseProblem({ ...ok, priceCents: 0 })).toMatch(/standard price/);
+    expect(releaseProblem({ ...ok, actorId: "writer" })).toMatch(/other than/);
+    expect(releaseProblem({ ...ok, reviewStatus: "add_to_product" })).not.toBeNull();
+  });
+  it("released services price like the rate card", () => {
+    const r = releaseOf({ releasedAt: "2026-11-18", listPriceCents: 500000, listBilling: "annual" })!;
+    expect(priceCustomLine({ unitCents: 500000, quantity: 1, billingFrequency: "annual" }, "X", r)).toMatchObject({ baselineUnitCents: 500000, needsExecApproval: false });
+    expect(priceCustomLine({ unitCents: 600000, quantity: 1, billingFrequency: "annual" }, "X", r).needsExecApproval).toBe(false);
+    expect(priceCustomLine({ unitCents: 450000, quantity: 1, billingFrequency: "annual" }, "X", r).needsExecApproval).toBe(true);
+    expect(priceCustomLine({ unitCents: 500000, quantity: 1, billingFrequency: "quarterly" }, "X", r).needsExecApproval).toBe(true);
+  });
+  it("unreleased services keep needing CEO or CRO", () => {
+    expect(releaseOf({ releasedAt: null, listPriceCents: 500000, listBilling: "annual" })).toBeNull();
+    expect(priceCustomLine({ unitCents: 999999, quantity: 1 }, "X", null).needsExecApproval).toBe(true);
+  });
+  it("a released service starts the quote line at its standard price and billing", () => {
+    const l = customQuoteLine({ id: "s1", name: "Board pack", summary: "What it is", included: [], excluded: [], billingFrequency: "one_time", suggestedPriceCents: 100, releasedAt: "2026-11-18", listPriceCents: 500000, listBilling: "annual" });
+    expect(l).toMatchObject({ unitCents: 500000, billingFrequency: "annual" });
   });
 });

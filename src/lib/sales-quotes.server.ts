@@ -7,7 +7,7 @@ import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "
 import { sanitizeQuoteSections } from "@/lib/quote-sections-model";
 import { normalizeQuoteBilling } from "@/lib/quote-billing";
 import { isFoundationKey } from "@/lib/foundation-admin-model";
-import { customServiceIdFromKey, isCustomServiceKey, priceCustomLine } from "@/lib/custom-service-model";
+import { customServiceIdFromKey, isCustomServiceKey, priceCustomLine, releaseOf } from "@/lib/custom-service-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -171,12 +171,13 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   const foundationSnaps = new Map<number, any>();
   let foundationNeedsExec = false;
   const pendingLines = new Map<number, QuoteLineInput>();
-  // Custom services written by Sales: no rate card, so the typed price always needs CEO or CRO.
+  // Custom services written by Sales: no rate card, so the typed price needs CEO or CRO, unless the
+  // service was built and released with a standard price (then priced like the rate card).
   // Retired services stay on quotes that already had them, but can't be newly added.
   let customNeedsExec = false;
   if (d.lines.some((l) => isCustomServiceKey(l.serviceKey))) {
     const ids = [...new Set(d.lines.map((l) => customServiceIdFromKey(l.serviceKey)).filter((x): x is string => !!x))];
-    const { data: svcs, error: svcError } = await db.from("sales_custom_services").select("id, name, summary, included, excluded, billing_frequency, archived_at").in("id", ids);
+    const { data: svcs, error: svcError } = await db.from("sales_custom_services").select("id, name, summary, included, excluded, billing_frequency, archived_at, released_at, list_price_cents, list_billing").in("id", ids);
     if (svcError) throw new Error("Couldn't check the custom services on this quote.");
     const byId = new Map(((svcs ?? []) as any[]).map((r) => [r.id as string, r]));
     const priorIds = [d.id, d.supersedingQuoteId].filter((x): x is string => !!x);
@@ -191,11 +192,12 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
       if (!svc) throw new Error(`"${l.label || "Custom service"}" isn't in the custom services list.`);
       if (svc.archived_at && !prior.has(l.serviceKey)) throw new Error(`"${svc.name}" was retired. Pick another service.`);
       if (l.bookkeeping || l.foundation) throw new Error("Custom services can't carry bookkeeping or foundation terms.");
-      const p = priceCustomLine(l, svc.name);
-      customNeedsExec = true;
-      const freq = (["one_time", "monthly", "quarterly", "annual"] as const).find((f) => f === l.billingFrequency) ?? svc.billing_frequency ?? "one_time";
+      const release = releaseOf({ releasedAt: svc.released_at, listPriceCents: svc.list_price_cents, listBilling: svc.list_billing });
+      const freq = (["one_time", "monthly", "quarterly", "annual"] as const).find((f) => f === l.billingFrequency) ?? release?.listBilling ?? svc.billing_frequency ?? "one_time";
+      const p = priceCustomLine({ ...l, billingFrequency: freq }, svc.name, release);
+      if (p.needsExecApproval) customNeedsExec = true;
       const details = cleanLineDetails(l.details) ?? cleanLineDetails({ scope: svc.summary, included: svc.included ?? [], excluded: svc.excluded ?? [] });
-      pendingLines.set(i, { ...l, label: svc.name, quantity: p.quantity, unitCents: p.unitCents, baselineUnitCents: p.unitCents, billingFrequency: freq, details, foundation: undefined, bookkeeping: undefined });
+      pendingLines.set(i, { ...l, label: svc.name, quantity: p.quantity, unitCents: p.unitCents, baselineUnitCents: p.baselineUnitCents, billingFrequency: freq, details, foundation: undefined, bookkeeping: undefined });
     }
   }
   // Foundation Administration: approved rate when one exists, otherwise an explicit negotiated price

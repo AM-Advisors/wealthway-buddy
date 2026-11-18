@@ -19,7 +19,7 @@ import { DIRECTION_LABEL, KIND_LABEL, STATUS_LABEL, type DocDirection, type DocK
 import { Panel } from "@/components/sales/sales-ui";
 import { isFoundationKey, type FoundationLineInput } from "@/lib/foundation-admin-model";
 import { BOOKKEEPING_KEY } from "@/lib/bookkeeping-model";
-import { customQuoteLine, isCustomServiceKey } from "@/lib/custom-service-model";
+import { customQuoteLine, isCustomServiceKey, priceCustomLine, releaseOf } from "@/lib/custom-service-model";
 
 export const Route = createFileRoute("/_authenticated/sales_/documents")({
   head: () => ({
@@ -210,7 +210,9 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
   const toggleCustom = (x: any) => has(x.serviceKey) ? setLines(lines.filter((l) => l.serviceKey !== x.serviceKey)) : setLines([...lines, customQuoteLine(x) as SvcLine]);
   const toggle = (l: any) => has(l.serviceKey) ? setLines(lines.filter((x) => x.serviceKey !== l.serviceKey)) : setLines([...lines, { serviceKey: l.serviceKey, label: l.label, quantity: 1, unitCents: l.baselineCents, baselineUnitCents: l.baselineCents, billingFrequency: l.pricingModel === "annual" ? "annual" : l.pricingModel === "quarterly" ? "quarterly" : l.pricingModel === "monthly" ? "monthly" : "one_time" }]);
   const total = lines.reduce((s, l) => s + l.quantity * l.unitCents, 0);
-  const base = lines.reduce((s, l) => s + l.quantity * (isCustomServiceKey(l.serviceKey) ? l.unitCents : l.baselineUnitCents), 0);
+  const releaseFor = (key: string) => { const x = custom.find((y) => y.serviceKey === key); return x ? releaseOf(x) : null; };
+  const customBaseline = (l: SvcLine) => { const r = releaseFor(l.serviceKey); return r && l.unitCents > 0 ? priceCustomLine(l, l.label, r).baselineUnitCents : l.unitCents; };
+  const base = lines.reduce((s, l) => s + l.quantity * (isCustomServiceKey(l.serviceKey) ? customBaseline(l) : l.baselineUnitCents), 0);
   return (
     <div className="space-y-2 text-sm">
       <div className="flex items-center justify-between"><span>Services (prices come from the rate card)</span><span className="text-muted-foreground">{lines.length} selected</span></div>
@@ -227,7 +229,7 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
         {shownCustom.map((x) => (
           <label key={x.serviceKey} className="flex cursor-pointer items-center justify-between gap-3 border-b px-3 py-2 last:border-0 hover:bg-muted/40">
             <span className="flex items-center gap-2"><input type="checkbox" checked={has(x.serviceKey)} onChange={() => toggleCustom(x)} />{x.name}</span>
-            <span className="text-muted-foreground">{x.suggestedPriceCents ? `suggested ${money(x.suggestedPriceCents)}` : "Enter a price"}</span>
+            <span className="text-muted-foreground">{releaseOf(x) ? `standard ${money(x.listPriceCents)}` : x.suggestedPriceCents ? `suggested ${money(x.suggestedPriceCents)}` : "Enter a price"}</span>
           </label>
         ))}
       </div>
@@ -236,7 +238,7 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
         <div className="rounded-md border">
           {lines.map((l, i) => (
             <div key={l.serviceKey} className="grid grid-cols-12 items-center gap-2 border-b px-3 py-2 last:border-0">
-              <span className="col-span-5">{l.label}{(isFoundationKey(l.serviceKey) || l.serviceKey === BOOKKEEPING_KEY) && <span className="block text-xs text-muted-foreground">Details collected at onboarding</span>}{isCustomServiceKey(l.serviceKey) && <span className="block text-xs text-muted-foreground">Custom service · price needs CEO or CRO</span>}</span>
+              <span className="col-span-5">{l.label}{(isFoundationKey(l.serviceKey) || l.serviceKey === BOOKKEEPING_KEY) && <span className="block text-xs text-muted-foreground">Details collected at onboarding</span>}{isCustomServiceKey(l.serviceKey) && <span className="block text-xs text-muted-foreground">{releaseFor(l.serviceKey) ? `Standard price ${money(releaseFor(l.serviceKey)!.listPriceCents)}; lower price or other billing needs CEO or CRO` : "Custom service · price needs CEO or CRO"}</span>}</span>
               <Input aria-label="Quantity" className="col-span-2" disabled={!!l.foundation} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x))} />
               <Input aria-label="Price" className="col-span-2" disabled={!!l.foundation} inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x))} />
               <select aria-label="Billing frequency" disabled={!!l.foundation} className="col-span-3 h-9 rounded-md border bg-background px-2" value={l.billingFrequency ?? "one_time"} onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, billingFrequency: e.target.value as any } : x))}>{BILLING_FREQUENCIES.map((fq) => <option key={fq.id} value={fq.id}>{fq.label}</option>)}</select>

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { CUSTOM_BILLING, CUSTOM_REVIEW_DECISIONS } from "@/lib/custom-service-model";
+import { BUILD_STAGES, CUSTOM_BILLING, CUSTOM_REVIEW_DECISIONS } from "@/lib/custom-service-model";
 
 const S = () => import("@/lib/custom-services.server");
 const body = z.object({
@@ -25,6 +25,14 @@ export const updateCustomService = createServerFn({ method: "POST" }).middleware
 export const reviewCustomService = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ id: z.string().uuid(), decision: z.enum(CUSTOM_REVIEW_DECISIONS), productTarget: z.string().max(200).nullish(), note: z.string().max(2000).nullish(), expectedUpdatedAt: z.string().min(10) }).parse(d))
   .handler(async ({ data, context }) => (await S()).reviewCustomService(context.userId, data));
+
+export const updateCustomServiceBuild = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), stage: z.enum(BUILD_STAGES), note: z.string().max(2000).nullish(), expectedUpdatedAt: z.string().min(10) }).parse(d))
+  .handler(async ({ data, context }) => (await S()).updateCustomServiceBuild(context.userId, data));
+
+export const releaseCustomService = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), listPriceCents: z.number().int().min(1).max(1_000_000_000), listBilling: z.enum(CUSTOM_BILLING), note: z.string().max(2000).nullish(), expectedUpdatedAt: z.string().min(10) }).parse(d))
+  .handler(async ({ data, context }) => (await S()).releaseCustomService(context.userId, data));
 
 export const retireCustomService = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().max(500) }).parse(d))
