@@ -38,7 +38,6 @@ function InvestorWelcome({
   diligenceUrl,
   contactEmail = 'operations@harmonious.co',
   commitment,
-  reviewerName,
   nextSteps,
 }: InvestorWelcomeProps) {
   const steps = nextSteps && nextSteps.length > 0 ? nextSteps : DEFAULT_STEPS
@@ -94,8 +93,7 @@ function InvestorWelcome({
             Dear {investorName},
           </Text>
           <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>
-            Your onboarding for {offeringName} is complete and your application has been approved
-            {reviewerName ? ` by ${reviewerName}` : ''}. Everything you need from here lives in your
+            Your onboarding for {offeringName} is complete and your application has been approved. Everything you need from here lives in your
             secure portal.
             {commitment ? ` Your commitment on file is ${commitment}.` : ''}
           </Text>

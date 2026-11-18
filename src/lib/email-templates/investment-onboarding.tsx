@@ -15,7 +15,6 @@ const money = (cents?: number | null) =>
 function InvestmentOnboarding({
   investorName = '',
   fundName = 'the fund',
-  managerName = 'Your fund manager',
   amountCents = null,
   ctaUrl = 'https://onboard.harmonious.co',
 }: Props) {
@@ -40,7 +39,7 @@ function InvestmentOnboarding({
             {investorName ? `Hi ${investorName},` : 'Hello,'}
           </Text>
           <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>
-            {managerName} uses Harmonious for investor onboarding. To complete your investment
+            Harmonious handles investor onboarding for {fundName}. To complete your investment
             {amount ? ` of ${amount}` : ''} in {fundName}, please complete these steps:
           </Text>
           <Section style={{ margin: '16px 0', padding: '0 20px' }}>

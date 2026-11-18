@@ -10,7 +10,7 @@ interface Props {
   ctaUrl?: string
 }
 
-function DocumentsSent({ investorName = '', fundName = 'your fund', senderName = 'Your fund manager', documents = [], note = '', ctaUrl = 'https://onboard.harmonious.co' }: Props) {
+function DocumentsSent({ investorName = '', fundName = 'your fund', documents = [], note = '', ctaUrl = 'https://onboard.harmonious.co' }: Props) {
   const t = { color: '#221F20', fontSize: '15px', lineHeight: '24px' }
   return (
     <Html>
@@ -25,7 +25,7 @@ function DocumentsSent({ investorName = '', fundName = 'your fund', senderName =
             Documents ready for {fundName}
           </Heading>
           <Text style={t}>{investorName ? `Hi ${investorName},` : 'Hello,'}</Text>
-          <Text style={t}>{senderName} has shared the following documents with you:</Text>
+          <Text style={t}>Harmonious has shared the following documents with you for {fundName}:</Text>
           {documents.map((d) => (
             <Text key={d} style={{ ...t, margin: '0 0 4px 12px' }}>• {d}</Text>
           ))}

@@ -17,7 +17,6 @@ function SigningReminder({
   documentTitle = 'a document',
   fundName = 'your fund',
   steps = ['Review the document', 'Sign'],
-  requestedBy,
   ctaUrl = 'https://app.harmonious.co/home',
   ctaLabel = 'Open and sign',
   firstTime = false,
@@ -35,8 +34,7 @@ function SigningReminder({
             {documentTitle} is waiting for you
           </Heading>
           <Text style={text}>
-            Hi {recipientName}, this is a friendly reminder that {documentTitle} for {fundName} still needs your attention
-            {requestedBy ? `. ${requestedBy} asked us to send it` : ''}. It only takes a few minutes.
+            Hi {recipientName}, this is a friendly reminder that {documentTitle} for {fundName} still needs your attention. It only takes a few minutes.
           </Text>
           <Section style={{ backgroundColor: '#f8fbfd', border: '1px solid #e6ecf3', padding: '16px 20px', margin: '8px 0 0' }}>
             <Text style={{ ...label }}>What's left to do</Text>

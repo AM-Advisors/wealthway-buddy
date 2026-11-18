@@ -29,7 +29,6 @@ function ClientInvitation({
   contactName = 'there',
   clientName = 'your organization',
   roleLabel = 'Client contact',
-  invitedByName = 'The Harmonious team',
   note = '',
   passwordUrl = 'https://app.harmonious.co/reset-password',
   signInUrl = 'https://app.harmonious.co/client-login',
@@ -90,7 +89,7 @@ function ClientInvitation({
           </Heading>
 
           <Text style={body}>
-            Hi {contactName}, {invitedByName} has given you access to the Harmonious portal for{' '}
+            Hi {contactName}, Harmonious has given you access to the Harmonious portal for{' '}
             {clientName}.
           </Text>
 
@@ -109,7 +108,7 @@ function ClientInvitation({
             ) : null}
             {note ? (
               <>
-                <Text style={label}>From {invitedByName}</Text>
+                <Text style={label}>From Harmonious</Text>
                 <Text style={{ ...value, fontWeight: 400, margin: 0 }}>{note}</Text>
               </>
             ) : null}

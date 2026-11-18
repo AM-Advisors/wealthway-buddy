@@ -39,7 +39,6 @@ function FundInvitation({
   inviteeName = 'there',
   offeringName = 'Harmonious',
   role = 'investor',
-  invitedByName = 'The Harmonious team',
   portalUrl = `${DEFAULT_PORTAL_ORIGIN}/auth`,
   signInUrl = `${DEFAULT_PORTAL_ORIGIN}/auth`,
   contactEmail = 'operations@harmonious.co',
@@ -50,8 +49,8 @@ function FundInvitation({
     ? `You now manage ${offeringName}`
     : `You are invited to ${offeringName}`
   const lead = isManager
-    ? `${invitedByName} has given you fund manager access to ${offeringName}. You can review investor progress, documents and funding status in the Harmonious manager portal.`
-    : `${invitedByName} has invited you to review and invest in ${offeringName}. Your secure investor portal is ready, identity verification, accreditation, fund documents and funding all happen in one place.`
+    ? `Harmonious has given you fund manager access to ${offeringName}. You can review investor progress, documents and funding status in the Harmonious manager portal.`
+    : `Harmonious has invited you to review and invest in ${offeringName}. Your secure investor portal is ready, identity verification, accreditation, fund documents and funding all happen in one place.`
 
   return (
     <Html>
