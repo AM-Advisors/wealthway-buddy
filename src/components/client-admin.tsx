@@ -286,7 +286,8 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
 
 function InviteStatus({ p }: { p: any }) {
   if (p.userId) return <Badge variant="secondary">Active account</Badge>;
-  if (p.invitedAt) return <Badge variant="outline">Invited {new Date(p.invitedAt).toLocaleDateString()}</Badge>;
+  const at = [p.invitedAt, p.fundInvitedAt].filter(Boolean).sort().pop();
+  if (at) return <Badge variant="outline">{p.invitedAt ? "Invited" : "Invited to fund"} {new Date(at).toLocaleDateString()}</Badge>;
   return <Badge variant="outline">Not invited</Badge>;
 }
 

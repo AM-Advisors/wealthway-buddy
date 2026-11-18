@@ -102,6 +102,19 @@ export const listClientPeople = createServerFn({ method: "GET" })
       userIds.length ? db.from("persons").select("user_id, email, kyc_status, aml_status").in("user_id", userIds) : { data: [] },
       emails.length ? db.from("persons").select("user_id, email, kyc_status, aml_status").in("email", emails) : { data: [] },
     ]);
+    // Invitations sent from a fund (e.g. a fund manager invite) count as invited
+    // on the client account too; they never stamp client_contacts.invited_at.
+    const { data: fundInvites } = emails.length && fundIds.length
+      ? await db.from("fund_invitations").select("email, created_at, last_sent_at, status").in("offering_id", fundIds).neq("status", "revoked")
+      : { data: [] };
+    const fundInvitedAt = new Map<string, string>();
+    for (const i of (fundInvites ?? []) as any[]) {
+      const key = String(i.email ?? "").toLowerCase();
+      const at = (i.last_sent_at ?? i.created_at) as string | null;
+      if (!key || !at || !emails.includes(key)) continue;
+      const prev = fundInvitedAt.get(key);
+      if (!prev || at > prev) fundInvitedAt.set(key, at);
+    }
     const personByUser = new Map(((byUser ?? []) as any[]).map((r) => [r.user_id, r]));
     const personByEmail = new Map(((byEmail ?? []) as any[]).map((r) => [String(r.email ?? "").toLowerCase(), r]));
     const verificationFor = (p: any) => (p.user_id ? personByUser.get(p.user_id) : null) ?? personByEmail.get(String(p.email ?? "").toLowerCase()) ?? null;
@@ -121,6 +134,7 @@ export const listClientPeople = createServerFn({ method: "GET" })
         status: p.status ?? "active",
         userId: p.user_id,
         invitedAt: p.invited_at ?? null,
+        fundInvitedAt: fundInvitedAt.get(String(p.email ?? "").toLowerCase()) ?? null,
         kycStatus: verificationFor(p)?.kyc_status ?? null,
         amlStatus: verificationFor(p)?.aml_status ?? null,
         scopes: ((scopes ?? []) as any[]).filter((s) => s.contact_id === p.id).map((s) => ({ id: s.id, offeringId: s.offering_id, companyId: s.company_id, role: s.role })),
