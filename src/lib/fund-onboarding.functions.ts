@@ -56,10 +56,14 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
       db.from("fund_managers").select("user_id").eq("offering_id", data.offeringId),
       db.from("fund_setups").select("id").eq("offering_id", data.offeringId).maybeSingle(),
     ]);
-    const managerIds = ((managers ?? []) as any[]).map((m) => m.user_id);
-    const { data: people } = managerIds.length
-      ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", managerIds)
-      : { data: [] };
+    // Countersigners: assigned managers plus active Fund Signatories with a login.
+    const { fundSignerUserIds } = await import("@/lib/fund-signatories.server");
+    const { resolveFundCountersigner } = await import("@/lib/fund-countersigner.server");
+    const signerIds = [...new Set([...((managers ?? []) as any[]).map((m) => m.user_id as string), ...(await fundSignerUserIds(data.offeringId))])];
+    const people = (await Promise.all(signerIds.map(async (id) => {
+      const cs = await resolveFundCountersigner(data.offeringId, id);
+      return cs ? { user_id: id, legal_name: cs.name, email: cs.email } : null;
+    }))).filter(Boolean);
     const docIds = ((docs ?? []) as any[]).map((d) => d.id);
     const { data: blocks } = docIds.length
       ? await db
@@ -158,13 +162,10 @@ export const saveDocumentSigningConfig = createServerFn({ method: "POST" })
     let countersigner: string | null = null;
     if (data.signingMode === "dual") {
       if (!data.countersignerUserId) throw new Error("Choose the authorized fund signatory.");
-      const { data: rel } = await db
-        .from("fund_managers")
-        .select("id")
-        .eq("offering_id", doc.offering_id)
-        .eq("user_id", data.countersignerUserId)
-        .maybeSingle();
-      if (!rel) throw new Error("That person is not currently assigned to this fund.");
+      const { isFundSignerUser } = await import("@/lib/fund-signatories.server");
+      if (!(await isFundSignerUser(doc.offering_id, data.countersignerUserId))) {
+        throw new Error("That person is not currently a manager or signatory of this fund.");
+      }
       countersigner = data.countersignerUserId;
     }
     const { error } = await db
@@ -216,13 +217,8 @@ export const countersignDetailFn = createServerFn({ method: "POST" })
     if (!me || me.signer_user_id !== context.userId || me.role_key !== "fund_manager") {
       throw new Error("Forbidden: this signature is not assigned to you.");
     }
-    const { data: rel } = await db
-      .from("fund_managers")
-      .select("id")
-      .eq("offering_id", me.offering_id)
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    if (!rel) throw new Error("Forbidden: you are no longer assigned to this fund.");
+    const { isFundSignerUser: stillSigner } = await import("@/lib/fund-signatories.server");
+    if (!(await stillSigner(me.offering_id, context.userId))) throw new Error("Forbidden: you are no longer assigned to this fund.");
 
     const [{ data: sig }, { data: doc }, { data: offering }, { data: investorRow }] = await Promise.all([
       db.from("document_signatures").select("application_id, provider_agreement_id, provider_status, signing_mode, pdf_path").eq("id", me.signature_id).maybeSingle(),

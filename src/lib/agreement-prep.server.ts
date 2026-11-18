@@ -375,11 +375,10 @@ export async function sendPreparedAgreement(
   const [{ data: offering }, { data: subscription }, { data: onboarding }, { data: investor }] =
     await Promise.all([
       admin.from("offerings").select("id, name, reg_type").eq("id", doc.offering_id).maybeSingle(),
-      admin
-        .from("subscriptions")
-        .select("commitment_cents, tax_classification, ownership_title")
-        .eq("application_id", application.id)
-        .maybeSingle(),
+      // Reuse the commitment recorded on the investment when the legacy record is missing.
+      import("@/lib/signing-commitment.server").then(async ({ ensureSigningCommitment }) => ({
+        data: await ensureSigningCommitment(admin, application.id),
+      })),
       admin
         .from("investor_onboardings")
         .select("investment_profile_id")

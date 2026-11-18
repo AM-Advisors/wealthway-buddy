@@ -90,12 +90,14 @@ describe("cross-fund authority", () => {
     expect((fns.match(/fundAuthority\(/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
   it("countersigner must be currently assigned to the fund", () => {
-    expect(fns).toMatch(/not currently assigned to this fund/);
+    expect(fns).toMatch(/not currently a manager or signatory of this fund/);
+    expect(fns).toMatch(/isFundSignerUser\(doc\.offering_id, data\.countersignerUserId\)/);
     expect(fns).toMatch(/no longer assigned to this fund/);
     expect(fns).toMatch(/signer_user_id !== context\.userId/);
   });
   it("Box dual requests verify the countersigner's fund relationship", () => {
-    expect(src("./box-sign.functions.ts")).toMatch(/fund_managers"\)\.select\("id"\)\.eq\("offering_id", doc\.offering_id\)/);
+    expect(src("./box-sign.functions.ts")).toMatch(/resolveFundCountersigner\(doc\.offering_id, csId\)/);
+    expect(src("./fund-countersigner.server.ts")).toMatch(/isFundSignerUser\(offeringId, userId\)/);
   });
 });
 
