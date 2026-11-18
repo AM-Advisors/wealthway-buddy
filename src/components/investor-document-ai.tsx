@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { DriveDocumentPicker } from "@/components/drive-document-picker";
 
 type Found = FoundRow & { decision?: "approved" | "denied" | "updated"; appliedValue?: string | undefined };
 type Owner = "match" | "needs" | "confirmed" | "moved";
@@ -61,7 +62,7 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
   const patch = (ri: number, p: Partial<Result>) => setResults((l) => l.map((r, i) => (i === ri ? { ...r, ...p } : r)));
   const refreshRecent = () => qc.invalidateQueries({ queryKey: ["doc-ai-recent", onboardingId] });
 
-  async function run(files: FileList | null) {
+  async function run(files: FileList | File[] | null) {
     for (const file of Array.from(files ?? [])) {
       if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is over 10 MB.`); continue; }
       setBusy(file.name);
@@ -132,11 +133,22 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
         const up = await startPrior({ data: { fundId, onboardingId: target, fileName: r.file } });
         const put = await supabase.storage.from("signed-documents").uploadToSignedUrl(up.path, up.token, r.blob, { contentType: r.blob.type || "application/pdf" });
         if (put.error) throw new Error("The file didn't upload. Try again.");
-        await recordPrior({ data: { fundId, onboardingId: target, path: up.path, fileName: r.file, kind: t.key as any, title: t.label, signedOn: r.signedOn, note: "Saved from Read documents with AI" } });
+        await recordPrior({ data: { fundId, onboardingId: target, path: up.path, fileName: r.file, kind: (t.key === "fund_operating_agreement" ? "operating_agreement" : t.key) as any, title: t.label, signedOn: r.signedOn, note: "Saved from Read documents with AI" } });
       }
       await logStep({ data: { onboardingId: target, fileName: r.file, step: "saved", type: t.key } }).catch(() => null);
-      patch(ri, { saved: { target: t.key, documentId, signedOn: r.signedOn || null }, changingType: false });
-      toast.success(`Saved as ${t.label}.`);
+      const sv = { target: t.key, documentId, signedOn: r.signedOn || null };
+      // One approval: saving also applies the document everywhere (no second click).
+      let used = false;
+      const needsSigned = t.use === "tax_outside" || t.use === "subscription_outside";
+      if (t.use && (!needsSigned || r.read.signed !== false)) {
+        if (t.use === "tax_outside" && documentId) await taxOutside({ data: { id: documentId, note: "Signed copy approved from Read documents with AI" } });
+        else if ((t.use === "accept_accreditation" || t.use === "accept_copy") && documentId) await reviewUpload({ data: { id: documentId, status: "accepted", note: null } });
+        else if (t.use === "subscription_outside") await markOutside({ data: { fundId, onboardingId: target, marked: true, signedOn: r.signedOn, note: "Signed copy approved from Read documents with AI" } });
+        await logStep({ data: { onboardingId: target, fileName: r.file, step: "used", type: t.key, use: t.use } }).catch(() => null);
+        used = true;
+      }
+      patch(ri, { saved: { ...sv, used }, changingType: false });
+      toast.success(used ? `Approved and filed as ${t.label}.` : `Saved as ${t.label}.`);
       void refreshRecent(); await qc.invalidateQueries();
     } catch (e) { toast.error((e as Error).message); } finally { setWorking(null); }
   }
@@ -163,7 +175,7 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Read documents with AI</CardTitle>
-        <CardDescription>Pick what you're uploading (or let AI decide), confirm who it belongs to, review each detail, then save it to the investor's documents and put it to use. Nothing changes until you click. Tax and account numbers are never read.</CardDescription>
+        <CardDescription>Pick what you're uploading (or let AI decide), choose files from your computer or the Harmonious Google Drive, confirm who it belongs to, review each detail, then save it to the investor's documents and put it to use. Nothing changes until you click. Tax and account numbers are never read.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -176,6 +188,7 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
             <input type="file" accept={ACCEPT} multiple className="hidden" disabled={!!busy} onChange={(e) => { void run(e.target.files); e.target.value = ""; }} />
             <Button asChild disabled={!!busy}><span className="cursor-pointer">{busy ? `Reading ${busy}…` : "Choose documents"}</span></Button>
           </label>
+          <DriveDocumentPicker onboardingId={onboardingId} disabled={!!busy} onPicked={(files) => run(files)} />
         </div>
 
         {results.map((r, i) => {
@@ -323,7 +336,7 @@ function SaveRow({ r, busy, onChange, onSave, onUse }: { r: Result; busy: boolea
       {t?.store === "prior" && <Input type="date" aria-label="Date signed" className="h-8 w-40" value={r.signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => onChange({ signedOn: e.target.value })} />}
       {dupBlocks
         ? <><span className="text-xs">Already saved on {r.read.duplicate!.savedAt}. See the documents list below.</span><Button size="sm" variant="outline" className="h-8" onClick={() => onChange({ saveDuplicate: true })}>Save another copy</Button></>
-        : <Button size="sm" className="h-8" disabled={busy || !t || (t.store === "prior" && !r.signedOn)} onClick={onSave}>{busy ? "Saving…" : r.saved ? "Save as corrected type" : "Save to investor's documents"}</Button>}
+        : <Button size="sm" className="h-8" disabled={busy || !t || (t.store === "prior" && !r.signedOn)} onClick={onSave}>{busy ? "Saving…" : r.saved ? "Save as corrected type" : "Approve & file"}</Button>}
       {r.saved && <Button size="sm" variant="ghost" className="h-8" onClick={() => onChange({ changingType: false })}>Cancel</Button>}
     </div>
   );

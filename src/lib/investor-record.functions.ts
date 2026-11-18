@@ -170,3 +170,12 @@ export const readNewInvestorDocumentFn = createServerFn({ method: "POST" }).midd
     base64: z.string().min(16).max(14_500_000),
   }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/investor-doc-extract.server")).readNewInvestorDocument(context.userId, data));
+
+/* ------------------------------------------------ Google Drive picker for the AI reader (staff) */
+const driveId = z.string().regex(/^[\w-]{10,120}$/);
+export const browseDriveFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid, folderId: driveId.nullish(), search: z.string().max(300).nullish(), start: z.boolean().optional() }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/drive-picker.server")).browseDrive(context.userId, data));
+export const downloadDriveFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid, fileId: driveId }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/drive-picker.server")).downloadDriveFile(context.userId, data));

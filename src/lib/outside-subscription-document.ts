@@ -3,7 +3,7 @@
  * investor only when Harmonious marked it and loaded the signed copy (outsideSubscriptionStates
  * complete). Other documents and partial records keep their platform status.
  */
-export type OutsideSubscription = { marked: boolean; signedOn: string | null; copyLoaded: boolean; complete: boolean };
+export type OutsideSubscription = { marked: boolean; signedOn: string | null; copyLoaded: boolean; copySignedOn?: string | null; complete: boolean };
 
 export function isSubscriptionDocument(doc: { document_category?: string | null; doc_type?: string | null }) {
   return doc.document_category === "subscription_agreement" || doc.doc_type === "subscription_agreement";

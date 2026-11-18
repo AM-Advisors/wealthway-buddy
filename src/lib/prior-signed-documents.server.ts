@@ -14,6 +14,7 @@ export const PRIOR_DOC_KINDS = {
   tax_form: "Tax form (W-9 / W-8)",
   side_letter: "Side letter",
   accreditation: "Accreditation evidence",
+  schedule_k1: "Schedule K-1",
   other: "Other signed document",
 } as const;
 export type PriorDocKind = keyof typeof PRIOR_DOC_KINDS;
@@ -92,7 +93,7 @@ export async function openPriorDoc(db: any, userId: string, input: { fundId: str
  * it counts as signed only once Harmonious has loaded the copy. Never touches funding.
  */
 export async function outsideSubscriptionStates(db: any, onboardingIds: string[]) {
-  const out = new Map<string, { marked: boolean; signedOn: string | null; copyLoaded: boolean; complete: boolean }>();
+  const out = new Map<string, { marked: boolean; signedOn: string | null; copyLoaded: boolean; copySignedOn: string | null; complete: boolean }>();
   if (!onboardingIds.length) return out;
   const ids = [...new Set(onboardingIds)];
   const marks: any[] = []; const docs: any[] = [];
@@ -100,7 +101,7 @@ export async function outsideSubscriptionStates(db: any, onboardingIds: string[]
     const c = ids.slice(i, i + 100);
     const [m, d] = await Promise.all([
       db.from("outside_subscription_marks").select("onboarding_id, action, signed_on, created_at").in("onboarding_id", c).order("created_at", { ascending: false }),
-      db.from("prior_signed_documents").select("id, onboarding_id, replaces_id, uploaded_by_role, document_kind").in("onboarding_id", c).eq("document_kind", "subscription_agreement"),
+      db.from("prior_signed_documents").select("id, onboarding_id, replaces_id, uploaded_by_role, document_kind, signed_on, created_at").in("onboarding_id", c).eq("document_kind", "subscription_agreement").order("created_at", { ascending: false }),
     ]);
     if (m.error || d.error) { console.error("outside subscription read failed (treated as none)"); continue; }
     marks.push(...(m.data ?? [])); docs.push(...(d.data ?? []));
@@ -109,8 +110,9 @@ export async function outsideSubscriptionStates(db: any, onboardingIds: string[]
   for (const id of ids) {
     const latest = marks.find((m) => m.onboarding_id === id);
     const marked = latest?.action === "marked";
-    const copyLoaded = docs.some((d) => d.onboarding_id === id && d.uploaded_by_role === "harmonious" && !replaced.has(d.id));
-    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, complete: marked && copyLoaded });
+    const copy = docs.find((d) => d.onboarding_id === id && d.uploaded_by_role === "harmonious" && !replaced.has(d.id));
+    const copyLoaded = Boolean(copy);
+    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: marked && copyLoaded });
   }
   return out;
 }

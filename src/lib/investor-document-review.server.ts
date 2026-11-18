@@ -117,9 +117,9 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
 
 /** Pure: a Harmonious-held copy of an outside-signed agreement shows as signed (evidence only, no approval). */
 export function outsideSignedFor(priors: any[], onboardingId: string, docType: string | null): { signedOn: string } | null {
-  if (docType !== "subscription_agreement") return null;
+  if (docType !== "subscription_agreement" && docType !== "operating_agreement") return null;
   const replaced = new Set(priors.map((p) => p.replaces_id).filter(Boolean));
-  const hit = priors.find((p) => p.onboarding_id === onboardingId && p.document_kind === "subscription_agreement" && !replaced.has(p.id));
+  const hit = priors.find((p) => p.onboarding_id === onboardingId && p.document_kind === docType && !replaced.has(p.id));
   return hit ? { signedOn: hit.signed_on as string } : null;
 }
 

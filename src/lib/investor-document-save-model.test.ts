@@ -46,3 +46,8 @@ describe("owner and quality checks", () => {
     expect(duplicateOf([{ fileName: "W9 signed.pdf", kind: "tax_form", savedAt: "2026-11-01" }], "W9_signed.pdf", "tax_form")).not.toBeNull();
   });
 });
+
+describe("K-1 and fund operating agreement types", () => {
+  it("files a Schedule K-1 as a K-1, never a W-9", () => expect(guessSaveTarget("Schedule K-1")).toBe("schedule_k1"));
+  it("offers a signed fund operating agreement choice", () => expect(saveTarget("fund_operating_agreement")?.store).toBe("prior"));
+});

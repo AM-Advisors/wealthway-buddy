@@ -1,0 +1,2 @@
+ALTER TABLE public.prior_signed_documents DROP CONSTRAINT IF EXISTS prior_signed_documents_document_kind_check;
+ALTER TABLE public.prior_signed_documents ADD CONSTRAINT prior_signed_documents_document_kind_check CHECK (document_kind in ('subscription_agreement','operating_agreement','ppm_acknowledgment','tax_form','side_letter','accreditation','schedule_k1','other'));

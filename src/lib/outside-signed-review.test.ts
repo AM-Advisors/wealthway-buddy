@@ -6,3 +6,6 @@ describe("outside-signed subscription in Approvals", () => {
   it("does not apply to other documents", () => expect(outsideSignedFor(rows, "ob", "operating_agreement")).toBeNull());
   it("does not apply to other investors", () => expect(outsideSignedFor(rows, "x", "subscription_agreement")).toBeNull());
 });
+describe("outside-signed operating agreement", () => {
+  it("shows a loaded operating agreement as signed", () => expect(outsideSignedFor([{ id: "b", onboarding_id: "ob", document_kind: "operating_agreement", signed_on: "2026-10-10", replaces_id: null }], "ob", "operating_agreement")).toEqual({ signedOn: "2026-10-10" }));
+});

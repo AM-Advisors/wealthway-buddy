@@ -77,7 +77,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
   const kindOptions = Object.entries(KINDS).filter(([k]) => !(hasActiveSub && !replacesId && k === "subscription_agreement"));
   return (
     <div className="space-y-4">
-    {!outsideDone && <OutsideSubscription fundId={fundId} onboardingId={onboardingId} onLoad={() => openForm(() => { setKind("subscription_agreement"); setTitle("Subscription Agreement"); })} />}
+    {!outsideDone && <OutsideSubscription fundId={fundId} onboardingId={onboardingId} onLoad={(date) => openForm(() => { setKind("subscription_agreement"); setTitle("Subscription Agreement"); if (date) setSignedOn(date); })} />}
     <section className="space-y-2" aria-label="Previously signed documents">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-medium">Signed before joining Harmonious</h4>
@@ -98,7 +98,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
                 try { const r = await open({ data: { fundId, onboardingId, documentId: d.id } }); const a = document.createElement("a"); a.href = r.url; a.download = ""; a.rel = "noreferrer"; a.click(); }
                 catch (e) { toast.error(e instanceof Error ? e.message : "The document could not be opened."); }
               }}>Download</Button>
-              {!d.replaced && <Button size="sm" variant="ghost" onClick={() => openForm(() => { setReplacesId(d.id); setKind(d.kind as Kind); setTitle(d.title); })}>Replace</Button>}
+              {!d.replaced && <Button size="sm" variant="ghost" onClick={() => openForm(() => { setReplacesId(d.id); setKind(d.kind as Kind); setTitle(d.title); if (d.signedOn) setSignedOn(d.signedOn); })}>Replace</Button>}
               {outsideDone && d.kind === "subscription_agreement" && !d.replaced && <UndoOutside fundId={fundId} onboardingId={onboardingId} />}
             </div>
           </div>
@@ -125,7 +125,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
   );
 }
 
-function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string; onboardingId: string; onLoad: () => void }) {
+function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string; onboardingId: string; onLoad: (signedOn?: string | null) => void }) {
   const qc = useQueryClient();
   const get = useServerFn(outsideSubscriptionFn);
   const mark = useServerFn(markOutsideSubscriptionFn);
@@ -135,10 +135,10 @@ function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string;
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const s = q.data;
-  const submit = async (marked: boolean) => {
+  const submit = async (marked: boolean, date?: string) => {
     setBusy(true);
     try {
-      await mark({ data: { fundId, onboardingId, marked, signedOn: marked ? signedOn : null, note: note.trim() || null } });
+      await mark({ data: { fundId, onboardingId, marked, signedOn: marked ? (date ?? signedOn) : null, note: note.trim() || null } });
       toast.success(marked ? "Marked as signed outside the platform." : "Outside signing undone.");
       setOpen(false); setNote("");
       await qc.invalidateQueries({ queryKey: ["prior-signed-docs", onboardingId] });
@@ -152,7 +152,9 @@ function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string;
     <section className="space-y-2 rounded-lg border p-3" aria-label="Subscription Agreement signed outside the platform">
       <h4 className="font-medium">Subscription Agreement signed outside the platform</h4>
       {!s.marked ? (
-        !open ? <div className="space-y-2"><p className="text-xs text-muted-foreground">Use this if the investor already signed their Subscription Agreement in another system.</p><Button size="sm" variant="outline" onClick={() => setOpen(true)}>Mark as signed outside the platform</Button></div>
+        !open ? (s.copySignedOn
+          ? <div className="space-y-2"><p className="text-xs text-muted-foreground">The signed copy is already on file, signed {s.copySignedOn}. Confirm to use that date.</p><div className="flex flex-wrap gap-2"><Button size="sm" disabled={busy} onClick={() => submit(true, s.copySignedOn!)}>{busy ? "Saving…" : `Mark signed outside the platform on ${s.copySignedOn}`}</Button><Button size="sm" variant="ghost" disabled={busy} onClick={() => { setSignedOn(s.copySignedOn!); setOpen(true); }}>Use a different date</Button></div></div>
+          : <div className="space-y-2"><p className="text-xs text-muted-foreground">Use this if the investor already signed their Subscription Agreement in another system.</p><Button size="sm" variant="outline" onClick={() => setOpen(true)}>Mark as signed outside the platform</Button></div>)
         : <div className="space-y-2">
           <label className="block text-xs text-muted-foreground">Date signed<Input type="date" value={signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSignedOn(e.target.value)} /></label>
           <Input aria-label="Note" placeholder="Note (optional), e.g. where it was signed" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
@@ -164,7 +166,7 @@ function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string;
           {s.complete ? <p className="text-xs text-muted-foreground">Harmonious has loaded the signed copy. The Sign step counts as done; funding is unchanged.</p>
             : <p className="text-xs text-muted-foreground">Waiting for Harmonious to load the signed copy. Until then the Sign step stays open.</p>}
           <div className="flex flex-wrap gap-2">
-            {!s.complete && s.isHarmonious && <Button size="sm" onClick={onLoad}>Load the signed copy</Button>}
+            {!s.complete && s.isHarmonious && <Button size="sm" onClick={() => onLoad(s.signedOn)}>Load the signed copy</Button>}
             {!open ? <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>Undo</Button>
               : <><Input aria-label="Reason" placeholder="Reason for undoing (required)" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} /><Button size="sm" variant="outline" disabled={busy || !note.trim()} onClick={() => submit(false)}>Confirm undo</Button><Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button></>}
           </div>
