@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { assignWixInvestments, getWixFundStaging, linkWixFund } from "@/lib/wix-funds.functions";
+import { applyWixContactSync, previewWixContactSync } from "@/lib/wix-contact-sync.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-migration_/wix")({
   head: () => ({
@@ -136,6 +137,7 @@ function FundLink({ row, data }: { row: Row; data: Data }) {
         <Button size="sm" disabled={busy || !choice} onClick={() => save(choice === NONE ? null : choice)}>{row.match?.source === "suggested" && choice === row.match.id ? "Confirm" : "Save"}</Button>
         {row.match && <Button asChild size="sm" variant="link"><Link to="/admin/fund/$fundId" params={{ fundId: row.match.id }}>Open {row.match.name}</Link></Button>}
       </div>
+      {row.match?.source === "confirmed" && <ContactSync wixFundId={row.wixId} />}
       {!row.match && <QueueMigrationButton source="wix" sourceRef={row.wixId} fundName={row.name} />}
     </CardContent></Card>
   );
@@ -216,6 +218,33 @@ function InvestorTable({ invs, data, currentFundId }: { invs: Inv[]; data: Data;
           </dl>}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+type SyncPlan = { rows: { onboardingId: string; investor: string; fills: { field: string; label: string; value: string }[] }[]; unmatchedHarmonious: string[]; unmatchedWix: string[] };
+function ContactSync({ wixFundId }: { wixFundId: string }) {
+  const preview = useServerFn(previewWixContactSync), apply = useServerFn(applyWixContactSync);
+  const [plan, setPlan] = useState<SyncPlan | null>(null);
+  const [busy, setBusy] = useState(false);
+  const load = async () => { setBusy(true); try { setPlan(await preview({ data: { wixFundId } }) as SyncPlan); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
+  const run = async () => { setBusy(true); try { const r = await apply({ data: { wixFundId } }); toast.success(`Filled ${r.fields} details for ${r.investors} investors`); await load(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
+  const withFills = plan?.rows.filter((r) => r.fills.length) ?? [];
+  return (
+    <div className="space-y-2 border-t pt-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" disabled={busy} onClick={load}>{busy && !plan ? "Checking…" : "Fill investor details from Wix"}</Button>
+        <span className="text-xs text-muted-foreground">Fills empty email, phone and address only. Nothing already in Harmonious is replaced and no one is emailed.</span>
+      </div>
+      {plan && (
+        <div className="space-y-2 rounded-md border p-3 text-sm">
+          <p>{plan.rows.length} investors matched · {withFills.length} have empty details Wix can fill.</p>
+          {withFills.length > 0 && <ul className="max-h-60 space-y-1 overflow-y-auto text-xs">{withFills.map((r) => <li key={r.onboardingId}><span className="font-medium">{r.investor}:</span> {r.fills.map((f) => `${f.label} ${f.value}`).join(" · ")}</li>)}</ul>}
+          {plan.unmatchedHarmonious.length > 0 && <p className="text-xs text-muted-foreground">No clear Wix match: {plan.unmatchedHarmonious.join(", ")}</p>}
+          {plan.unmatchedWix.length > 0 && <p className="text-xs text-muted-foreground">In Wix but not in this Harmonious fund: {plan.unmatchedWix.join(", ")}</p>}
+          <Button size="sm" disabled={busy || !withFills.length} onClick={() => { if (window.confirm(`Fill empty details for ${withFills.length} investors?`)) void run(); }}>{busy ? "Working…" : `Fill details for ${withFills.length} investors`}</Button>
+        </div>
+      )}
     </div>
   );
 }
