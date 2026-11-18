@@ -3,11 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { confirmDocumentOwnerFn, documentOwnerOptionsFn, readInvestorDocumentFn, recentDocumentReadsFn, recordDocumentStepFn, resolveSuggestionFn } from "@/lib/investor-record.functions";
+import { createInvestorFromDocumentFn, confirmDocumentOwnerFn, documentOwnerOptionsFn, readInvestorDocumentFn, recentDocumentReadsFn, recordDocumentStepFn, resolveSuggestionFn } from "@/lib/investor-record.functions";
 import { completeTaxFormOutsideFn, managerReviewUploadFn, uploadOnboardingDocForFn } from "@/lib/investor-extras.functions";
 import { markOutsideSubscriptionFn, recordPriorDocFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
 import { SAVE_TARGETS, USE_LABEL, saveTarget, type DocumentReadResult, type FoundRow, type SaveTargetKey } from "@/lib/investor-document-save-model";
 import { supabase } from "@/integrations/supabase/client";
+import { draftFromDocument, draftProblems, partyKey, type NewInvestorDraft } from "@/lib/doc-to-new-investor";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
   const read = useServerFn(readInvestorDocumentFn);
   const confirmOwner = useServerFn(confirmDocumentOwnerFn);
   const ownerOptions = useServerFn(documentOwnerOptionsFn);
+  const createFromDoc = useServerFn(createInvestorFromDocumentFn);
+  const [newPick, setNewPick] = useState<{ ri: number; draft: NewInvestorDraft } | null>(null);
   const recent = useServerFn(recentDocumentReadsFn);
   const logStep = useServerFn(recordDocumentStepFn);
   const resolve = useServerFn(resolveSuggestionFn);
@@ -92,6 +95,31 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
       toast.success(targetOnboardingId === onboardingId ? "Owner confirmed." : `Moved to ${label ?? "the other investor"}. Nothing was saved here.`);
       void refreshRecent(); await qc.invalidateQueries();
     } catch (e) { toast.error((e as Error).message); } finally { setWorking(null); }
+  }
+
+  async function addNewInvestor(ri: number, draft: NewInvestorDraft) {
+    const r = results[ri]!;
+    const problems = draftProblems(draft);
+    if (problems.length) { toast.error(problems[0]!); return; }
+    setWorking(ri);
+    try {
+      const out = await createFromDoc({ data: { onboardingId, fileName: r.file, values: r.read.values, draft } });
+      patch(ri, { found: out.found, owner: "moved", ownerOnboardingId: out.onboardingId, ownerLabel: out.label });
+      setNewPick(null);
+      toast.success(`Added ${out.label} to this fund and moved ${r.file} to them. No email was sent.`);
+      // Other files in this upload that name the same new person go to them too.
+      const key = partyKey(draft);
+      for (let j = 0; j < results.length; j++) {
+        const o = results[j]!;
+        if (j === ri || o.owner !== "needs" || !key || partyKey(draftFromDocument(o.read.values, o.read.names)) !== key) continue;
+        try {
+          const m = await confirmOwner({ data: { onboardingId, targetOnboardingId: out.onboardingId, fileName: o.file, values: o.read.values, within: o.within || null } });
+          patch(j, { found: m.found, owner: "moved", ownerOnboardingId: out.onboardingId, ownerLabel: out.label });
+          toast.message(`${o.file} also moved to ${out.label}.`);
+        } catch (e) { toast.error(`${o.file}: ${(e as Error).message}`); }
+      }
+      void refreshRecent(); await qc.invalidateQueries();
+    } catch (e) { toast.error(`${(e as Error).message} If they're already on the fund, use "Belongs to someone else".`); } finally { setWorking(null); }
   }
 
   async function decide(ri: number, fi: number, f: Found, action: "accept" | "reject" | "update", value?: string, quiet = false) {
@@ -235,7 +263,9 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
                       </select>
                       <Button size="sm" className="h-8" disabled={working === i} onClick={() => void ownerDecision(i, onboardingId, null)}>It's this investor</Button>
                       <Button size="sm" variant="outline" className="h-8" disabled={working === i} onClick={() => setMovePick({ ri: i, value: "" })}>Belongs to someone else</Button>
+                      <Button size="sm" variant="outline" className="h-8" disabled={working === i} onClick={() => setNewPick({ ri: i, draft: draftFromDocument(r.read.values, r.read.names) })}>Add as a new investor</Button>
                     </div>
+                    {newPick?.ri === i && <NewInvestorForm draft={newPick.draft} busy={working === i} onChange={(d) => setNewPick({ ri: i, draft: d })} onCancel={() => setNewPick(null)} onSave={() => void addNewInvestor(i, newPick.draft)} />}
                     {movePick?.ri === i && (
                       <div className="flex flex-wrap items-center gap-2">
                         <SearchableSelect aria-label="Investor in this fund" className="w-72" placeholder={optionsQ.isLoading ? "Loading investors…" : "Choose an investor in this fund…"}
@@ -301,7 +331,34 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
   );
 }
 
+function NewInvestorForm({ draft, busy, onChange, onCancel, onSave }: { draft: NewInvestorDraft; busy: boolean; onChange: (d: NewInvestorDraft) => void; onCancel: () => void; onSave: () => void }) {
+  const f = (k: keyof NewInvestorDraft, label: string) => (
+    <label className="space-y-1"><span className="text-muted-foreground">{label}</span>
+      <Input className="h-8" value={draft[k]} onChange={(e) => onChange({ ...draft, [k]: e.target.value })} /></label>
+  );
+  return (
+    <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+      <p className="font-medium">New investor, filled in from this document. Check everything before adding.</p>
+      <label className="block space-y-1"><span className="text-muted-foreground">Investing as</span>
+        <select aria-label="Investing as" className="h-8 w-full rounded-md border bg-background px-2" value={draft.type} onChange={(e) => onChange({ ...draft, type: e.target.value as NewInvestorDraft["type"] })}>
+          <option value="individual">An individual</option><option value="entity">A company</option><option value="trust">A trust</option>
+        </select></label>
+      <div className="grid gap-2 sm:grid-cols-3">
+        {draft.type !== "individual" && f("legalName", "Entity or trust legal name")}
+        {f("firstName", draft.type === "individual" ? "First name" : "Signer first name")}
+        {f("middleName", "Middle name")}
+        {f("lastName", draft.type === "individual" ? "Last name" : "Signer last name")}
+        {f("email", "Email (optional)")}{f("phone", "Phone")}{f("dateOfBirth", "Birthday (YYYY-MM-DD)")}
+        {f("addressLine1", "Address")}{f("city", "City")}{f("region", "State")}{f("postalCode", "ZIP")}{f("country", "Country")}{f("citizenship", "Citizenship")}
+      </div>
+      <p className="text-muted-foreground">No email or invitation is sent. Tax and account numbers are never copied.</p>
+      <div className="flex gap-2"><Button size="sm" className="h-8" disabled={busy} onClick={onSave}>Add investor</Button><Button size="sm" variant="ghost" className="h-8" onClick={onCancel}>Cancel</Button></div>
+    </div>
+  );
+}
+
 const EVENT_LABEL: Record<string, string> = {
+  document_owner_new_investor: "Added as a new investor",
   document_read_with_ai: "Read", document_owner_confirmed: "Owner confirmed", document_owner_moved: "Moved to another investor",
   document_owner_moved_here: "Moved here from another investor", document_saved_from_ai: "Saved", document_used_from_ai: "Put to use",
 };

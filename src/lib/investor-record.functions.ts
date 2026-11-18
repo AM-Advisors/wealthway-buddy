@@ -179,3 +179,11 @@ export const browseDriveFn = createServerFn({ method: "POST" }).middleware([requ
 export const downloadDriveFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ onboardingId: uuid, fileId: driveId }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/drive-picker.server")).downloadDriveFile(context.userId, data));
+const draftStr = z.string().max(300);
+export const createInvestorFromDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({
+    onboardingId: uuid, fileName: z.string().max(200), values: z.record(z.string().max(60), z.string().max(300)),
+    draft: z.object({ type: z.enum(["individual", "entity", "trust"]), firstName: draftStr, middleName: draftStr, lastName: draftStr, email: z.string().trim().max(254), legalName: draftStr,
+      phone: draftStr, dateOfBirth: draftStr, citizenship: draftStr, addressLine1: draftStr, addressLine2: draftStr, city: draftStr, region: draftStr, postalCode: draftStr, country: draftStr }),
+  }).parse)
+  .handler(async ({ data, context }) => (await (await docAi()).createInvestorFromDocument(context.userId, data)) as unknown as { found: import("@/lib/investor-document-save-model").FoundRow[]; onboardingId: string; label: string; hasEmail: boolean });

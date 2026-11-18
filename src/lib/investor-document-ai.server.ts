@@ -216,7 +216,7 @@ export async function documentOwnerOptions(userId: string, onboardingId: string)
   }).sort((a, b) => a.label.localeCompare(b.label));
 }
 
-const READ_EVENTS = ["document_read_with_ai", "document_owner_confirmed", "document_owner_moved", "document_owner_moved_here", "document_saved_from_ai", "document_used_from_ai"];
+const READ_EVENTS = ["document_read_with_ai", "document_owner_new_investor", "document_owner_confirmed", "document_owner_moved", "document_owner_moved_here", "document_saved_from_ai", "document_used_from_ai"];
 export async function recentDocumentReads(userId: string, onboardingId: string) {
   const { role } = await assertOnboardingAccess(userId, onboardingId);
   if (role !== "staff") forbid("only Harmonious can read documents with AI.");
@@ -230,4 +230,31 @@ export async function recordDocumentStep(userId: string, input: { onboardingId: 
   if (role !== "staff") forbid("only Harmonious can read documents with AI.");
   await logRead(userId, input.onboardingId, input.step === "saved" ? "document_saved_from_ai" : "document_used_from_ai", { fileName: input.fileName.slice(0, 120), type: input.type, use: input.use ?? null });
   return { ok: true };
+}
+
+/** Staff: the document names someone not on this fund — create them (no invite) and move the document to them. */
+export async function createInvestorFromDocument(userId: string, input: { onboardingId: string; fileName: string; values: Values; draft: import("@/lib/doc-to-new-investor").NewInvestorDraft }) {
+  const { role, row } = await assertOnboardingAccess(userId, input.onboardingId);
+  if (role !== "staff") forbid("only Harmonious can read documents with AI.");
+  const { draftProblems } = await import("@/lib/doc-to-new-investor");
+  const d = input.draft;
+  const problems = draftProblems(d);
+  if (problems.length) throw new Error(problems[0]);
+  const { createInvestor } = await import("@/lib/investor-record.server");
+  const n = (v: string) => v || null;
+  const created = await createInvestor(userId, {
+    offeringId: (row as any).offering_id,
+    person: { firstName: d.firstName, middleName: n(d.middleName), lastName: d.lastName, email: d.email || undefined, phone: n(d.phone), dateOfBirth: n(d.dateOfBirth), citizenship: n(d.citizenship), addressLine1: n(d.addressLine1), addressLine2: n(d.addressLine2), city: n(d.city), region: n(d.region), postalCode: n(d.postalCode), country: n(d.country) },
+    profile: { type: d.type, legalName: d.type === "individual" ? null : d.legalName },
+    investment: {},
+    allowMissingEmail: !d.email,
+  });
+  const name = input.fileName.replace(/[^\w.\- ]+/g, "_").slice(0, 120) || "document";
+  const values: Values = {};
+  for (const k of KEYS) if (typeof input.values[k] === "string") values[k] = String(input.values[k]).slice(0, 300);
+  const found = await propose(userId, created.onboardingId, name, values);
+  await logRead(userId, input.onboardingId, "document_owner_new_investor", { fileName: name, toOnboardingId: created.onboardingId });
+  await logRead(userId, created.onboardingId, "document_owner_moved_here", { fileName: name, fromOnboardingId: input.onboardingId, createdFromDocument: true });
+  const label = d.type === "individual" ? `${d.firstName} ${d.lastName}` : `${d.legalName} · ${d.firstName} ${d.lastName}`;
+  return { found, onboardingId: created.onboardingId, label, hasEmail: !!d.email };
 }
