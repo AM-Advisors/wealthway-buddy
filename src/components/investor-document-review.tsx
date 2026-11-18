@@ -13,6 +13,8 @@ import {
   decideDocumentFn, emailFundSignatoryFn, listDocumentReviewsFn, myInvitedFundsFn, signedCopyUrlFn, startInvitedFundFn,
 } from "@/lib/investor-document-review.functions";
 import { money } from "@/lib/status";
+import { listPriorDocsFn, openPriorDocFn } from "@/lib/prior-signed-documents.functions";
+import { outsideDocsForRecord } from "@/lib/record-outside-documents";
 
 function useReviews(offeringId: string) {
   const load = useServerFn(listDocumentReviewsFn);
@@ -140,21 +142,46 @@ export function InvestorDocumentReview({ offeringId }: { offeringId: string }) {
   );
 }
 
-/** One investor's documents on their record page. */
+/** One investor's documents on their record page, including copies signed outside the platform. */
 export function InvestorRecordDocuments({ offeringId, onboardingId }: { offeringId: string; onboardingId: string }) {
   const { data, isLoading } = useReviews(offeringId);
+  const listPrior = useServerFn(listPriorDocsFn);
+  const openPrior = useServerFn(openPriorDocFn);
+  const prior = useQuery({ queryKey: ["prior-signed-docs", onboardingId], queryFn: () => listPrior({ data: { fundId: offeringId, onboardingId } }) });
   const inv = data?.investors.find((i) => i.onboardingId === onboardingId);
+  const slots = (inv?.documents ?? []).map((d) => ({ docType: data?.documents.find((x) => x.id === d.documentId)?.docType ?? null, outsideSigned: d.outsideSigned }));
+  const outside = outsideDocsForRecord(prior.data ?? [], slots);
+  const loading = isLoading || prior.isLoading;
+  const empty = !inv?.documents.length && !outside.length;
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">Documents &amp; signed agreements</CardTitle></CardHeader>
       <CardContent>
-        {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p>
-          : !inv || !inv.documents.length ? <p className="text-sm text-muted-foreground">No signature documents for this investor yet.</p>
-          : <ul className="divide-y">{inv.documents.map((d) => {
-              const doc = data?.documents.find((x) => x.id === d.documentId);
-              if (!doc) return null;
-              return <DocRow key={d.documentId} offeringId={offeringId} onboardingId={onboardingId} title={doc.title} version={doc.version} d={d} />;
-            })}</ul>}
+        {loading ? <p className="text-sm text-muted-foreground">Loading…</p>
+          : empty ? <p className="text-sm text-muted-foreground">No signed documents for this investor yet.</p>
+          : <ul className="divide-y">
+              {(inv?.documents ?? []).map((d) => {
+                const doc = data?.documents.find((x) => x.id === d.documentId);
+                if (!doc) return null;
+                return <DocRow key={d.documentId} offeringId={offeringId} onboardingId={onboardingId} title={doc.title} version={doc.version} d={d} />;
+              })}
+              {outside.map((p) => (
+                <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="break-words font-medium">{p.title}</p>
+                    <p className="text-xs text-muted-foreground">{p.kindLabel !== p.title ? `${p.kindLabel} · ` : ""}Signed on {new Date(p.signedOn + "T00:00:00").toLocaleDateString()} · Copy on file, loaded by {p.uploadedBy}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge>Signed outside the platform</Badge>
+                    <Button size="sm" variant="outline" onClick={async () => {
+                      try { const r = await openPrior({ data: { fundId: offeringId, onboardingId, documentId: p.id } }); window.open(r.url, "_blank", "noopener"); }
+                      catch (e) { toast.error((e as Error).message); }
+                    }}>Download copy</Button>
+                  </div>
+                </li>
+              ))}
+            </ul>}
+        {prior.isError ? <p className="mt-2 text-xs text-destructive">Documents signed outside the platform could not be loaded. <Button size="sm" variant="link" onClick={() => prior.refetch()}>Retry</Button></p> : null}
       </CardContent>
     </Card>
   );

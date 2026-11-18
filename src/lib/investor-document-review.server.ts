@@ -90,7 +90,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   const signed = liveSigs.filter((s) => ((s.provider_status === "completed" || s.signed_at) && s.pdf_path) || invSignedAt.has(s.id))
     .map((s) => (invSignedAt.has(s.id) && !s.provider_completed_at ? { ...s, provider_completed_at: invSignedAt.get(s.id) } : s));
   return {
-    documents: docList.map((d) => ({ id: d.id as string, title: d.title as string, version: d.active_version as number | null })),
+    documents: docList.map((d) => ({ id: d.id as string, title: d.title as string, version: d.active_version as number | null, docType: (d.doc_type ?? null) as string | null })),
     investors: rows.map((r) => {
       const p = pMap.get(r.person_id);
       return {
