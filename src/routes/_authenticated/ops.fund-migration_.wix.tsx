@@ -223,26 +223,77 @@ function InvestorTable({ invs, data, currentFundId }: { invs: Inv[]; data: Data;
 }
 
 type SyncPlan = { rows: { onboardingId: string; investor: string; fills: { field: string; label: string; value: string }[] }[]; unmatchedHarmonious: string[]; unmatchedWix: string[] };
+type Fill = SyncPlan["rows"][number]["fills"][number];
+function splitFills(fills: Fill[]) {
+  const pick = (re: RegExp) => fills.find((f) => re.test(f.label))?.value ?? "";
+  const email = pick(/^email/i), phone = pick(/^phone/i);
+  const line1 = [pick(/^address$/i), pick(/address line 2/i)].filter(Boolean).join(", ");
+  const cityLine = [pick(/^city/i), [pick(/^state/i), pick(/^postal/i)].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const country = pick(/^country/i);
+  const known = /^(email|phone|address$|address line 2|city|state|postal|country)/i;
+  const other = fills.filter((f) => !known.test(f.label));
+  return { email, phone, line1, cityLine, country, other };
+}
 function ContactSync({ wixFundId }: { wixFundId: string }) {
   const preview = useServerFn(previewWixContactSync), apply = useServerFn(applyWixContactSync);
   const [plan, setPlan] = useState<SyncPlan | null>(null);
   const [busy, setBusy] = useState(false);
+  const [view, setView] = useState<"fill" | "noMatch" | "wixOnly">("fill");
+  const [q, setQ] = useState("");
   const load = async () => { setBusy(true); try { setPlan(await preview({ data: { wixFundId } }) as SyncPlan); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   const run = async () => { setBusy(true); try { const r = await apply({ data: { wixFundId } }); toast.success(`Filled ${r.fields} details for ${r.investors} investors`); await load(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   const withFills = plan?.rows.filter((r) => r.fills.length) ?? [];
+  const needle = q.trim().toLowerCase();
+  const shown = withFills.filter((r) => !needle || `${r.investor} ${r.fills.map((f) => f.value).join(" ")}`.toLowerCase().includes(needle));
+  const names = (view === "noMatch" ? plan?.unmatchedHarmonious : plan?.unmatchedWix) ?? [];
+  const tabs = [["fill", "Ready to fill", withFills.length], ["noMatch", "No clear Wix match", plan?.unmatchedHarmonious.length ?? 0], ["wixOnly", "In Wix only", plan?.unmatchedWix.length ?? 0]] as const;
+  const empty = <span className="text-muted-foreground">·</span>;
   return (
-    <div className="space-y-2 border-t pt-3">
+    <div className="space-y-3 border-t pt-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Button size="sm" variant="outline" disabled={busy} onClick={load}>{busy && !plan ? "Checking…" : "Fill investor details from Wix"}</Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={load}>{busy && !plan ? "Checking…" : plan ? "Check again" : "Fill investor details from Wix"}</Button>
         <span className="text-xs text-muted-foreground">Fills empty email, phone and address only. Nothing already in Harmonious is replaced and no one is emailed.</span>
       </div>
       {plan && (
-        <div className="space-y-2 rounded-md border p-3 text-sm">
-          <p>{plan.rows.length} investors matched · {withFills.length} have empty details Wix can fill.</p>
-          {withFills.length > 0 && <ul className="max-h-60 space-y-1 overflow-y-auto text-xs">{withFills.map((r) => <li key={r.onboardingId}><span className="font-medium">{r.investor}:</span> {r.fills.map((f) => `${f.label} ${f.value}`).join(" · ")}</li>)}</ul>}
-          {plan.unmatchedHarmonious.length > 0 && <p className="text-xs text-muted-foreground">No clear Wix match: {plan.unmatchedHarmonious.join(", ")}</p>}
-          {plan.unmatchedWix.length > 0 && <p className="text-xs text-muted-foreground">In Wix but not in this Harmonious fund: {plan.unmatchedWix.join(", ")}</p>}
-          <Button size="sm" disabled={busy || !withFills.length} onClick={() => { if (window.confirm(`Fill empty details for ${withFills.length} investors?`)) void run(); }}>{busy ? "Working…" : `Fill details for ${withFills.length} investors`}</Button>
+        <div className="space-y-3 rounded-md border p-3 text-sm">
+          <p className="text-muted-foreground">{plan.rows.length} investors matched in Wix.</p>
+          <div className="flex flex-wrap gap-2">
+            {tabs.map(([id, label, n]) => (
+              <Button key={id} size="sm" variant={view === id ? "default" : "outline"} onClick={() => setView(id)}>{label} <Badge variant="secondary" className="ml-2">{n}</Badge></Button>
+            ))}
+          </div>
+          {view === "fill" ? (
+            <>
+              <Input className="max-w-xs" placeholder="Search investors" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search investors" />
+              {shown.length === 0 ? <p className="text-muted-foreground">{withFills.length ? "No investors match your search." : "Nothing to fill. Every matched investor already has these details."}</p> : (
+                <div className="max-h-[28rem] overflow-auto rounded-md border">
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Investor</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead><TableHead>Address</TableHead></TableRow></TableHeader>
+                    <TableBody>{shown.map((r) => {
+                      const s = splitFills(r.fills);
+                      return (
+                        <TableRow key={r.onboardingId} className="align-top">
+                          <TableCell className="font-medium">{r.investor}</TableCell>
+                          <TableCell className="break-all">{s.email ? s.email.toLowerCase() : empty}</TableCell>
+                          <TableCell className="whitespace-nowrap">{s.phone || empty}</TableCell>
+                          <TableCell>
+                            {s.line1 || s.cityLine || s.country ? <div className="leading-snug">{s.line1 && <div>{s.line1}</div>}{s.cityLine && <div>{s.cityLine}</div>}{s.country && <div className="text-xs text-muted-foreground">{s.country}</div>}</div> : empty}
+                            {s.other.map((f) => <div key={f.field} className="text-xs text-muted-foreground">{f.label}: {f.value}</div>)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}</TableBody>
+                  </Table>
+                </div>
+              )}
+              <Button disabled={busy || !withFills.length} onClick={() => { if (window.confirm(`Fill empty details for ${withFills.length} investors?`)) void run(); }}>{busy ? "Working…" : `Fill details for ${withFills.length} investors`}</Button>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">{view === "noMatch" ? "These investors are in this Harmonious fund, but no single Wix record clearly matches them. Nothing is filled for them." : "These records are in Wix for this fund but aren't investors in the Harmonious fund yet."}</p>
+              {names.length ? <div className="flex flex-wrap gap-2">{names.map((n, i) => <Badge key={`${n}-${i}`} variant="outline" className="text-sm font-normal">{n}</Badge>)}</div> : <p className="text-muted-foreground">None.</p>}
+            </div>
+          )}
         </div>
       )}
     </div>
