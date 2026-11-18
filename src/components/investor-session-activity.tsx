@@ -24,14 +24,14 @@ export function InvestorSessionActivity({ onboardingId }: { onboardingId: string
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Sign-ins and activity</CardTitle>
-        <CardDescription>Recorded sign-ins and pages or actions in their account, newest first. Staff only.</CardDescription>
+        <CardDescription>Recorded sign-ins, pages viewed, clicks, emails and invitation-link opens, newest first. Typed values are never recorded. Staff only.</CardDescription>
       </CardHeader>
       <CardContent className="text-sm">
         {q.isLoading ? <p className="text-muted-foreground">Loading…</p>
           : q.error ? <p className="text-destructive">Activity could not be loaded.</p>
-          : !q.data?.hasAccount ? <p className="text-muted-foreground">The investor has not created an account yet.</p>
-          : !sessions.length ? <p className="text-muted-foreground">No sign-ins recorded yet.</p>
           : <div className="space-y-4">
+            {!q.data?.hasAccount ? <p className="text-muted-foreground">The investor has not created an account yet. Their sign-ins, pages and clicks appear here automatically once they do.</p>
+              : !sessions.length ? <p className="text-muted-foreground">No sign-ins recorded yet.</p> : null}
             {sessions.slice(0, shown).map((s) => {
               const first = s.items[s.items.length - 1]!;
               return <div key={s.id + first.created_at} className="rounded-md border p-3">
@@ -46,6 +46,10 @@ export function InvestorSessionActivity({ onboardingId }: { onboardingId: string
               </div>;
             })}
             {sessions.length > shown ? <Button size="sm" variant="outline" onClick={() => setShown((n) => n + 10)}>Show more sessions</Button> : null}
+            {!!q.data?.outside.length && <div className="rounded-md border p-3">
+              <p className="font-medium">Emails and invitation link</p>
+              <ul className="mt-2 space-y-1">{q.data.outside.slice(0, 30).map((e) => <li key={e.id} className="flex flex-wrap justify-between gap-2"><span>{e.what}</span><span className="text-xs text-muted-foreground">{new Date(e.when).toLocaleString()}</span></li>)}</ul>
+            </div>}
           </div>}
       </CardContent>
     </Card>

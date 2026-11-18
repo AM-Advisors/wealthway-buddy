@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 import { isReconciledFunding } from "@/lib/funding-status";
 
@@ -20,7 +20,7 @@ const viewSchema = z.object({ step: z.enum(STEP_KEYS) });
 
 /** Records that the signed-in investor opened an onboarding step (first and latest time). */
 export const recordStepView = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .validator((data: unknown) => viewSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;

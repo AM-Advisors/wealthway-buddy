@@ -397,7 +397,13 @@ export async function accountSubject(viewer: string, id: string) {
     db.from("persons").select("user_id, legal_first_name, legal_last_name, preferred_name, email").eq("id", id).maybeSingle(),
   ]);
   const { resolveAccountSubject } = await import("@/lib/account-subject-model");
-  return resolveAccountSubject(id, { loginExists: !!(auth as any)?.user, person: (person as any) ?? null });
+  const subject = resolveAccountSubject(id, { loginExists: !!(auth as any)?.user, person: (person as any) ?? null });
+  if (subject.kind !== "person_without_login") return { ...subject, events: [] as { id: string; when: string; kind: string; what: string }[] };
+  // No login yet: show what was recorded outside an account (emails, invitation-link opens).
+  const { data: obs } = await db.from("investor_onboardings").select("id").eq("person_id", id).limit(500);
+  const { loadOutsideAccountEvents } = await import("@/lib/person-activity-timeline.server");
+  const events = await loadOutsideAccountEvents(db, { emails: [subject.email ?? ""], onboardingIds: ((obs ?? []) as any[]).map((o) => o.id) });
+  return { ...subject, events };
 }
 
 /** Full activity trail for one user: account, pages, clicks, actions and access changes. Read-only. */
@@ -449,6 +455,16 @@ export async function personActivity(viewer: string, subjectId: string, options:
     kyc: p.kyc_status, aml: p.aml_status, state: p.onboarding_state, gaps: setupGaps(p, isStaff),
   });
   const people = [...((linkedP.data ?? []) as any[]).map((p) => mapP(p, true)), ...((emailP.data ?? []) as any[]).map((p) => mapP(p, false))];
+  // Emails and invitation-link opens tied to this person (including before the account existed) join the same timeline.
+  const personIds = ((linkedP.data ?? []) as any[]).map((p) => p.id);
+  const { data: personObs } = personIds.length ? await db.from("investor_onboardings").select("id").in("person_id", personIds).limit(500) : { data: [] as any[] };
+  const { loadOutsideAccountEvents } = await import("@/lib/person-activity-timeline.server");
+  const outside = await loadOutsideAccountEvents(db, {
+    emails: [email, ...((linkedP.data ?? []) as any[]).flatMap((p) => [p.email, p.secondary_email])].filter(Boolean),
+    onboardingIds: [...((inv.data ?? []) as any[]).map((i) => i.id), ...((personObs ?? []) as any[]).map((o) => o.id)],
+    from: options.from, to: options.to, before: options.before,
+  });
+  const timeline = [...events, ...outside.map((o) => ({ ...o, path: null as string | null }))].sort((a, b) => String(b.when).localeCompare(String(a.when)));
   // Identity check results (document, liveness, face match, AML) - display only, last-four only.
   const linkedIds = people.filter((p) => p.linked).map((p) => p.id);
   const [kv, ac] = await Promise.all([
@@ -491,6 +507,6 @@ export async function personActivity(viewer: string, subjectId: string, options:
     clients: ((cu.data ?? []) as any[]).map((c) => ({ id: c.client_id as string, name: (c.clients?.name ?? "Client") as string, role: c.client_role as string | null })),
     funds: [...funds.values()],
     investments: ((inv.data ?? []) as any[]).map((i) => ({ id: i.id as string, offeringId: i.offering_id as string, fund: (i.offerings?.name ?? "Fund") as string, committed: i.commitment_amount_cents as number | null, funded: i.funded_amount_cents as number, status: i.funding_status as string })),
-    events: events.slice(0, 100), nextCursor: events.length > 100 ? events[99]?.when ?? null : null,
+    events: timeline.slice(0, 100), nextCursor: timeline.length > 100 ? timeline[99]?.when ?? null : null,
   };
 }

@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/ops/people_/$userId")({
 });
 
 const when = (s: string | null) => (s ? new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Never");
-const KINDS = ["All", "Viewed", "Clicked", "Action", "Access change", "Security"];
+const KINDS = ["All", "Viewed", "Clicked", "Action", "Access change", "Security", "Email", "Invitation"];
 const SESSION_LABELS = { unknown: "Status unknown", sign_in_recorded: "Sign-in recorded", sign_out_recorded: "Sign-out recorded", timeout_recorded: "Session timed out", revoked: "Sessions revoked" };
 
 function PersonActivityPage() {
@@ -49,7 +49,15 @@ function PersonActivityPage() {
     <main className="mx-auto max-w-5xl space-y-4 px-4 py-10">
       <Link to="/ops/people-access" search={{ tab: "others" }} className="text-sm text-primary hover:underline">← People & Access</Link>
       <h1 className="text-3xl">{s.kind === "person_without_login" ? (s.name || s.email || "Person record") : "Account not found"}</h1>
-      <p className="text-sm">{s.kind === "person_without_login" ? "This person hasn't created a login yet, so there is no sign-in or activity to show. Activity appears here once they sign in." : "No login account or person record matches this address."}</p>
+      <p className="text-sm">{s.kind === "person_without_login" ? "This person hasn't created a login yet. Emails and invitation-link opens are listed below; sign-ins, pages and clicks appear here automatically once they sign in." : "No login account or person record matches this address."}</p>
+      {s.kind === "person_without_login" && (
+        <section className="rounded-lg border">
+          <h2 className="border-b p-4 text-lg">Activity ({s.events.length})</h2>
+          {!s.events.length ? <p className="p-4 text-sm text-muted-foreground">Nothing recorded yet.</p> : (
+            <ul className="divide-y text-sm">{s.events.map((e) => <li key={e.id} className="flex flex-wrap justify-between gap-2 p-3"><span><Badge variant="outline" className="mr-2">{e.kind}</Badge>{e.what}</span><span className="text-xs text-muted-foreground">{when(e.when)}</span></li>)}</ul>
+          )}
+        </section>
+      )}
     </main>
   );
   return <AccountActivity userId={userId} />;

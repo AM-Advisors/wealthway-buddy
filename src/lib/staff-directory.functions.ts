@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 
 export const getEmployees = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -16,8 +16,9 @@ export const assignManager = createServerFn({ method: "POST" })
   .validator((d) => z.object({ userId: z.string().uuid(), managerId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-directory.server")).setManager(context.userId, data.userId, data.managerId));
 
+// Signed-in but not yet identity-verified accounts are recorded too (their own clicks only), so onboarding activity is never lost.
 export const recordStaffActivity = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .validator((d) => z.object({ kind: z.enum(["page", "action", "click"]), path: z.string().max(300), label: z.string().max(200).nullable() }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-directory.server")).logActivity(context.userId, data.kind, data.path, data.label));
 
