@@ -20,3 +20,10 @@ export const approveFundDriveFileFn = createServerFn({ method: "POST" }).middlew
 export const fundDriveFileLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ fileId }).parse)
   .handler(async ({ data, context }) => (await srv()).intakeFileLink(context.userId, data.fileId));
+
+export const addFundDriveInvestorFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({
+    fundId: z.string().uuid(), folderName: z.string().max(500), confirmedNew: z.boolean(),
+    draft: z.object({ type: z.enum(["individual", "entity", "trust"]), firstName: z.string().max(80), lastName: z.string().max(80), legalName: z.string().max(200), email: z.string().max(254) }),
+  }).parse)
+  .handler(async ({ data, context }) => (await srv()).addIntakeInvestor(context.userId, data));

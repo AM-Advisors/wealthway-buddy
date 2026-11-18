@@ -195,3 +195,25 @@ export async function intakeFileLink(userId: string, fileId: string) {
   const m = await get(`/files/${encodeURIComponent(fileId)}?supportsAllDrives=true&fields=webViewLink`);
   return { url: String(m.webViewLink ?? `https://drive.google.com/file/d/${fileId}/view`) };
 }
+
+/** The Drive folder names someone not on this fund: Operations confirm the details and add them (no invitation). */
+export async function addIntakeInvestor(userId: string, input: { fundId: string; folderName: string; draft: { type: "individual" | "entity" | "trust"; firstName: string; lastName: string; legalName: string; email: string }; confirmedNew: boolean }) {
+  const d = await assertOps(userId);
+  const { draftProblems } = await import("@/lib/doc-to-new-investor");
+  const v = input.draft;
+  const problems = draftProblems({ ...v, email: v.email.trim().toLowerCase(), middleName: "", phone: "", dateOfBirth: "", citizenship: "", addressLine1: "", addressLine2: "", city: "", region: "", postalCode: "", country: "" });
+  if (problems.length) throw new Error(problems[0]);
+  const { createInvestor } = await import("@/lib/investor-record.server");
+  const email = v.email.trim().toLowerCase();
+  const created = await createInvestor(userId, {
+    offeringId: input.fundId,
+    confirmedNew: input.confirmedNew,
+    person: { firstName: v.firstName.trim(), lastName: v.lastName.trim(), email: email || undefined },
+    profile: { type: v.type, legalName: v.type === "individual" ? null : v.legalName.trim() },
+    investment: {},
+    allowMissingEmail: !email,
+  });
+  await d.from("investor_onboarding_events").insert({ offering_id: input.fundId, onboarding_id: created.onboardingId, event: "drive_intake_investor_added", actor_user_id: userId, actor_role: "harmonious", detail: { folder_name: input.folderName.slice(0, 200), has_email: !!email } });
+  const person = `${v.firstName.trim()} ${v.lastName.trim()}`;
+  return { onboardingId: created.onboardingId as string, label: v.type === "individual" ? person : `${v.legalName.trim()} (${person})` };
+}

@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { approveFundDriveFileFn, fundDriveFileLinkFn, scanFundDriveFn, setFundDriveDecisionFn } from "@/lib/fund-drive-intake.functions";
-import { INTAKE_TARGETS, defaultSignedOn, rowStatus, type IntakeRow } from "@/lib/fund-drive-intake-model";
+import { addFundDriveInvestorFn, approveFundDriveFileFn, fundDriveFileLinkFn, scanFundDriveFn, setFundDriveDecisionFn } from "@/lib/fund-drive-intake.functions";
+import { INTAKE_TARGETS, defaultSignedOn, draftFromFolder, rowStatus, type FolderInvestorDraft, type IntakeRow } from "@/lib/fund-drive-intake-model";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const STATUS: Record<ReturnType<typeof rowStatus>, { label: string; cls: string }> = {
   ready: { label: "Ready for Ops approval", cls: "border-primary/40 bg-primary/10 text-primary" },
@@ -56,6 +57,8 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
   const [filter, setFilter] = useState<Filter>("open");
   const [search, setSearch] = useState("");
   const [bulk, setBulk] = useState(false);
+  const addInvestor = useServerFn(addFundDriveInvestorFn);
+  const [adding, setAdding] = useState<{ folderName: string; draft: FolderInvestorDraft; confirmedNew: boolean; askConfirm: boolean; saving: boolean } | null>(null);
 
   const rows = q.data?.rows ?? [];
   const edit = (r: IntakeRow): Edit => edits[r.fileId] ?? { onboardingId: r.onboardingId, target: r.target, signedOn: defaultSignedOn(r.modifiedTime), title: r.fileName.replace(/\.[a-z0-9]{2,5}$/i, "") };
@@ -107,6 +110,34 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
     toast.success(`Added ${ok} of ${ready.length} documents.`);
     onApplied?.();
   }
+  function startAdd(r: IntakeRow) {
+    setAdding({ folderName: r.folderName, draft: draftFromFolder(r.folderName), confirmedNew: false, askConfirm: false, saving: false });
+  }
+  async function saveNewInvestor() {
+    if (!adding) return;
+    setAdding({ ...adding, saving: true });
+    try {
+      const res = await addInvestor({ data: { fundId, folderName: adding.folderName, draft: adding.draft, confirmedNew: adding.confirmedNew } });
+      qc.setQueryData(key, (old: any) => old ? { ...old, investors: [...old.investors, { onboardingId: res.onboardingId, label: res.label }].sort((a: any, b: any) => a.label.localeCompare(b.label)) } : old);
+      // Every open file in the same Drive folder goes to the new investor; each still needs Approve.
+      setEdits((cur) => {
+        const next = { ...cur };
+        for (const r of rows) {
+          const st = statusOf(r);
+          if (r.folderName === adding.folderName && st !== "added" && st !== "unreadable" && !edit(r).onboardingId) next[r.fileId] = { ...edit(r), onboardingId: res.onboardingId };
+        }
+        return next;
+      });
+      toast.success(`Added ${res.label} to the fund. No invitation was sent. Approve each file to save it to them.`);
+      setAdding(null);
+      onApplied?.();
+    } catch (err: any) {
+      const msg = String(err?.message ?? "Couldn't add the investor");
+      const maybeSame = /may be this person|already exists/i.test(msg);
+      setAdding((a) => a ? { ...a, saving: false, askConfirm: maybeSame || a.askConfirm } : a);
+      toast.error(maybeSame ? `${msg} If you're sure this is a different person, tick the box and save again.` : msg);
+    }
+  }
   async function preview(r: IntakeRow) {
     try { const { url } = await link({ data: { fileId: r.fileId } }); window.open(url, "_blank", "noopener"); } catch (err: any) { toast.error(err?.message ?? "Couldn't open"); }
   }
@@ -149,10 +180,12 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
               return (
                 <tr key={r.fileId} className="border-t align-top">
                   <td className="p-2">
-                    <select aria-label="Investor" className="w-56 rounded-md border bg-background p-1.5" disabled={locked} value={e.onboardingId ?? ""} onChange={(ev) => patch(r.fileId, r, { onboardingId: ev.target.value || null })}>
+                    <select aria-label="Investor" className="w-56 rounded-md border bg-background p-1.5" disabled={locked} value={e.onboardingId ?? ""} onChange={(ev) => { if (ev.target.value === "__new__") { startAdd(r); return; } patch(r.fileId, r, { onboardingId: ev.target.value || null }); }}>
                       <option value="">Pick investor…</option>
+                      <option value="__new__">+ Add as a new investor</option>
                       {q.data?.investors.map((i) => <option key={i.onboardingId} value={i.onboardingId}>{i.label}</option>)}
                     </select>
+                    {!locked && !e.onboardingId && <button type="button" className="mt-1 block text-xs font-medium text-primary hover:underline" onClick={() => startAdd(r)}>Not on the fund? Add as a new investor</button>}
                     <p className="mt-1 text-xs text-muted-foreground">Drive folder: {r.folderName}</p>
                   </td>
                   <td className="p-2">
@@ -183,5 +216,45 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
     </div>
   );
   })();
-  return <>{picker}<div className="mt-4">{body}</div></>;
+
+  const d0 = adding?.draft;
+  const setDraft = (p: Partial<FolderInvestorDraft>) => setAdding((a) => a ? { ...a, draft: { ...a.draft, ...p } } : a);
+  const addDialog = (
+    <Dialog open={!!adding} onOpenChange={(o) => { if (!o && !adding?.saving) setAdding(null); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add a new investor</DialogTitle>
+          <DialogDescription>Filled in from the Drive folder "{adding?.folderName}". Check the details. The investor is added to this fund without an invitation; open files in this folder are set to them so you can approve each one.</DialogDescription>
+        </DialogHeader>
+        {d0 && (
+          <div className="space-y-3 text-sm">
+            <label className="block">Investing as
+              <select className="mt-1 w-full rounded-md border bg-background p-2" value={d0.type} onChange={(ev) => setDraft({ type: ev.target.value as FolderInvestorDraft["type"] })}>
+                <option value="individual">Individual</option>
+                <option value="trust">Trust</option>
+                <option value="entity">Business / organization</option>
+              </select>
+            </label>
+            {d0.type !== "individual" && <label className="block">{d0.type === "trust" ? "Trust legal name" : "Legal name"}<Input className="mt-1" value={d0.legalName} onChange={(ev) => setDraft({ legalName: ev.target.value })} /></label>}
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block">{d0.type === "individual" ? "First name" : "Signer first name"}<Input className="mt-1" value={d0.firstName} onChange={(ev) => setDraft({ firstName: ev.target.value })} /></label>
+              <label className="block">{d0.type === "individual" ? "Last name" : "Signer last name"}<Input className="mt-1" value={d0.lastName} onChange={(ev) => setDraft({ lastName: ev.target.value })} /></label>
+            </div>
+            <label className="block">Email (optional)<Input className="mt-1" type="email" autoComplete="off" value={d0.email} onChange={(ev) => setDraft({ email: ev.target.value })} placeholder="Add later if you don't have it" /></label>
+            {adding?.askConfirm && (
+              <label className="flex items-start gap-2 rounded-md border border-destructive/40 p-2">
+                <input type="checkbox" className="mt-1" checked={adding.confirmedNew} onChange={(ev) => setAdding((a) => a ? { ...a, confirmedNew: ev.target.checked } : a)} />
+                <span>Someone similar is already on file. I've checked and this is a different person.</span>
+              </label>
+            )}
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" disabled={adding?.saving} onClick={() => setAdding(null)}>Cancel</Button>
+          <Button disabled={adding?.saving || (adding?.askConfirm && !adding.confirmedNew)} onClick={saveNewInvestor}>{adding?.saving ? "Adding…" : "Add investor"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+  return <>{picker}<div className="mt-4">{body}</div>{addDialog}</>;
 }

@@ -105,3 +105,19 @@ export function defaultSignedOn(modified: string | null, today = new Date()): st
   const use = isNaN(d.getTime()) || d > today ? today : d;
   return use.toISOString().slice(0, 10);
 }
+
+/** New-investor draft from a Drive folder name such as "Charles Steinmetz (Charles P Steinmetz Rev Trust)". Operations confirm before saving. */
+export type FolderInvestorDraft = { type: "individual" | "entity" | "trust"; firstName: string; lastName: string; legalName: string; email: string };
+const ENTITY_WORDS = /\b(llc|l\.l\.c|inc|corp|corporation|company|co|lp|llp|ltd|fund|partners|partnership|holdings|capital|ventures|group|foundation|family office|ira)\b/i;
+const TRUST_WORDS = /\b(trust|rev(ocable)?|living trust|ttee|trustee)\b/i;
+export function draftFromFolder(folder: string): FolderInvestorDraft {
+  const clean = folder.replace(/\s+/g, " ").trim();
+  const m = clean.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  let person = m ? m[1]!.trim() : clean, entity = m ? m[2]!.trim() : "";
+  // "Acme LLC (Jane Doe)": the entity is outside the brackets.
+  if (m && (ENTITY_WORDS.test(person) || TRUST_WORDS.test(person)) && !(ENTITY_WORDS.test(entity) || TRUST_WORDS.test(entity))) [person, entity] = [entity, person];
+  if (!m && (ENTITY_WORDS.test(clean) || TRUST_WORDS.test(clean))) { entity = clean; person = ""; }
+  const type = entity ? (TRUST_WORDS.test(entity) ? "trust" : "entity") : "individual";
+  const parts = person.split(" ").filter(Boolean);
+  return { type, firstName: parts[0] ?? "", lastName: parts.slice(1).join(" "), legalName: entity, email: "" };
+}

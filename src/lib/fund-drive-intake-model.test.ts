@@ -28,3 +28,19 @@ describe("fund drive intake", () => {
     expect(rowStatus({ onboardingId: "travis", target: "other", decision: "rejected", readable: true })).toBe("rejected");
   });
 });
+
+import { draftFromFolder } from "./fund-drive-intake-model";
+describe("new investor from a Drive folder", () => {
+  it("reads a person and their trust", () => {
+    expect(draftFromFolder("Charles Steinmetz (Charles P Steinmetz Rev Trust)")).toEqual({ type: "trust", firstName: "Charles", lastName: "Steinmetz", legalName: "Charles P Steinmetz Rev Trust", email: "" });
+  });
+  it("reads an individual", () => {
+    expect(draftFromFolder("Jody Papini")).toMatchObject({ type: "individual", firstName: "Jody", lastName: "Papini", legalName: "" });
+  });
+  it("reads an entity named outside the brackets", () => {
+    expect(draftFromFolder("Advanced Investment Corp (Benjamin Bassichis)")).toMatchObject({ type: "entity", firstName: "Benjamin", lastName: "Bassichis", legalName: "Advanced Investment Corp" });
+  });
+  it("reads an entity-only folder and leaves the signer blank", () => {
+    expect(draftFromFolder("P4L2 Holdings LLC")).toMatchObject({ type: "entity", firstName: "", legalName: "P4L2 Holdings LLC" });
+  });
+});
