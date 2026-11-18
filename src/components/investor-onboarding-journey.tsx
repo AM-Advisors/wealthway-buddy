@@ -452,7 +452,8 @@ function QuestionUpload({ fundId, value, onUploaded }: { fundId: string | null; 
   );
 }
 
-function QuestionnaireForm({ d, done, locked, onSave, saving, financialBackground }: { d: any; onboardingId: string; done: boolean; locked: boolean; onSave: (answers: Record<string, string>, submit: boolean) => void; saving: boolean; financialBackground?: React.ReactNode }) {
+/** The one investor questionnaire form, shared by the portal and the direct onboarding link. */
+export function QuestionnaireForm({ d, done, locked, onSave, saving, financialBackground }: { d: any; onboardingId: string; done: boolean; locked: boolean; onSave: (answers: Record<string, string>, submit: boolean) => void; saving: boolean; financialBackground?: React.ReactNode }) {
   const questions: any[] = d.questionnaire?.questions ?? [];
   const saved = (d.questionnaireResponses ?? {}) as Record<string, unknown>;
   const [open, setOpen] = useState(!done);

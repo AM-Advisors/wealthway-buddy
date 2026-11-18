@@ -15,7 +15,7 @@ import { PROFILE_LABELS, type ProfileField } from "@/lib/investor-start-model";
  * Shows only what's still missing; skipped when the fund team already filled it in.
  * Investment details stay on the investment profile.
  */
-export function ProfileStep({ children }: { children: ReactNode }) {
+export function ProfileStep({ children, showLogo = true }: { children: ReactNode; showLogo?: boolean }) {
   const load = useServerFn(getOwnProfileGap);
   const save = useServerFn(saveOwnProfile);
   const qc = useQueryClient();
@@ -44,7 +44,7 @@ export function ProfileStep({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
       <form onSubmit={submit} className="w-full max-w-md space-y-4">
-        <Logo variant="navy" className="h-7 w-auto" />
+        {showLogo ? <Logo variant="navy" className="h-7 w-auto" /> : null}
         <div>
           <h1 className="text-2xl">Complete your profile</h1>
           <p className="mt-2 text-sm text-muted-foreground">

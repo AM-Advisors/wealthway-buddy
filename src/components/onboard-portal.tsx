@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { startBoxSigning } from "@/lib/box-sign.functions";
 import {
@@ -32,6 +31,7 @@ import { kycFieldsFor } from "@/lib/kyc-fields";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
 import { CertificationsPanel, EligibilityPanel, FinancialBackgroundPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 import { OnboardingUploadsCard } from "@/components/investor-onboarding-extras";
+import { QuestionnaireForm } from "@/components/investor-onboarding-journey";
 import { isReconciledFunding } from "@/lib/funding-status";
 
 const money = (cents: number | null | undefined) =>
@@ -324,9 +324,12 @@ function DocumentsStep({ d, onboardingId, done }: { d: any; onboardingId: string
   const prepareFn = useServerFn(prepareSubscriptionDocumentsFn);
   const signFn = useServerFn(startBoxSigning);
   const confirmFn = useServerFn(recordSubscriptionSignatureFn);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [signer, setSigner] = useState("");
-  const saveQ = useMutation({ mutationFn: () => qFn({ data: { onboardingId, answers, submit: true } }), onSuccess: done, onError: (e) => toast.error(errText(e)) });
+  const saveQ = useMutation({
+    mutationFn: (v: { answers: Record<string, string>; submit: boolean }) => qFn({ data: { onboardingId, answers: v.answers, submit: v.submit } }),
+    onSuccess: (_r, v) => { if (v.submit) done(); },
+    onError: (e) => toast.error(errText(e)),
+  });
   const sign = useMutation({
     mutationFn: async (docId: string) => {
       await prepareFn({ data: { onboardingId } }).catch(() => null);
@@ -352,16 +355,7 @@ function DocumentsStep({ d, onboardingId, done }: { d: any; onboardingId: string
       </CardHeader>
       <CardContent className="space-y-4">
         {qNeeded ? (
-          <div className="space-y-3 rounded-md border p-4">
-            <p className="text-sm font-medium">Investor questionnaire</p>
-            {(d.questionnaire.questions ?? []).map((qq: any) => (
-              <div key={qq.key}>
-                <Label htmlFor={qq.key}>{qq.label}</Label>
-                <Textarea id={qq.key} value={answers[qq.key] ?? String(d.questionnaireResponses?.[qq.key] ?? "")} onChange={(e) => setAnswers({ ...answers, [qq.key]: e.target.value })} />
-              </div>
-            ))}
-            <Button className="w-full sm:w-auto" disabled={saveQ.isPending} onClick={() => saveQ.mutate()}>Save answers</Button>
-          </div>
+          <QuestionnaireForm d={d} onboardingId={onboardingId} done={false} locked={false} saving={saveQ.isPending} onSave={(answers, submit) => saveQ.mutate({ answers, submit })} />
         ) : null}
         <ul className="space-y-2">
           {docs.map((doc) => (

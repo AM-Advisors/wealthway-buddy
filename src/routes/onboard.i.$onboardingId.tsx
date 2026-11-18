@@ -3,6 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { OnboardPortal, OnboardShell } from "@/components/onboard-portal";
 import { MyPersonalInvestmentLinks } from "@/components/personal-investment-link";
 import { AccountKycGate } from "@/components/account-kyc-gate";
+import { ProfileStep } from "@/components/profile-step";
 import { supabase } from "@/integrations/supabase/client";
 
 /** One investment's onboarding. Ownership is enforced on the server for every read. */
@@ -31,8 +32,11 @@ function PortalPage() {
   return (
     <OnboardShell>
       <AccountKycGate onSignOut={() => supabase.auth.signOut().then(() => undefined)}>
-        <OnboardPortal onboardingId={onboardingId} />
-        <div className="mt-6"><MyPersonalInvestmentLinks onlyOnboardingId={onboardingId} /></div>
+        {/* Same "Complete your profile" step as the portal: blank phone/address are asked first. */}
+        <ProfileStep showLogo={false}>
+          <OnboardPortal onboardingId={onboardingId} />
+          <div className="mt-6"><MyPersonalInvestmentLinks onlyOnboardingId={onboardingId} /></div>
+        </ProfileStep>
       </AccountKycGate>
     </OnboardShell>
   );

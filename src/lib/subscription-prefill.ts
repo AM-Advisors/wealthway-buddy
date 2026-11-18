@@ -57,10 +57,14 @@ export function lockedAnswers(f: PrefillFacts): Record<string, string | null> {
   const out: Record<string, string | null> = {
     [PREFILL_KEYS.name]: f.verifiedName?.trim() || null,
     [PREFILL_KEYS.amount]: formatUsd(f.commitmentCents),
-    [PREFILL_KEYS.email]: f.email?.trim() || null,
-    [PREFILL_KEYS.phone]: f.phone?.trim() || null,
     [PREFILL_KEYS.irsForm]: irsFormOptionFor(f.taxFormType),
   };
+  // Contact details are not produced by Verification: lock them only when a value is on
+  // file, otherwise the investor types them like any other answer.
+  const email = f.email?.trim();
+  const phone = f.phone?.trim();
+  if (email) out[PREFILL_KEYS.email] = email;
+  if (phone) out[PREFILL_KEYS.phone] = phone;
   const bt = businessTypeFor(f.profileType);
   if (bt || f.profileType !== "joint") out[PREFILL_KEYS.businessType] = bt;
   return out;

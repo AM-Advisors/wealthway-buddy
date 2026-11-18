@@ -24,6 +24,15 @@ describe("subscription prefill", () => {
     expect(out["name_of_subscriber"]).toBe("Calvin Jung");
     expect(out["subscription_amount"]).toBe("$500,000.00");
   });
+  it("phone and email lock only when a value is on file, so the investor can type a missing one", () => {
+    const base = { verifiedName: "Calvin Jung", commitmentCents: 50_000_000, profileType: "individual", taxFormType: "w9" as const };
+    const missing = lockedAnswers({ ...base, email: null, phone: null });
+    expect("phone" in missing).toBe(false);
+    expect("email" in missing).toBe(false);
+    expect(applyLocked({ phone: "555-0100" }, missing, ["phone"])["phone"]).toBe("555-0100");
+    const onFile = lockedAnswers({ ...base, email: "c@x.com", phone: "555-0199" });
+    expect(applyLocked({ phone: "555-0100" }, onFile, ["phone"])["phone"]).toBe("555-0199");
+  });
   const Q = standard as Question[];
   const WIRE = "is_the_jurisdiction_where_the_wiring_institution_is_located_";
   it("question 14 shows only after Yes on question 13", () => {

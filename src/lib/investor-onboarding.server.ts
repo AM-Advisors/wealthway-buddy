@@ -912,7 +912,7 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
     verifiedName,
     commitmentCents: (row.accepted_amount_cents ?? row.requested_amount_cents ?? null) as number | null,
     email: person?.email ?? loginEmail,
-    phone: person?.phone ?? acct?.phone ?? null,
+    phone: person?.phone ?? acct?.phone ?? (isIndividual ? profile?.phone : null) ?? null,
     profileType,
     taxFormType: routing.status === "determined" ? routing.formType : null,
   });
@@ -2656,6 +2656,11 @@ export async function onboardPortalDetail(userId: string, onboardingId: string) 
     })),
     questionnaire: detail.questionnaire ?? null,
     questionnaireResponses: detail.questionnaireResponses ?? null,
+    // Same fields the portal questionnaire uses, so both links render one form.
+    questionnaireLocked: detail.questionnaireLocked ?? {},
+    questionnairePreparedByTeam: Boolean(detail.questionnairePreparedByTeam),
+    profileType: detail.profileType ?? null,
+    offering: { id: detail.offering?.id ?? row.offering_id },
     executed: Boolean(detail.executedSnapshot),
     fundingUnlocked: Boolean(detail.fundingUnlocked),
     fundingStatus: (detail.fundingStatus ?? null) as string | null,
