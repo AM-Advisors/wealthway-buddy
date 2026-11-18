@@ -141,14 +141,11 @@ export const startBoxSigning = createServerFn({ method: "POST" })
     const signerEmail = namedSigner?.email ?? (profile.email as string);
     const signerName = namedSigner?.name ?? (profile.legal_name ?? profile.email);
 
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("commitment_cents")
-      .eq("application_id", application.id)
-      .maybeSingle();
-    if (!subscription) throw new Error("Complete your subscription details before signing.");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // The commitment recorded on the investment is reused; investors never re-enter it.
+    const { ensureSigningCommitment } = await import("@/lib/signing-commitment.server");
+    const subscription = await ensureSigningCommitment(supabaseAdmin, application.id);
+    if (!subscription) throw new Error("Your investment amount hasn't been recorded yet. Go back to the investment amount step, then sign.");
 
     const { data: existing } = await supabaseAdmin
       .from("document_signatures")
@@ -205,16 +202,13 @@ export const startBoxSigning = createServerFn({ method: "POST" })
     let countersigner: { user_id: string; email: string; name: string } | null = null;
     if (dual) {
       const csId = (doc as any).countersigner_user_id as string | null;
-      const { data: rel } = csId
-        ? await supabaseAdmin.from("fund_managers").select("id").eq("offering_id", doc.offering_id).eq("user_id", csId).maybeSingle()
-        : { data: null };
-      const { data: cs } = csId
-        ? await supabaseAdmin.from("profiles").select("legal_name, email").eq("user_id", csId).maybeSingle()
-        : { data: null };
-      if (!rel || !(cs as any)?.email) {
+      // The countersigner may be a fund manager or an active Fund Signatory with a login.
+      const { resolveFundCountersigner } = await import("@/lib/fund-countersigner.server");
+      const cs = csId ? await resolveFundCountersigner(doc.offering_id, csId) : null;
+      if (!cs) {
         throw new Error("This document isn't ready to sign yet, the fund's countersigner hasn't been set up.");
       }
-      countersigner = { user_id: csId as string, email: (cs as any).email, name: (cs as any).legal_name ?? (cs as any).email };
+      countersigner = { user_id: csId as string, email: cs.email, name: cs.name };
     }
 
     const request = dual && countersigner

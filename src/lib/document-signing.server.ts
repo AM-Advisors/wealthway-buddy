@@ -9,6 +9,7 @@
  * browser: both are resolved from the authenticated person's own records.
  */
 
+import { capacityForProfileType } from "@/lib/signing-commitment";
 import {
   executionState,
   publicSigner,
@@ -37,6 +38,7 @@ export interface ResolvedSigning {
   subscription: { commitment_cents: number | null; tax_classification: string | null } | null;
   profile: { legal_name: string | null; email: string | null };
   investmentProfileId: string | null;
+  investmentProfileType: string | null;
   signature: any | null;
   signers: any[];
 }
@@ -95,15 +97,13 @@ export async function resolveSigning(
         .select("id, name, reg_type")
         .eq("id", application.offering_id)
         .maybeSingle(),
-      supabase
-        .from("subscriptions")
-        .select("commitment_cents, tax_classification")
-        .eq("application_id", application.id)
-        .maybeSingle(),
+      import("@/lib/signing-commitment.server").then(async ({ ensureSigningCommitment }) => ({
+        data: await ensureSigningCommitment(admin, application.id),
+      })),
       supabase.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle(),
       supabase
         .from("investor_onboardings")
-        .select("investment_profile_id")
+        .select("investment_profile_id, investment_profiles(profile_type)")
         .eq("application_id", application.id)
         .maybeSingle(),
       supabase.auth.getUser(),
@@ -143,6 +143,7 @@ export async function resolveSigning(
     subscription: subscription ?? null,
     profile: { legal_name: profile?.legal_name ?? null, email: signerEmail },
     investmentProfileId: onboarding?.investment_profile_id ?? null,
+    investmentProfileType: ((onboarding as any)?.investment_profiles?.profile_type as string | null | undefined) ?? null,
     signature: signature ?? null,
     signers,
   };
@@ -296,7 +297,9 @@ export async function openSigningSession(
   const { fileId, versionId } = await ensureBoxSourceFile(admin, resolved);
   const now = new Date().toISOString();
   const capacity: SignerCapacity =
-    requiredCapacities(resolved.subscription?.tax_classification)[0] ?? "individual";
+    (resolved.subscription?.tax_classification
+      ? requiredCapacities(resolved.subscription.tax_classification)[0]
+      : capacityForProfileType(resolved.investmentProfileType)) ?? "individual";
 
   let partyName: string | null = null;
   if (resolved.investmentProfileId) {
@@ -308,7 +311,11 @@ export async function openSigningSession(
   // fields land in the Acceptance of Subscription block. Their link opens only after approval.
   const { data: dualDoc } = await admin.from("offering_documents").select("signing_mode, countersigner_user_id").eq("id", resolved.document.id).maybeSingle();
   const dualSigner = dualDoc?.signing_mode === "dual" && dualDoc.countersigner_user_id && dualDoc.countersigner_user_id !== userId
-    ? (await admin.from("profiles").select("email, legal_name").eq("user_id", dualDoc.countersigner_user_id).maybeSingle()).data
+    ? await (async () => {
+        const { resolveFundCountersigner } = await import("@/lib/fund-countersigner.server");
+        const cs = await resolveFundCountersigner(resolved.application.offering_id, dualDoc.countersigner_user_id as string);
+        return cs ? { email: cs.email, legal_name: cs.name } : null;
+      })()
     : null;
   const detail = await createMultiSignerRequest({
     fileId,

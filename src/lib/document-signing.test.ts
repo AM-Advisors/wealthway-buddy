@@ -23,6 +23,8 @@ function fakeDb(tables: Record<string, Row[]>, account: Row | null = { id: "user
       const api: any = {
         select: () => api,
         order: () => api,
+        not: () => api,
+        limit: () => api,
         eq: (column: string, value: unknown) => {
           rows = rows.filter((r) => r[column] === value);
           return api;

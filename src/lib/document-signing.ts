@@ -165,7 +165,7 @@ export type RefusalReason =
 export const REFUSAL_MESSAGES: Record<RefusalReason, string> = {
   not_your_document: "This agreement belongs to another investor.",
   document_not_in_offering: "This document is not part of your fund.",
-  no_subscription: "Complete your subscription details before signing.",
+  no_subscription: "Your investment amount hasn't been recorded yet. Go back to the investment amount step, then sign.",
   signature_not_required: "This document does not require a signature.",
   not_a_required_signer: "You are not a required signer on this agreement.",
   already_signed: "You have already signed this agreement.",

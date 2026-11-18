@@ -62,7 +62,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
       return { application: null, offering: null, investment: null, documents: [], signatures: [], subscription: null, profile: null };
     }
 
-    const [{ data: offering }, { data: documents }, { data: signatures }, { data: subscription }, { data: profile }] =
+    const [{ data: offering }, { data: documents }, { data: signatures }, { data: loadedSubscription }, { data: profile }] =
       await Promise.all([
         supabase
           .from("offerings")
@@ -85,8 +85,15 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
           .maybeSingle(),
         supabase.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle(),
       ]);
+    let subscription = loadedSubscription;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!subscription?.commitment_cents) {
+      // Page loads never write: show the commitment already recorded on the investment.
+      const { recordedSigningCommitment } = await import("@/lib/signing-commitment.server");
+      const recorded = await recordedSigningCommitment(supabaseAdmin, application.id);
+      if (recorded) subscription = { ...(subscription ?? {}), ...recorded } as any;
+    }
     const { documentPublicationFor } = await import("./investor-document-publication.server");
     const { closedInvestmentFor } = await import("@/lib/closed-investment.server");
     const { outsideSignedOn } = await import("@/lib/outside-subscription-document");
@@ -196,12 +203,11 @@ export const signDocument = createServerFn({ method: "POST" })
     const { assertApplicationSigningVerification } = await import("@/lib/investor-onboarding.server");
     await assertApplicationSigningVerification(userId, application.id);
 
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("commitment_cents, ownership_title, tax_classification")
-      .eq("application_id", application.id)
-      .maybeSingle();
-    if (!subscription) throw new Error("Complete your subscription details before signing.");
+    // The commitment recorded on the investment is reused; investors never re-enter it.
+    const { supabaseAdmin: commitmentAdmin } = await import("@/integrations/supabase/client.server");
+    const { ensureSigningCommitment } = await import("@/lib/signing-commitment.server");
+    const subscription = await ensureSigningCommitment(commitmentAdmin, application.id);
+    if (!subscription) throw new Error("Your investment amount hasn't been recorded yet. Go back to the investment amount step, then sign.");
 
     const signedAt = new Date().toISOString();
     const documentHash = await sha256Hex(`${doc.title}\n${doc.body}`);
