@@ -164,6 +164,15 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           console.error("[didit] auto-apply failed", e);
         }
         if (!applicationId && manual.linked > 0 && processingError === "no matching application") processingError = null;
+        // A finished check from a fund's own verification link that nobody on the fund holds opens a staff follow-up.
+        if (!applicationId && manual.linked === 0) {
+          try {
+            const { noteFundLinkSession } = await import("@/lib/fund-verification-link.server");
+            await noteFundLinkSession({ workflowId: body["workflow_id"] ? String(body["workflow_id"]) : null, sessionId, status });
+          } catch (e) {
+            console.error("[didit] fund link follow-up failed", (e as Error).message);
+          }
+        }
 
         await supabaseAdmin
           .from("didit_webhook_events")
