@@ -14,6 +14,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { getNavigation } from "@/lib/navigation";
+import { filterByServiceMenu } from "@/lib/service-menu";
+import { useServiceMenu } from "@/components/use-service-menu";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { opsSearchIndex } from "@/lib/ops-search";
 import { opsQuickSearchFn } from "@/lib/ops-quick-search.functions";
@@ -29,6 +31,7 @@ export function QuickJump() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { session, activeId, applicationSurface } = useClientWorkspace();
+  const services = useServiceMenu(Boolean(session));
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -63,7 +66,8 @@ export function QuickJump() {
   const groups = useMemo(() => {
     const nav = getNavigation(session as never, activeId, pathname, applicationSurface);
     const out: { heading: string; items: { title: string; url: string; hint?: string }[] }[] = [];
-    if (nav.primary.length) out.push({ heading: "Your portal", items: nav.primary.map((i) => ({ title: i.title, url: i.url })) });
+    const primary = filterByServiceMenu(nav.primary, services);
+    if (primary.length) out.push({ heading: "Your portal", items: primary.map((i) => ({ title: i.title, url: i.url })) });
     const caps = (session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? [];
     if (nav.shell === "ops" && (session as { operations?: boolean } | null)?.operations) {
       out.push({ heading: "Harmonious Operations", items: opsSearchIndex(caps).map((e) => ({ title: e.title, url: e.url, hint: e.area })) });
@@ -71,7 +75,7 @@ export function QuickJump() {
       out.push({ heading: "Harmonious", items: nav.operations.map((o) => ({ title: o.title, url: o.url })) });
     }
     return out;
-  }, [session, activeId, pathname, applicationSurface]);
+  }, [session, activeId, pathname, applicationSurface, services]);
 
   const go = (url: string) => {
     setOpen(false);

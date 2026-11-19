@@ -27,6 +27,8 @@ import { getMyCapTables } from "@/lib/cap-table-billing.functions";
 import { myEntitlementsFn } from "@/lib/saas-orders.functions";
 import { filterByEntitlements } from "@/lib/saas-order-model";
 import { filterByHiddenTabs } from "@/lib/client-tab-access";
+import { filterByServiceMenu } from "@/lib/service-menu";
+import { useServiceMenu } from "@/components/use-service-menu";
 import { myHiddenTabsFn } from "@/lib/client-tab-access.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
@@ -100,7 +102,9 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const hiddenFn = useServerFn(myHiddenTabsFn);
   const hidden = useQuery({ queryKey: ["my-hidden-tabs"], queryFn: () => hiddenFn(), staleTime: 60_000 });
   // Areas staff switched off for this client are hidden completely.
-  const items = filterByHiddenTabs(filterByEntitlements(base, ents.data ?? null), hidden.data ?? []);
+  // Optional services (Wealth & services, Report Cards) only show for people who have them.
+  const services = useServiceMenu();
+  const items = filterByServiceMenu(filterByHiddenTabs(filterByEntitlements(base, ents.data ?? null), hidden.data ?? []), services);
   const active = (options ?? []).find((o) => o.id === activeId);
   const brand = useClientBrand(active?.kind === "company");
   const sharedFn = useServerFn(listMySharedFunds);
