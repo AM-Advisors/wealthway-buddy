@@ -63,6 +63,8 @@ async function ownOrder(uid: string, orderId: string) {
 }
 
 export async function startOrderCheckout(uid: string, email: string | null, orderId: string, env: "sandbox" | "live", returnUrl: string, method: "card" | "ach" = "card") {
+  const { requireAllowedReturnUrl } = await import("@/lib/payment-return-url");
+  returnUrl = requireAllowedReturnUrl(returnUrl);
   const o = await ownOrder(uid, orderId);
   if (o.payment_status === "paid") return { clientSecret: null as string | null, paid: true };
   const snap = o.price_snapshot as ReturnType<typeof priceOrder>;

@@ -98,7 +98,13 @@ export const listPreviewInvestors = createServerFn({ method: "GET" })
 
 const sendTestSchema = z.object({
   templateName: z.string().min(1),
-  to: z.string().trim().email().max(255),
+  // Preview tests are internal: only Harmonious mailboxes may receive them.
+  to: z
+    .string()
+    .trim()
+    .email()
+    .max(255)
+    .refine((v) => /@harmonious\.co$/i.test(v), "Preview tests can only be sent to a harmonious.co address."),
   data: z.record(z.string(), z.any()).default({}),
   applicationId: z.string().uuid().optional(),
 });

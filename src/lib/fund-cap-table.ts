@@ -1,3 +1,4 @@
+import { csvSafeCell } from "@/lib/csv-safe";
 import { isReconciledFunding } from "@/lib/funding-status";
 
 /**
@@ -141,7 +142,7 @@ function num(v: unknown): number | null {
 }
 
 export function capTableCsv(rows: CapRow[]): string {
-  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const esc = csvSafeCell;
   const head = ["Investor", "Profile", "Class", "Stage", "Commitment", "Funded", "Units", "% committed", "% funded", "Mgmt fee", "Carry", "Side letter", "MFN"];
   const lines = rows.map((r) => [
     r.investorName, r.profileName, r.classKey, r.stage,

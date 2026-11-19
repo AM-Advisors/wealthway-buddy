@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { isAllowedReturnUrl } from "@/lib/payment-return-url";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { CONTRACT_ROLES, STAFF_ROLES } from "@/lib/contracts.functions";
@@ -375,7 +376,7 @@ export const markInvoiceReviewed = createServerFn({ method: "POST" })
 /** Starts card checkout for an issued invoice. Only the client's own people can pay; the webhook marks it paid. */
 export const startInvoiceCardPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ id: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(2000) }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(2000).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious.") }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: links } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId);
     const mine = new Set(((links ?? []) as any[]).map((l) => l.client_id));

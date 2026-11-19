@@ -3,6 +3,7 @@
  * distribution batch/line engine. Never moves money or shares: it prepares
  * sheets/files and records what people confirm they did outside Harmonious.
  */
+import { csvSafeCell } from "@/lib/csv-safe";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   proposeDistribution, distributionAuthority, distributionRole, destinationFromRow, distributionBatchRow,
@@ -170,7 +171,7 @@ export async function distributionBankFile(userId: string, batchId: string) {
   const unverified = rows.filter((l) => !l.destination_verified || !l.payment_instruction_id);
   if (unverified.length) fail(`${unverified.length} investor(s) have no verified wire instructions. Verify them before creating the bank file.`);
   await db().from("distribution_file_access").insert({ batch_id: batchId, file_kind: "bank_file", actor_user_id: userId });
-  const esc = (v: unknown) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+  const esc = csvSafeCell;
   const header = ["Beneficiary", "Bank", "Routing / SWIFT", "Account", "Method", "Amount (USD)", "Reference"];
   const lines = rows.map((l) => {
     const d = destinationFromRow(instrById.get(String(l.payment_instruction_id)));

@@ -422,6 +422,28 @@ const invitationSchema = z.object({
   applicationId: z.string().uuid().optional(),
 });
 
+/**
+ * The onboarding invitation may go only to a Harmonious mailbox (internal test)
+ * or to the investor recorded on the selected application, never an arbitrary address.
+ */
+async function assertInvitationRecipient(to: string, applicationId: string | undefined) {
+  const email = to.trim().toLowerCase();
+  if (/@harmonious\.co$/i.test(email)) return;
+  if (!applicationId) throw new Error("Choose the investor's application first, or send to a harmonious.co address.");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const db = supabaseAdmin as any;
+  const { data: app } = await db.from("investor_applications").select("user_id").eq("id", applicationId).maybeSingle();
+  if (!app?.user_id) throw new Error("That application was not found.");
+  const recorded = new Set<string>();
+  const { data: profile } = await db.from("profiles").select("email").eq("user_id", app.user_id).maybeSingle();
+  if (profile?.email) recorded.add(String(profile.email).trim().toLowerCase());
+  const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(String(app.user_id));
+  if (authUser?.user?.email) recorded.add(authUser.user.email.trim().toLowerCase());
+  if (!recorded.has(email)) {
+    throw new Error("The invitation can only go to this application's investor email or a harmonious.co address.");
+  }
+}
+
 /** Sends the full onboarding invitation email to one address (admin only). */
 export const sendOnboardingInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -429,6 +451,7 @@ export const sendOnboardingInvitation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
+    await assertInvitationRecipient(data.to, data.applicationId);
 
     let offeringName = "Harmonious";
     let investorName = "Investor";

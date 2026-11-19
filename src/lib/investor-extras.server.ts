@@ -82,9 +82,12 @@ export async function uploadDoc(userId: string, input: { onboardingId: string; k
   const bytes = Buffer.from(input.base64, "base64");
   if (bytes.length === 0) throw new Error("That file is empty.");
   if (bytes.length > MAX_BYTES) throw new Error("Files can be up to 50 MB.");
+  // The stored type comes from the file's own bytes, never the caller's claim.
+  const { validateUpload, DOCUMENT_KINDS } = await import("./upload-validation");
+  const { contentType } = validateUpload(new Uint8Array(bytes), input.fileName, { allowed: [...DOCUMENT_KINDS, "webp"], maxBytes: MAX_BYTES, label: "File" });
   const safe = input.fileName.replace(/[^\w.\- ]+/g, "_").slice(0, 120);
   const path = `${userId}/onboarding/${ob.id}/${crypto.randomUUID()}-${safe}`;
-  const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType: input.contentType || "application/octet-stream" });
+  const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType });
   if (up.error) throw new Error("Couldn't save that file. Please try again.");
   const { error } = await d.from("investor_documents").insert({
     onboarding_id: ob.id, application_id: ob.application_id, offering_id: ob.offering_id, user_id: userId, investment_profile_id: ob.investment_profile_id,

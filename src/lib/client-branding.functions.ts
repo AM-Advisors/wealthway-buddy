@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { isAllowedReturnUrl } from "@/lib/payment-return-url";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { BRAND_FONTS } from "@/lib/client-branding";
@@ -73,7 +74,7 @@ export const listClientSetup = createServerFn({ method: "GET" })
 /** Starts the $100/month white-label card subscription. Branding turns on only after the payment confirms. */
 export const requestPaidWhitelabel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious.") }).parse(d))
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     if (!(await canEdit(context, data.clientId))) return { error: "You can't change this client's options." };
     const db = await admin();
@@ -105,7 +106,7 @@ export const requestPaidWhitelabel = createServerFn({ method: "POST" })
 /** Opens the billing page for the white-label subscription (card, invoices, cancel at period end). */
 export const openWhitelabelBilling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious.") }).parse(d))
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     if (!(await canEdit(context, data.clientId))) return { error: "Not allowed." };
     const db = await admin();

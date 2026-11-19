@@ -1,5 +1,6 @@
 import { useOrgTz } from "@/components/marketing/use-org-tz";
 import { fmtInTz } from "@/lib/org-timezone";
+import { sanitizeHtml } from "@/lib/classroom-html";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -114,7 +115,7 @@ function ArticleTab({ p, set, sources }: TP & { sources: string[] }) {
     <F label="Outline (one heading per line; points after ' - ')"><textarea className={inp} rows={6} value={p.outline.map((o) => [o.heading, ...o.points.map((x) => ` · ${x}`)].join("\n")).join("\n")}
       onChange={(e) => { const out: ContentPackage["outline"] = []; for (const l of e.target.value.split("\n")) { if (l.startsWith(" · ")) out.at(-1)?.points.push(l.slice(3)); else if (l.trim()) out.push({ heading: l, points: [] }); } set({ outline: out }); }} /></F>
     <F label="Article (HTML)"><textarea className={`${inp} font-mono text-xs`} rows={18} value={p.body_html} onChange={(e) => set({ body_html: e.target.value })} /></F>
-    <div className="rounded-md border border-border p-3"><p className="mb-2 text-xs font-semibold">Preview</p><div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: p.body_html.replace(/<script[\s\S]*?<\/script>/gi, "") }} /></div>
+    <div className="rounded-md border border-border p-3"><p className="mb-2 text-xs font-semibold">Preview</p><div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(p.body_html ?? "") }} /></div>
     <F label="FAQ (Q: / A: lines)"><textarea className={inp} rows={6} value={p.faq.map((f) => `Q: ${f.q}\nA: ${f.a}`).join("\n")}
       onChange={(e) => { const out: ContentPackage["faq"] = []; for (const l of e.target.value.split("\n")) { if (l.startsWith("Q: ")) out.push({ q: l.slice(3), a: "" }); else if (l.startsWith("A: ") && out.length) out.at(-1)!.a = l.slice(3); } set({ faq: out }); }} /></F>
     <F label="Primary-source citations (label | url per line; must be one of the item's sources)"><textarea className={inp} rows={4} value={p.citations.map((c) => `${c.label} | ${c.url}`).join("\n")}

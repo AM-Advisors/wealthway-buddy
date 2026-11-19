@@ -1,3 +1,4 @@
+import { csvSafeCell } from "@/lib/csv-safe";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -59,8 +60,7 @@ function fmtDateTime(value: string | null | undefined) {
 }
 
 function csvCell(value: unknown) {
-  const text = value === null || value === undefined ? "" : String(value);
-  return `"${text.replace(/"/g, '""')}"`;
+  return csvSafeCell(value);
 }
 
 export function ComplianceView() {

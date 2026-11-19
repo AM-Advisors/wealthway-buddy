@@ -276,23 +276,28 @@ export async function listFiles(fundId: string, includeSetupEvidence = false) {
 export async function uploadFile(uid: string, fundId: string, f: { title: string; category: string; fileName: string; contentType: string; base64: string }) {
   const bytes = Buffer.from(f.base64, "base64");
   if (bytes.byteLength > 20 * 1024 * 1024) throw new Error("Files must be 20 MB or smaller.");
+  const { validateUpload, DOCUMENT_KINDS } = await import("@/lib/upload-validation");
+  let contentType: string;
   if (f.category === "ein_letter") {
     const state = await (await import("@/lib/fund-setup-extras.server")).getExtras(uid, fundId);
     if (!state.canUploadEvidence || !state.hasSetup) throw new Error("IRS evidence needs Harmonious review or a saved fund setup.");
-    (await import("@/lib/upload-validation")).validateUpload(new Uint8Array(bytes), f.fileName, { allowed: ["pdf", "png", "jpg", "webp"], maxBytes: 10 * 1024 * 1024 });
+    contentType = validateUpload(new Uint8Array(bytes), f.fileName, { allowed: ["pdf", "png", "jpg", "webp"], maxBytes: 10 * 1024 * 1024 }).contentType;
+  } else {
+    // Every other category: the stored type comes from the file's own bytes, never the caller's claim.
+    contentType = validateUpload(new Uint8Array(bytes), f.fileName, { allowed: [...DOCUMENT_KINDS, "webp"], maxBytes: 20 * 1024 * 1024 }).contentType;
   }
   const path = `fund-files/${fundId}/${crypto.randomUUID()}/${f.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
   const d = await db();
-  const { error } = await d.storage.from(BUCKET).upload(path, bytes, { contentType: f.contentType || "application/octet-stream", upsert: false });
+  const { error } = await d.storage.from(BUCKET).upload(path, bytes, { contentType, upsert: false });
   if (error) throw new Error("Upload failed. Please try again.");
   const { data, error: e2 } = await d.from("fund_files").insert({
     offering_id: fundId, title: f.title, category: f.category, file_name: f.fileName, storage_path: path,
-    content_type: f.contentType, size_bytes: bytes.byteLength, uploaded_by: uid,
+    content_type: contentType, size_bytes: bytes.byteLength, uploaded_by: uid,
   }).select("id").single();
   if (e2) throw new Error("Couldn't save the file.");
   if (f.category === "ein_letter") {
     const evidencePath = `fund-setup-restricted/${fundId}/ein_letter/${data.id}/${f.fileName.replace(/[^\w.\-]+/g, "_")}`;
-    const { error: copyError } = await d.storage.from("fund-formation").upload(evidencePath, bytes, { contentType: f.contentType || "application/pdf", upsert: false });
+    const { error: copyError } = await d.storage.from("fund-formation").upload(evidencePath, bytes, { contentType, upsert: false });
     if (copyError) throw new Error("The file was saved but IRS evidence could not be linked. Please retry.");
     await (await import("@/lib/fund-setup-extras.server")).uploadEvidence(uid, { offeringId: fundId, kind: "ein_letter", path: evidencePath });
   }

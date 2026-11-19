@@ -482,8 +482,11 @@ export async function uploadBillCopy(uid: string, fundId: string, f: { expenseId
   if ((e as any).bill_copy_path) throw new Error("A copy is already attached to this bill.");
   const bytes = Buffer.from(f.base64, "base64");
   if (bytes.byteLength > 20 * 1024 * 1024) throw new Error("Files must be 20 MB or smaller.");
+  // The stored type comes from the file's own bytes, never the caller's claim.
+  const { validateUpload, DOCUMENT_KINDS } = await import("@/lib/upload-validation");
+  const { contentType } = validateUpload(new Uint8Array(bytes), f.fileName, { allowed: [...DOCUMENT_KINDS, "webp"], maxBytes: 20 * 1024 * 1024 });
   const path = `fund-bills/${fundId}/${f.expenseId}/${f.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
-  const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType: f.contentType || "application/octet-stream", upsert: false });
+  const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType, upsert: false });
   if (up.error) throw new Error("Upload failed. Please try again.");
   await d.from("fund_expense_records").update({ bill_copy_path: path }).eq("id", f.expenseId);
   await d.from("fund_accounting_events").insert({ offering_id: fundId, record_table: "fund_expense_records", record_id: f.expenseId, action: "bill copy attached", actor_user_id: uid } as any);

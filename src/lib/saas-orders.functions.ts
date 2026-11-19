@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { isAllowedReturnUrl } from "@/lib/payment-return-url";
 
 import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 import { CAP_TIERS, INVESTOR_SERVICING_KEYS, SERVICING_KEYS } from "@/lib/saas-order-model";
@@ -31,7 +32,7 @@ export const signSaasOrderFn = createServerFn({ method: "POST" }).middleware([re
   });
 
 export const startSaasCheckoutFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
-  .validator(z.object({ orderId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500), method: z.enum(["card", "ach"]).default("card") }).parse)
+  .validator(z.object({ orderId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious."), method: z.enum(["card", "ach"]).default("card") }).parse)
   .handler(async ({ data, context }) => (await srv()).startOrderCheckout(context.userId, await email(context), data.orderId, data.environment, data.returnUrl, data.method));
 
 export const chooseWireFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])

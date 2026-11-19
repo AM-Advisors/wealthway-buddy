@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { isAllowedReturnUrl } from "@/lib/payment-return-url";
 
 // Money, banking and account changes need a fully cleared identity check (not "limited" review access).
 import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
@@ -60,7 +61,7 @@ export const quoteFundPayment = createServerFn({ method: "POST" })
 /** Records the payment and opens embedded card checkout for exactly the quoted items. */
 export const startFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ target, environment: env, returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ target, environment: env, returnUrl: z.string().url().max(500).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious.") }).parse(d))
   .handler(async ({ data, context }): Promise<{ paymentId: string; clientSecret: string } | { error: string }> => {
     let t;
     try { t = await resolveTarget(context, data.target); } catch (e) { return { error: (e as Error).message }; }

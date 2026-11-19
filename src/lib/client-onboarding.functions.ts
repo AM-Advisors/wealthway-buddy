@@ -86,6 +86,38 @@ async function requireManage(context: any) {
   return who;
 }
 
+/**
+ * Invitations go only to people already recorded on that client: its primary or
+ * billing contact, or an active client contact. Harmonious staff addresses are
+ * never client contacts. Keeps the welcome email from reaching arbitrary inboxes.
+ */
+async function assertRecordedClientRecipient(clientId: string, email: string) {
+  if (/@harmonious\.co$/i.test(email)) {
+    throw new Error("Harmonious team members are added on the staff side, not as client contacts.");
+  }
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const db = supabaseAdmin as any;
+  const { data: client } = await db
+    .from("clients")
+    .select("id, primary_contact_email, billing_contact_email")
+    .eq("id", clientId)
+    .maybeSingle();
+  if (!client) throw new Error("That client was not found.");
+  const recorded = [client.primary_contact_email, client.billing_contact_email]
+    .map((v: unknown) => String(v ?? "").trim().toLowerCase())
+    .filter(Boolean);
+  if (recorded.includes(email)) return;
+  const { data: contacts } = await db
+    .from("client_contacts")
+    .select("email")
+    .eq("client_id", clientId)
+    .neq("status", "inactive")
+    .ilike("email", email)
+    .limit(1);
+  if ((contacts ?? []).length) return;
+  throw new Error("Add this person to the client's contacts first, then send the invitation.");
+}
+
 async function audit(
   context: any,
   who: { userId: string; roles: string[] },
@@ -295,6 +327,7 @@ export const inviteClientContact = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const who = await requireManage(context);
     const email = data.email.toLowerCase();
+    await assertRecordedClientRecipient(data.clientId, email);
 
     const { data: existing } = await context.supabase
       .from("client_invitations")

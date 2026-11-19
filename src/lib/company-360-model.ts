@@ -1,4 +1,5 @@
 /** Pure cap-table derivation: ownership comes only from posted security transactions. */
+import { csvSafeCell } from "./csv-safe";
 
 export type Tx = {
   id: string; company_id: string; kind: string; quantity: number; effective_date: string;
@@ -86,6 +87,5 @@ export function documentPurpose(docType: string | null | undefined): keyof typeo
 export function toCsv(rows: Record<string, string | number | null>[]) {
   if (!rows.length) return "";
   const cols = Object.keys(rows[0]!);
-  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\n");
+  return [cols.map(csvSafeCell).join(","), ...rows.map((r) => cols.map((c) => csvSafeCell(r[c])).join(","))].join("\n");
 }

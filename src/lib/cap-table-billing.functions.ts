@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { isAllowedReturnUrl } from "@/lib/payment-return-url";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { CAP_TABLE_TIERS, priceIdFor } from "@/lib/cap-table-tiers";
@@ -69,7 +70,7 @@ export const startCapTableCheckout = createServerFn({ method: "POST" })
     tier: z.enum(["free", "starter", "growth", "scale", "enterprise"]),
     interval: z.enum(["monthly", "annual"]),
     environment: envSchema,
-    returnUrl: z.string().url().max(500),
+    returnUrl: z.string().url().max(500).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious."),
   }).parse(d))
   .handler(async ({ data, context }): Promise<{ subscriptionId: string; mode: "free" | "sales" | "checkout"; clientSecret?: string } | { error: string }> => {
     const w = await who(context);
@@ -136,7 +137,7 @@ export const startCapTableCheckout = createServerFn({ method: "POST" })
 /** Opens the billing page where clients change tier, update their card or cancel. */
 export const openCapTableBillingPortal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ environment: envSchema, returnUrl: z.string().url().max(500).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious.") }).parse(d))
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     const w = await who(context);
     if (!w.clientId || !w.canManage) return { error: "Not allowed." };
