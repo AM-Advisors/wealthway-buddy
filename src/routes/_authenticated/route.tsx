@@ -1,9 +1,14 @@
 import { Link, Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { getPolicyStatus } from "@/lib/policies.functions";
+import { getOwnProfileGap } from "@/lib/investor-start.functions";
+import { resolveSession } from "@/lib/session.functions";
+import { primeGateStage, type GateAuth } from "@/lib/mfa-stage";
+import { AppShellLoading, PageLoading } from "@/components/page-loading";
+import type { QueryClient } from "@tanstack/react-query";
 import { accountKycStatusFn } from "@/lib/account-kyc.functions";
 import { getPortalAccess } from "@/lib/portal-access.functions";
 import { myEntitlementsFn } from "@/lib/saas-orders.functions";
@@ -30,32 +35,49 @@ import { logSecurityEvent } from "@/lib/account-security.functions";
 export const Route = createFileRoute("/_authenticated")({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
   ssr: false,
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async ({ location, context }) => {
+    // The saved session answers instantly; the sign-in service confirms it once per visit.
+    // Server functions check the token on every request, so this only decides what to draw.
+    const { data: local } = await supabase.auth.getSession();
+    const sessionUser = local.session?.user ?? null;
+    if (!sessionUser) throw toSignIn(location.href);
+    // Start every sign-in check now, alongside the page code, instead of one after another.
+    primeSignedInChecks(context.queryClient, local.session?.access_token);
+    if (confirmedUserId === sessionUser.id) return { user: sessionUser };
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
-      // Remember where they were heading so the deep link survives signing in.
-      const next = safeInternalPath(location.href, "");
-      throw redirect({ to: "/auth", search: (next ? { next } : {}) as never });
-    }
+    if (error || !data.user) throw toSignIn(location.href);
+    confirmedUserId = data.user.id;
     return { user: data.user };
   },
+  // Drawn on the server, so the page outline shows at once while the app code arrives.
+  pendingComponent: AppShellLoading,
   component: AuthenticatedLayout,
 });
+
+/** Signed-in account the sign-in service last confirmed in this tab; a different account is confirmed again. */
+let confirmedUserId: string | null = null;
+
+function toSignIn(href: string) {
+  confirmedUserId = null;
+  // Remember where they were heading so the deep link survives signing in.
+  const next = safeInternalPath(href, "");
+  return redirect({ to: "/auth", search: (next ? { next } : {}) as never });
+}
+
+/** Warms the same queries the gates read; each gate still decides from its own result. */
+function primeSignedInChecks(queryClient: QueryClient, accessToken: string | undefined) {
+  const fresh = { staleTime: 60_000 };
+  void queryClient.prefetchQuery({ queryKey: ["policy-status"], queryFn: () => getPolicyStatus(), ...fresh });
+  void queryClient.prefetchQuery({ queryKey: ["account-kyc-status"], queryFn: () => accountKycStatusFn(), ...fresh });
+  void queryClient.prefetchQuery({ queryKey: ["portal-access"], queryFn: () => getPortalAccess(), ...fresh });
+  void queryClient.prefetchQuery({ queryKey: ["client-session"], queryFn: () => resolveSession({ data: {} }), ...fresh });
+  void queryClient.prefetchQuery({ queryKey: ["own-profile-gap"], queryFn: () => getOwnProfileGap(), staleTime: 5 * 60_000 });
+  primeGateStage(supabase.auth as unknown as GateAuth, accessToken);
+}
 
 function AuthenticatedLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const policyStatus = useServerFn(getPolicyStatus);
-  const kycStatus = useServerFn(accountKycStatusFn);
-  const portalAccess = useServerFn(getPortalAccess);
-
-  // The gates below nest, so start all their checks at once instead of one after another.
-  // Each gate still decides from its own query; this only warms the cache.
-  useEffect(() => {
-    void queryClient.prefetchQuery({ queryKey: ["policy-status"], queryFn: () => policyStatus(), staleTime: 60_000 });
-    void queryClient.prefetchQuery({ queryKey: ["account-kyc-status"], queryFn: () => kycStatus(), staleTime: 60_000 });
-    void queryClient.prefetchQuery({ queryKey: ["portal-access"], queryFn: () => portalAccess(), staleTime: 60_000 });
-  }, [queryClient, policyStatus, kycStatus, portalAccess]);
 
   async function signOut() {
     await logSecurityEvent({ data: { eventType: "sign_out", action: "Explicit sign-out requested" } }).catch(() => {});
@@ -63,6 +85,7 @@ function AuthenticatedLayout() {
     queryClient.clear();
     // Nothing about the last workspace, company or delegated context survives sign-out.
     clearStoredClientContext();
+    confirmedUserId = null;
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
@@ -152,7 +175,7 @@ function OpsAreaGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { activeId, session, loading } = useClientWorkspace();
   if (!(pathname === "/ops" || pathname.startsWith("/ops/"))) return <>{children}</>;
-  if (loading) return <div className="p-10 text-sm text-muted-foreground">Loading...</div>;
+  if (loading) return <PageLoading />;
   const { shell } = getNavigation(session as never, activeId, pathname);
   if (shell === "ops") return <>{children}</>;
   return (

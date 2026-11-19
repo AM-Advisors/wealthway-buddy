@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPortalAccess } from "@/lib/portal-access.functions";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { PageLoading } from "@/components/page-loading";
 import { ProfileStep } from "@/components/profile-step";
 
 /**
@@ -40,11 +41,7 @@ export function PortalGate({
   }, [data?.openOnboardingId, navigate, queryClient]);
 
   if (isPending) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
-        Checking your access…
-      </div>
-    );
+    return <PageLoading />;
   }
 
   if (isError) {

@@ -23,6 +23,7 @@ import { useClientWorkspace } from "@/components/client-workspace";
 import { AttentionCenter } from "@/components/attention-center";
 import { InvestorDashboard, useInvestorDashboard } from "@/components/investor-dashboard";
 import { SetupCard } from "@/components/setup-card";
+import { PageLoading } from "@/components/page-loading";
 
 import { money, prettyStatus, statusTone } from "@/lib/status";
 
@@ -50,6 +51,10 @@ export const Route = createFileRoute("/_authenticated/home")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  // Start the home page's own data while its code downloads and the sign-in checks run.
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery({ queryKey: ["role-overview"], queryFn: () => getRoleOverview(), staleTime: 30_000 });
+  },
   component: RoleHome,
 });
 
@@ -95,7 +100,7 @@ function RoleHome() {
   });
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading your home page…</div>;
+    return <PageLoading label="Loading your home page" />;
   }
   if (!data) return null;
 

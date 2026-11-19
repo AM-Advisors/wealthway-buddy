@@ -1,6 +1,7 @@
 import { isStaffSurface } from "@/lib/host-routing";
 import { canEnrollPasskey } from "@/lib/passkeys";
-import { resolveGateStage, type GateAuth } from "@/lib/mfa-stage";
+import { noteGateShown, takeGateStage, type GateAuth } from "@/lib/mfa-stage";
+import { PageLoading } from "@/components/page-loading";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -63,7 +64,11 @@ export function SecurityGate({
   const log = useServerFn(logSecurityEvent);
 
   const check = useCallback(async () => {
-    const next = await resolveGateStage(auth);
+    // Only the real sign-in service can have a head start, matched to this exact session.
+    const key = auth === (supabase.auth as unknown as GateAuth)
+      ? (await supabase.auth.getSession()).data.session?.access_token ?? null
+      : null;
+    const next = await takeGateStage(auth, key);
     if (next === "ok") return setStage((s) => (s === "codes" ? s : "ok"));
     setStage(next);
   }, [auth]);
@@ -71,6 +76,8 @@ export function SecurityGate({
   useEffect(() => {
     void check();
   }, [check]);
+
+  useEffect(() => noteGateShown(), []);
 
   const send = useCallback(
     async (eventType: string, extra: Record<string, unknown> = {}) => {
@@ -91,7 +98,7 @@ export function SecurityGate({
   );
 
   if (stage === "loading")
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Checking security…</div>;
+    return <PageLoading label="Checking sign-in security" />;
   if (stage === "error")
     return (
       <Shell onSignOut={onSignOut}>

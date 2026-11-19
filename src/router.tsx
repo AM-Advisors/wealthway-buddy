@@ -17,6 +17,8 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // Touching or pointing at a link starts loading that page, so it is ready by the click.
+    defaultPreload: "intent",
   });
 
   return router;

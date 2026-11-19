@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { onboardingDetailFn } from "@/lib/investor-onboarding.functions";
 import { INVESTMENT_TABS, normalizeInvestmentTab } from "@/lib/investment-workspace";
 import { LoadError } from "@/components/load-error";
+import { PageLoading } from "@/components/page-loading";
 
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
   head: () => ({
@@ -35,6 +36,14 @@ export const Route = createFileRoute("/_authenticated/investment/$onboardingId")
     ...(typeof search["step"] === "string" ? { step: search["step"] as string } : {}),
     ...(typeof search["tab"] === "string" ? { tab: search["tab"] as string } : {}),
   }),
+  // Start reading the investment while its code downloads and the sign-in checks run (same authorized read).
+  loader: ({ context, params }) => {
+    void context.queryClient.prefetchQuery({
+      queryKey: ["onboarding", params.onboardingId],
+      queryFn: () => onboardingDetailFn({ data: { onboardingId: params.onboardingId } }),
+      staleTime: 15_000,
+    });
+  },
   component: InvestmentPage,
 });
 
@@ -50,7 +59,7 @@ function InvestmentPage() {
     queryFn: () => load({ data: { onboardingId } }),
   });
   const offeringId = ctx.data?.offering?.id ?? null;
-  if (ctx.isPending) return <main className="mx-auto max-w-3xl px-4 py-10"><p className="text-sm text-muted-foreground">Loading your investment…</p></main>;
+  if (ctx.isPending) return <PageLoading label="Loading your investment" />;
   if (ctx.error) return <main className="mx-auto max-w-3xl px-4 py-10"><LoadError audience="account" error={ctx.error} what="Your investment details" onRetry={() => void ctx.refetch()} /></main>;
 
   // Until the investment closes, show only the guided steps and documents; reports come later.

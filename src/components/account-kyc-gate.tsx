@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { Logo } from "@/components/Logo";
+import { PageLoading } from "@/components/page-loading";
 import { Button } from "@/components/ui/button";
 import { accountKycStatusFn, startAccountCheckFn } from "@/lib/account-kyc.functions";
 
@@ -22,6 +23,7 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
   // Self-serve sign-up (pick plan, sign SOW, pay) comes first; identity is a later step and access stays closed until it passes.
   const onPlanPage = /^\/plan(\/|$)/.test(pathname);
   if (s?.open || onPlanPage) return <>{children}</>;
+  if (q.isLoading) return <PageLoading />;
   // Limited access: ID, selfie and face match passed; a person is finishing one check. Money and banking stay closed on the server.
   if (s?.limited) return (
     <>

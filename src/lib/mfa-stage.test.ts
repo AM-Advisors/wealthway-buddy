@@ -56,3 +56,53 @@ describe("resolveGateStage with the fictional sign-in service", () => {
     expect(await resolveGateStage(qa.auth)).toBe("error");
   });
 });
+
+describe("early security check head start", () => {
+  // A sign-in service that counts lookups and can be switched from aal2 to aal1.
+  function countingAuth(level: { current: string }) {
+    const calls = { n: 0 };
+    const auth = {
+      mfa: {
+        getAuthenticatorAssuranceLevel: async () => { calls.n += 1; return { data: { currentLevel: level.current, nextLevel: "aal2" }, error: null }; },
+        listFactors: async () => ({ data: { all: [{ id: "f1", factor_type: "totp", status: "verified" }] }, error: null }),
+      },
+    } as unknown as import("./mfa-stage").GateAuth;
+    return { auth, calls };
+  }
+
+  it("is reused once for the exact same session, without a second lookup", async () => {
+    const { primeGateStage, takeGateStage } = await import("./mfa-stage");
+    const { auth, calls } = countingAuth({ current: "aal2" });
+    primeGateStage(auth, "token-a");
+    expect(await takeGateStage(auth, "token-a")).toBe("ok");
+    expect(calls.n).toBe(1);
+  });
+
+  it("a different session (new sign-in) never inherits an earlier completed second step", async () => {
+    const { primeGateStage, takeGateStage } = await import("./mfa-stage");
+    const level = { current: "aal2" };
+    const { auth } = countingAuth(level);
+    primeGateStage(auth, "old-session");
+    level.current = "aal1";
+    expect(await takeGateStage(auth, "new-session")).toBe("verify");
+  });
+
+  it("is used only once; the next check asks the sign-in service again", async () => {
+    const { primeGateStage, takeGateStage } = await import("./mfa-stage");
+    const level = { current: "aal2" };
+    const { auth } = countingAuth(level);
+    primeGateStage(auth, "token-b");
+    await takeGateStage(auth, "token-b");
+    level.current = "aal1";
+    expect(await takeGateStage(auth, "token-b")).toBe("verify");
+  });
+
+  it("is not started while a security gate is already on screen", async () => {
+    const { primeGateStage, noteGateShown } = await import("./mfa-stage");
+    const { auth, calls } = countingAuth({ current: "aal2" });
+    const done = noteGateShown();
+    primeGateStage(auth, "token-c");
+    done();
+    expect(calls.n).toBe(0);
+  });
+});

@@ -44,3 +44,33 @@ export async function resolveGateStage(auth: GateAuth): Promise<MfaStage> {
     return "error";
   }
 }
+
+/**
+ * Lets the signed-in layout start the security check while the page code is
+ * still downloading. The gate takes the head start once, only for the same
+ * sign-in service and the exact same session token (a new sign-in, refresh or
+ * second step changes the token), and otherwise asks again. The decision
+ * itself is unchanged.
+ */
+let primed: { auth: GateAuth; key: string; at: number; stage: Promise<MfaStage> } | null = null;
+let gatesShown = 0;
+const PRIMED_FOR_MS = 30_000;
+
+export function primeGateStage(auth: GateAuth, key: string | null | undefined): void {
+  // A gate on screen already holds its decision; nothing to start early.
+  if (!key || gatesShown > 0) return;
+  if (primed && primed.auth === auth && primed.key === key && Date.now() - primed.at < PRIMED_FOR_MS) return;
+  primed = { auth, key, at: Date.now(), stage: resolveGateStage(auth) };
+}
+
+export function takeGateStage(auth: GateAuth, key: string | null | undefined): Promise<MfaStage> {
+  const hit = primed && key && primed.auth === auth && primed.key === key && Date.now() - primed.at < PRIMED_FOR_MS ? primed.stage : null;
+  primed = null;
+  return hit ?? resolveGateStage(auth);
+}
+
+/** The security gate reports while it is on screen; returns the cleanup. */
+export function noteGateShown(): () => void {
+  gatesShown += 1;
+  return () => { gatesShown = Math.max(0, gatesShown - 1); };
+}

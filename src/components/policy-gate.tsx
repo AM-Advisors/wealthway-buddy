@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
+import { PageLoading } from "@/components/page-loading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PRIVACY_POLICY, TERMS_OF_SERVICE, legalPlainText } from "@/lib/legal-content";
 
@@ -56,11 +57,7 @@ export function PolicyGate({
   });
 
   if (isPending) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
+    return <PageLoading />;
   }
 
   const outstanding = (data?.outstanding ?? []) as any[];
