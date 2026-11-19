@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { downloadRecordingFn, listRecordingsFn, openRecordingFn } from "@/lib/session-recordings.functions";
 import { downloadBlob, replayHtml } from "@/lib/recording-download";
+import { recordingOverview } from "@/lib/recording-overview";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 
@@ -44,6 +45,7 @@ function RecordingsPage() {
       </div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.isError && <LoadError error={q.error} what="Screen recordings" onRetry={() => q.refetch()} />}
+      {q.data && q.data.recordings.length > 0 && <Overview rows={q.data.recordings as any[]} onSearch={setSearch} />}
       {selected && <Player id={selected} onClose={() => setSelected(null)} />}
       {q.data && (q.data.recordings.length === 0 ? <p className="text-sm text-muted-foreground">No recordings yet.</p> : (
         <div className="divide-y rounded-lg border">
@@ -109,4 +111,39 @@ function DownloadRecording({ id }: { id: string }) {
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return <Button size="sm" variant="outline" disabled={busy} onClick={() => void run()} aria-label="Download recording"><Download className="mr-1 size-4" />{busy ? "Preparing…" : "Download"}</Button>;
+}
+
+function Overview({ rows, onSearch }: { rows: any[]; onSearch: (s: string) => void }) {
+  const o = recordingOverview(rows);
+  const stat = (label: string, value: string | number) => (
+    <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl font-semibold">{value}</p></div>
+  );
+  const hrs = o.totalMinutes >= 60 ? `${Math.floor(o.totalMinutes / 60)}h ${o.totalMinutes % 60}m` : `${o.totalMinutes}m`;
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+        {stat("Recordings", o.total)}{stat("Page replays", o.replays)}{stat("Screen videos", o.screens)}
+        {stat("People", o.people)}{stat("Last 24 hours", o.last24h)}{stat("Time recorded", hrs)}
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border p-3">
+          <p className="mb-2 text-sm font-medium">Most recorded people</p>
+          {o.topPeople.map((p) => (
+            <button key={p.name} type="button" onClick={() => onSearch(p.name)} className="flex w-full justify-between rounded px-1 py-1 text-left text-sm hover:bg-muted">
+              <span>{p.name}</span><span className="text-muted-foreground">{p.count} · {p.minutes}m · last {new Date(p.last).toLocaleDateString()}</span>
+            </button>
+          ))}
+        </div>
+        <div className="rounded-lg border p-3">
+          <p className="mb-2 text-sm font-medium">Most visited pages</p>
+          {o.topPages.map((p) => (
+            <button key={p.path} type="button" onClick={() => onSearch(p.path)} className="flex w-full justify-between gap-2 rounded px-1 py-1 text-left text-sm hover:bg-muted">
+              <span className="truncate">{p.path}</span><span className="text-muted-foreground">{p.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">Based on the {o.total} most recent recordings shown below. Click a person or page to filter.</p>
+    </div>
+  );
 }
