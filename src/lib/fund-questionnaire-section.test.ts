@@ -58,6 +58,6 @@ describe("later versions of new-investor questions", () => {
   });
   it("a draft cannot supply its own earlier start time", () => {
     const sneaky = [{ key: "fs_new", label: "New", type: "text" as const, newInvestmentsFrom: "2020-01-01T00:00:00Z" }];
-    expect(carryNewInvestmentCutoffs(v1, sneaky as any, true)[0].newInvestmentsFrom).toBeUndefined();
+    expect(carryNewInvestmentCutoffs(v1, sneaky as any, true)[0]?.newInvestmentsFrom).toBeUndefined();
   });
 });
