@@ -1203,3 +1203,7 @@
 
 - [x] Accreditation: confirm inside Verification card; standalone page reads verified identity
 - [x] Turn off accreditation requirement on 4D Snoretox SPV (as it was before)
+
+## View account: manage access + connected details (2026-11-19)
+- [ ] View account page: add/remove client accounts with role, funds and services for that person (reuse existing access engines)
+- [ ] Same email / same person shows the same accounts, clients, funds and details on every screen (find and fix mismatches)
