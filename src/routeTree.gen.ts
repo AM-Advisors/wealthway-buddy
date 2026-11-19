@@ -25,6 +25,7 @@ import { Route as FundAdministrationRouteImport } from './routes/fund-administra
 import { Route as HarmoniousclassroomRouteImport } from './routes/harmoniousclassroom'
 import { Route as InvestorRouteImport } from './routes/investor'
 import { Route as InvestorLoginRouteImport } from './routes/investor-login'
+import { Route as KycAmlRouteImport } from './routes/kyc-aml'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
 import { Route as PlaidOauthRouteImport } from './routes/plaid-oauth'
 import { Route as PlatformRouteImport } from './routes/platform'
@@ -583,6 +584,11 @@ const InvestorRoute = InvestorRouteImport.update({
 const InvestorLoginRoute = InvestorLoginRouteImport.update({
   id: '/investor-login',
   path: '/investor-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KycAmlRoute = KycAmlRouteImport.update({
+  id: '/kyc-aml',
+  path: '/kyc-aml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManagerLoginRoute = ManagerLoginRouteImport.update({
@@ -3357,6 +3363,7 @@ export interface FileRoutesByFullPath {
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/investor': typeof InvestorRouteWithChildren
   '/investor-login': typeof InvestorLoginRoute
+  '/kyc-aml': typeof KycAmlRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -3852,6 +3859,7 @@ export interface FileRoutesByTo {
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/investor-login': typeof InvestorLoginRoute
+  '/kyc-aml': typeof KycAmlRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -4345,6 +4353,7 @@ export interface FileRoutesById {
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/investor': typeof InvestorRouteWithChildren
   '/investor-login': typeof InvestorLoginRoute
+  '/kyc-aml': typeof KycAmlRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -4844,6 +4853,7 @@ export interface FileRouteTypes {
     | '/harmoniousclassroom'
     | '/investor'
     | '/investor-login'
+    | '/kyc-aml'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -5339,6 +5349,7 @@ export interface FileRouteTypes {
     | '/fund-administration'
     | '/harmoniousclassroom'
     | '/investor-login'
+    | '/kyc-aml'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -5831,6 +5842,7 @@ export interface FileRouteTypes {
     | '/harmoniousclassroom'
     | '/investor'
     | '/investor-login'
+    | '/kyc-aml'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -6330,6 +6342,7 @@ export interface RootRouteChildren {
   HarmoniousclassroomRoute: typeof HarmoniousclassroomRoute
   InvestorRoute: typeof InvestorRouteWithChildren
   InvestorLoginRoute: typeof InvestorLoginRoute
+  KycAmlRoute: typeof KycAmlRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
   PlaidOauthRoute: typeof PlaidOauthRoute
   PlatformRoute: typeof PlatformRoute
@@ -6514,6 +6527,13 @@ declare module '@tanstack/react-router' {
       path: '/investor-login'
       fullPath: '/investor-login'
       preLoaderRoute: typeof InvestorLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kyc-aml': {
+      id: '/kyc-aml'
+      path: '/kyc-aml'
+      fullPath: '/kyc-aml'
+      preLoaderRoute: typeof KycAmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manager-login': {
@@ -10947,6 +10967,7 @@ const rootRouteChildren: RootRouteChildren = {
   HarmoniousclassroomRoute: HarmoniousclassroomRoute,
   InvestorRoute: InvestorRouteWithChildren,
   InvestorLoginRoute: InvestorLoginRoute,
+  KycAmlRoute: KycAmlRoute,
   ManagerLoginRoute: ManagerLoginRoute,
   PlaidOauthRoute: PlaidOauthRoute,
   PlatformRoute: PlatformRoute,

@@ -54,7 +54,10 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
           <p className="text-sm text-muted-foreground">{body.text}</p>
           <p className="text-xs text-muted-foreground">
             Identity verification is performed by an independent verification service. Harmonious
-            prepares and tracks your verification but cannot guarantee its timing or outcome.
+            prepares and tracks your verification but cannot guarantee its timing or outcome.{" "}
+            <a href="/kyc-aml" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-2">
+              Read our KYC, KYB &amp; AML policy
+            </a>
           </p>
         </div>
         <ol className="grid gap-2 text-sm sm:grid-cols-2">

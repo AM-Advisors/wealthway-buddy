@@ -57,7 +57,7 @@ export const MARKETING_NAV: NavGroup[] = [
     items: [
       { label: "Platform overview", href: "/platform", status: "live" },
       { label: "Investor Onboarding", href: "/investor-onboarding", status: "planned" },
-      { label: "KYC, KYB & AML", href: "/kyc-aml", status: "planned" },
+      { label: "KYC, KYB & AML", href: "/kyc-aml", status: "live" },
       { label: "Fund Accounting", href: "/fund-accounting", status: "planned" },
       { label: "NAV & Valuations", href: "/nav-calculation", status: "planned" },
       { label: "Capital & Banking", href: "/capital-banking", status: "planned" },

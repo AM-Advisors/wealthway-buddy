@@ -51,6 +51,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
         "Staff and client workspaces use authenticator-based two-step sign-in. Additional checks protect sensitive actions such as access to tax documents.",
         "If someone loses their second step, access is restored only after a documented identity confirmation process completed by Harmonious staff.",
         "Identity verification is tied to the person's own account. Qualifying identity checks under review may allow limited workspace access; banking, funding and money actions remain blocked until verification is fully approved.",
+        "Our KYC, KYB & AML Policy (harmonious.co/kyc-aml) explains how people, companies, trusts and their owners are verified and screened.",
         "Access follows role and scope: a person sees the funds, clients and records they are responsible for. Extra permissions are granted to one named person and are never handed out because of an email domain.",
         "Access can be revoked, suspended or archived at any time, and each account's most recent sign-in is recorded.",
       ],

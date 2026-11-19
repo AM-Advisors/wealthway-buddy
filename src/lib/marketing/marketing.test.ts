@@ -67,7 +67,7 @@ describe("Wix URL preservation", () => {
   });
   it("reports cutover blockers: KEEP pages without a route and unimported articles", () => {
     const blockers = WIX_PAGES.filter((u) => u.action === "KEEP" && !routeFileExists(u.path)).map((u) => u.path);
-    expect(blockers.sort()).toEqual(["/careers", "/kyc-aml"]);
+    expect(blockers.sort()).toEqual(["/careers"]);
     expect(missingArticles().length).toBe(55);
   });
 });

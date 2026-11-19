@@ -10,6 +10,7 @@ const LEGAL = [
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/data-deletion", label: "User Data Deletion" },
   { href: "/terms", label: "Terms of Service" },
+  { href: "/kyc-aml", label: "KYC, KYB & AML Policy" },
   { href: "/cap-table-privacy", label: "CapTable Privacy Notice" },
   { href: "/cap-table-terms", label: "CapTable Terms of Service" },
   { href: "/data-security", label: "Security" },

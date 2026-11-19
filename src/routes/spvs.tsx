@@ -101,6 +101,10 @@ function SpvPage() {
                 </li>
               ))}
             </ul>
+            <p className="mt-4 text-sm text-muted-foreground">
+              How investors and their owners are verified and screened:{" "}
+              <Link to="/kyc-aml" className="font-medium text-primary underline underline-offset-2">KYC, KYB &amp; AML policy</Link>
+            </p>
           </div>
         </section>
 

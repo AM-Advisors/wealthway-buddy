@@ -20,7 +20,7 @@ export const WIX_PAGES: WixUrl[] = [
   { path: "/home", action: "REDIRECT", target: "/", note: "Wix duplicate of the homepage" },
   { path: "/spvs", action: "KEEP", note: "SPV Administration pillar" },
   { path: "/cap-table-management", action: "KEEP", note: "Cap Table Management pillar" },
-  { path: "/kyc-aml", action: "KEEP", note: "Needs a reviewed page before cutover" },
+  { path: "/kyc-aml", action: "KEEP" },
   { path: "/careers", action: "KEEP", note: "Needs content before cutover" },
   { path: "/contactus", action: "KEEP", note: "Contact / Schedule a Demo form" },
   { path: "/harmoniousclassroom", action: "KEEP", note: "Resources hub" },
