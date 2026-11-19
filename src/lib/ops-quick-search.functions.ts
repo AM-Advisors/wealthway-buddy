@@ -34,7 +34,8 @@ export const opsQuickSearchFn = createServerFn({ method: "GET" })
       d
         .from("persons")
         .select("id, user_id, legal_first_name, legal_last_name, preferred_name, email")
-        .or(`email.ilike.%${s}%,legal_first_name.ilike.%${s}%,legal_last_name.ilike.%${s}%,preferred_name.ilike.%${s}%`)
+        .is("merged_into_person_id", null)
+        .or(`email.ilike.%${s}%,secondary_email.ilike.%${s}%,legal_first_name.ilike.%${s}%,legal_last_name.ilike.%${s}%,preferred_name.ilike.%${s}%`)
         .order("updated_at", { ascending: false })
         .limit(5),
     ]);

@@ -14,6 +14,7 @@ import { SidebarAccessCard } from "@/components/sidebar-access-card";
 import { RefreshCw } from "lucide-react";
 import { MfaResetPanel } from "@/components/mfa-reset-panel";
 import { EmailCorrectionCard } from "@/components/email-correction-card";
+import { PersonAccessManager } from "@/components/person-access-manager";
 
 export const Route = createFileRoute("/_authenticated/ops/people_/$userId")({
   head: () => ({
@@ -84,6 +85,7 @@ function AccountActivity({ userId }: { userId: string }) {
         <header className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">View account</p><Button variant="outline" size="icon" aria-label="Refresh account" title="Refresh account" disabled={q.isFetching} onClick={() => void q.refetch()}><RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin motion-reduce:animate-none" : ""}`} /></Button></div>
           <h1 className="text-3xl">{d.name || d.email}</h1>
+          {d.suspended && <Badge variant="destructive">Login suspended</Badge>}
           <p className="mt-1 text-sm text-muted-foreground">{d.email} · Account created {when(d.createdAt)} · Email confirmed {when(d.confirmedAt)} · Last signed in {when(d.lastSignIn)}</p>
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
@@ -95,6 +97,7 @@ function AccountActivity({ userId }: { userId: string }) {
         {d.email && <MfaResetPanel email={d.email} userId={userId} />}
         <EmailCorrectionCard userId={userId} personId={null} />
         <AccountOverview d={d} />
+        <PersonAccessManager userId={userId} />
         {d.roles.length > 0 && <SidebarAccessCard userId={userId} />}
         <KycReport d={d} userId={userId} />
         <PersonAccountsCard userId={userId} />

@@ -468,28 +468,136 @@ export const listClientAccountsForAccess = createServerFn({ method: "GET" })
     return ((data ?? []) as any[]).map((c) => ({ id: c.id as string, name: (c.name ?? "Client") as string }));
   });
 
+const CLIENT_ACCESS_ROLES = ["client_gp", "client_signatory", "client_finance", "client_legal", "client_compliance", "client_readonly", "member"] as const;
+
 /**
- * Adds or removes a person's membership in a client account. Access
- * administrators only; never on yourself; audited before the change. Never
- * grants staff authority - it only makes the client workspace available.
+ * Adds, changes or removes a person's login access to a client account, with
+ * the same client roles used by client onboarding. Access administrators only;
+ * never on yourself; audited before the change. Never grants staff authority.
  */
 export const setClientMembership = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), clientId: z.string().uuid(), add: z.boolean(), role: z.enum(["member", "admin"]).default("member"), reason }).parse(d))
+  .validator((d: unknown) =>
+    z
+      .object({
+        targetUserId: z.string().uuid(),
+        clientId: z.string().uuid(),
+        add: z.boolean(),
+        change: z.boolean().default(false),
+        role: z.enum(CLIENT_ACCESS_ROLES).default("client_readonly"),
+        canApprove: z.boolean().default(false),
+        reason,
+      })
+      .parse(d),
+  )
   .handler(async ({ context, data }) => {
     await requireAccessViewer(context);
     const p = await prepare(context);
     if (data.targetUserId === p.actorId) throw new Error("You can't change your own client accounts.");
-    const before = p.b.cus.filter((c: any) => c.user_id === data.targetUserId).map((c: any) => c.client_id);
-    const exists = before.includes(data.clientId);
-    if (data.add && exists) throw new Error("This person already belongs to that client account.");
-    if (!data.add && !exists) throw new Error("This person isn't a member of that client account.");
-    const after = data.add ? [...before, data.clientId] : before.filter((x: string) => x !== data.clientId);
-    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: data.add ? "Client account added" : "Client account removed", scopeType: "client", scopeId: data.clientId, previous: { clients: before }, next: { clients: after, role: data.role }, reason: data.reason, correlationId: p.correlationId });
     const db = await admin();
-    const { error } = data.add
-      ? await db.from("client_users").insert({ user_id: data.targetUserId, client_id: data.clientId, client_role: data.role, can_approve: false })
-      : await db.from("client_users").delete().eq("user_id", data.targetUserId).eq("client_id", data.clientId);
+    const { data: rows } = await db.from("client_users").select("id, client_id, client_role, can_approve, revoked_at").eq("user_id", data.targetUserId);
+    const live = ((rows ?? []) as any[]).filter((r) => !r.revoked_at);
+    const before = live.map((r) => ({ client: r.client_id, role: r.client_role, canApprove: !!r.can_approve }));
+    const current = live.find((r) => r.client_id === data.clientId);
+    if (data.change && !current) throw new Error("This person isn't a member of that client account.");
+    if (data.add && !data.change && current) throw new Error("This person already belongs to that client account. Change their role instead.");
+    if (!data.add && !data.change && !current) throw new Error("This person isn't a member of that client account.");
+    const removing = !data.add && !data.change;
+    const after = removing
+      ? before.filter((x) => x.client !== data.clientId)
+      : [...before.filter((x) => x.client !== data.clientId), { client: data.clientId, role: data.role, canApprove: data.canApprove }];
+    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: removing ? "Client account removed" : data.change ? "Client role changed" : "Client account added", scopeType: "client", scopeId: data.clientId, previous: { clients: before }, next: { clients: after }, reason: data.reason, correlationId: p.correlationId });
+    const { error } = removing
+      ? await db.from("client_users").delete().eq("user_id", data.targetUserId).eq("client_id", data.clientId)
+      : await db.from("client_users").upsert({ user_id: data.targetUserId, client_id: data.clientId, client_role: data.role, can_approve: data.canApprove, revoked_at: null, revoked_by: null }, { onConflict: "client_id,user_id" });
     if (error) throw new Error("Could not update the client account.");
+    if (!removing && data.role !== "member") {
+      await db.from("user_roles").upsert({ user_id: data.targetUserId, role: data.role }, { onConflict: "user_id,role" });
+    }
+    try {
+      await db.rpc("connect_listed_entries", { _user_id: data.targetUserId });
+    } catch {
+      /* listing links are best effort; access is already saved */
+    }
     return { ok: true };
+  });
+
+/**
+ * Adds or removes a person as a fund manager from View account. Access
+ * administrators only; never on yourself; Harmonious staff emails are refused;
+ * a fund keeps at least one manager. Audited before the change.
+ */
+export const setFundManagerAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), fundId: z.string().uuid(), add: z.boolean(), reason }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAccessViewer(context);
+    const p = await prepare(context);
+    if (data.targetUserId === p.actorId) throw new Error("You can't change your own fund access.");
+    const db = await admin();
+    const [{ data: auth }, { data: fund }, { data: mgrs }] = await Promise.all([
+      db.auth.admin.getUserById(data.targetUserId),
+      db.from("offerings").select("id, name").eq("id", data.fundId).maybeSingle(),
+      db.from("fund_managers").select("user_id").eq("offering_id", data.fundId),
+    ]);
+    const email = String(auth?.user?.email ?? "").toLowerCase();
+    if (!auth?.user) throw new Error("That login no longer exists.");
+    if (!fund) throw new Error("That fund no longer exists.");
+    const managers = ((mgrs ?? []) as any[]).map((m) => m.user_id as string);
+    const isManager = managers.includes(data.targetUserId);
+    if (data.add && isManager) throw new Error("This person is already a manager of that fund.");
+    if (!data.add && !isManager) throw new Error("This person isn't a manager of that fund.");
+    if (!data.add && managers.length <= 1) throw new Error("A fund needs at least one fund manager. Add another manager before removing this one.");
+    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: data.add ? "Fund manager added" : "Fund manager removed", scopeType: "fund", scopeId: data.fundId, previous: { manager: isManager }, next: { manager: data.add }, reason: data.reason, correlationId: p.correlationId });
+    if (data.add) {
+      const { grantFundAccess } = await import("@/lib/invitations.functions");
+      await grantFundAccess({ supabase: context.supabase as any, supabaseAdmin: db, actorId: p.actorId, targetUserId: data.targetUserId, offeringIds: [data.fundId], role: "fund_manager" as any, email, name: "", sendEmail: false });
+    } else {
+      const { error } = await db.from("fund_managers").delete().eq("user_id", data.targetUserId).eq("offering_id", data.fundId);
+      if (error) throw new Error("Could not update the fund access.");
+      await db.from("fund_invitations").update({ status: "revoked" }).eq("offering_id", data.fundId).eq("accepted_by", data.targetUserId).eq("invite_role", "fund_manager").neq("status", "revoked");
+      const { count } = await db.from("fund_managers").select("id", { count: "exact", head: true }).eq("user_id", data.targetUserId);
+      if ((count ?? 0) === 0) await db.from("user_roles").delete().eq("user_id", data.targetUserId).eq("role", "fund_manager");
+    }
+    return { ok: true };
+  });
+
+/**
+ * Everything View account needs to manage a person's access: their connected
+ * clients, funds and investments (shared person-connections model), the
+ * services each client has, and the pick lists. Read for access viewers;
+ * canEdit says whether the viewer may change access.
+ */
+export const getPersonAccessSetup = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { requireAccessViewer: requireViewer } = await import("@/lib/user-access.server");
+    const db = await requireViewer(context.userId);
+    let canEdit = false;
+    try { await requireAccessViewer(context); canEdit = true; } catch { canEdit = false; }
+    const { loadConnectionIdentity, loadPersonConnections } = await import("@/lib/person-connections.server");
+    const identity = await loadConnectionIdentity(db, data.userId);
+    const connections = await loadPersonConnections(db, identity);
+    const [{ data: clients }, { data: funds }, { data: auth }] = await Promise.all([
+      db.from("clients").select("id, name").order("name").limit(5000),
+      db.from("offerings").select("id, name, client_id").order("name").limit(5000),
+      db.auth.admin.getUserById(data.userId),
+    ]);
+    const clientIds = [...new Set([...connections.clients.map((c) => c.id), ...connections.funds.map((f) => f.clientId).filter(Boolean) as string[]])];
+    const { staffTabAccess } = await import("@/lib/client-tab-access.server");
+    const services: Record<string, { key: string; label: string; enabled: boolean }[]> = {};
+    for (const cid of clientIds.slice(0, 25)) {
+      try { services[cid] = (await staffTabAccess(context.userId, cid)).tabs.map((t) => ({ key: t.key, label: t.label, enabled: t.enabled })); } catch { /* viewer may not read services */ }
+    }
+    const { isHarmoniousStaffEmail } = await import("@/lib/harmonious-staff");
+    return {
+      canEdit,
+      self: data.userId === context.userId,
+      staffEmail: isHarmoniousStaffEmail(String(auth?.user?.email ?? "")),
+      connections,
+      services,
+      clientOptions: ((clients ?? []) as any[]).map((c) => ({ id: c.id as string, name: (c.name ?? "Client") as string })),
+      fundOptions: ((funds ?? []) as any[]).map((f) => ({ id: f.id as string, name: (f.name ?? "Fund") as string, clientId: (f.client_id ?? null) as string | null })),
+    };
   });

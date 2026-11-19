@@ -67,12 +67,12 @@ export async function directory(viewer: string) {
   const [users, roles, cu, ftm, contacts, profiles, states, persons, si, ci, fi, ftg, off, fm] = await Promise.all([
     allAuthUsers(db),
     db.from("user_roles").select("user_id, role").limit(50000),
-    db.from("client_users").select("user_id, client_id").limit(50000),
+    db.from("client_users").select("user_id, client_id").is("revoked_at", null).limit(50000),
     db.from("fund_team_members").select("user_id, offering_id").is("removed_at", null).not("user_id", "is", null).limit(50000),
-    db.from("client_contacts").select("user_id, email, designations").limit(50000),
+    db.from("client_contacts").select("user_id, email, designations").is("deactivated_at", null).eq("status", "active").limit(50000),
     db.from("profiles").select("user_id, legal_name, email, is_test_demo").limit(50000),
     db.from("user_access_states").select("*").is("lifted_at", null).limit(50000),
-    db.from("persons").select("user_id").not("user_id", "is", null).limit(50000),
+    db.from("persons").select("user_id").not("user_id", "is", null).is("merged_into_person_id", null).limit(50000),
     db.from("staff_invitations").select("id, email, invited_name, invited_by, status, created_at, is_test_demo").eq("status", "pending").limit(5000),
     db.from("client_invitations").select("id, email, invited_name, invited_by, status, created_at, invite_sent_at, client_id, is_test_demo").eq("status", "pending").limit(5000),
     db.from("fund_invitations").select("id, email, invited_name, invited_by, status, created_at, last_sent_at, offering_id, invite_role, is_test_demo").eq("status", "pending").is("accepted_at", null).limit(5000),
@@ -99,11 +99,13 @@ export async function directory(viewer: string) {
     const p = P.get(u.id);
     const ftg = (FTG.get(u.id) ?? []) as any[];
     const funds = [...new Set([...(F.get(u.id) ?? []), ...(FM.get(u.id) ?? [])].map((x: any) => OFF.get(x.offering_id)).filter(Boolean))] as string[];
+    for (const g of ftg) { const n = g.offering_id ? OFF.get(g.offering_id) : null; if (n && !funds.includes(n)) funds.push(n); }
     if (ftg.some((g) => g.scope === "all_funds" || g.scope === "all_managed")) funds.push("All funds");
     return {
       kind: "user" as const, id: u.id, email: u.email ?? p?.email ?? "", name: p?.legal_name || u.user_metadata?.full_name || "",
       types: types.length ? types : ["User" as PersonType], lastSignIn: u.last_sign_in_at ?? null, createdAt: u.created_at,
       status: global ? (global.state as "revoked" | "archived") : "active" as const,
+      suspended: !!u.banned_until && new Date(u.banned_until) > new Date(),
       scopedRevokes: st.filter((s) => s.scope !== "global").map((s) => ({ id: s.id, scope: s.scope, scopeId: s.scope_id, reason: s.reason })),
       funds,
       fundTeam: ftg.length
@@ -439,15 +441,17 @@ export async function personActivity(viewer: string, subjectId: string, options:
   const email = (u?.email ?? prof?.email ?? "").toLowerCase();
   const { setupGaps } = await import("@/lib/user-insights-model");
   const PF = "id,user_id,email,secondary_email,legal_first_name,legal_last_name,phone,secondary_phone,address_line1,address_line2,city,region,postal_code,kyc_status,aml_status,onboarding_state";
-  const [linkedP, emailP, cu, ftm, inv, managers] = await Promise.all([
-    db.from("persons").select(PF).eq("user_id", subjectId),
-    email ? db.from("persons").select(PF).ilike("email", email).is("user_id", null) : Promise.resolve({ data: [] as any[] }),
-    db.from("client_users").select("client_id, client_role, clients(name)").eq("user_id", subjectId),
-    db.from("fund_team_members").select("offering_id, team_role, offerings(name)").eq("user_id", subjectId).is("removed_at", null),
-    db.from("investor_onboardings").select("id, offering_id, commitment_amount_cents, funded_amount_cents, funding_status, offerings(name)").eq("investor_user_id", subjectId),
-    db.from("fund_managers").select("offering_id, offerings(name)").eq("user_id", subjectId),
+  // Clients, funds and investments come from the shared person-connections loader so this
+  // page matches every other screen: login, person record and every address on file.
+  const { loadConnectionIdentity, loadPersonConnections } = await import("@/lib/person-connections.server");
+  const identity = await loadConnectionIdentity(db, subjectId);
+  const [linkedP, emailP, connections] = await Promise.all([
+    db.from("persons").select(PF).eq("user_id", subjectId).is("merged_into_person_id", null),
+    email ? db.from("persons").select(PF).ilike("email", email.replace(/[\\%_]/g, "\\$&")).is("user_id", null).is("merged_into_person_id", null) : Promise.resolve({ data: [] as any[] }),
+    loadPersonConnections(db, identity),
   ]);
-  const isStaff = ((roles ?? []) as any[]).length > 0 && !((cu.data ?? []) as any[]).length;
+  const inv = { data: connections.investments };
+  const isStaff = ((roles ?? []) as any[]).length > 0 && !connections.clients.some((c) => c.access);
   const mapP = (p: any, linked: boolean) => ({
     id: p.id, linked, name: [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" "), email: p.email, phone: p.phone,
     secondaryEmail: p.secondary_email, secondaryPhone: p.secondary_phone,
@@ -490,9 +494,6 @@ export async function personActivity(viewer: string, subjectId: string, options:
     profiles: (profs.data ?? []) as any[],
   };
   const { accountSessionStatus } = await import("@/lib/account-session-status");
-  const funds = new Map<string, { id: string; name: string; role: string | null }>();
-  for (const f of ftm.data ?? []) funds.set(f.offering_id, { id: f.offering_id, name: f.offerings?.name ?? "Fund", role: f.team_role });
-  for (const f of managers.data ?? []) funds.set(f.offering_id, { id: f.offering_id, name: f.offerings?.name ?? "Fund", role: "Fund manager" });
   return {
     sessionStatus: sessionEvents.error || revocation.error ? { state: "unknown" as const, at: null } : accountSessionStatus(sessionEvents.data ?? [], revocation.data?.revoked_after ?? null, u?.last_sign_in_at ?? null),
     lastActivity: latestActivity.data ?? null,
@@ -504,9 +505,11 @@ export async function personActivity(viewer: string, subjectId: string, options:
     createdAt: u?.created_at ?? null, lastSignIn: u?.last_sign_in_at ?? null, confirmedAt: u?.email_confirmed_at ?? null,
     people,
     missing: people.some((p) => p.linked) ? [...new Set(people.filter((p) => p.linked).flatMap((p) => p.gaps))] : setupGaps(null, isStaff),
-    clients: ((cu.data ?? []) as any[]).map((c) => ({ id: c.client_id as string, name: (c.clients?.name ?? "Client") as string, role: c.client_role as string | null })),
-    funds: [...funds.values()],
-    investments: ((inv.data ?? []) as any[]).map((i) => ({ id: i.id as string, offeringId: i.offering_id as string, fund: (i.offerings?.name ?? "Fund") as string, committed: i.commitment_amount_cents as number | null, funded: i.funded_amount_cents as number, status: i.funding_status as string })),
+    clients: connections.clients.map((c) => ({ id: c.id, name: c.name, role: c.access?.role ?? (c.pendingInvite ? "invited" : c.listedAs.length ? `listed as ${c.listedAs.join(", ")}` : null) })),
+    funds: connections.funds.map((f) => ({ id: f.id, name: f.name, role: [f.manager ? "Fund manager" : null, ...f.teamRoles, ...f.teamAccess, f.investor ? "investor" : null, f.pendingInvite ? `invited (${f.pendingInvite})` : null].filter(Boolean).join(", ") || null })),
+    investments: connections.investments,
+    connections,
+    suspended: !!(u as any)?.banned_until && new Date((u as any).banned_until) > new Date(),
     events: timeline.slice(0, 100), nextCursor: timeline.length > 100 ? timeline[99]?.when ?? null : null,
   };
 }

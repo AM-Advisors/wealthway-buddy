@@ -98,10 +98,16 @@ export const listClientPeople = createServerFn({ method: "GET" })
     const contactRows = (people ?? []) as any[];
     const userIds = [...new Set(contactRows.map((p) => p.user_id).filter(Boolean))];
     const emails = [...new Set(contactRows.map((p) => String(p.email ?? "").toLowerCase()).filter(Boolean))];
-    const [{ data: byUser }, { data: byEmail }] = await Promise.all([
-      userIds.length ? db.from("persons").select("user_id, email, kyc_status, aml_status").in("user_id", userIds) : { data: [] },
-      emails.length ? db.from("persons").select("user_id, email, kyc_status, aml_status").in("email", emails) : { data: [] },
+    // Same matching as View account: the contact's own person record first, then
+    // its login, then its address (exact, case-insensitive); merged records skipped.
+    const personIds = [...new Set(contactRows.map((p) => p.person_id).filter(Boolean))];
+    const esc = (e: string) => e.replace(/[\\%_]/g, (m) => `\\${m}`);
+    const [{ data: byPerson }, { data: byUser }, byEmailRows] = await Promise.all([
+      personIds.length ? db.from("persons").select("id, user_id, email, kyc_status, aml_status").in("id", personIds).is("merged_into_person_id", null) : { data: [] },
+      userIds.length ? db.from("persons").select("id, user_id, email, kyc_status, aml_status").in("user_id", userIds).is("merged_into_person_id", null) : { data: [] },
+      Promise.all(emails.slice(0, 200).map((e) => db.from("persons").select("id, user_id, email, kyc_status, aml_status").ilike("email", esc(e)).is("merged_into_person_id", null).limit(5))),
     ]);
+    const byEmail = byEmailRows.flatMap((r: any) => (r.data ?? []) as any[]).filter((r: any) => emails.includes(String(r.email ?? "").toLowerCase()));
     // Invitations sent from a fund (e.g. a fund manager invite) count as invited
     // on the client account too; they never stamp client_contacts.invited_at.
     const { data: fundInvites } = emails.length && fundIds.length
@@ -115,9 +121,10 @@ export const listClientPeople = createServerFn({ method: "GET" })
       const prev = fundInvitedAt.get(key);
       if (!prev || at > prev) fundInvitedAt.set(key, at);
     }
+    const personById = new Map(((byPerson ?? []) as any[]).map((r) => [r.id, r]));
     const personByUser = new Map(((byUser ?? []) as any[]).map((r) => [r.user_id, r]));
     const personByEmail = new Map(((byEmail ?? []) as any[]).map((r) => [String(r.email ?? "").toLowerCase(), r]));
-    const verificationFor = (p: any) => (p.user_id ? personByUser.get(p.user_id) : null) ?? personByEmail.get(String(p.email ?? "").toLowerCase()) ?? null;
+    const verificationFor = (p: any) => (p.person_id ? personById.get(p.person_id) : null) ?? (p.user_id ? personByUser.get(p.user_id) : null) ?? personByEmail.get(String(p.email ?? "").toLowerCase()) ?? null;
     return {
       caps,
       relationships,
