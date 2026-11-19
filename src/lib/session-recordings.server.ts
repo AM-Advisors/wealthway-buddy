@@ -1,3 +1,4 @@
+import { cameraConsentValid } from "@/lib/recording-consent";
 /** Support recordings. Server-only. Anyone signed in writes only their own; only leadership (super_admin/executive/admin) can list or play. */
 const BUCKET = "session-recordings";
 const VIEWER_ROLES = ["super_admin", "executive", "admin"];
@@ -11,6 +12,8 @@ async function ownRecording(db: any, userId: string, id: string, kind: "replay" 
 }
 
 export async function startRecording(userId: string, d: { kind: "replay" | "screen"; path: string; userAgent?: string | undefined; deviceId?: string | undefined; clientInfo?: Record<string, unknown> | undefined; ip?: string | null; withCamera?: boolean | undefined }) {
+  // Camera/microphone files need the current consent wording agreed in the recorder.
+  if (d.withCamera && (d.kind !== "screen" || !cameraConsentValid(d.clientInfo as { consentVersion?: string; consentedAt?: string } | undefined))) throw new Error("Camera and microphone consent is missing. Please agree in the recorder and try again.");
   const db = await admin();
   const id = crypto.randomUUID();
   const prefix = `${d.kind}/${userId}/${id}`;

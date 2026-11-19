@@ -105,7 +105,7 @@ function RecordingDetails({ r }: { r: any }) {
       {q.isLoading && <p className="text-muted-foreground">Reading recording…</p>}
       {q.isError && <LoadError error={q.error} what="Recording details" onRetry={() => q.refetch()} />}
       {q.data?.kind === "screen" && <p>Screen video the person chose to record and send to Harmonious{r.client_info?.camera ? ", with their camera and microphone" : r.client_info?.microphone ? ", with their microphone" : ""}. {r.bytes ? `${(Number(r.bytes) / 1_048_576).toFixed(1)} MB.` : ""}</p>}
-      {r.client_info?.consentedAt && (r.client_info?.camera || r.client_info?.microphone) && <p className="text-xs text-muted-foreground">Camera and microphone consent given in the recorder before sending · {new Date(r.client_info.consentedAt).toLocaleString()}</p>}
+      {r.client_info?.consentedAt && (r.client_info?.camera || r.client_info?.microphone) && <p className="text-xs text-muted-foreground">Camera and microphone consent given in the recorder · {new Date(r.client_info.consentedAt).toLocaleString()}{r.client_info?.consentVersion ? ` · wording ${r.client_info.consentVersion}` : " · earlier wording"}</p>}
       {q.data?.breakdown && <BreakdownView b={q.data.breakdown as Breakdown} />}
     </div>
   );

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-type CamKind = "none" | "camera_microphone" | "microphone";
+import { CAMERA_CONSENT, canStartRecording, consentFacts, type CamKind } from "@/lib/recording-consent";
 
 const FLUSH_MS = 10_000;
 export const RECORD_SCREEN_EVENT = "hm:record-screen";
@@ -123,7 +123,7 @@ export function SessionRecorder() {
 
   // Record-my-screen (optionally with camera and microphone, only after the person agrees)
   const [recording, setRecording] = useState(false);
-  const [pending, setPending] = useState<{ screen: Blob; camera: Blob | null; camKind: CamKind } | null>(null);
+  const [pending, setPending] = useState<{ screen: Blob; camera: Blob | null; camKind: CamKind; consentedAt: string | null } | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [asking, setAsking] = useState(false);
@@ -133,6 +133,8 @@ export function SessionRecorder() {
 
   const begin = async (withCamera: boolean) => {
     setAsking(false);
+    // Consent time is when the person pressed Start with the box ticked, not when they later press Send.
+    const consentedAt = withCamera ? new Date().toISOString() : null;
     let screen: MediaStream;
     // The screen picker must open straight from the click, so it is asked for first.
     try { screen = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); }
@@ -158,7 +160,7 @@ export function SessionRecorder() {
       screen.getTracks().forEach((t) => t.stop());
       cam?.getTracks().forEach((t) => t.stop());
       setRecording(false);
-      setPending({ screen: new Blob(screenChunks, { type: "video/webm" }), camera: cr ? new Blob(camChunks, { type: camKind === "camera_microphone" ? "video/webm" : "audio/webm" }) : null, camKind });
+      setPending({ screen: new Blob(screenChunks, { type: "video/webm" }), camera: cr ? new Blob(camChunks, { type: camKind === "camera_microphone" ? "video/webm" : "audio/webm" }) : null, camKind, consentedAt });
       markReplay("screen_video_stopped");
     };
     mr.ondataavailable = (e) => { if (e.data.size) screenChunks.push(e.data); };
@@ -176,8 +178,8 @@ export function SessionRecorder() {
     if (!pending) return;
     setSaving(true);
     try {
-      const withCam = pending.camKind !== "none" && !!pending.camera?.size;
-      const info = { ...(clientInfo() ?? {}), camera: pending.camKind === "camera_microphone" && withCam, microphone: withCam, consentedAt: new Date().toISOString() };
+      const { withCam, ...consent } = consentFacts(pending.camKind, !!pending.camera?.size, pending.consentedAt);
+      const info = { ...(clientInfo() ?? {}), ...consent };
       const rec = await start({ data: { kind: "screen", path: pathRef.current, userAgent: navigator.userAgent, deviceId: deviceId(), clientInfo: info, withCamera: withCam } });
       if (!("token" in rec) || !rec.token) throw new Error("upload");
       const up = await supabase.storage.from("session-recordings").uploadToSignedUrl(rec.path, rec.token, pending.screen, { contentType: "video/webm" });
@@ -207,7 +209,7 @@ export function SessionRecorder() {
   return (
     <div data-no-record className="rr-block fixed bottom-4 left-4 z-50 flex flex-col items-start gap-2">
       <Dialog open={asking} onOpenChange={setAsking}>
-        <DialogContent className="rr-block max-w-md">
+        <DialogContent className="rr-block max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Record a video for Harmonious</DialogTitle>
             <DialogDescription>Show us what you see so we can help. Nothing is sent until you watch it and press Send.</DialogDescription>
@@ -223,14 +225,23 @@ export function SessionRecorder() {
             </Label>
           </RadioGroup>
           {choice === "camera" && (
-            <Label className="flex cursor-pointer items-start gap-3 rounded-md bg-muted p-3 text-sm font-normal">
-              <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
-              <span>I agree to Harmonious recording my camera and microphone for this video only. Your browser will ask you to allow the camera and microphone. You can stop at any time, and only Harmonious leadership can watch it.</span>
-            </Label>
+            <div className="space-y-3 rounded-md border bg-muted/50 p-3">
+              <p className="font-medium">{CAMERA_CONSENT.title}</p>
+              <ul className="space-y-2 text-sm">
+                {CAMERA_CONSENT.points.map((p) => (
+                  <li key={p.heading}><span className="font-medium">{p.heading}.</span> <span className="text-muted-foreground">{p.text}</span></li>
+                ))}
+              </ul>
+              <Label className="flex cursor-pointer items-start gap-3 rounded-md bg-background p-3 text-sm font-normal">
+                <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" aria-label="I agree to camera and microphone recording" />
+                <span>{CAMERA_CONSENT.agreement}</span>
+              </Label>
+              <p className="text-xs text-muted-foreground">{CAMERA_CONSENT.browserStep} <a href="/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Policy</a></p>
+            </div>
           )}
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setAsking(false)}>Cancel</Button>
-            <Button disabled={choice === "camera" && !agreed} onClick={() => void begin(choice === "camera")}>Start recording</Button>
+            <Button disabled={!canStartRecording(choice, agreed)} onClick={() => void begin(choice === "camera")}>Start recording</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

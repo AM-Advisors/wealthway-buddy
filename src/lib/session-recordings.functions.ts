@@ -8,7 +8,7 @@ const clientInfo = z.object({
   screen: z.string().max(30).optional(), window: z.string().max(30).optional(), pixelRatio: z.number().min(0).max(10).optional(),
   timeZone: z.string().max(60).optional(), language: z.string().max(35).optional(), touch: z.boolean().optional(),
   extendedDisplay: z.boolean().nullable().optional(), connection: z.string().max(20).nullable().optional(),
-  camera: z.boolean().optional(), microphone: z.boolean().optional(), consentedAt: z.string().max(40).optional(),
+  camera: z.boolean().optional(), microphone: z.boolean().optional(), consentedAt: z.string().max(40).optional(), consentVersion: z.string().max(80).optional(),
 }).optional();
 async function requestIp(): Promise<string | null> {
   const { getRequestHeader } = await import("@tanstack/react-start/server");
