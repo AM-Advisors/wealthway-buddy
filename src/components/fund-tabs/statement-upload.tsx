@@ -10,7 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATEMENT_CATEGORIES } from "@/lib/fund-books-model";
-import { applyStatementFn, listStatementsFn, updateStatementLineFn, uploadStatementFn } from "@/lib/fund-books.functions";
+import { applyStatementFn, listStatementsFn, removeStatementFn, updateStatementLineFn, uploadStatementFn } from "@/lib/fund-books.functions";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 import { ManualLineForm, ManualStatementForm, RemoveManualLine } from "./manual-books-entry";
 import { fileToBase64, fmtDate, usd } from "./shared";
 
@@ -72,6 +74,7 @@ export function StatementUpload({ fundId, investors, canEnter = false }: { fundI
                 <div className="flex items-center gap-2">
                   {u.tie.known && <Badge variant={u.tie.ties ? "default" : "destructive"}>{u.tie.ties ? "Balances tie" : `Off by ${usd(Math.abs(u.tie.gapCents))}`}</Badge>}
                   <Badge variant="outline">{u.status === "applied" ? "Applied" : "Needs review"}</Badge>
+                  {canEnter && open && !(u.lines ?? []).some((l: any) => l.applied_tx_id) && <RemoveStatement fundId={fundId} uploadId={u.id} fileName={u.file_name} onDone={refresh} />}
                 </div>
               </div>
               {u.tie.known && <p className="text-xs text-muted-foreground">Opening {usd(Number(u.opening_balance_cents))} · Closing {usd(Number(u.closing_balance_cents))}</p>}
@@ -119,5 +122,27 @@ export function StatementUpload({ fundId, investors, canEnter = false }: { fundI
         })}
       </CardContent>
     </Card>
+  );
+}
+
+function RemoveStatement({ fundId, uploadId, fileName, onDone }: { fundId: string; uploadId: string; fileName: string; onDone: () => void }) {
+  const remove = useServerFn(removeStatementFn);
+  const m = useMutation({ mutationFn: () => remove({ data: { fundId, uploadId } }), onSuccess: () => { toast.success(`${fileName} deleted.`); onDone(); }, onError: (e: Error) => toast.error(e.message) });
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="ghost" disabled={m.isPending} aria-label={`Delete ${fileName}`}><Trash2 className="mr-1 size-4" />Delete</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this statement?</AlertDialogTitle>
+          <AlertDialogDescription>{fileName} and its unchecked lines will be removed from this fund, along with the stored file. Nothing has been added to the books from it, so the books don't change.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep it</AlertDialogCancel>
+          <AlertDialogAction onClick={() => m.mutate()}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

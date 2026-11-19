@@ -103,3 +103,7 @@ export const openBillCopyFn = createServerFn({ method: "POST" }).middleware([req
 
 export const accountingSummaryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => (await srv()).accountingSummary(context.userId, data.fundId));
+
+export const removeStatementFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(fund.extend({ uploadId: uuid }).parse)
+  .handler(async ({ data, context }) => (await srv()).removeStatement(context.userId, data.fundId, data.uploadId));

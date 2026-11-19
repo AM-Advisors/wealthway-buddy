@@ -539,3 +539,31 @@ export async function accountingSummary(uid: string, fundId: string) {
     openInvoices: staff ? open.length : null, openInvoicesCents: staff ? open.reduce((s, i) => s + Number(i.total_cents), 0) : null, staff,
   };
 }
+
+/**
+ * Harmonious staff remove a wrongly uploaded statement. Only statements with nothing in the
+ * books: refused once any line was applied or is linked to an expense, investment or payable.
+ */
+export async function removeStatement(uid: string, fundId: string, uploadId: string) {
+  if (!(await isStaff(uid))) throw new Error("Only the Harmonious team can delete a statement.");
+  const d = await db();
+  const { data: u } = await d.from("bank_statement_uploads").select("id, status, applied_at, storage_path, file_name").eq("id", uploadId).eq("offering_id", fundId).maybeSingle();
+  if (!u) throw new Error("That statement is no longer on this fund.");
+  if (u.status === "applied" || u.applied_at) throw new Error("This statement was applied to the books, so it can't be deleted.");
+  const { data: lines } = await d.from("bank_statement_lines").select("id, applied_tx_id").eq("upload_id", uploadId);
+  const ids = ((lines ?? []) as any[]).map((l) => String(l.id));
+  if (((lines ?? []) as any[]).some((l) => l.applied_tx_id)) throw new Error("Some lines from this statement are in the books, so it can't be deleted.");
+  if (ids.length) {
+    for (const t of ["fund_expense_records", "fund_investment_transactions", "fund_payable_settlements"]) {
+      const { count } = await d.from(t).select("id", { count: "exact", head: true }).in("bank_line_id", ids);
+      if (count) throw new Error("Lines from this statement are linked to other records, so it can't be deleted.");
+    }
+    const del = await d.from("bank_statement_lines").delete().eq("upload_id", uploadId);
+    if (del.error) throw new Error("Couldn't delete the statement lines.");
+  }
+  const { error } = await d.from("bank_statement_uploads").delete().eq("id", uploadId).eq("offering_id", fundId);
+  if (error) throw new Error("Couldn't delete the statement.");
+  if (u.storage_path) await d.storage.from(BUCKET).remove([String(u.storage_path)]);
+  console.info("[bank-statement-removed]", { fundId, uploadId, by: uid, lines: ids.length });
+  return { removed: true, fileName: String(u.file_name ?? "") };
+}
