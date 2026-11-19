@@ -118,7 +118,6 @@ export function FeeAcceptanceCard({ onboardingId }: { onboardingId: string }) {
         <div><dt className="text-xs text-muted-foreground">Carried interest</dt><dd>{pct(t.carryPct)}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Hurdle</dt><dd>{pct(t.hurdlePct)}</dd></div>
       </dl>
-      {t.notes && <p className="text-sm text-muted-foreground">{t.notes}</p>}
       {q.data.sideLetters.length > 0 && <p className="text-sm">Your side letter terms also apply: {q.data.sideLetters.join("; ")}.</p>}
       {q.data.accepted ? (
         <p className="text-sm text-muted-foreground">Accepted by {q.data.accepted.name} on {fmtDate(q.data.accepted.at)}.</p>

@@ -161,6 +161,13 @@ async function activeTerms(d: any, offeringId: string) {
   return data as any;
 }
 
+/** Investor-facing side letter labels: plain status only, never storage paths; drafts hidden. */
+export function investorSideLetterLabels(rows: { status?: string | null; document_reference?: string | null }[]): string[] {
+  const shown = rows.filter((r) => !["proposed", "draft", "withdrawn", "terminated", "expired"].includes(String(r.status ?? "")));
+  return [...new Set(shown.map((r) => `Side letter · ${String(r.status ?? "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())}`))];
+}
+
+// Internal fee-term notes are staff-only and never returned to investors.
 export async function feeStatus(userId: string, onboardingId: string): Promise<FeeStatus> {
   const { d, ob } = await ownOnboarding(userId, onboardingId);
   const t = await activeTerms(d, ob.offering_id);
@@ -170,9 +177,9 @@ export async function feeStatus(userId: string, onboardingId: string): Promise<F
     d.from("side_letters").select("status, document_reference").eq("onboarding_id", ob.id).limit(20),
   ]);
   return {
-    terms: { id: String(t.id), managementFeePct: t.management_fee_pct, basis: t.management_fee_basis, carryPct: t.carry_pct, hurdlePct: t.hurdle_pct, notes: t.notes ?? null },
+    terms: { id: String(t.id), managementFeePct: t.management_fee_pct, basis: t.management_fee_basis, carryPct: t.carry_pct, hurdlePct: t.hurdle_pct, notes: null },
     accepted: acc ? { at: String((acc as any).accepted_at), name: String((acc as any).accepted_name) } : null,
-    sideLetters: ((sl ?? []) as any[]).map((s) => `Side letter${s.document_reference ? ` (${s.document_reference})` : ""} · ${String(s.status ?? "").replace(/_/g, " ")}`),
+    sideLetters: investorSideLetterLabels((sl ?? []) as any[]),
   };
 }
 
