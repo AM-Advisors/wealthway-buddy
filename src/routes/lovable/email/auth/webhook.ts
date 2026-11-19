@@ -7,6 +7,7 @@ import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
+import { scannerSafeRecoveryUrl } from '@/lib/scanner-safe-auth-link'
 
 // Configuration
 const SITE_NAME = "Harmonious"
@@ -59,7 +60,8 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               render: (data) =>
                 React.createElement(RecoveryEmail, {
                   siteName: SITE_NAME,
-                  confirmationUrl: data.url,
+                  // Email scanners open links on arrival; our page uses the code only on Continue.
+                  confirmationUrl: scannerSafeRecoveryUrl(data.url, 'https://app.harmonious.co'),
                 }),
             },
             email_change: {

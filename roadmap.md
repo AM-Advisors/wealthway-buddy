@@ -1,5 +1,9 @@
 # Roadmap
 
+## Kelby sign-in (2026-11-19)
+- [x] Found why: his company's email scanner opened and used up his reset link; first invite link was replaced by a second one
+- [x] Password reset links now need a Continue click, so scanners can't use them up
+
 ## Test investors (2026-11-19)
 - [x] @harmonious.co emails are automatically test investors (new, existing and changed emails)
 - [x] Test investors go through every step, labeled, and never count in fund totals, dashboards, cap tables, filings or K-1s
