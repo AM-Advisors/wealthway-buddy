@@ -340,7 +340,7 @@ export const startInvestmentVerificationFn = createServerFn({ method: "POST" })
     return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin, null, context.supabase);
   });
 
-// ------------------------------------------- onboard.harmonious.co portal
+// ------------------------------------------- /onboard investor portal
 
 export const claimOnboardInvitationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
@@ -363,7 +363,7 @@ export const startPortalVerificationFn = createServerFn({ method: "POST" })
   .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => {
     const { getRequest } = await import("@tanstack/react-start/server");
-    let origin = "https://onboard.harmonious.co";
+    let origin = (await import("@/lib/app-origins")).CLIENT_ORIGIN_DEFAULT;
     try {
       const url = getRequest()?.url;
       if (url) origin = new URL(url).origin;

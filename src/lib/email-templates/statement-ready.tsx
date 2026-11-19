@@ -8,7 +8,7 @@ interface Props {
   ctaUrl?: string
 }
 
-function StatementReady({ recipientName = '', fundName = 'your fund', kind = 'statement', ctaUrl = 'https://onboard.harmonious.co' }: Props) {
+function StatementReady({ recipientName = '', fundName = 'your fund', kind = 'statement', ctaUrl = 'https://app.harmonious.co' }: Props) {
   const t = { color: '#221F20', fontSize: '15px', lineHeight: '24px' }
   return (
     <Html>
@@ -42,5 +42,5 @@ export const template = {
   component: StatementReady,
   subject: (data: Record<string, any>) => `Your ${data['kind'] || 'statement'} for ${data['fundName'] || 'your fund'} is ready`,
   displayName: 'Statement ready',
-  previewData: { recipientName: 'Jane', fundName: 'Example Fund I', kind: 'capital account statement', ctaUrl: 'https://onboard.harmonious.co/statements' },
+  previewData: { recipientName: 'Jane', fundName: 'Example Fund I', kind: 'capital account statement', ctaUrl: 'https://app.harmonious.co/statements' },
 } satisfies TemplateEntry

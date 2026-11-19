@@ -10,7 +10,7 @@ interface Props {
   ctaUrl?: string
 }
 
-function DocumentsSent({ investorName = '', fundName = 'your fund', documents = [], note = '', ctaUrl = 'https://onboard.harmonious.co' }: Props) {
+function DocumentsSent({ investorName = '', fundName = 'your fund', documents = [], note = '', ctaUrl = 'https://app.harmonious.co' }: Props) {
   const t = { color: '#221F20', fontSize: '15px', lineHeight: '24px' }
   return (
     <Html>
@@ -48,5 +48,5 @@ export const template = {
   component: DocumentsSent,
   subject: (data: Record<string, any>) => `Documents ready for ${data['fundName'] || 'your fund'}`,
   displayName: 'Documents sent to investor',
-  previewData: { investorName: 'Jane', fundName: 'Example Fund I', senderName: 'Example Capital', documents: ['Subscription Agreement', 'Operating Agreement'], note: '', ctaUrl: 'https://onboard.harmonious.co/investment/abc' },
+  previewData: { investorName: 'Jane', fundName: 'Example Fund I', senderName: 'Example Capital', documents: ['Subscription Agreement', 'Operating Agreement'], note: '', ctaUrl: 'https://app.harmonious.co/investment/abc' },
 } satisfies TemplateEntry

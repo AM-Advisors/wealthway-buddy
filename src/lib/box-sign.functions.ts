@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
+import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 
 /** Requests sent from this time carry guided (pre-placed) signature fields. */
 const GUIDED_SIGNING_SINCE = "2026-11-18T21:00:00Z";
@@ -29,10 +30,10 @@ export const startBoxSigning = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // From onboard.harmonious.co the investment is explicit and must belong
+    // From the /onboard portal the investment is explicit and must belong
     // to the caller; the signing return lands back on that same investment.
     let applicationId: string | null = null;
-    let redirectUrl = "https://app.harmonious.co/portal";
+    let redirectUrl = `${CLIENT_ORIGIN_DEFAULT}/portal`;
     if (data.onboarding_id) {
       const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
       const { data: ob } = await admin
@@ -46,7 +47,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       // Link the investment's own record when it has none yet (same guarded step as verification).
       const { linkedApplicationForInvestment } = await import("@/lib/active-application");
       applicationId = await linkedApplicationForInvestment(supabase, ob as any, { link: true });
-      redirectUrl = `https://onboard.harmonious.co/onboard/i/${(ob as any).id}`;
+      redirectUrl = `${CLIENT_ORIGIN_DEFAULT}/onboard/i/${(ob as any).id}`;
     } else {
       applicationId = await activeApplicationId(supabase, userId);
     }

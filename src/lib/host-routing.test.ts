@@ -42,11 +42,8 @@ describe("which application a page belongs to", () => {
     expect(canonicalRedirect({ url: `${OPS}/view-as?page=%2Fmy-funds` })).toBeNull();
   });
 
-  it("leaves sign-in, machine endpoints and tracking alone", () => {
+  it("leaves machine endpoints and tracking alone on the old onboarding address", () => {
     for (const path of [
-      "/auth",
-      "/auth/register",
-      "/reset-password",
       "/api/public/packet/xyz",
       "/lovable/email/events",
       "/__l5e/assets-v1/logo.png",
@@ -55,6 +52,31 @@ describe("which application a page belongs to", () => {
     ]) {
       expect(surfaceForPath(path)).toBe("shared");
       expect(canonicalRedirect({ url: `${LEGACY_ORIGIN}${path}` })).toBeNull();
+    }
+  });
+
+  it("moves sign-in and invitation pages from the old onboarding address to the app, keeping the path", () => {
+    for (const path of [
+      "/auth",
+      "/auth/register",
+      "/reset-password",
+      "/onboard/6c09444cd78548cfb0cace0e55ed547d",
+      "/onboard/i/9431c524-974e-4803-9e91-3b8be07dee04",
+      "/onboard/prepare/abc",
+      "/invite/abc",
+      "/accept/abc",
+    ]) {
+      expect(canonicalRedirect({ url: `${LEGACY_ORIGIN}${path}` })).toEqual({ location: `${APP}${path}`, status: 302 });
+    }
+    expect(canonicalRedirect({ url: `${LEGACY_ORIGIN}/auth?next=%2Fonboard%2Fi%2Fx#access_token=t` })?.location).toBe(
+      `${APP}/auth?next=%2Fonboard%2Fi%2Fx#access_token=t`,
+    );
+  });
+
+  it("keeps sign-in, invitation and investment pages together on the app address", () => {
+    for (const path of ["/auth", "/onboard/abc", "/onboard/i/abc", "/verify-identity", "/investment/abc", "/home"]) {
+      expect(canonicalRedirect({ url: `${APP}${path}` })).toBeNull();
+      expect(redirectSettles(`${LEGACY_ORIGIN}${path}`)).toBe(true);
     }
   });
 });

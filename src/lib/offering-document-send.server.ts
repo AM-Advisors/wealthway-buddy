@@ -6,12 +6,13 @@
  * starts provider signing, and never sends unapproved versions.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
 import { documentApplies, DOCUMENT_CATEGORY_LABELS } from "@/lib/offering-document-model";
 import { investorDocuments } from "@/lib/offering-document-setup.server";
 
 const db = () => supabaseAdmin as any;
-const PORTAL = "https://onboard.harmonious.co";
+const PORTAL = CLIENT_ORIGIN_DEFAULT;
 const SENDABLE = ["subscription_agreement", "operating_agreement", "ppm", "offering_memorandum", "side_letter", "other"];
 
 async function assertManager(userId: string, offeringId: string) {

@@ -16,7 +16,7 @@ function InvestmentOnboarding({
   investorName = '',
   fundName = 'the fund',
   amountCents = null,
-  ctaUrl = 'https://onboard.harmonious.co',
+  ctaUrl = 'https://app.harmonious.co',
 }: Props) {
   const amount = money(amountCents)
   return (
@@ -69,5 +69,5 @@ export const template = {
   component: InvestmentOnboarding,
   subject: (data: Record<string, any>) => `Complete your investment onboarding for ${data['fundName'] || 'your fund'}`,
   displayName: 'Investment onboarding invitation',
-  previewData: { investorName: 'Jane', fundName: 'Example Fund I', managerName: 'Example Capital', amountCents: 25000000, ctaUrl: 'https://onboard.harmonious.co/onboard/abc123abc123abc123' },
+  previewData: { investorName: 'Jane', fundName: 'Example Fund I', managerName: 'Example Capital', amountCents: 25000000, ctaUrl: 'https://app.harmonious.co/onboard/abc123abc123abc123' },
 } satisfies TemplateEntry

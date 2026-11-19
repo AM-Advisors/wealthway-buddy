@@ -63,6 +63,32 @@ const SHARED_PREFIXES = [
 // Personal account pages belong to the application in which they are opened.
 const SHARED_ACCOUNT_PREFIXES = ["/profile", "/access", "/inbox", "/messages", "/prepared", "/sign-off", "/policies", "/security", "/feedback"];
 
+/**
+ * Machine endpoints and static files. These are the only paths the old
+ * onboarding address still answers itself (email logos, tracking, webhooks,
+ * an already-open tab's server calls). Every page, including sign-in and
+ * invitation links, moves to the client address so a person signs in once.
+ */
+const MACHINE_PREFIXES = [
+  "/api/",
+  "/lovable/",
+  "/__l5e/",
+  "/~oauth",
+  "/_serverFn",
+  "/_build",
+  "/assets/",
+  "/@",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/favicon",
+  "/og-",
+];
+
+/** True for machine endpoints and static files, never for a page a person sees. */
+export function isMachinePath(pathname: string): boolean {
+  return MACHINE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix));
+}
+
 export type PathSurface = AppSurface | "shared";
 
 function hasPrefix(pathname: string, prefix: string): boolean {
@@ -226,9 +252,10 @@ export function canonicalRedirect(
   }
 
   if (onLegacy) {
-    // Machine endpoints, tracking and sign-in callbacks keep working on the old
-    // address; only pages move.
-    if (surface === "shared") return null;
+    // One sign-in address: invitation links, sign-in and every other page on
+    // the old onboarding address move to the client address with their path,
+    // query and fragment. Only machine endpoints keep answering here.
+    if (isMachinePath(pathname)) return null;
     const kind = classifyLegacyPath(pathname);
     const base = kind === "operations" ? ops : client;
     return { location: `${base}${pathname === "/" ? `/home${parsed.search}${parsed.hash}` : tail}`, status: 302 };

@@ -78,7 +78,7 @@ describe("manager status is progress-only", () => {
 
 describe("invitation links and identity binding", () => {
   it("URL carries only the opaque reference", () => {
-    expect(onboardInvitationUrl("a".repeat(32))).toBe(`https://onboard.harmonious.co/onboard/${"a".repeat(32)}`);
+    expect(onboardInvitationUrl("a".repeat(32))).toBe(`https://app.harmonious.co/onboard/${"a".repeat(32)}`);
     expect(() => onboardInvitationUrl("a@b.com")).toThrow();
     expect(() => onboardInvitationUrl("../x")).toThrow();
   });
@@ -128,9 +128,10 @@ describe("server-side enforcement (source guards)", () => {
 });
 
 describe("domain behavior", () => {
-  it("portal paths stay on onboard.harmonious.co", () => {
+  it("portal paths live on the app address; old onboarding links forward there", () => {
     expect(surfaceForPath("/onboard/abc")).toBe("shared");
-    expect(canonicalRedirect({ url: "https://onboard.harmonious.co/onboard/i/abc" })).toBeNull();
+    expect(canonicalRedirect({ url: "https://app.harmonious.co/onboard/i/abc" })).toBeNull();
+    expect(canonicalRedirect({ url: "https://onboard.harmonious.co/onboard/i/abc" })?.location).toBe("https://app.harmonious.co/onboard/i/abc");
     expect(surfaceForPath("/onboarding/kyc")).toBe("client");
   });
 });

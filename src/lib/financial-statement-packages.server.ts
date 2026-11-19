@@ -5,10 +5,11 @@
  * Emails go out only when staff press the notice button.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 import { onboardingActor } from "@/lib/investor-onboarding.server";
 
 const db = () => supabaseAdmin as any;
-const PORTAL = "https://onboard.harmonious.co";
+const PORTAL = CLIENT_ORIGIN_DEFAULT;
 const fail = (m: string): never => { throw new Error(m); };
 export const PACKAGE_REPORTS = ["balance_sheet", "income_statement", "changes_in_capital"] as const;
 

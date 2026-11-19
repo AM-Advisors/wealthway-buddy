@@ -6,10 +6,11 @@
  * Emails go out only when staff press "send notice" - never automatically.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 import { assertStaff, onboardingActor } from "@/lib/investor-onboarding.server";
 
 const db = () => supabaseAdmin as any;
-const PORTAL = "https://onboard.harmonious.co";
+const PORTAL = CLIENT_ORIGIN_DEFAULT;
 const fail = (m: string): never => { throw new Error(m); };
 
 // ------------------------------------------------------------ statements

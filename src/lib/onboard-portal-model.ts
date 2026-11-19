@@ -1,14 +1,16 @@
 /**
- * onboard.harmonious.co - the lightweight investor onboarding presentation.
+ * /onboard - the lightweight investor onboarding presentation (on the client address).
  *
  * Pure projection of the authoritative requirement results for ONE
  * investment into three investor-facing steps. Nothing here stores progress:
  * every state is derived from records evaluated on the server.
  */
+import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 import type { RequirementKey, RequirementResult } from "@/lib/investor-onboarding-model";
 import { verificationAllowsSigning, signingRequirementSatisfied } from "@/lib/investor-onboarding-model";
 
-export const ONBOARD_ORIGIN = "https://onboard.harmonious.co";
+/** Investor onboarding lives on the client address so one sign-in covers every step. */
+export const ONBOARD_ORIGIN = CLIENT_ORIGIN_DEFAULT;
 
 export const PORTAL_STEPS = ["verification", "accreditation", "documents"] as const;
 export type PortalStep = (typeof PORTAL_STEPS)[number];

@@ -641,7 +641,7 @@ function rememberOnboardingId(onboardingId: string) {
   window.history.replaceState(window.history.state, "", url.toString());
 }
 
-/** Sent here from onboard.harmonious.co: go back to that exact investment. */
+/** Sent here from the /onboard portal: go back to that exact investment. */
 function returnToPortal(): boolean {
   const back = safeOnboardReturnPath(new URLSearchParams(window.location.search).get("return"));
   if (!back) return false;
