@@ -30,3 +30,8 @@ export const openRecordingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => (await srv()).openRecording(context.userId, data.id));
+
+export const downloadRecordingFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => (await srv()).downloadRecording(context.userId, data.id));

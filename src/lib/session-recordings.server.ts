@@ -82,3 +82,26 @@ export async function openRecording(userId: string, id: string) {
   }
   return { kind: "replay" as const, events: events as any };
 }
+
+/** Download for leadership viewers; each download is logged separately from viewing. */
+export async function downloadRecording(userId: string, id: string) {
+  const db = await admin();
+  await assertViewer(db, userId);
+  const { data: rec } = await db.from("session_recordings").select("*").eq("id", id).maybeSingle();
+  if (!rec) throw new Error("Recording not found.");
+  await db.from("security_events").insert({ user_id: userId, event_type: "recording_downloaded", action: `Downloaded ${rec.kind} recording ${id}` }).then(() => null, () => null);
+  const stamp = String(rec.started_at ?? new Date().toISOString()).slice(0, 16).replace(/[:T]/g, "-");
+  const base = `harmonious-${rec.kind === "screen" ? "screen-video" : "page-replay"}-${stamp}`;
+  if (rec.kind === "screen") {
+    const s = await db.storage.from(BUCKET).createSignedUrl(`${rec.storage_prefix}/screen.webm`, 120, { download: `${base}.webm` });
+    if (s.error) throw new Error("Recording video couldn't be downloaded.");
+    return { kind: "screen" as const, url: s.data.signedUrl as string, fileName: `${base}.webm` };
+  }
+  const events: unknown[] = [];
+  for (let i = 0; i < Math.min(rec.chunk_count, 500); i++) {
+    const f = await db.storage.from(BUCKET).download(`${rec.storage_prefix}/${String(i).padStart(6, "0")}.json`);
+    if (f.error || !f.data) continue;
+    try { events.push(...(JSON.parse(await f.data.text()) as unknown[])); } catch { /* skip corrupt chunk */ }
+  }
+  return { kind: "replay" as const, events: events as any, fileName: `${base}.html` };
+}

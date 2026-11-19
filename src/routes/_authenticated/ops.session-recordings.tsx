@@ -7,7 +7,10 @@ import { LoadError } from "@/components/load-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { listRecordingsFn, openRecordingFn } from "@/lib/session-recordings.functions";
+import { downloadRecordingFn, listRecordingsFn, openRecordingFn } from "@/lib/session-recordings.functions";
+import { downloadBlob, replayHtml } from "@/lib/recording-download";
+import { toast } from "sonner";
+import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/session-recordings")({
   head: () => ({ meta: [
@@ -32,7 +35,7 @@ function RecordingsPage() {
   const q = useQuery({ queryKey: ["session-recordings", kind, search], queryFn: () => list({ data: { kind, search: search || undefined } }), retry: false });
   const fmt = (s: string) => new Date(s).toLocaleString();
   return (
-    <AmPage title="Screen recordings" intro="Replays hide everything people type. Screen videos are ones people chose to send. Each opening is logged.">
+    <AmPage title="Screen recordings" intro="Replays hide everything people type. Screen videos are ones people chose to send. Each opening and download is logged.">
       <div className="flex flex-wrap gap-2">
         {([[undefined, "All"], ["replay", "Page replays"], ["screen", "Sent screen videos"]] as const).map(([k, l]) => (
           <Button key={l} variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}>{l}</Button>
@@ -54,6 +57,7 @@ function RecordingsPage() {
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">{r.kind === "screen" ? "Screen video" : "Page replay"}</Badge>
                 <Button size="sm" onClick={() => setSelected(r.id)}>Play</Button>
+                <DownloadRecording id={r.id} />
               </div>
             </div>
           ))}
@@ -82,11 +86,27 @@ function Player({ id, onClose }: { id: string; onClose: () => void }) {
   }, [q.data]);
   return (
     <div className="space-y-2 rounded-lg border p-3">
-      <div className="flex justify-between"><p className="font-medium">Playing recording</p><Button size="sm" variant="outline" onClick={onClose}>Close</Button></div>
+      <div className="flex justify-between"><p className="font-medium">Playing recording</p><div className="flex gap-2"><DownloadRecording id={id} /><Button size="sm" variant="outline" onClick={onClose}>Close</Button></div></div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Opening…</p>}
       {q.isError && <LoadError error={q.error} what="This recording" onRetry={() => q.refetch()} />}
       {q.data?.kind === "screen" && <video src={q.data.url} controls className="w-full max-w-4xl rounded" />}
       <div ref={box} />
     </div>
   );
+}
+
+function DownloadRecording({ id }: { id: string }) {
+  const download = useServerFn(downloadRecordingFn);
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true);
+    try {
+      const d = await download({ data: { id } });
+      if (d.kind === "screen") { window.location.href = d.url; return; }
+      if ((d.events as unknown[]).length < 2) { toast.info("This replay has too little activity to download."); return; }
+      const [js, css] = await Promise.all([import("rrweb-player/dist/index.js?raw"), import("rrweb-player/dist/style.css?raw")]);
+      downloadBlob(new Blob([replayHtml(d.events as unknown[], "Page replay", js.default, css.default)], { type: "text/html;charset=utf-8" }), d.fileName);
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  return <Button size="sm" variant="outline" disabled={busy} onClick={() => void run()} aria-label="Download recording"><Download className="mr-1 size-4" />{busy ? "Preparing…" : "Download"}</Button>;
 }
