@@ -69,14 +69,14 @@ export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
       const { data: saved, error } = await db.from("fund_questionnaire_sections").update({ title: data.title, questions: data.questions, prepared_by: context.userId, prepared_at: new Date().toISOString(), ...provenance }).eq("id", data.sectionId).eq("offering_id", data.offeringId).eq("status", "draft").select("id").maybeSingle();
       if (error) throw new Error(error.message);
       if (!saved) throw new Error("That draft changed. Refresh before saving.");
-      await (await import("./fund-review-notify.server")).notifyFundReview("questions", saved.id);
+      if (!(await autoApproveDemoSection(db, context.userId, data.offeringId, saved.id))) await (await import("./fund-review-notify.server")).notifyFundReview("questions", saved.id);
       return { ok: true };
     }
     const { data: last } = await db.from("fund_questionnaire_sections").select("version").eq("offering_id", data.offeringId).order("version", { ascending: false }).limit(1);
     const version = (((last ?? []) as any[])[0]?.version ?? 0) + 1;
     const { data: savedSection, error } = await db.from("fund_questionnaire_sections").insert({ offering_id: data.offeringId, version, title: data.title, questions: data.questions, prepared_by: context.userId, ...provenance }).select("id").single();
     if (error) throw new Error(error.message);
-    if (savedSection) await (await import("./fund-review-notify.server")).notifyFundReview("questions", savedSection.id);
+    if (savedSection && !(await autoApproveDemoSection(db, context.userId, data.offeringId, savedSection.id))) await (await import("./fund-review-notify.server")).notifyFundReview("questions", savedSection.id);
     return { ok: true };
   });
 
@@ -85,11 +85,16 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ sectionId: uuid }).parse)
   .handler(async ({ data, context }) => {
-    const t = await tabs();
-    const db = await t.db();
-    const { data: row } = await db.from("fund_questionnaire_sections").select("*").eq("id", data.sectionId).maybeSingle();
+    const db = await (await tabs()).db();
+    await approveSection(db, context.userId, data.sectionId);
+    return { ok: true };
+  });
+
+/** One explicit approval by an authorized person; demo funds call it right after saving. */
+async function approveSection(db: any, userId: string, sectionId: string) {
+    const { data: row } = await db.from("fund_questionnaire_sections").select("*").eq("id", sectionId).maybeSingle();
     if (!row || row.status !== "draft") throw new Error("That draft wasn't found.");
-    await (await import("./fund-routine-access.server")).assertRoutineFund(db, context.userId, row.offering_id);
+    await (await import("./fund-routine-access.server")).assertRoutineFund(db, userId, row.offering_id);
     const { validateSectionQuestions } = await import("./fund-questionnaire-section");
     const invalid = validateSectionQuestions(row.questions);
     if (invalid) throw new Error(invalid);
@@ -104,7 +109,14 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
     const { carryNewInvestmentCutoffs } = await import("./fund-questionnaire-section");
     const questions = carryNewInvestmentCutoffs(prev ? { questions: prev.questions as any, approvedAt: prev.approved_at, newInvestmentsOnly: prev.new_investments_only } : null, row.questions as any, !!row.new_investments_only);
     await db.from("fund_questionnaire_sections").update({ status: "retired" }).eq("offering_id", row.offering_id).eq("status", "approved");
-    const { error } = await db.from("fund_questionnaire_sections").update({ status: "approved", questions: questions as any, approved_by: context.userId, approved_at: new Date().toISOString() }).eq("id", row.id).eq("status", "draft");
+    const { error } = await db.from("fund_questionnaire_sections").update({ status: "approved", questions: questions as any, approved_by: userId, approved_at: new Date().toISOString() }).eq("id", row.id).eq("status", "draft");
     if (error) throw new Error(error.message);
-    return { ok: true };
-  });
+}
+
+/** Demo funds only: the saved draft approves itself when its source agreements allow; otherwise it waits as usual. */
+async function autoApproveDemoSection(db: any, userId: string, offeringId: string, sectionId: string) {
+  const { isDemoFund } = await import("./demo-fund.server");
+  const { demoAutoApproves } = await import("./demo-fund");
+  if (!demoAutoApproves("fund_questionnaire_section", await isDemoFund(db, offeringId))) return false;
+  try { await approveSection(db, userId, sectionId); return true; } catch { return false; }
+}

@@ -685,6 +685,8 @@ export async function saveEconomics(
       .select("*")
       .single();
     if (saveError || !data) fail("The fees and terms could not be saved.");
+    const auto = await autoApproveDemoEconomics(userId, routineSetup.offering_id, data.id);
+    if (auto) return auto;
     await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id);
     return data;
   }
@@ -716,11 +718,21 @@ export async function saveEconomics(
     actorUserId: userId,
     actorRole: actor.isStaff ? "harmonious" : "client",
   });
+  const auto = await autoApproveDemoEconomics(userId, routineSetup.offering_id, data.id);
+  if (auto) return auto;
   await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id);
   return data;
 }
 
-export async function approveEconomics(userId: string, versionId: string) {
+/** Demo funds only: the saver's own routine approval is recorded at once, labeled as automatic. */
+async function autoApproveDemoEconomics(userId: string, offeringId: string, versionId: string) {
+  const { isDemoFund } = await import("./demo-fund.server");
+  const { demoAutoApproves } = await import("./demo-fund");
+  if (!demoAutoApproves("fund_economics", await isDemoFund(db(), offeringId))) return null;
+  return approveEconomics(userId, versionId, { automaticDemo: true });
+}
+
+export async function approveEconomics(userId: string, versionId: string, opts: { automaticDemo?: boolean } = {}) {
   const { data: version } = await db()
     .from("fund_economics_versions")
     .select("*")
@@ -774,6 +786,7 @@ export async function approveEconomics(userId: string, versionId: string) {
       approver_email: (approver as any)?.email ?? null,
       summary: termsSummary(version.terms as any, version.classes as any),
       superseded_versions: ((rows ?? []) as any[]).filter((v) => v.status === "approved" && v.id !== versionId).map((v) => v.version),
+      ...(opts.automaticDemo ? { automatic_demo: true, note: (await import("./demo-fund")).DEMO_AUTO_APPROVE_NOTE } : {}),
     },
     actorUserId: userId,
     actorRole: actor.isStaff ? "harmonious" : "client",
@@ -1767,6 +1780,7 @@ export async function syncFeesToEconomics(input: {
     if (err) return { synced: false as const, reason: err };
     await db().from("fund_economics_versions").update({ terms, classes, change_reason: draft.change_reason ?? input.reason, updated_at: nowIso() }).eq("id", draft.id);
     await recordEvent({ setupId: setup.id, subjectTable: "fund_economics_versions", subjectId: draft.id, event: "economics_synced", detail: { source: input.reason }, actorUserId: input.actorId });
+    await autoApproveDemoEconomics(input.actorId, input.offeringId, draft.id).catch(() => null);
     return { synced: true as const, versionId: draft.id as string };
   }
   const { data, error } = await db().from("fund_economics_versions").insert({
@@ -1775,6 +1789,8 @@ export async function syncFeesToEconomics(input: {
   }).select("id").single();
   if (error || !data) return { synced: false as const, reason: error?.message ?? "insert_failed" };
   await recordEvent({ setupId: setup.id, subjectTable: "fund_economics_versions", subjectId: data.id, event: "economics_version_created", toStatus: "draft", detail: { source: input.reason }, actorUserId: input.actorId });
-  await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id).catch(() => null);
+  // A demo fund's draft approves itself when the actor may approve it; otherwise it waits as usual.
+  const auto = await autoApproveDemoEconomics(input.actorId, input.offeringId, data.id).catch(() => null);
+  if (!auto) await (await import("./fund-review-notify.server")).notifyFundReview("terms", data.id).catch(() => null);
   return { synced: true as const, versionId: data.id as string };
 }

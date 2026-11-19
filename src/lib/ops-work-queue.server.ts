@@ -21,6 +21,7 @@ import { requireOperations } from "@/lib/ops-access.functions";
 import { verificationNeedsConfirmation } from "@/lib/verification-alert-model";
 import { can, type OpsArea, type OpsCapability } from "@/lib/ops-capabilities";
 import { redactActivity } from "@/lib/ops-records";
+import { demoScopeFrom, isDemoItem, type DemoScope } from "@/lib/demo-fund";
 import {
   UNCONFIGURED_AREAS,
   applyFilters,
@@ -96,12 +97,13 @@ type Lookup = {
   clients: Map<string, string>;
   people: Map<string, string>;
   books: Map<string, string>;
+  demo: DemoScope;
 };
 
 async function lookups(s: any): Promise<Lookup> {
   const [offerings, clients, books] = await Promise.all([
-    safely(async () => rows(await s.from("offerings").select("id, name, client_id"))),
-    safely(async () => rows(await s.from("clients").select("id, name"))),
+    safely(async () => rows(await s.from("offerings").select("id, name, client_id, is_demo"))),
+    safely(async () => rows(await s.from("clients").select("id, name, is_test_demo"))),
     safely(async () => rows(await s.from("ledger_books").select("id, offering_id"))),
   ]);
   return {
@@ -111,6 +113,7 @@ async function lookups(s: any): Promise<Lookup> {
     clients: new Map(clients.map((c: any) => [c.id, c.name as string])),
     people: new Map(),
     books: new Map(books.map((b: any) => [b.id, b.offering_id as string])),
+    demo: demoScopeFrom(offerings as any[], clients as any[]),
   };
 }
 
@@ -1290,7 +1293,8 @@ export async function workQueue(context: Ctx, input: WorkQueueInput = {}) {
   // never read an area this person may not see
   const { items: collectedItems, completeness: done } = await collectAll(capabilities, (load) => load(s, lookup, now, filters.fundId));
 
-  const authorized = filterByCapability(collectedItems, capabilities).filter(summaryIsSafe);
+  // Demo funds are for testing; they never become Operations tasks.
+  const authorized = filterByCapability(collectedItems, capabilities).filter(summaryIsSafe).filter((i) => !isDemoItem(i, lookup.demo));
   const filtered = sortItems(applyFilters(authorized, filters, context.userId, now));
   const page = paginate(filtered, input.page ?? 1, input.pageSize ?? 25);
 
@@ -1329,7 +1333,7 @@ export async function approvalsInbox(context: Ctx) {
   const now = new Date();
   const lookup = await lookups(s);
   const { items: collectedItems, completeness: done } = await collectAll(capabilities, (load) => load(s, lookup, now));
-  const all = sortOldestFirst(filterByCapability(collectedItems, capabilities).filter(summaryIsSafe).filter(isApprovalItem));
+  const all = sortOldestFirst(filterByCapability(collectedItems, capabilities).filter(summaryIsSafe).filter(isApprovalItem).filter((i) => !isDemoItem(i, lookup.demo)));
   const items = all.slice(0, 300);
   const capped = all.length > items.length;
   return {
@@ -1386,7 +1390,7 @@ export async function pendingApprovalItemsForAlerts(s: any): Promise<WorkItem[]>
   const lookup = await lookups(s);
   const now = new Date();
   const collected = await Promise.all(COLLECTORS.map(({ load }) => load(s, lookup, now).catch(() => [] as WorkItem[])));
-  return collected.flat().filter(summaryIsSafe).filter((i) => i.requiredAction === "review" || i.requiredAction === "approve");
+  return collected.flat().filter(summaryIsSafe).filter((i) => !isDemoItem(i, lookup.demo)).filter((i) => i.requiredAction === "review" || i.requiredAction === "approve");
 }
 
 /** Harmonious-only stalled list: fund setup work plus investors idle 7+ days. Read only. */
@@ -1422,5 +1426,5 @@ async function stalledWorkItems(context: Ctx) {
       out.push({ id: `investor:${o.id}`, kind: "investor", fundId: o.offering_id, fundName: lookup.funds.get(o.offering_id)?.name ?? null, investorName: name.get(o.person_id) || "Unnamed investor", action: step.action, owner: step.owner, days: daysWaiting(since, now), href: `/ops/fund/${o.offering_id}/investor/${o.id}` });
     }
   }
-  return out.sort((a, b) => (b.days ?? 0) - (a.days ?? 0));
+  return out.filter((i) => !isDemoItem({ fundId: i.fundId, clientId: lookup.funds.get(i.fundId)?.clientId ?? null }, lookup.demo)).sort((a, b) => (b.days ?? 0) - (a.days ?? 0));
 }
