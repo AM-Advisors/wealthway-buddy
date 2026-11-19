@@ -136,7 +136,7 @@ export function SidebarAccountFooter({
                 <Link to="/feedback" search={{ from: typeof window !== "undefined" ? window.location.pathname : undefined }} className="flex items-center gap-2"><MessageSquareWarning className="size-4" /> Report a problem or idea</Link>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => window.dispatchEvent(new Event("hm:record-screen"))} className="flex items-center gap-2">
-                <Video className="size-4" /> Record my screen
+                <Video className="size-4" /> Record my screen or camera
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => { window.dispatchEvent(new Event("hm:flush-replay")); onSignOut(); }} className="flex items-center gap-2">
                 <LogOut className="size-4" /> Sign out

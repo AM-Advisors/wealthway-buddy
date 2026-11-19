@@ -10,7 +10,7 @@ async function ownRecording(db: any, userId: string, id: string, kind: "replay" 
   return data;
 }
 
-export async function startRecording(userId: string, d: { kind: "replay" | "screen"; path: string; userAgent?: string | undefined; deviceId?: string | undefined; clientInfo?: Record<string, unknown> | undefined; ip?: string | null }) {
+export async function startRecording(userId: string, d: { kind: "replay" | "screen"; path: string; userAgent?: string | undefined; deviceId?: string | undefined; clientInfo?: Record<string, unknown> | undefined; ip?: string | null; withCamera?: boolean | undefined }) {
   const db = await admin();
   const id = crypto.randomUUID();
   const prefix = `${d.kind}/${userId}/${id}`;
@@ -19,7 +19,14 @@ export async function startRecording(userId: string, d: { kind: "replay" | "scre
   if (d.kind === "screen") {
     const up = await db.storage.from(BUCKET).createSignedUploadUrl(`${prefix}/screen.webm`);
     if (up.error) throw new Error("Recording upload couldn't be prepared.");
-    return { id, uploadUrl: up.data.signedUrl as string, token: up.data.token as string, path: `${prefix}/screen.webm` };
+    let camera: { cameraToken: string; cameraPath: string } | Record<string, never> = {};
+    if (d.withCamera) {
+      // Only after the person agreed in the recorder; the file holds their own camera and/or microphone.
+      const cu = await db.storage.from(BUCKET).createSignedUploadUrl(`${prefix}/camera.webm`);
+      if (cu.error) throw new Error("Recording upload couldn't be prepared.");
+      camera = { cameraToken: cu.data.token as string, cameraPath: `${prefix}/camera.webm` };
+    }
+    return { id, uploadUrl: up.data.signedUrl as string, token: up.data.token as string, path: `${prefix}/screen.webm`, ...camera };
   }
   return { id };
 }
@@ -40,6 +47,8 @@ export async function finishScreen(userId: string, d: { id: string; note?: strin
   await db.from("session_recordings").update({ note: d.note?.slice(0, 2000) || null, bytes: d.bytes, chunk_count: 1, last_path: d.path, last_activity_at: new Date().toISOString() }).eq("id", d.id);
   return { ok: true };
 }
+
+const hasCamera = (rec: any) => Boolean(rec?.client_info?.camera || rec?.client_info?.microphone);
 
 async function assertViewer(db: any, userId: string) {
   const { data } = await db.from("user_roles").select("role").eq("user_id", userId);
@@ -119,7 +128,8 @@ export async function openRecording(userId: string, id: string) {
   if (rec.kind === "screen") {
     const s = await db.storage.from(BUCKET).createSignedUrl(`${rec.storage_prefix}/screen.webm`, 600);
     if (s.error) throw new Error("Recording video couldn't open.");
-    return { kind: "screen" as const, url: s.data.signedUrl as string };
+    const c = hasCamera(rec) ? await db.storage.from(BUCKET).createSignedUrl(`${rec.storage_prefix}/camera.webm`, 600) : null;
+    return { kind: "screen" as const, url: s.data.signedUrl as string, cameraUrl: (c && !c.error ? c.data.signedUrl : null) as string | null, cameraVideo: Boolean(rec.client_info?.camera) };
   }
   const events: unknown[] = [];
   for (let i = 0; i < Math.min(rec.chunk_count, 500); i++) {
@@ -142,7 +152,8 @@ export async function downloadRecording(userId: string, id: string) {
   if (rec.kind === "screen") {
     const s = await db.storage.from(BUCKET).createSignedUrl(`${rec.storage_prefix}/screen.webm`, 120, { download: `${base}.webm` });
     if (s.error) throw new Error("Recording video couldn't be downloaded.");
-    return { kind: "screen" as const, url: s.data.signedUrl as string, fileName: `${base}.webm` };
+    const c = hasCamera(rec) ? await db.storage.from(BUCKET).createSignedUrl(`${rec.storage_prefix}/camera.webm`, 120, { download: `${base}-${rec.client_info?.camera ? "camera" : "microphone"}.webm` }) : null;
+    return { kind: "screen" as const, url: s.data.signedUrl as string, cameraUrl: (c && !c.error ? c.data.signedUrl : null) as string | null, fileName: `${base}.webm` };
   }
   const events: unknown[] = [];
   for (let i = 0; i < Math.min(rec.chunk_count, 500); i++) {

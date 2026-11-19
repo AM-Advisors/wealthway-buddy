@@ -37,7 +37,7 @@ function RecordingsPage() {
   const q = useQuery({ queryKey: ["session-recordings", kind, search], queryFn: () => list({ data: { kind, search: search || undefined } }), retry: false });
   const fmt = (s: string) => new Date(s).toLocaleString();
   return (
-    <AmPage title="Screen recordings" intro="Replays hide everything people type. Screen videos are ones people chose to send. Each opening and download is logged.">
+    <AmPage title="Screen recordings" intro="Replays hide everything people type. Screen videos, including any camera and microphone, are ones people agreed to record and chose to send. Each opening and download is logged.">
       <div className="flex flex-wrap gap-2">
         {([[undefined, "All"], ["replay", "Page replays"], ["screen", "Sent screen videos"]] as const).map(([k, l]) => (
           <Button key={l} variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}>{l}</Button>
@@ -83,6 +83,7 @@ function RecordingRow({ r, fmt, onPlay }: { r: any; fmt: (s: string) => string; 
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{r.kind === "screen" ? "Screen video" : "Page replay"}</Badge>
+          {r.kind === "screen" && (r.client_info?.camera || r.client_info?.microphone) && <Badge variant="outline">{r.client_info?.camera ? "Camera & microphone" : "Microphone"}</Badge>}
           <Button size="sm" onClick={onPlay}>Play</Button>
           <Button size="sm" variant="outline" onClick={() => setOpen((v) => !v)} aria-expanded={open}>{open ? <ChevronUp className="mr-1 size-4" /> : <ChevronDown className="mr-1 size-4" />}Details</Button>
           <DownloadRecording id={r.id} />
@@ -103,7 +104,8 @@ function RecordingDetails({ r }: { r: any }) {
       {r.device_id && <p className="text-xs text-muted-foreground">Device marker {String(r.device_id).slice(0, 8)} (same marker means the same browser)</p>}
       {q.isLoading && <p className="text-muted-foreground">Reading recording…</p>}
       {q.isError && <LoadError error={q.error} what="Recording details" onRetry={() => q.refetch()} />}
-      {q.data?.kind === "screen" && <p>Screen video the person chose to record and send to Harmonious. {r.bytes ? `${(Number(r.bytes) / 1_048_576).toFixed(1)} MB.` : ""}</p>}
+      {q.data?.kind === "screen" && <p>Screen video the person chose to record and send to Harmonious{r.client_info?.camera ? ", with their camera and microphone" : r.client_info?.microphone ? ", with their microphone" : ""}. {r.bytes ? `${(Number(r.bytes) / 1_048_576).toFixed(1)} MB.` : ""}</p>}
+      {r.client_info?.consentedAt && (r.client_info?.camera || r.client_info?.microphone) && <p className="text-xs text-muted-foreground">Camera and microphone consent given in the recorder before sending · {new Date(r.client_info.consentedAt).toLocaleString()}</p>}
       {q.data?.breakdown && <BreakdownView b={q.data.breakdown as Breakdown} />}
     </div>
   );
@@ -143,7 +145,7 @@ function BreakdownView({ b, onJump }: { b: Breakdown; onJump?: (offsetMs: number
 
 function Player({ id, onClose }: { id: string; onClose: () => void }) {
   const open = useServerFn(openRecordingFn);
-  const q = useQuery({ queryKey: ["session-recording", id], queryFn: async () => (await open({ data: { id } })) as { kind: "replay"; events: unknown[] } | { kind: "screen"; url: string }, retry: false, staleTime: Infinity });
+  const q = useQuery({ queryKey: ["session-recording", id], queryFn: async () => (await open({ data: { id } })) as { kind: "replay"; events: unknown[] } | { kind: "screen"; url: string; cameraUrl?: string | null; cameraVideo?: boolean }, retry: false, staleTime: Infinity });
   const box = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const d0 = q.data as any;
@@ -167,9 +169,32 @@ function Player({ id, onClose }: { id: string; onClose: () => void }) {
       <div className="flex justify-between"><p className="font-medium">Playing recording</p><div className="flex gap-2"><DownloadRecording id={id} /><Button size="sm" variant="outline" onClick={onClose}>Close</Button></div></div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Opening…</p>}
       {q.isError && <LoadError error={q.error} what="This recording" onRetry={() => q.refetch()} />}
-      {q.data?.kind === "screen" && <video src={q.data.url} controls className="w-full max-w-4xl rounded" />}
+      {q.data?.kind === "screen" && <ScreenWithCamera url={q.data.url} cameraUrl={(q.data as any).cameraUrl ?? null} cameraVideo={Boolean((q.data as any).cameraVideo)} />}
       <div ref={box} />
       {breakdown && <details className="rounded-md border p-3 text-sm" open><summary className="cursor-pointer font-medium">Breakdown · click a marker to jump there</summary><div className="pt-3"><BreakdownView b={breakdown} onJump={(ms) => { try { playerRef.current?.goto?.(ms, false); } catch { /* ignore */ } }} /></div></details>}
+    </div>
+  );
+}
+
+/** Screen video with the person's camera (or microphone) kept in step: play, pause and seek follow the screen. */
+function ScreenWithCamera({ url, cameraUrl, cameraVideo }: { url: string; cameraUrl: string | null; cameraVideo: boolean }) {
+  const screen = useRef<HTMLVideoElement>(null);
+  const cam = useRef<HTMLVideoElement & HTMLAudioElement>(null);
+  useEffect(() => {
+    const s = screen.current, c = cam.current;
+    if (!s || !c) return;
+    const sync = () => { if (Math.abs(c.currentTime - s.currentTime) > 0.3) c.currentTime = s.currentTime; };
+    const play = () => { sync(); void c.play().catch(() => null); };
+    const pause = () => c.pause();
+    s.addEventListener("play", play); s.addEventListener("pause", pause); s.addEventListener("seeked", sync); s.addEventListener("ratechange", () => { c.playbackRate = s.playbackRate; });
+    return () => { s.removeEventListener("play", play); s.removeEventListener("pause", pause); s.removeEventListener("seeked", sync); };
+  }, [url, cameraUrl]);
+  return (
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+      <video ref={screen} src={url} controls className="w-full max-w-4xl rounded" />
+      {cameraUrl && (cameraVideo
+        ? <div className="lg:w-72"><p className="mb-1 text-xs text-muted-foreground">Camera and microphone (follows the screen video)</p><video ref={cam} src={cameraUrl} controls={false} className="w-full rounded" /></div>
+        : <div className="lg:w-72"><p className="mb-1 text-xs text-muted-foreground">Microphone (follows the screen video)</p><audio ref={cam} src={cameraUrl} /></div>)}
     </div>
   );
 }
@@ -181,7 +206,12 @@ function DownloadRecording({ id }: { id: string }) {
     setBusy(true);
     try {
       const d = await download({ data: { id } });
-      if (d.kind === "screen") { window.location.href = d.url; return; }
+      if (d.kind === "screen") {
+        const cam = (d as any).cameraUrl as string | null | undefined;
+        if (cam) { const a = document.createElement("a"); a.href = cam; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); }
+        window.setTimeout(() => { window.location.href = d.url; }, cam ? 400 : 0);
+        return;
+      }
       if ((d.events as unknown[]).length < 2) { toast.info("This replay has too little activity to download."); return; }
       const [js, css] = await Promise.all([import("rrweb-player/dist/index.js?raw"), import("rrweb-player/dist/style.css?raw")]);
       downloadBlob(new Blob([replayHtml(d.events as unknown[], "Page replay", js.default, css.default)], { type: "text/html;charset=utf-8" }), d.fileName);

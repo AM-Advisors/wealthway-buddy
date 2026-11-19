@@ -43,8 +43,8 @@ export const MARKER_LABELS: Record<string, string> = {
   online: "Internet connection back",
   page_error: "Page error",
   resize: "Window resized",
-  screen_video_started: "Started a screen video for Harmonious",
-  screen_video_stopped: "Stopped the screen video",
+  screen_video_started: "Started a video for Harmonious",
+  screen_video_stopped: "Stopped the video",
 };
 
 export type Marker = { at: number; offsetMs: number; kind: string; label: string; detail?: string };

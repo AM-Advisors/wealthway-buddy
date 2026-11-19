@@ -8,6 +8,7 @@ const clientInfo = z.object({
   screen: z.string().max(30).optional(), window: z.string().max(30).optional(), pixelRatio: z.number().min(0).max(10).optional(),
   timeZone: z.string().max(60).optional(), language: z.string().max(35).optional(), touch: z.boolean().optional(),
   extendedDisplay: z.boolean().nullable().optional(), connection: z.string().max(20).nullable().optional(),
+  camera: z.boolean().optional(), microphone: z.boolean().optional(), consentedAt: z.string().max(40).optional(),
 }).optional();
 async function requestIp(): Promise<string | null> {
   const { getRequestHeader } = await import("@tanstack/react-start/server");
@@ -18,7 +19,7 @@ async function requestIp(): Promise<string | null> {
 // Recording runs before identity verification too, so people stuck at sign-in can be helped.
 export const startRecordingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .validator((d) => z.object({ kind: z.enum(["replay", "screen"]), path, userAgent: z.string().max(300).optional(), deviceId: z.string().max(100).optional(), clientInfo }).parse(d))
+  .validator((d) => z.object({ kind: z.enum(["replay", "screen"]), path, userAgent: z.string().max(300).optional(), deviceId: z.string().max(100).optional(), clientInfo, withCamera: z.boolean().optional() }).parse(d))
   .handler(async ({ context, data }) => (await srv()).startRecording(context.userId, { ...data, ip: await requestIp() }));
 
 export const appendReplayChunkFn = createServerFn({ method: "POST" })

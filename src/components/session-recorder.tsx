@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Square, X } from "lucide-react";
+import { Camera, Mic, MonitorUp, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { appendReplayChunkFn, finishScreenRecordingFn, startRecordingFn } from "@/lib/session-recordings.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+type CamKind = "none" | "camera_microphone" | "microphone";
 
 const FLUSH_MS = 10_000;
 export const RECORD_SCREEN_EVENT = "hm:record-screen";
@@ -115,38 +121,72 @@ export function SessionRecorder() {
     };
   }, [signedIn, start, append]);
 
-  // Record-my-screen button
+  // Record-my-screen (optionally with camera and microphone, only after the person agrees)
   const [recording, setRecording] = useState(false);
-  const [pending, setPending] = useState<Blob | null>(null);
+  const [pending, setPending] = useState<{ screen: Blob; camera: Blob | null; camKind: CamKind } | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
-  const recorderRef = useRef<MediaRecorder | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [choice, setChoice] = useState<"screen" | "camera">("screen");
+  const [agreed, setAgreed] = useState(false);
+  const stopAllRef = useRef<(() => void) | null>(null);
 
-  const begin = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-      const chunks: Blob[] = [];
-      const mr = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm" });
-      mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-      mr.onstop = () => { stream.getTracks().forEach((t) => t.stop()); setRecording(false); setPending(new Blob(chunks, { type: "video/webm" })); };
-      stream.getVideoTracks()[0]?.addEventListener("ended", () => { if (mr.state !== "inactive") mr.stop(); });
-      mr.start(1000);
-      markReplay("screen_video_started");
-      mr.addEventListener("stop", () => markReplay("screen_video_stopped"));
-      recorderRef.current = mr;
-      setRecording(true);
-    } catch { toast.error("Screen recording was not started."); }
+  const begin = async (withCamera: boolean) => {
+    setAsking(false);
+    let screen: MediaStream;
+    // The screen picker must open straight from the click, so it is asked for first.
+    try { screen = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); }
+    catch { toast.error("Screen recording was not started."); return; }
+    let cam: MediaStream | null = null;
+    let camKind: CamKind = "none";
+    if (withCamera) {
+      try { cam = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: true }); camKind = "camera_microphone"; }
+      catch {
+        try { cam = await navigator.mediaDevices.getUserMedia({ audio: true }); camKind = "microphone"; toast.info("Camera wasn't allowed. Recording your screen and microphone."); }
+        catch { toast.info("Camera and microphone weren't allowed. Recording your screen only."); }
+      }
+    }
+    const webm = (video: boolean) => video && MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : video ? "video/webm" : "audio/webm";
+    const screenChunks: Blob[] = [], camChunks: Blob[] = [];
+    const mr = new MediaRecorder(screen, { mimeType: webm(true) });
+    const cr = cam ? new MediaRecorder(cam, { mimeType: webm(camKind === "camera_microphone") }) : null;
+    let done = 0;
+    const total = cr ? 2 : 1;
+    const finishOne = () => {
+      done++;
+      if (done < total) return;
+      screen.getTracks().forEach((t) => t.stop());
+      cam?.getTracks().forEach((t) => t.stop());
+      setRecording(false);
+      setPending({ screen: new Blob(screenChunks, { type: "video/webm" }), camera: cr ? new Blob(camChunks, { type: camKind === "camera_microphone" ? "video/webm" : "audio/webm" }) : null, camKind });
+      markReplay("screen_video_stopped");
+    };
+    mr.ondataavailable = (e) => { if (e.data.size) screenChunks.push(e.data); };
+    mr.onstop = finishOne;
+    if (cr) { cr.ondataavailable = (e) => { if (e.data.size) camChunks.push(e.data); }; cr.onstop = finishOne; }
+    const stopAll = () => { if (mr.state !== "inactive") mr.stop(); if (cr && cr.state !== "inactive") cr.stop(); };
+    screen.getVideoTracks()[0]?.addEventListener("ended", stopAll);
+    mr.start(1000); cr?.start(1000);
+    markReplay("screen_video_started", camKind === "none" ? undefined : camKind === "camera_microphone" ? "with camera and microphone" : "with microphone");
+    stopAllRef.current = stopAll;
+    setRecording(true);
   };
 
   const send = async () => {
     if (!pending) return;
     setSaving(true);
     try {
-      const rec = await start({ data: { kind: "screen", path: pathRef.current, userAgent: navigator.userAgent, deviceId: deviceId(), clientInfo: clientInfo() } });
+      const withCam = pending.camKind !== "none" && !!pending.camera?.size;
+      const info = { ...(clientInfo() ?? {}), camera: pending.camKind === "camera_microphone" && withCam, microphone: withCam, consentedAt: new Date().toISOString() };
+      const rec = await start({ data: { kind: "screen", path: pathRef.current, userAgent: navigator.userAgent, deviceId: deviceId(), clientInfo: info, withCamera: withCam } });
       if (!("token" in rec) || !rec.token) throw new Error("upload");
-      const up = await supabase.storage.from("session-recordings").uploadToSignedUrl(rec.path, rec.token, pending, { contentType: "video/webm" });
+      const up = await supabase.storage.from("session-recordings").uploadToSignedUrl(rec.path, rec.token, pending.screen, { contentType: "video/webm" });
       if (up.error) throw up.error;
-      await finish({ data: { id: rec.id, note: note.trim() || undefined, bytes: pending.size, path: pathRef.current } });
+      if (withCam && pending.camera && "cameraToken" in rec && rec.cameraToken && rec.cameraPath) {
+        const cu = await supabase.storage.from("session-recordings").uploadToSignedUrl(rec.cameraPath, rec.cameraToken, pending.camera, { contentType: pending.camera.type });
+        if (cu.error) throw cu.error;
+      }
+      await finish({ data: { id: rec.id, note: note.trim() || undefined, bytes: pending.screen.size + (withCam ? pending.camera?.size ?? 0 : 0), path: pathRef.current } });
       toast.success("Recording sent to Harmonious.");
       setPending(null); setNote("");
     } catch { toast.error("The recording couldn't be sent. Please try again."); }
@@ -154,33 +194,67 @@ export function SessionRecorder() {
   };
 
   useEffect(() => {
-    const onStart = () => { if (!recorderRef.current || recorderRef.current.state === "inactive") void begin(); };
+    const onStart = () => { if (!recording) { setChoice("screen"); setAgreed(false); setAsking(true); } };
     window.addEventListener(RECORD_SCREEN_EVENT, onStart);
     return () => window.removeEventListener(RECORD_SCREEN_EVENT, onStart);
   });
 
-  const previewUrl = useMemo(() => (pending ? URL.createObjectURL(pending) : null), [pending]);
-  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+  const screenUrl = useMemo(() => (pending ? URL.createObjectURL(pending.screen) : null), [pending]);
+  const camUrl = useMemo(() => (pending?.camera ? URL.createObjectURL(pending.camera) : null), [pending]);
+  useEffect(() => () => { if (screenUrl) URL.revokeObjectURL(screenUrl); if (camUrl) URL.revokeObjectURL(camUrl); }, [screenUrl, camUrl]);
+  const discard = () => { setPending(null); setNote(""); };
   if (!signedIn) return null;
   return (
     <div data-no-record className="rr-block fixed bottom-4 left-4 z-50 flex flex-col items-start gap-2">
+      <Dialog open={asking} onOpenChange={setAsking}>
+        <DialogContent className="rr-block max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record a video for Harmonious</DialogTitle>
+            <DialogDescription>Show us what you see so we can help. Nothing is sent until you watch it and press Send.</DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={choice} onValueChange={(v) => { setChoice(v as "screen" | "camera"); setAgreed(false); }} className="gap-3">
+            <Label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 font-normal">
+              <RadioGroupItem value="screen" className="mt-0.5" />
+              <span><span className="flex items-center gap-1 font-medium"><MonitorUp className="size-4" />Screen only</span><span className="text-sm text-muted-foreground">Your screen and, if you choose, its sound.</span></span>
+            </Label>
+            <Label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 font-normal">
+              <RadioGroupItem value="camera" className="mt-0.5" />
+              <span><span className="flex items-center gap-1 font-medium"><Camera className="size-4" /><Mic className="size-4" />Screen, camera and microphone</span><span className="text-sm text-muted-foreground">Talk us through it. Your camera and voice are recorded alongside your screen.</span></span>
+            </Label>
+          </RadioGroup>
+          {choice === "camera" && (
+            <Label className="flex cursor-pointer items-start gap-3 rounded-md bg-muted p-3 text-sm font-normal">
+              <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+              <span>I agree to Harmonious recording my camera and microphone for this video only. Your browser will ask you to allow the camera and microphone. You can stop at any time, and only Harmonious leadership can watch it.</span>
+            </Label>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setAsking(false)}>Cancel</Button>
+            <Button disabled={choice === "camera" && !agreed} onClick={() => void begin(choice === "camera")}>Start recording</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {pending && (
         <div className="w-80 rounded-lg border bg-card p-3 text-card-foreground shadow-lg">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-medium">Send this recording to Harmonious?</p>
-            <button aria-label="Discard recording" onClick={() => { setPending(null); setNote(""); }}><X className="h-4 w-4" /></button>
+            <button aria-label="Discard recording" onClick={discard}><X className="h-4 w-4" /></button>
           </div>
-          <video src={previewUrl ?? undefined} controls className="mb-2 w-full rounded" />
+          {camUrl && <p className="mb-1 text-xs text-muted-foreground">Your screen</p>}
+          <video src={screenUrl ?? undefined} controls className="mb-2 w-full rounded" />
+          {camUrl && <p className="mb-1 text-xs text-muted-foreground">{pending.camKind === "camera_microphone" ? "Your camera and microphone" : "Your microphone"}</p>}
+          {camUrl && pending.camKind === "camera_microphone" && <video src={camUrl} controls className="mb-2 w-full rounded" />}
+          {camUrl && pending.camKind === "microphone" && <audio src={camUrl} controls className="mb-2 w-full" />}
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="What were you trying to do? (optional)" className="mb-2" />
           <div className="flex gap-2">
             <Button size="sm" onClick={send} disabled={saving}>{saving ? "Sending…" : "Send"}</Button>
-            <Button size="sm" variant="outline" onClick={() => { setPending(null); setNote(""); }}>Discard</Button>
+            <Button size="sm" variant="outline" onClick={discard}>Discard</Button>
           </div>
         </div>
       )}
       {recording && (
-        <Button size="sm" variant="outline" onClick={() => recorderRef.current?.stop()}>
-          <Square className="mr-1 h-3 w-3" /> Stop screen video
+        <Button size="sm" variant="outline" onClick={() => stopAllRef.current?.()}>
+          <Square className="mr-1 h-3 w-3" /> Stop recording
         </Button>
       )}
     </div>
