@@ -3004,6 +3004,13 @@
       "when": 1795111552097,
       "tag": "0428_power_of_attorney_records",
       "breakpoints": true
+    },
+    {
+      "idx": 429,
+      "version": "7",
+      "when": 1795112360893,
+      "tag": "0429_poa_authority",
+      "breakpoints": true
     }
   ]
 }

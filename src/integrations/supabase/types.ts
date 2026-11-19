@@ -41601,9 +41601,12 @@ export type Database = {
           agent_email: string | null
           agent_name: string
           agent_relationship: string | null
+          agent_user_id: string | null
           client_id: string | null
+          covered_document_types: string[]
           covered_powers: string[]
           created_at: string
+          delegation_id: string | null
           document_hash: string | null
           durable: boolean
           effective_on: string
@@ -41630,9 +41633,12 @@ export type Database = {
           agent_email?: string | null
           agent_name: string
           agent_relationship?: string | null
+          agent_user_id?: string | null
           client_id?: string | null
+          covered_document_types?: string[]
           covered_powers?: string[]
           created_at?: string
+          delegation_id?: string | null
           document_hash?: string | null
           durable?: boolean
           effective_on: string
@@ -41659,9 +41665,12 @@ export type Database = {
           agent_email?: string | null
           agent_name?: string
           agent_relationship?: string | null
+          agent_user_id?: string | null
           client_id?: string | null
+          covered_document_types?: string[]
           covered_powers?: string[]
           created_at?: string
+          delegation_id?: string | null
           document_hash?: string | null
           durable?: boolean
           effective_on?: string

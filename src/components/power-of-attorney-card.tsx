@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, FileSignature, Plus } from "lucide-react";
+import { Download, FileSignature, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -16,15 +16,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  investorProfilesForPoaFn, listPowersOfAttorneyFn, powerOfAttorneyFileFn, reviewPowerOfAttorneyFn, revokePowerOfAttorneyFn, startPoaUploadFn, submitPowerOfAttorneyFn,
+  investorProfilesForPoaFn, linkPowerOfAttorneyAgentFn, listPowersOfAttorneyFn, powerOfAttorneyFileFn, reviewPowerOfAttorneyFn, revokePowerOfAttorneyFn, startPoaUploadFn, submitPowerOfAttorneyFn,
 } from "@/lib/power-of-attorney.functions";
 import { POA_KIND_LABELS, POA_POWER_LABELS, POA_POWERS, POA_STATUS_LABELS, poaInputBlocker, type PoaDisplayStatus, type PoaKind, type PoaPower } from "@/lib/power-of-attorney-model";
+import { POA_KEEPS_WITH_OWNER } from "@/lib/poa-authority";
+import { SIGNABLE_DOCUMENT_LABELS, SIGNABLE_DOCUMENT_TYPES, type SignableDocumentType } from "@/lib/signatory-model";
 
 type Subject = { kind: "investment_profile" | "client"; id: string };
 const fmt = (d: string | null | undefined) => (d ? new Date(`${d.length === 10 ? `${d}T12:00:00` : d}`).toLocaleDateString("en-US") : null);
 const statusVariant = (s: PoaDisplayStatus) => (s === "accepted" ? "default" : s === "pending_review" || s === "not_yet_effective" ? "secondary" : "outline");
+const authorityVariant = (state: string) => (state === "active" ? "default" : state === "ended" || state === "no_record" ? "outline" : "secondary");
 
-/** Power of attorney on file for an investing profile or a client. Keeping one on file grants no signing or money authority. */
+/** Power of attorney on file for an investing profile or a client. The named person may do exactly what the accepted document lists. */
 export function PowerOfAttorneyCard({ subject, title = "Power of attorney" }: { subject: Subject; title?: string }) {
   const list = useServerFn(listPowersOfAttorneyFn);
   const qc = useQueryClient();
@@ -40,7 +43,7 @@ export function PowerOfAttorneyCard({ subject, title = "Power of attorney" }: { 
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
         <div>
           <CardTitle className="flex items-center gap-2 text-base"><FileSignature className="h-4 w-4" />{title}</CardTitle>
-          <CardDescription className="text-sm">Keep a signed power of attorney on file, with the person it names. Harmonious reviews each one. Having it on file doesn't let that person sign or move money.</CardDescription>
+          <CardDescription className="text-sm">Keep a signed power of attorney on file, with the person it names. Harmonious reviews each one. Once accepted, that person can do what the document lists, and nothing else.</CardDescription>
         </div>
         {data?.can.add ? <Button size="sm" onClick={() => setAdding({ replacesId: null })}><Plus className="mr-1 h-4 w-4" />Add power of attorney</Button> : null}
       </CardHeader>
@@ -48,6 +51,9 @@ export function PowerOfAttorneyCard({ subject, title = "Power of attorney" }: { 
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
         {data && data.records.length === 0 ? <p className="text-sm text-muted-foreground">No power of attorney on file.</p> : null}
         {data?.records.map((r) => <PoaRow key={r.id} r={r} can={data.can} me={data.me} onChanged={refresh} onReplace={() => setAdding({ replacesId: r.id })} />)}
+        {data && data.records.length ? (
+          <p className="text-xs text-muted-foreground">Always stays with the account holder and Harmonious: {POA_KEEPS_WITH_OWNER.join("; ")}.</p>
+        ) : null}
       </CardContent>
       {adding ? <AddPoaDialog subject={subject} replacesId={adding.replacesId} onClose={() => setAdding(null)} onSaved={() => { setAdding(null); refresh(); }} /> : null}
     </Card>
@@ -56,15 +62,31 @@ export function PowerOfAttorneyCard({ subject, title = "Power of attorney" }: { 
 
 type Row = Awaited<ReturnType<typeof listPowersOfAttorneyFn>>["records"][number];
 
-function PoaRow({ r, can, me, onChanged, onReplace }: { r: Row; can: { add: boolean; revoke: boolean; review: boolean }; me: string; onChanged: () => void; onReplace: () => void }) {
+function PoaRow({ r, can, me, onChanged, onReplace }: { r: Row; can: { add: boolean; revoke: boolean; review: boolean; link: boolean }; me: string; onChanged: () => void; onReplace: () => void }) {
   const review = useServerFn(reviewPowerOfAttorneyFn);
   const revoke = useServerFn(revokePowerOfAttorneyFn);
   const file = useServerFn(powerOfAttorneyFileFn);
+  const link = useServerFn(linkPowerOfAttorneyAgentFn);
   const [mode, setMode] = useState<"reject" | "revoke" | null>(null);
   const [note, setNote] = useState("");
+  const [linking, setLinking] = useState(false);
+  const [linkEmail, setLinkEmail] = useState(r.agentEmail ?? "");
   const act = useMutation({
-    mutationFn: async (kind: "accept" | "reject" | "revoke") => kind === "revoke" ? revoke({ data: { id: r.id, reason: note } }) : review({ data: { id: r.id, decision: kind, note: note || null } }),
-    onSuccess: (_d, kind) => { toast.success(kind === "accept" ? "Accepted" : kind === "reject" ? "Marked not accepted" : "Revoked"); setMode(null); setNote(""); onChanged(); },
+    mutationFn: async (kind: "accept" | "reject" | "revoke") => {
+      if (kind === "revoke") { await revoke({ data: { id: r.id, reason: note } }); return null; }
+      const out = await review({ data: { id: r.id, decision: kind, note: note || null } });
+      return out.why ?? null;
+    },
+    onSuccess: (why, kind) => {
+      toast.success(kind === "accept" ? "Accepted" : kind === "reject" ? "Marked not accepted" : "Revoked");
+      if (why) toast.info(why);
+      setMode(null); setNote(""); onChanged();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const doLink = useMutation({
+    mutationFn: () => link({ data: { id: r.id, agentEmail: linkEmail.trim() } }),
+    onSuccess: () => { toast.success("Linked to their account"); setLinking(false); onChanged(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const open = async () => {
@@ -79,10 +101,39 @@ function PoaRow({ r, can, me, onChanged, onReplace }: { r: Row; can: { add: bool
           <p className="font-medium">{r.agentName}{r.agentRelationship ? <span className="font-normal text-muted-foreground"> · {r.agentRelationship}</span> : null}</p>
           <p className="text-sm text-muted-foreground">{POA_KIND_LABELS[r.poaKind as PoaKind]}{r.durable ? ", durable" : ""} · from {fmt(r.effectiveOn)}{r.expiresOn ? ` to ${fmt(r.expiresOn)}` : ", no end date"}{r.agentEmail ? ` · ${r.agentEmail}` : ""}</p>
           <p className="text-sm">Covers: {(r.coveredPowers as string[]).map((p: string) => POA_POWER_LABELS[p as PoaPower] ?? p).join(", ")}</p>
+          {r.coveredDocumentTypes.length ? <p className="text-sm text-muted-foreground">May sign: {r.coveredDocumentTypes.map((t) => SIGNABLE_DOCUMENT_LABELS[t as SignableDocumentType] ?? t).join(", ")}</p> : null}
           {r.limitsNote ? <p className="text-sm text-muted-foreground">Limits: {r.limitsNote}</p> : null}
         </div>
-        <Badge variant={statusVariant(r.displayStatus)}>{POA_STATUS_LABELS[r.displayStatus]}</Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge variant={statusVariant(r.displayStatus)}>{POA_STATUS_LABELS[r.displayStatus]}</Badge>
+          <Badge variant={authorityVariant(r.authority.state)}><ShieldCheck className="mr-1 h-3 w-3" />{r.authority.label}</Badge>
+        </div>
       </div>
+      {r.mayDo.length ? (
+        <div className="rounded-md bg-muted/50 p-2">
+          <p className="text-sm font-medium">What this person may do</p>
+          <ul className="mt-1 space-y-0.5 text-sm">{r.mayDo.map((line, i) => <li key={i}>· {line}</li>)}</ul>
+          <p className="mt-1 text-xs text-muted-foreground">{r.authority.detail}</p>
+        </div>
+      ) : null}
+      {r.agentUserId ? (
+        <p className="flex items-center gap-1 text-xs text-muted-foreground"><UserRound className="h-3 w-3" />Linked to {r.agentName2 ?? "their account"}</p>
+      ) : r.status === "accepted" ? (
+        <div className="rounded-md border border-dashed p-2">
+          <p className="text-sm">We haven't matched {r.agentName} to a sign-in account yet, so nothing is open for them.</p>
+          {can.link ? (
+            linking ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Input value={linkEmail} onChange={(e) => setLinkEmail(e.target.value.trim())} placeholder="Their account email" className="max-w-xs" autoComplete="off" />
+                <Button size="sm" disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(linkEmail) || doLink.isPending} onClick={() => doLink.mutate()}>{doLink.isPending ? "Linking…" : "Link account"}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setLinking(false)}>Cancel</Button>
+              </div>
+            ) : (
+              <Button size="sm" variant="outline" className="mt-2" onClick={() => setLinking(true)}>Link their account</Button>
+            )
+          ) : null}
+        </div>
+      ) : null}
       <p className="text-xs text-muted-foreground">
         Added by {r.submittedByName ?? "a team member"} on {fmt(r.createdAt)}
         {r.reviewedAt ? ` · ${r.status === "rejected" ? "not accepted" : "reviewed"} by ${r.reviewedByName} on ${fmt(r.reviewedAt)}` : ""}
@@ -127,12 +178,15 @@ function AddPoaDialog({ subject, replacesId, onClose, onSaved }: { subject: Subj
   const [poaKind, setPoaKind] = useState<PoaKind>("general");
   const [durable, setDurable] = useState(false);
   const [powers, setPowers] = useState<PoaPower[]>([]);
+  const [docTypes, setDocTypes] = useState<SignableDocumentType[]>([]);
   const [limitsNote, setLimitsNote] = useState("");
   const [effectiveOn, setEffectiveOn] = useState("");
   const [expiresOn, setExpiresOn] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const input = { agentName, agentEmail: agentEmail || null, poaKind, coveredPowers: powers, limitsNote: limitsNote || null, effectiveOn, expiresOn: expiresOn || null };
-  const blocker = poaInputBlocker(input) ?? (file ? null : "Choose the signed power of attorney file.");
+  const blocker = poaInputBlocker(input)
+    ?? (powers.includes("sign_documents") && docTypes.length === 0 ? "Say which document types the power of attorney lets them sign." : null)
+    ?? (file ? null : "Choose the signed power of attorney file.");
   const save = useMutation({
     mutationFn: async () => {
       if (!file) throw new Error("Choose the signed power of attorney file.");
@@ -141,7 +195,7 @@ function AddPoaDialog({ subject, replacesId, onClose, onSaved }: { subject: Subj
       if (up.error) throw new Error("The file couldn't be uploaded. Please try again.");
       const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
       const documentHash = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-      return submit({ data: { subject, ...input, agentRelationship: agentRelationship || null, durable, fileName: file.name, storagePath: t.path, documentHash, replacesId } });
+      return submit({ data: { subject, ...input, agentRelationship: agentRelationship || null, durable, coveredDocumentTypes: docTypes, fileName: file.name, storagePath: t.path, documentHash, replacesId } });
     },
     onSuccess: () => { toast.success("Saved. Harmonious will review it."); onSaved(); },
     onError: (e: Error) => toast.error(e.message),
@@ -151,7 +205,7 @@ function AddPoaDialog({ subject, replacesId, onClose, onSaved }: { subject: Subj
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{replacesId ? "Upload a replacement power of attorney" : "Add a power of attorney"}</DialogTitle>
-          <DialogDescription>Upload the signed document and tell us who it names. Harmonious reviews it before it shows as accepted.{replacesId ? " Once accepted, it replaces the earlier one." : ""}</DialogDescription>
+          <DialogDescription>Upload the signed document and tell us who it names. Harmonious reviews it before it shows as accepted. Once accepted, the person named can do what the document lists.{replacesId ? " It then replaces the earlier one." : ""}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1"><Label htmlFor="poa-file">Signed document</Label><Input id="poa-file" type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /><p className="text-xs text-muted-foreground">Kept private. Opening it is logged.</p></div>
@@ -166,10 +220,19 @@ function AddPoaDialog({ subject, replacesId, onClose, onSaved }: { subject: Subj
             <div className="space-y-1"><Label htmlFor="poa-to">Ends (leave blank if no end date)</Label><Input id="poa-to" type="date" value={expiresOn} onChange={(e) => setExpiresOn(e.target.value)} /></div>
           </div>
           <div><p className="text-sm font-medium">What the document says it covers</p>
+            <p className="text-xs text-muted-foreground">Only these open for that person, and only after Harmonious accepts the document.</p>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">{POA_POWERS.map((p) => (
               <label key={p} className="flex items-center gap-2 text-sm"><Checkbox checked={powers.includes(p)} onCheckedChange={(c) => setPowers((prev) => (c ? [...prev, p] : prev.filter((x) => x !== p)))} />{POA_POWER_LABELS[p]}</label>
             ))}</div>
           </div>
+          {powers.includes("sign_documents") ? (
+            <div><p className="text-sm font-medium">Which documents may they sign?</p>
+              <p className="text-xs text-muted-foreground">Choose only what the power of attorney names. Each signature still needs a fresh identity check.</p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">{SIGNABLE_DOCUMENT_TYPES.map((t) => (
+                <label key={t} className="flex items-center gap-2 text-sm"><Checkbox checked={docTypes.includes(t)} onCheckedChange={(c) => setDocTypes((prev) => (c ? [...prev, t] : prev.filter((x) => x !== t)))} />{SIGNABLE_DOCUMENT_LABELS[t]}</label>
+              ))}</div>
+            </div>
+          ) : null}
           <div className="space-y-1"><Label htmlFor="poa-limits">Limits or other powers {poaKind === "limited" || powers.includes("other") ? "" : "(optional)"}</Label><Textarea id="poa-limits" value={limitsNote} onChange={(e) => setLimitsNote(e.target.value)} maxLength={1000} placeholder="For example: only for the Erebor subscription" /></div>
         </div>
         <DialogFooter className="gap-2">

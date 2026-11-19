@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { SIGNABLE_DOCUMENT_TYPES } from "@/lib/signatory-model";
 import { POA_POWERS } from "@/lib/power-of-attorney-model";
 
 const srv = () => import("@/lib/power-of-attorney.server");
@@ -22,10 +23,16 @@ export const submitPowerOfAttorneyFn = createServerFn({ method: "POST" })
   .validator((d) => z.object({
     subject, agentName: z.string().max(200), agentEmail: z.string().max(320).nullable().optional(), agentRelationship: z.string().max(80).nullable().optional(),
     poaKind: z.enum(["general", "limited"]), durable: z.boolean(), coveredPowers: z.array(z.enum(POA_POWERS)).max(POA_POWERS.length),
+    coveredDocumentTypes: z.array(z.enum(SIGNABLE_DOCUMENT_TYPES)).max(SIGNABLE_DOCUMENT_TYPES.length).optional(),
     limitsNote: z.string().max(1000).nullable().optional(), effectiveOn: date, expiresOn: date.nullable().optional(),
     fileName: z.string().min(1).max(200), storagePath: z.string().max(600), documentHash: z.string().max(128).nullable().optional(), replacesId: z.string().uuid().nullable().optional(),
   }).parse(d))
   .handler(async ({ context, data }) => { const { subject: s, ...rest } = data; return (await srv()).submitPowerOfAttorney(context.userId, s, rest); });
+
+export const linkPowerOfAttorneyAgentFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), agentEmail: z.string().email().max(320) }).parse(d))
+  .handler(async ({ context, data }) => (await srv()).linkPowerOfAttorneyAgent(context.userId, data.id, data.agentEmail));
 
 export const reviewPowerOfAttorneyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

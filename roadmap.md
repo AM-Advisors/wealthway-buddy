@@ -1,5 +1,16 @@
 # Roadmap
 
+## Power of attorney carries real authority (2026-11-19)
+- [x] Accepted document grants exactly the powers it lists, through the one authorization engine
+- [x] Money, bank or wire changes, identity checks, sign-in security and access grants can never come from a power of attorney
+- [x] Named person's account matched by exact email, or linked by staff or the account holder
+- [x] Nothing opens until the named person accepts the grant; revoking or replacing ends it at once
+- [x] Card shows what the person may do, their account link, and the live state
+- [x] Signing needs the document types named in the document, with a fresh identity check each time
+- [x] Signing authority fails closed: if the document can't be attached to the grant, the grant is taken back rather than left standing
+- [x] Clicked through on the fictional sandbox: link, accept-before-use, revoke with reason, reject with reason
+- [ ] Company (client) powers of attorney still grant access only through client team access; no automatic company authority
+
 ## Report Cards complete build (2026-11-18)
 - [x] Report Cards as a service: whole client (standalone) or one fund (add-on); staff always
 - [x] PDF, spreadsheet, Excel and data-file downloads with permanent download history
