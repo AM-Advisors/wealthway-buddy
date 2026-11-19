@@ -186,11 +186,10 @@ const HEADER_LABELS: Record<string, string> = {
 };
 
 export function headerNav(nav: NavGroup[] = visibleNav()): NavGroup[] {
-  const describe = (i: NavItem): NavItem => ({
-    ...i,
-    label: HEADER_LABELS[i.href] ?? i.label,
-    description: i.description ?? HEADER_DESCRIPTIONS[i.href],
-  });
+  const describe = (i: NavItem): NavItem => {
+    const description = i.description ?? HEADER_DESCRIPTIONS[i.href];
+    return { ...i, label: HEADER_LABELS[i.href] ?? i.label, ...(description ? { description } : {}) };
+  };
   const seen = new Set<string>();
   const solutionItems: NavItem[] = [];
   for (const g of nav.filter((g) => HEADER_SOLUTION_GROUPS.includes(g.label))) {
