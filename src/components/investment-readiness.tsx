@@ -1,4 +1,5 @@
 import { openLabelFor } from "@/lib/readiness-open-target";
+import { TestInvestorBadge } from "@/components/test-investor-control";
 import { LoadError } from "@/components/load-error";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -396,7 +397,7 @@ export function FundReadiness({ fundId, viewAs = false }: { fundId: string; view
             {!shown.length ? <p className="px-4 py-6 text-sm text-muted-foreground">No investors match this filter.</p> : shown.map((r) => (
               <button key={r.onboardingId} type="button" onClick={() => setOpen(r.onboardingId === open ? null : r.onboardingId)}
                 className={cn("grid w-full grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-left text-sm last:border-b-0 hover:bg-muted/40 md:grid-cols-[1.4fr_0.8fr_0.9fr_1.6fr_0.8fr_0.6fr] md:items-center", open === r.onboardingId && "bg-muted/60")}>
-                <span className="font-medium">{r.investorName}<span className="block text-xs font-normal text-muted-foreground">{r.profileLabel ?? r.profileType ?? ""}</span></span>
+                <span className="font-medium">{r.investorName}{r.isTestInvestor && <TestInvestorBadge className="ml-2 border-accent text-foreground" />}<span className="block text-xs font-normal text-muted-foreground">{r.profileLabel ?? r.profileType ?? ""}</span></span>
                 <span className="text-right md:text-left">{money(r.amountCents)}</span>
                 <span className={cn("text-xs font-semibold", r.closeReady ? "text-accent-foreground" : bucketOf(r) === "blocked" ? "text-destructive" : "")}>{r.closeReady ? "Ready" : bucketOf(r) === "blocked" ? "Blocked" : "Not Ready"}<span className="ml-1 font-normal text-muted-foreground">{r.percentComplete}%</span></span>
                 <span className="col-span-2 md:col-span-1">{r.nextAction?.label ?? "Nothing outstanding"}</span>

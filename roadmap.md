@@ -1,5 +1,11 @@
 # Roadmap
 
+## Test investors (2026-11-19)
+- [x] @harmonious.co emails are automatically test investors (new, existing and changed emails)
+- [x] Test investors go through every step, labeled, and never count in fund totals, dashboards, cap tables, filings or K-1s
+- [x] Staff can mark or unmark other investors as tests with a reason; Harmonious emails always stay tests
+- [x] Jenner Smith: no current investment on the platform; his old Digital Irish session stays unfiled
+
 ## Power of attorney carries real authority (2026-11-19)
 - [x] Accepted document grants exactly the powers it lists, through the one authorization engine
 - [x] Money, bank or wire changes, identity checks, sign-in security and access grants can never come from a power of attorney

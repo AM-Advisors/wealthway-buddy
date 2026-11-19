@@ -1,5 +1,5 @@
 import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
-import { investmentAmountCents, isLiveInvestment } from "@/lib/investment-amounts";
+import { countsInFundTotals, investmentAmountCents, isLiveInvestment } from "@/lib/investment-amounts";
 /**
  * Role dashboards - server aggregation. Every number is built here, from
  * records the caller is authorized to see, using the shared definitions in
@@ -76,7 +76,8 @@ export async function opsDashboard(userId: string, filters: { clientId?: string 
   // Readiness, agreements and the trend are independent; load them together.
   const { agreementStatusForClients } = await import("@/lib/commercial-agreements.server");
   const [built, agreements, trendData] = await Promise.all([
-    factsFor((onbs ?? []) as any[]),
+    // Test investors are never counted in fund dashboards.
+    factsFor(((onbs ?? []) as any[]).filter(countsInFundTotals)),
     agreementStatusForClients(clientIds).catch(() => new Map()) as Promise<Map<string, any>>,
     trendFor(filters.fundId || filters.clientId || filters.managerId ? ids : null, filters.range),
   ]);
@@ -134,7 +135,7 @@ export async function managerFundDashboard(userId: string, offeringId: string, r
     db().from("investment_readiness_events").select("onboarding_id, requirement_key, stage, new_status, created_at").eq("offering_id", offeringId)
       .eq("new_status", "complete").in("stage", Object.keys(SAFE_ACTIVITY)).order("created_at", { ascending: false }).limit(15),
   ]);
-  const rows = (onbs ?? []) as any[];
+  const rows = ((onbs ?? []) as any[]).filter(countsInFundTotals);
   const built = await factsFor(rows);
   const facts = built.map((b) => b.fact);
   const k = kpis(facts);

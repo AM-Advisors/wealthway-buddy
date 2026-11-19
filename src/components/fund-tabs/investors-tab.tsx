@@ -37,6 +37,7 @@ import { fmtDate, usd } from "./shared";
 import { InviteInvestorButton, PersonalInvestmentLinkCard, PersonalLinkCopyButton } from "@/components/personal-investment-link";
 import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
 import { InvestorPeopleAndContacts } from "@/components/investor-people-contacts";
+import { TestInvestorBadge, TestInvestorControl } from "@/components/test-investor-control";
 import { InvestorPriorVerification } from "@/components/investor-prior-verification";
 import { PlatformSignedEmpty, PriorSignedDocuments } from "@/components/prior-signed-documents";
 import { ClassAssignmentCard } from "@/components/fund-setup-phase3";
@@ -73,8 +74,11 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
   const canRemind = (r: any) => !!r.email && !!reminderStep(r.stage, r.docs, r.wiring) && reminderAllowed(lq.data?.[r.id] ?? null);
   const allPicked = rows.length > 0 && picked.length === rows.length;
   const toggleAll = (on: boolean) => setPicked(on ? rows.map((r) => r.id) : []);
-  const committed = rows.reduce((s, r) => s + (r.committedCents ?? 0), 0);
-  const received = rows.reduce((s, r) => s + (r.receivedCents ?? 0), 0);
+  // Test investors are listed but never counted in the fund's totals.
+  const counted = rows.filter((r) => !r.isTestInvestor);
+  const committed = counted.reduce((s, r) => s + (r.committedCents ?? 0), 0);
+  const received = counted.reduce((s, r) => s + (r.receivedCents ?? 0), 0);
+  const testCount = rows.length - counted.length;
   async function sendReminders() {
     setSending(true);
     try {
@@ -141,6 +145,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
         {rows.length > 0 && committed > 0 && (
           <div className="mb-4 rounded-lg border p-3">
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Funding progress</span><span className="font-medium">{usd(received)} received of {usd(committed)} committed</span></div>
+            {testCount > 0 && <p className="mt-1 text-xs text-muted-foreground">Not counting {testCount} test investor{testCount === 1 ? "" : "s"}.</p>}
             <div className="mt-2 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${Math.min(100, Math.round((received / committed) * 100))}%` }} /></div>
           </div>
         )}
@@ -158,7 +163,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
                     <td className="py-2" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" aria-label={`Select ${r.name}`} title={canRemind(r) ? "Select for reminders and bulk actions" : "Select for bulk actions (no reminder due)"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
-                    <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
+                    <td className="py-2"><p className="font-medium">{r.name}{r.isTestInvestor && <TestInvestorBadge className="ml-2 border-accent text-foreground" />}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
                     <td onClick={(e) => e.stopPropagation()}><PersonalLinkCopyButton onboardingId={r.id} /></td>
                     <td><StepChips steps={r.steps} /><p className="mt-0.5 text-[11px] text-muted-foreground">{(() => { const c = currentStep(r.steps); return c ? `${c.label}: ${STEP_STATE_LABELS[c.state]}` : "All steps complete"; })()}</p></td>
                     {classApplicable && <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>}
@@ -296,6 +301,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
               <Badge variant={d.kycOk ? "secondary" : "outline"}>{d.kycLabel}</Badge>
               <Badge variant={String(d.docs).startsWith("Signed") && !String(d.docs).includes("pending") ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
               <Badge variant={d.wiring === "Funded" ? "secondary" : "outline"}>Wiring: {d.wiring}</Badge>
+              {id && <TestInvestorControl onboardingId={id} isTest={!!d.isTestInvestor} email={d.email} canChange={!!d.canMarkTestInvestor} />}
               {d.investorUserId && (
                 <Button asChild size="sm" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>
               )}
@@ -373,6 +379,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
   return (
     <div>
       {embedded && d && <div className="mb-4 flex flex-wrap items-center gap-2">
+        {id && <TestInvestorControl onboardingId={id} isTest={!!d.isTestInvestor} email={d.email} canChange={!!d.canMarkTestInvestor} />}
         {d.investorUserId && <Button asChild size="sm" variant="outline" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>}
       </div>}
         {q.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading…</p> : q.error ? <div role="alert" className="space-y-2 p-6"><p className="text-sm text-destructive">Investor details couldn’t load.</p><Button variant="outline" onClick={() => void q.refetch()}>Retry</Button></div> : d && (

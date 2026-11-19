@@ -28,3 +28,13 @@ export function reconciledFundedCents(row: AmountRow, fundingStatus: string | nu
 export function isLiveInvestment(row: { removed_at?: string | null; merged_into_onboarding_id?: string | null }): boolean {
   return !row.removed_at && !row.merged_into_onboarding_id;
 }
+
+/** Test investors (Harmonious employees or staff-marked tests) go through every step but are never counted. */
+export function isTestInvestment(row: { is_test_investor?: boolean | null }): boolean {
+  return row.is_test_investor === true;
+}
+
+/** Counts toward a fund's totals, readiness, cap table, filings and tax: live and not a test investor. */
+export function countsInFundTotals(row: { removed_at?: string | null; merged_into_onboarding_id?: string | null; is_test_investor?: boolean | null }): boolean {
+  return isLiveInvestment(row) && !isTestInvestment(row);
+}

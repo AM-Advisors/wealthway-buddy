@@ -152,12 +152,14 @@ async function buildCapTable(
   // out and an earlier, empty application is not counted as a second holder.
   const { data: investmentsRaw, error: investmentsError } = await supabaseAdmin
     .from("investor_onboardings")
-    .select("id, investor_user_id, application_id, stage, funding_status, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, offering_class_key, removed_at, merged_into_onboarding_id, created_at, updated_at, person_id, investment_profile_id")
+    .select("id, investor_user_id, application_id, stage, funding_status, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, offering_class_key, removed_at, merged_into_onboarding_id, created_at, updated_at, person_id, investment_profile_id, is_test_investor")
     .eq("offering_id", offeringId);
   if (investmentsError) throw new Error("The cap table could not be loaded. Please try again.");
-  const investments = ((investmentsRaw ?? []) as any[]).filter((o) => !EXCLUDED_STATUSES.has(String(o.stage)));
+  // Test investors are never holders; their linked applications are left out too so they don't reappear as legacy rows.
+  const testApps = new Set(((investmentsRaw ?? []) as any[]).filter((o) => o.is_test_investor === true && o.application_id).map((o) => String(o.application_id)));
+  const investments = ((investmentsRaw ?? []) as any[]).filter((o) => o.is_test_investor !== true && !EXCLUDED_STATUSES.has(String(o.stage)));
   const { joinFundRecords, applicationHoldsValue } = await import("@/lib/investment-record-mapping");
-  const joined = joinFundRecords(apps, investments, (a) =>
+  const joined = joinFundRecords(apps.filter((a) => !testApps.has(String(a.id))), investments, (a) =>
     (fundedByApp.get(a.id) ?? 0) > 0 || Number(posByApp.get(a.id)?.shares ?? 0) > 0 || applicationHoldsValue(a),
   );
   const replacedIds = new Set(joined.replaced.map((a) => a.id));
@@ -179,7 +181,7 @@ async function buildCapTable(
 
   const base = [
     ...apps
-      .filter((a) => !replacedIds.has(a.id))
+      .filter((a) => !replacedIds.has(a.id) && !testApps.has(String(a.id)))
       .map((a) => {
         const commitment = subByApp.get(a.id) ?? Number(a.commitment_cents ?? 0);
         const pos = posByApp.get(a.id);

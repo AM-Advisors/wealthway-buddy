@@ -7,7 +7,7 @@ const cents = z.number().int().min(-1e13).max(1e13).optional();
 const SERVICE_KEY = "tax_k1";
 
 async function investorsOf(d: any, fundId: string) {
-  const { data: obs } = await d.from("investor_onboardings").select("id, person_id, investor_user_id, investment_profile_id, commitment_amount_cents, funded_amount_cents").eq("offering_id", fundId).is("removed_at", null);
+  const { data: obs } = await d.from("investor_onboardings").select("id, person_id, investor_user_id, investment_profile_id, commitment_amount_cents, funded_amount_cents").eq("offering_id", fundId).is("removed_at", null).eq("is_test_investor", false); // test investors never get K-1s
   const rows = (obs ?? []) as any[];
   const ids = [...new Set(rows.map((o) => o.person_id).filter(Boolean))];
   const { data: ps } = ids.length ? await d.from("persons").select("id, legal_first_name, legal_last_name, preferred_name").in("id", ids) : { data: [] };

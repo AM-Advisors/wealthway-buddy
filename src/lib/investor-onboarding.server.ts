@@ -3113,6 +3113,7 @@ export async function fundReadiness(userId: string, offeringId: string, viewerOv
       nextAction: v.nextAction,
       closeReady: v.closeReady,
       updatedAt: row.updated_at ?? null,
+      isTestInvestor: row.is_test_investor === true,
       readiness: v,
     });
   }

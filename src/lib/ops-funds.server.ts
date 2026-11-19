@@ -1,6 +1,6 @@
 /** Operations → Funds dashboard. Staff only; read-only; built from canonical records. */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { isLiveInvestment } from "@/lib/investment-amounts";
+import { countsInFundTotals } from "@/lib/investment-amounts";
 import { isPendingReconciliation } from "@/lib/funding-status";
 import { assertStaff } from "@/lib/investor-onboarding.server";
 import { fundMetrics, totals, type FundOnboardingFact } from "@/lib/ops-funds-model";
@@ -55,8 +55,8 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
   // investor made thousands of database calls and the page timed out. Only missing or
   // stale summaries (older than SUMMARY_TTL, oldest first) are refreshed, up to
   // REFRESH_LIMIT per load, so the page always stays within the server's limits.
-  // Removed or merged duplicates never count (same rule as the fund cap table).
-  const onbRows = ((onbs ?? []) as any[]).filter(isLiveInvestment);
+  // Removed or merged duplicates and test investors never count (same rule as the fund cap table).
+  const onbRows = ((onbs ?? []) as any[]).filter(countsInFundTotals);
   const ids = onbRows.map((r) => r.id);
   const saved = new Map<string, any>();
   for (let i = 0; i < ids.length; i += 300) {

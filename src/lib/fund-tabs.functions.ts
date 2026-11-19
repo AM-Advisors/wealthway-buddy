@@ -21,7 +21,7 @@ export const investorDetailFn = createServerFn({ method: "POST" }).middleware([r
       (async () => (await import("./investor-review-evidence.server")).investorReviewEvidence(d, context.userId, data.fundId, data.onboardingId))(),
       (async () => (await import("./accreditation-review.server")).canVerify(context.userId, data.fundId))(),
     ]);
-    return { ...detail, canManageTermAssociations: access.staff, reviewEvidence, canApproveSubscription, canVerifyAccreditation };
+    return { ...detail, canManageTermAssociations: access.staff, canMarkTestInvestor: access.staff, reviewEvidence, canApproveSubscription, canVerifyAccreditation };
   });
 
 export const managerInvestorSignedCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

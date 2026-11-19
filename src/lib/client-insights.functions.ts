@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { investmentAmountCents, isLiveInvestment } from "@/lib/investment-amounts";
+import { countsInFundTotals, investmentAmountCents } from "@/lib/investment-amounts";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
@@ -31,7 +31,7 @@ export const getClientInsights = createServerFn({ method: "POST" })
     const invIds = live.map((i) => i.id);
     const [{ data: lines }, { data: onbs }, { data: fees }, { data: carry }] = await Promise.all([
       invIds.length ? db.from("invoice_lines").select("invoice_id, label, amount_cents, offering_id").in("invoice_id", invIds) : none,
-      ids.length ? db.from("investor_onboardings").select("offering_id, stage, requested_amount_cents, commitment_amount_cents, accepted_amount_cents, funded_amount_cents, created_at, updated_at, removed_at, merged_into_onboarding_id").in("offering_id", ids) : none,
+      ids.length ? db.from("investor_onboardings").select("offering_id, stage, requested_amount_cents, commitment_amount_cents, accepted_amount_cents, funded_amount_cents, created_at, updated_at, removed_at, merged_into_onboarding_id, is_test_investor").in("offering_id", ids) : none,
       ids.length ? db.from("fund_ledger_entries").select("offering_id, entry_date, amount_cents, direction").eq("category", "Management fee").is("voided_at", null).in("offering_id", ids) : none,
       ids.length ? db.from("carry_allocations").select("offering_id, amount_cents, clawback_cents, created_at, approved_by").in("offering_id", ids).not("approved_by", "is", null) : none,
     ]);
@@ -52,7 +52,7 @@ export const getClientInsights = createServerFn({ method: "POST" })
       }
     }
     for (const o of (onbs ?? []) as any[]) {
-      if (!isLiveInvestment(o) || o.stage === "declined" || o.stage === "cancelled") continue;
+      if (!countsInFundTotals(o) || o.stage === "declined" || o.stage === "cancelled") continue;
       const fundId = String(o.offering_id); const fundName = name.get(fundId) ?? "Fund";
       const c = Number(investmentAmountCents(o) ?? 0);
       if (c) facts.push({ kind: "raised_committed", fundId, fundName, date: day(o.created_at), cents: c });

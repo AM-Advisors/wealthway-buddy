@@ -4,12 +4,12 @@ import { investmentAmountCents } from "@/lib/investment-amounts";
 
 const SOLD = ["received", "funded", "settled"];
 
-/** Investors counted as sold: money received/funded or closed, live records only. */
+/** Investors counted as sold: money received/funded or closed, live records only; test investors never count. */
 export async function soldInvestors(db: any, offeringIds: string[]) {
   if (!offeringIds.length) return [] as any[];
   const { data } = await db.from("investor_onboardings")
-    .select("id, offering_id, funding_status, closed_at, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, removed_at, merged_into_onboarding_id, persons(region), investment_profiles(legal_name, profile_type)")
-    .in("offering_id", offeringIds).is("removed_at", null);
+    .select("id, offering_id, funding_status, closed_at, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, removed_at, merged_into_onboarding_id, is_test_investor, persons(region), investment_profiles(legal_name, profile_type)")
+    .in("offering_id", offeringIds).is("removed_at", null).eq("is_test_investor", false);
   return ((data ?? []) as any[]).filter((o) => !o.merged_into_onboarding_id && (SOLD.includes(String(o.funding_status)) || o.closed_at));
 }
 

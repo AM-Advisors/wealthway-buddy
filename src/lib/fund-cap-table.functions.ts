@@ -35,7 +35,7 @@ export const getFundCapTable = createServerFn({ method: "GET" })
     const [{ data: obs }, { data: letters }, { data: econ }] = await Promise.all([
       db.from("investor_onboardings")
         .select("id, stage, funding_status, offering_class_key, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, removed_at, person_id, investment_profile_id, application_id")
-        .eq("offering_id", data.fundId),
+        .eq("offering_id", data.fundId).eq("is_test_investor", false), // test investors are never holders
       db.from("side_letters").select("id, onboarding_id, status, mfn_enabled, effective_date, expiry_date, terms").eq("offering_id", data.fundId),
       setup
         ? db.from("fund_economics_versions").select("terms, classes").eq("setup_id", setup.id).eq("status", "approved")

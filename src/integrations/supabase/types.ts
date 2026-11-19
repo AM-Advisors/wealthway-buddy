@@ -29360,6 +29360,7 @@ export type Database = {
           investor_reports_sent_at: string | null
           investor_user_id: string | null
           invitation_id: string | null
+          is_test_investor: boolean
           last_activity_at: string
           manager_notes: string | null
           merged_into_onboarding_id: string | null
@@ -29412,6 +29413,7 @@ export type Database = {
           investor_reports_sent_at?: string | null
           investor_user_id?: string | null
           invitation_id?: string | null
+          is_test_investor?: boolean
           last_activity_at?: string
           manager_notes?: string | null
           merged_into_onboarding_id?: string | null
@@ -29464,6 +29466,7 @@ export type Database = {
           investor_reports_sent_at?: string | null
           investor_user_id?: string | null
           invitation_id?: string | null
+          is_test_investor?: boolean
           last_activity_at?: string
           manager_notes?: string | null
           merged_into_onboarding_id?: string | null
@@ -53200,6 +53203,7 @@ export type Database = {
       is_any_staff: { Args: never; Returns: boolean }
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
+      is_harmonious_email: { Args: { _email: string }; Returns: boolean }
       is_live_fund_reviewer: {
         Args: { _fund: string; _user: string }
         Returns: boolean
@@ -53320,6 +53324,10 @@ export type Database = {
       offering_wire_release_state: {
         Args: { p_offering_id: string }
         Returns: Json
+      }
+      onboarding_is_derived_test: {
+        Args: { _person: string; _user: string }
+        Returns: boolean
       }
       post_distribution_payment_atomic: {
         Args: {

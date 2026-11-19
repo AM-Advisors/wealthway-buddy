@@ -56,7 +56,7 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
   const classApplicable = fund?.has_multiple_classes === true;
   const fundRelease = await (await import("@/lib/wire-release.server")).wireReleaseState(fundId).catch(() => ({ available: false }));
   let gridQuery = (await db()).from("investor_onboardings")
-    .select("id, offering_id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, questionnaire_version, questionnaire_responses, created_at, investment_profiles(legal_name, profile_type, tax_id_last4)")
+    .select("id, offering_id, stage, is_test_investor, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, questionnaire_version, questionnaire_responses, created_at, investment_profiles(legal_name, profile_type, tax_id_last4)")
     .eq("offering_id", fundId).is("removed_at", null);
   // A single investor's detail reads only that row, not the whole fund.
   if (onlyOnboardingId) gridQuery = gridQuery.eq("id", onlyOnboardingId);
@@ -140,6 +140,8 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
       stage: o.stage as string,
       applicationId: o.application_id ?? null,
       investorUserId: o.investor_user_id ?? null,
+      // Test investors go through every step but never count in fund totals.
+      isTestInvestor: o.is_test_investor === true,
     };
   });
 }
