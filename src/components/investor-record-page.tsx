@@ -33,6 +33,7 @@ import { InvestorSessionActivity } from "@/components/investor-session-activity"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PowerOfAttorneyCard } from "@/components/power-of-attorney-card";
 
 export const INVESTOR_RECORD_TABS = ["overview", "investment", "profile", "onboarding", "readiness", "documents", "activity", "history", "accreditation"] as const;
 export type InvestorRecordTab = (typeof INVESTOR_RECORD_TABS)[number];
@@ -146,6 +147,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         {!data.overview.removed && <PersonalInvestmentLinkCard onboardingId={onboardingId} email={p?.email ?? undefined} />}
         {!data.overview.removed && !data.investorHasAccount ? <Card className="md:col-span-2"><CardContent className="pt-6 text-sm text-muted-foreground">Investor has not created an account yet. Send the invite above so they can sign in and complete their steps.</CardContent></Card> : null}
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} initialAccreditationReview={initial === "accreditation"} /></CardContent></Card>
+        {data.profile?.id ? <PowerOfAttorneyCard subject={{ kind: "investment_profile", id: data.profile.id }} /> : null}
         {staff && !data.overview.removed ? <ManualReceiptCard onboardingId={onboardingId} /> : null}
         {staff && !data.overview.removed ? <AcceptCloseCard onboardingId={onboardingId} /> : null}
         {staff && data.suggestions.length ? <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Information conflicts & suggested updates</CardTitle></CardHeader><CardContent className="divide-y">

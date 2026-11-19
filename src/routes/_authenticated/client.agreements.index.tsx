@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, FileText, Lock, MessageSquare, Plus, ShieldCheck } from "lucide-react";
 
 import { ClientOffboardingPanel } from "@/components/client-offboarding-panel";
+import { PowerOfAttorneyCard } from "@/components/power-of-attorney-card";
 import { useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -227,6 +228,7 @@ function AgreementsHome() {
         </CardContent>
       </Card>
 
+      <PowerOfAttorneyCard subject={{ kind: "client", id: data.clientId }} title="Power of attorney for your organization" />
       <ClientOffboardingPanel />
     </div>
   );

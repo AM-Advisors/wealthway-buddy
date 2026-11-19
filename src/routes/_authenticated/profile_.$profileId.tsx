@@ -15,6 +15,7 @@ import {
   submitProfileAccreditationFn, uploadProfileDocFn,
 } from "@/lib/investment-profile-detail.functions";
 import { INVESTMENT_PROFILE_LABELS, type InvestmentProfileType } from "@/lib/identity-model";
+import { PowerOfAttorneyCard } from "@/components/power-of-attorney-card";
 
 export const Route = createFileRoute("/_authenticated/profile_/$profileId")({
   head: () => ({
@@ -85,6 +86,7 @@ function ProfileDetailPage() {
       {data.isEntity ? <OwnersCard data={data} onSaved={refresh} /> : null}
       {data.isEntity ? <FormationCard data={data} onSaved={refresh} /> : null}
       <AccreditationCard data={data} onSaved={refresh} />
+      <PowerOfAttorneyCard subject={{ kind: "investment_profile", id: p.id }} />
     </div>
   );
 }

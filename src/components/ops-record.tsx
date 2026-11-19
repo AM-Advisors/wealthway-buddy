@@ -44,6 +44,7 @@ import { FundCapTable } from "@/components/fund-cap-table";
 import { FoundationWorkspace } from "@/components/foundation-workspace";
 import { getFoundationFlagState } from "@/lib/foundation-admin.functions";
 import { InvestmentChecklist } from "@/components/investment-readiness";
+import { InvestorPowersOfAttorney, PowerOfAttorneyCard } from "@/components/power-of-attorney-card";
 
 const LABELS: Record<OpsRecordType, { title: string; plural: string }> = {
   client: { title: "Client", plural: "Clients" },
@@ -403,6 +404,8 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
         {type === "client" && active === "overview" ? <HarmoniousTeamCard clientId={id} /> : null}
         {type === "fund" && record.clientId ? <HarmoniousTeamCard clientId={record.clientId} /> : null}
         {type === "client" && active === "overview" ? <CommercialAgreementCard clientId={id} /> : null}
+        {type === "client" && active === "overview" ? <PowerOfAttorneyCard subject={{ kind: "client", id }} /> : null}
+        {type === "investor" && !embedded && /^[0-9a-f-]{36}$/i.test(id) ? <InvestorPowersOfAttorney investorUserId={id} /> : null}
         {type === "fund" ? <CommercialAgreementCard offeringId={id} /> : null}
         {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}
         {type === "investor" ? <DriveInvestorCard investorUserId={id} /> : null}

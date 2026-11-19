@@ -2997,6 +2997,13 @@
       "when": 1795108442428,
       "tag": "0427_session_recording_device_details",
       "breakpoints": true
+    },
+    {
+      "idx": 428,
+      "version": "7",
+      "when": 1795111552097,
+      "tag": "0428_power_of_attorney_records",
+      "breakpoints": true
     }
   ]
 }

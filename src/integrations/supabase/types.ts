@@ -41561,6 +41561,153 @@ export type Database = {
           },
         ]
       }
+      power_of_attorney_events: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          event: string
+          id: string
+          note: string | null
+          record_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          event: string
+          id?: string
+          note?: string | null
+          record_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          event?: string
+          id?: string
+          note?: string | null
+          record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "power_of_attorney_events_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "power_of_attorney_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      power_of_attorney_records: {
+        Row: {
+          agent_email: string | null
+          agent_name: string
+          agent_relationship: string | null
+          client_id: string | null
+          covered_powers: string[]
+          created_at: string
+          document_hash: string | null
+          durable: boolean
+          effective_on: string
+          expires_on: string | null
+          file_name: string
+          id: string
+          investment_profile_id: string | null
+          limits_note: string | null
+          poa_kind: string
+          replaces_id: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          status: string
+          storage_path: string
+          subject_kind: string
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          agent_email?: string | null
+          agent_name: string
+          agent_relationship?: string | null
+          client_id?: string | null
+          covered_powers?: string[]
+          created_at?: string
+          document_hash?: string | null
+          durable?: boolean
+          effective_on: string
+          expires_on?: string | null
+          file_name: string
+          id?: string
+          investment_profile_id?: string | null
+          limits_note?: string | null
+          poa_kind: string
+          replaces_id?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
+          storage_path: string
+          subject_kind: string
+          submitted_by: string
+          updated_at?: string
+        }
+        Update: {
+          agent_email?: string | null
+          agent_name?: string
+          agent_relationship?: string | null
+          client_id?: string | null
+          covered_powers?: string[]
+          created_at?: string
+          document_hash?: string | null
+          durable?: boolean
+          effective_on?: string
+          expires_on?: string | null
+          file_name?: string
+          id?: string
+          investment_profile_id?: string | null
+          limits_note?: string | null
+          poa_kind?: string
+          replaces_id?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
+          storage_path?: string
+          subject_kind?: string
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "power_of_attorney_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "power_of_attorney_records_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "power_of_attorney_records_replaces_id_fkey"
+            columns: ["replaces_id"]
+            isOneToOne: false
+            referencedRelation: "power_of_attorney_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_approval_requests: {
         Row: {
           client_id: string | null
