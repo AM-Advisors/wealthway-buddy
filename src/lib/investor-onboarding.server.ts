@@ -548,7 +548,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
     subscription: {
       requestedAmountCents: eff.requestedAmountCents,
       questionnaireVersion: row.questionnaire_version,
-      questionnaireComplete: questionnaireCompletion({ submittedAt: row.questionnaire_submitted_at, version: row.questionnaire_version, questions: I.completionQuestions.get(String(row.offering_id)) ?? null, answers: row.questionnaire_responses, profileType: eff.profileType }).complete,
+      questionnaireComplete: questionnaireCompletion({ submittedAt: row.questionnaire_submitted_at, version: row.questionnaire_version, questions: I.completionQuestions.get(String(row.offering_id)) ?? null, answers: row.questionnaire_responses, profileType: eff.profileType, startedAt: row.created_at ?? null }).complete,
       documentsPrepared: Boolean(row.document_template_version) && acksDone,
       signatureStatus: signedCount > 0 ? "completed" : null,
       fundingStatus: row.funding_status,
@@ -845,7 +845,7 @@ export async function setInvestmentAmount(
 }
 
 /** The fund's own published questionnaire, else the Harmonious standard questionnaire. */
-export async function publishedQuestionnaire(offeringId: string) {
+export async function publishedQuestionnaire(offeringId: string, startedAt?: string | null) {
   const { data } = await db()
     .from("offering_questionnaires")
     .select("*")
@@ -855,10 +855,12 @@ export async function publishedQuestionnaire(offeringId: string) {
     .limit(1);
   const base = ((data ?? []) as any[])[0] ?? STANDARD_QUESTIONNAIRE;
   // The fund's approved additional section, minus anything the base already asks.
-  const { data: sec } = await db().from("fund_questionnaire_sections").select("title, version, questions").eq("offering_id", offeringId).eq("status", "approved").order("version", { ascending: false }).limit(1);
-  const section = ((sec ?? []) as any[])[0] ?? null;
+  const { data: sec } = await db().from("fund_questionnaire_sections").select("title, version, questions, approved_at, new_investments_only").eq("offering_id", offeringId).eq("status", "approved").order("version", { ascending: false }).limit(1);
+  const row = ((sec ?? []) as any[])[0] ?? null;
+  const section = row ? { ...row, approvedAt: row.approved_at, newInvestmentsOnly: row.new_investments_only } : null;
   const { mergeSection } = await import("@/lib/fund-questionnaire-section");
-  return mergeSection(base, section);
+  // startedAt is the investment's start; "new investors only" questions skip earlier investments.
+  return mergeSection(base, section, startedAt);
 }
 
 /** The person's most recent Didit session: their own verification, else a staff-confirmed link. */
@@ -943,7 +945,7 @@ export async function saveQuestionnaire(
   input: { onboardingId: string; answers: Record<string, unknown>; submit?: boolean },
 ) {
   const { actor, row } = await assertInvestorOwns(userId, input.onboardingId);
-  const questionnaire = await publishedQuestionnaire(row.offering_id);
+  const questionnaire = await publishedQuestionnaire(row.offering_id, row.created_at ?? null);
   const { applyLocked, fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const questions = locks.questions;
@@ -1031,7 +1033,7 @@ async function assertTeamPreparer(userId: string, onboardingId: string) {
 /** What the team sees when filling in for the investor. */
 export async function teamPrepareContext(userId: string, onboardingId: string) {
   const { row } = await assertTeamPreparer(userId, onboardingId);
-  const questionnaire = await publishedQuestionnaire(row.offering_id);
+  const questionnaire = await publishedQuestionnaire(row.offering_id, row.created_at ?? null);
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const { isAccreditationQuestion } = await import("@/lib/accreditation-step");
@@ -1055,7 +1057,7 @@ export async function teamPrepareContext(userId: string, onboardingId: string) {
 export async function teamSaveInvestorAnswers(userId: string, input: { onboardingId: string; answers: Record<string, unknown> }) {
   const { actor, row, role } = await assertTeamPreparer(userId, input.onboardingId);
   if (row.questionnaire_submitted_at) fail("The investor already confirmed their answers. Ask them to update the answers themselves.");
-  const questionnaire = await publishedQuestionnaire(row.offering_id);
+  const questionnaire = await publishedQuestionnaire(row.offering_id, row.created_at ?? null);
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const { applyLocked } = await import("@/lib/subscription-prefill");
   const { isAccreditationQuestion } = await import("@/lib/accreditation-step");
@@ -1463,7 +1465,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
       .eq("owner_user_id", row.investor_user_id),
   ]);
 
-  const questionnaire = await publishedQuestionnaire(row.offering_id);
+  const questionnaire = await publishedQuestionnaire(row.offering_id, row.created_at ?? null);
   const locks = questionnaire ? await subscriptionLocks(row, (questionnaire.questions ?? []) as Question[]) : null;
   const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const journey = journeySteps(facts.requirements, {

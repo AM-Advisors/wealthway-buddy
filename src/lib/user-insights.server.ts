@@ -41,7 +41,7 @@ export async function directoryInsights(db: any, people: any[]) {
   const [invitations, { data: persons, error }, { data: onboardings, error: onboardingError }] = await Promise.all([
     invitationSummaries(db),
     db.from("persons").select(PERSON_FIELDS).limit(20000),
-    db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,investor_user_id,questionnaire_submitted_at,questionnaire_version,questionnaire_responses,stage,funding_status").is("removed_at", null).limit(20000),
+    db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,investor_user_id,questionnaire_submitted_at,questionnaire_version,questionnaire_responses,stage,funding_status,created_at").is("removed_at", null).limit(20000),
   ]);
   if (error || onboardingError) throw new Error("Could not load setup progress.");
   const completions = await (await import("@/lib/questionnaire-completion.server")).questionnaireCompletionForRows(db, onboardings ?? []);

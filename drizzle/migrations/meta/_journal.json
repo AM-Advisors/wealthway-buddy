@@ -2969,6 +2969,13 @@
       "when": 1795046360242,
       "tag": "0423_lock_cap_records_and_accreditation_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 424,
+      "version": "7",
+      "when": 1795059564437,
+      "tag": "0424_fund_question_sections_new_investments_only",
+      "breakpoints": true
     }
   ]
 }

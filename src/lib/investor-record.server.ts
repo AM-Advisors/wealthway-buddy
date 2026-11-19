@@ -678,7 +678,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     computeReadinessFor(row),
     (async () => (await import("@/lib/related-person.server")).relationshipsUnderReview(((rel ?? []) as any[]).map((r) => r.id)))(),
     staff ? Promise.resolve(true) : investorEditWindow(row),
-    (async () => (await import("@/lib/investor-onboarding.server")).publishedQuestionnaire(row.offering_id))(),
+    (async () => (await import("@/lib/investor-onboarding.server")).publishedQuestionnaire(row.offering_id, row.created_at ?? null))(),
   ]);
   const readiness = {
     ready: Boolean((result as any).closeReady), label: (result as any).closeReady ? "Ready to Close" : "Not Ready to Close",

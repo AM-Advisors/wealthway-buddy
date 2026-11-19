@@ -1,0 +1,2 @@
+ALTER TABLE public.fund_questionnaire_sections ADD COLUMN IF NOT EXISTS new_investments_only boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.fund_questionnaire_sections.new_investments_only IS 'When true, the section applies only to investments started on or after its approval; earlier investments are not asked.';

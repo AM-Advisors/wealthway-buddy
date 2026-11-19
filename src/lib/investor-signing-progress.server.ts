@@ -22,7 +22,7 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
   const { supabaseAdmin: d } = await import("@/integrations/supabase/client.server");
   const { data: obs, error } = await (d as any)
     .from("investor_onboardings")
-    .select("id, offering_id, person_id, investment_profile_id, stage, questionnaire_responses, questionnaire_submitted_at, questionnaire_version, document_template_version, funding_status, updated_at")
+    .select("id, offering_id, person_id, investment_profile_id, stage, questionnaire_responses, questionnaire_submitted_at, questionnaire_version, document_template_version, funding_status, updated_at, created_at")
     .is("removed_at", null)
     .not("stage", "in", `(${CLOSED.join(",")})`)
     .order("updated_at", { ascending: false })
@@ -67,7 +67,7 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
         investorName: name ?? null,
         stage: String(r.stage ?? ""),
         questionnaireSubmitted: Boolean(r.questionnaire_submitted_at && r.questionnaire_version),
-        questionnaireMissingRequired: questionnaireCompletion({ submittedAt: r.questionnaire_submitted_at, version: r.questionnaire_version, questions: questions.get(r.offering_id) ?? null, answers: r.questionnaire_responses, profileType: profileType.get(r.investment_profile_id) }).missingRequired,
+        questionnaireMissingRequired: questionnaireCompletion({ submittedAt: r.questionnaire_submitted_at, version: r.questionnaire_version, questions: questions.get(r.offering_id) ?? null, answers: r.questionnaire_responses, profileType: profileType.get(r.investment_profile_id), startedAt: r.created_at ?? null }).missingRequired,
         questionnaireAnswered: Object.values((r.questionnaire_responses ?? {}) as Record<string, unknown>).filter((v) => v !== null && v !== "" && !(Array.isArray(v) && !v.length)).length,
         taxFormType: tax?.form_type ?? null,
         taxFormSigned: Boolean(tax?.certified_at),

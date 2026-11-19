@@ -22,11 +22,27 @@ export function newSectionQuestions(base: Question[], section: Question[]): Ques
   });
 }
 
-/** Base questionnaire plus the approved section's new questions, after a heading marker. */
-export function mergeSection<T extends { questions?: Question[] }>(base: T, section: { title: string; version: number; questions: Question[] } | null): T & { sectionTitle?: string; sectionVersion?: number; sectionStartKey?: string } {
+export type QuestionSection = { title: string; version: number; questions: Question[]; approvedAt?: string | null; newInvestmentsOnly?: boolean | null };
+
+/** A "new investors only" section skips investments started before it was approved. Unknown start = applies. */
+export function startedBeforeCutoff(startedAt: string | null | undefined, cutoff: string | null | undefined): boolean {
+  if (!startedAt || !cutoff) return false;
+  return new Date(startedAt).getTime() < new Date(cutoff).getTime();
+}
+
+/** Drops "new investors only" questions for an investment that started before they were published. */
+export function questionsForInvestment(questions: Question[], startedAt: string | null | undefined): Question[] {
+  return questions.filter((q) => !startedBeforeCutoff(startedAt, q.newInvestmentsFrom));
+}
+
+/** Base questionnaire plus the approved section's new questions, after a heading marker.
+ * Pass startedAt to drop a "new investors only" section for an investment that began before it was approved. */
+export function mergeSection<T extends { questions?: Question[] }>(base: T, section: QuestionSection | null, startedAt?: string | null): T & { sectionTitle?: string; sectionVersion?: number; sectionStartKey?: string } {
   if (!section) return base;
+  const cutoff = section.newInvestmentsOnly ? section.approvedAt ?? null : null;
+  if (startedBeforeCutoff(startedAt, cutoff)) return base;
   const baseQs = base.questions ?? [];
-  const extra = newSectionQuestions(baseQs, section.questions);
+  const extra = newSectionQuestions(baseQs, section.questions).map((q) => (cutoff ? { ...q, newInvestmentsFrom: cutoff } : q));
   const first = extra[0];
   if (!first) return base;
   return { ...base, questions: [...baseQs, ...extra], sectionTitle: section.title, sectionVersion: section.version, sectionStartKey: first.key };

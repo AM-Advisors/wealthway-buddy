@@ -834,6 +834,8 @@ export interface Question {
   satisfiedBy?: string | null;
   /** A "Yes" puts the investment under Harmonious review (bad-actor disclosures). */
   highRisk?: boolean;
+  /** Set on "new investors only" fund questions: investments started before this time are not asked. */
+  newInvestmentsFrom?: string | null;
 }
 
 /** Whether a question applies to this investing party. No profile type yet = show everything. */

@@ -24106,6 +24106,7 @@ export type Database = {
           approved_by: string | null
           created_at: string
           id: string
+          new_investments_only: boolean
           offering_id: string
           prepared_at: string
           prepared_by: string | null
@@ -24122,6 +24123,7 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           id?: string
+          new_investments_only?: boolean
           offering_id: string
           prepared_at?: string
           prepared_by?: string | null
@@ -24138,6 +24140,7 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           id?: string
+          new_investments_only?: boolean
           offering_id?: string
           prepared_at?: string
           prepared_by?: string | null

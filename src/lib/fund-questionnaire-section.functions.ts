@@ -13,6 +13,7 @@ const question = z.object({
   sourceQuote: z.string().max(1200).optional(),
   prefillKey: z.enum(["address_line1", "address_line2", "city", "region", "postal_code", "country", "phone", "date_of_birth", "citizenship_country", "formation_state", "formation_date"]).nullish(),
   showWhen: z.any().optional(),
+  appliesTo: z.array(z.string().max(40)).max(20).optional(),
 });
 const tabs = () => import("@/lib/fund-tabs.server");
 
@@ -28,7 +29,7 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
     const author = await questionAuthorAccess(context.supabase, context.userId, data.offeringId).catch(() => null);
     const documents = author ? await questionDocumentOptions(db, data.offeringId) : [];
     const { data: aiState } = author ? await db.from("fund_questionnaire_ai_state").select("blocked_message,reset_at").eq("offering_id", data.offeringId).maybeSingle() : { data: null };
-    const { data: rows, error } = await db.from("fund_questionnaire_sections").select("id, version, title, questions, status, source_note, source_documents, prepared_by, prepared_at, approved_by, approved_at").eq("offering_id", data.offeringId).order("version", { ascending: false });
+    const { data: rows, error } = await db.from("fund_questionnaire_sections").select("id, version, title, questions, status, source_note, source_documents, new_investments_only, prepared_by, prepared_at, approved_by, approved_at").eq("offering_id", data.offeringId).order("version", { ascending: false });
     if (error) throw new Error("Could not load additional fund questions.");
     const { data: base } = await db.from("offering_questionnaires").select("questions").eq("offering_id", data.offeringId).eq("status", "published").order("version", { ascending: false }).limit(1);
     const baseQs = ((base ?? []) as any[])[0]?.questions ?? (await import("@/lib/standard-investor-questionnaire.json")).default;
@@ -50,7 +51,7 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
 
 export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(z.object({ offeringId: uuid, sectionId: uuid.nullish(), title: z.string().min(1).max(200), questions: z.array(question).max(80), sourceNote: z.string().max(3000).nullish(), sourceDocuments: z.array(z.object({ id: uuid, documentId: uuid, version: z.number().int().positive(), title: z.string().max(500), fileName: z.string().max(500) })).max(3).optional() }).parse)
+  .validator(z.object({ offeringId: uuid, sectionId: uuid.nullish(), title: z.string().min(1).max(200), questions: z.array(question).max(80), sourceNote: z.string().max(3000).nullish(), sourceDocuments: z.array(z.object({ id: uuid, documentId: uuid, version: z.number().int().positive(), title: z.string().max(500), fileName: z.string().max(500) })).max(3).optional(), newInvestmentsOnly: z.boolean().optional() }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
     const { questionAuthorAccess } = await import("./fund-question-ai.server");
@@ -63,7 +64,7 @@ export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
       const { data: v, error } = await db.from("offering_document_versions").select("id").eq("id", source.id).eq("offering_id", data.offeringId).eq("offering_document_id", source.documentId).eq("version", source.version).maybeSingle();
       if (error || !v) throw new Error("A source agreement no longer belongs to this fund.");
     }
-    const provenance = { ...(data.sourceNote != null ? { source_note: data.sourceNote } : {}), ...(data.sourceDocuments ? { source_documents: data.sourceDocuments } : {}) };
+    const provenance = { ...(data.sourceNote != null ? { source_note: data.sourceNote } : {}), ...(data.sourceDocuments ? { source_documents: data.sourceDocuments } : {}), ...(data.newInvestmentsOnly !== undefined ? { new_investments_only: data.newInvestmentsOnly } : {}) };
     if (data.sectionId) {
       const { data: saved, error } = await db.from("fund_questionnaire_sections").update({ title: data.title, questions: data.questions, prepared_by: context.userId, prepared_at: new Date().toISOString(), ...provenance }).eq("id", data.sectionId).eq("offering_id", data.offeringId).eq("status", "draft").select("id").maybeSingle();
       if (error) throw new Error(error.message);

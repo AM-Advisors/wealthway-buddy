@@ -11,12 +11,13 @@ export async function loadCompletionQuestions(d: any, offeringIds: string[]) {
     const chunk = ids.slice(i, i + 100);
     const [bases, sections] = await Promise.all([
       d.from("offering_questionnaires").select("offering_id, version, questions").in("offering_id", chunk).eq("status", "published").order("version", { ascending: false }),
-      d.from("fund_questionnaire_sections").select("offering_id, title, version, questions").in("offering_id", chunk).eq("status", "approved").order("version", { ascending: false }),
+      d.from("fund_questionnaire_sections").select("offering_id, title, version, questions, approved_at, new_investments_only").in("offering_id", chunk).eq("status", "approved").order("version", { ascending: false }),
     ]);
     if (bases.error || sections.error) throw new Error("Questionnaire requirements could not be loaded.");
     for (const id of chunk) {
       const base = (bases.data ?? []).find((r: any) => r.offering_id === id) ?? { questions: standardQuestions as Question[] };
-      const section = (sections.data ?? []).find((r: any) => r.offering_id === id) ?? null;
+      const row = (sections.data ?? []).find((r: any) => r.offering_id === id) ?? null;
+      const section = row ? { ...row, approvedAt: row.approved_at, newInvestmentsOnly: row.new_investments_only } : null;
       result.set(id, mergeSection(base, section).questions ?? []);
     }
   }
@@ -35,6 +36,6 @@ export async function questionnaireCompletionForRows(d: any, rows: any[]) {
   return new Map(rows.map((r) => [r.id, questionnaireCompletion({
     submittedAt: r.questionnaire_submitted_at, version: r.questionnaire_version,
     questions: questions.get(r.offering_id) ?? null, answers: r.questionnaire_responses,
-    profileType: profiles.get(r.investment_profile_id),
+    profileType: profiles.get(r.investment_profile_id), startedAt: r.created_at ?? null,
   })]));
 }
