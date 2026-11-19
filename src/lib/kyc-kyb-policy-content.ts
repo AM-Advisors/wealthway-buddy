@@ -24,7 +24,11 @@ export const KYC_KYB_POLICY: LegalDocument = {
     },
     {
       heading: "Identity verification for individuals (KYC)",
-      paragraphs: ["Before a person can use the Harmonious portal, we verify their identity. For an individual investor we ask for:"],
+      paragraphs: [
+        "Everyone who accesses the Harmonious platform must complete KYC on themselves. This includes fund managers, client team members, signers, preparers, advisors and anyone else acting for an investor or a fund. Access stays closed until their own identity check is complete.",
+        "Every investor must also complete KYC on themselves. A person's own check never stands in for anyone else, and someone acting for an investor cannot complete the investor's check for them.",
+        "For each identity check we ask for:",
+      ],
       bullets: [
         "Full legal name, date of birth, citizenship and residential address.",
         "A Social Security number or other tax identification number. It is stored encrypted and screens show only the last four digits.",
