@@ -4,7 +4,7 @@
  * existing signed-outside and investor document engines. Decisions are append-only events.
  */
 import { FOLDER_MIME, GOOGLE_DOC_MIME, driveIdFromLink, driveQueryLiteral, readableAs } from "@/lib/drive-picker-model";
-import { classifyFileName, defaultSignedOn, intakeTarget, matchFolder, type IntakeDecision, type IntakeRow, type IntakeTarget, type RosterEntry } from "@/lib/fund-drive-intake-model";
+import { PROFILE_FILL_MAX_BYTES, classifyFileName, defaultSignedOn, pickInvestorFor, intakeTarget, matchFolder, type IntakeDecision, type IntakeRow, type IntakeTarget, type RosterEntry } from "@/lib/fund-drive-intake-model";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_drive/drive/v3";
 const ALL = "supportsAllDrives=true&includeItemsFromAllDrives=true";
@@ -216,4 +216,52 @@ export async function addIntakeInvestor(userId: string, input: { fundId: string;
   await d.from("investor_onboarding_events").insert({ offering_id: input.fundId, onboarding_id: created.onboardingId, event: "drive_intake_investor_added", actor_user_id: userId, actor_role: "harmonious", detail: { folder_name: input.folderName.slice(0, 200), has_email: !!email } });
   const person = `${v.firstName.trim()} ${v.lastName.trim()}`;
   return { onboardingId: created.onboardingId as string, label: v.type === "individual" ? person : `${v.legalName.trim()} (${person})` };
+}
+
+/** Reads one Drive file with the shared investor AI reader (every page). Nothing is saved or stored. */
+export async function readIntakeFile(userId: string, input: { fundId: string; fileId: string }) {
+  await assertOps(userId);
+  const m: Meta & { trashed?: boolean } = await get(`/files/${encodeURIComponent(input.fileId)}?supportsAllDrives=true&fields=id,name,mimeType,size,trashed`);
+  if (m.trashed) throw new Error("That file is in the Drive trash.");
+  const r = readableAs(m.mimeType, null);
+  if (!r.ok) throw new Error(`${m.name}: only PDFs, images and Google Docs can be read.`);
+  const path = m.mimeType === GOOGLE_DOC_MIME ? `/files/${encodeURIComponent(m.id)}/export?mimeType=application%2Fpdf` : `/files/${encodeURIComponent(m.id)}?alt=media&supportsAllDrives=true`;
+  const res = await fetch(`${GATEWAY}${path}`, { headers: headers() });
+  if (!res.ok) { console.error(`Fund drive intake download failed [${res.status}]`); throw new Error(`The file couldn't be downloaded from Drive [${res.status}].`); }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (!bytes.byteLength) throw new Error("That file is empty.");
+  if (bytes.byteLength > PROFILE_FILL_MAX_BYTES) throw new Error(`${m.name} is over 10 MB, so it can't be read with AI.`);
+  let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  const { readNewInvestorDocument } = await import("@/lib/investor-doc-extract.server");
+  return readNewInvestorDocument(userId, { offeringId: input.fundId, fileName: m.name, contentType: r.as, base64: btoa(bin) });
+}
+
+/**
+ * Completes one investor's profile from what was read in their folder: picks the reading that is
+ * them, fills blank details and sends differences to review (completeProfileFromReading).
+ */
+export async function fillProfileFromIntake(userId: string, input: { fundId: string; onboardingId: string; folderName: string; investors: unknown[] }) {
+  const d = await assertOps(userId);
+  await belongs(d, input.fundId, input.onboardingId);
+  const { normalizeReading, mergeInvestors, mergeInvestorInto } = await import("@/lib/investor-doc-extract-model");
+  // Re-check every value with the same cleaning as a fresh reading.
+  const toRaw = (i: any) => ({
+    first_name: i?.firstName, middle_name: i?.middleName, last_name: i?.lastName, preferred_name: i?.preferredName, email: i?.email, phone: i?.phone,
+    investor_type: i?.profileType, entity_name: i?.entityName, entity_type: i?.entityType, jurisdiction: i?.jurisdiction, trust_type: i?.trustType,
+    address_line1: i?.addressLine1, address_line2: i?.addressLine2, city: i?.city, region: i?.region, postal_code: i?.postalCode, country: i?.country,
+    mailing_address: i?.mailingAddress, date_of_birth: i?.dateOfBirth, citizenship: i?.citizenship, amount: i?.amount, commitment: i?.commitment,
+    investment_date: i?.investmentDate, units: i?.units,
+    related_people: (Array.isArray(i?.related) ? i.related : []).map((r: any) => ({ first_name: r?.firstName, last_name: r?.lastName, email: r?.email, role: r?.role, ownership_percent: r?.ownershipPercent, is_signer: r?.isSigner })),
+  });
+  const list = mergeInvestors(normalizeReading({ investors: input.investors.slice(0, 50).map(toRaw) }, { keepBirthDate: true }).investors);
+  if (!list.length) throw new Error("No investor details were found in this folder's documents.");
+  const entry = (await roster(d, input.fundId)).find((r) => r.onboardingId === input.onboardingId);
+  const names = [...(entry?.names ?? []), input.folderName];
+  const picked = pickInvestorFor(names, list);
+  if (!picked) throw new Error(`The documents name ${list.length} different people and none match ${entry?.label ?? "this investor"}. Use each investor's own folder.`);
+  // Signers or owners read as separate entries on the same entity's papers are kept as its owners.
+  for (const other of list) if (other !== picked && picked.entityName && other.entityName && other.entityName.toLowerCase() === picked.entityName.toLowerCase()) mergeInvestorInto(picked, other);
+  const { completeProfileFromReading } = await import("@/lib/investor-profile-fill.server");
+  const out = await completeProfileFromReading(userId, { onboardingId: input.onboardingId, investor: picked, sourceRef: `Drive folder ${input.folderName}` });
+  return out;
 }

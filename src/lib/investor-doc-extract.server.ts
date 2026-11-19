@@ -1,11 +1,13 @@
 /**
  * Reads one uploaded investor document with AI and returns suggested details.
  * Staff or that fund's own managers only (same check as adding an investor).
- * The file is read in memory and never stored; tax ID, account and document
- * numbers are excluded by the prompt, the schema and a final redaction pass.
+ * Every page is read (signature pages, questionnaires, exhibits) so the profile can be
+ * completed from one pass. The file is read in memory and never stored; tax ID, account
+ * and document numbers are excluded by the prompt, the schema and a final redaction pass.
+ * Birth dates are asked for and kept only when Harmonious staff read the file.
  */
 import { generateResponse, GatewayError, PaymentRequiredError, RateLimitError } from "@lovable.dev/ai-gateway";
-import { DOC_READ_MAX_BYTES, DOC_READ_TYPES, EXTRACT_INSTRUCTIONS, EXTRACT_SCHEMA, normalizeReading, type DocumentReading } from "@/lib/investor-doc-extract-model";
+import { DOC_READ_MAX_BYTES, DOC_READ_TYPES, EXTRACT_SCHEMA, extractInstructions, normalizeReading, type DocumentReading } from "@/lib/investor-doc-extract-model";
 
 const MODEL = "openai/gpt-6.1-sol";
 
@@ -25,9 +27,9 @@ export async function readNewInvestorDocument(userId: string, input: { offeringI
   try {
     const res = await generateResponse({
       model: MODEL,
-      reasoning: { effort: "low" },
-      instructions: EXTRACT_INSTRUCTIONS,
-      input: [{ role: "user", content: [file, { type: "input_text", text: `File name: ${input.fileName.slice(0, 120)}. Return the investor details as JSON.` }] }],
+      reasoning: { effort: "medium" },
+      instructions: extractInstructions({ includeBirthDate: actor.isStaff }),
+      input: [{ role: "user", content: [file, { type: "input_text", text: `File name: ${input.fileName.slice(0, 120)}. Read every page and return all the investor details as JSON.` }] }],
       text: { format: { type: "json_schema", name: "investor_details", strict: true, schema: EXTRACT_SCHEMA as unknown as Record<string, unknown> } },
     });
     if (res?.status === "failed" || res?.status === "incomplete") throw new Error("The document couldn't be read. Try a clearer copy.");
@@ -40,7 +42,7 @@ export async function readNewInvestorDocument(userId: string, input: { offeringI
       }
     }
     if (!text.trim()) throw new Error("The document couldn't be read. Try a clearer copy.");
-    return normalizeReading(JSON.parse(text));
+    return normalizeReading(JSON.parse(text), { keepBirthDate: actor.isStaff });
   } catch (e) {
     if (e instanceof PaymentRequiredError) throw new Error("Document reading is paused because AI credits have run out.");
     if (e instanceof RateLimitError) throw new Error("Document reading is busy. Wait a minute and try this file again.");

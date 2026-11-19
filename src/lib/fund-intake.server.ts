@@ -251,8 +251,9 @@ export async function applyFundIntakeInvestor(userId: string, input: { runId: st
   const g = review.investors.find((x) => x.key === input.key);
   if (!g) throw new Error("That investor is no longer in the list. Refresh and try again.");
   if (g.decided && g.decided.action !== "skipped") throw new Error("This investor was already handled.");
-  if (input.action === "skip") { await decision(input.runId, null, "investor", "skipped", { key: g.key }, userId); return { ok: true, onboardingId: null, filed: 0, problems: [] as string[] }; }
+  if (input.action === "skip") { await decision(input.runId, null, "investor", "skipped", { key: g.key }, userId); return { ok: true, onboardingId: null, filed: 0, problems: [] as string[], profile: null }; }
   let onboardingId: string;
+  let profileResult: { filled: string[]; suggested: string[]; related: number } | null = null;
   const inv = g.investor;
   if (input.action === "match") {
     if (!input.onboardingId || !review.existing.some((e) => e.onboardingId === input.onboardingId)) throw new Error("Choose who on the fund this is.");
@@ -263,15 +264,34 @@ export async function applyFundIntakeInvestor(userId: string, input: { runId: st
     const legalName = type === "individual" ? null : (input.legalName?.trim() || inv.entityName || null);
     if (type !== "individual" && !legalName) throw new Error("Enter the trust or company's legal name.");
     const { createInvestor } = await import("@/lib/investor-record.server");
+    // Everything the documents showed goes onto the new record at once (no invitation).
+    const details: Record<string, string> = {};
+    if (type !== "individual" && inv.jurisdiction) details["jurisdiction"] = inv.jurisdiction;
+    if (type === "trust" && inv.trustType) details["trustType"] = inv.trustType;
+    if (type === "entity" && inv.entityType) details["entityType"] = inv.entityType;
     const created = await createInvestor(userId, {
       offeringId: review.run.offeringId,
       ...(input.confirmedNew ? { confirmedNew: true } : {}),
-      person: { firstName: inv.firstName, lastName: inv.lastName, ...(inv.email ? { email: inv.email } : {}), ...(inv.phone ? { phone: inv.phone } : {}) } as any,
-      profile: { type, legalName },
-      investment: { amountCents: amountToCents(inv.amount) },
+      person: {
+        firstName: inv.firstName, lastName: inv.lastName, middleName: inv.middleName ?? null, preferredName: inv.preferredName ?? null,
+        ...(inv.email ? { email: inv.email } : {}), phone: inv.phone ?? null, dateOfBirth: inv.dateOfBirth ?? null, citizenship: inv.citizenship ?? null,
+        addressLine1: inv.addressLine1 ?? null, addressLine2: inv.addressLine2 ?? null, city: inv.city ?? null, region: inv.region ?? null,
+        postalCode: inv.postalCode ?? null, country: inv.country ?? null, mailingAddress: inv.mailingAddress ? { line1: inv.mailingAddress } : null,
+      },
+      profile: { type, legalName, subType: type === "entity" ? inv.entityType ?? null : null, details },
+      investment: {
+        amountCents: amountToCents(inv.amount), commitmentCents: amountToCents(inv.commitment ?? null),
+        investmentDate: inv.investmentDate ?? null, unitCount: inv.units ? Number(inv.units) : null,
+      },
+      related: type === "individual" ? [] : (inv.related ?? []).map((r) => ({ firstName: r.firstName, lastName: r.lastName, email: r.email, role: r.isSigner && r.role === "beneficial_owner" ? "authorized_signer" : r.role, ownershipPercent: r.ownershipPercent ? Number(r.ownershipPercent) : null, isSigner: r.isSigner })),
       source: "document",
       allowMissingEmail: !inv.email,
     });
+    const { FIELD_LABELS, EXTRACT_FIELDS } = await import("@/lib/investor-doc-extract-model");
+    profileResult = {
+      filled: EXTRACT_FIELDS.filter((f) => inv[f] != null && !["firstName", "lastName", "profileType", "entityType"].includes(f) && !(type === "individual" && ["entityName", "jurisdiction", "trustType"].includes(f))).map((f) => FIELD_LABELS[f]),
+      suggested: [], related: type === "individual" ? 0 : (inv.related ?? []).length,
+    };
     onboardingId = created.onboardingId;
   }
   const { migrationApplies } = await import("@/lib/fund-origin");
@@ -299,8 +319,15 @@ export async function applyFundIntakeInvestor(userId: string, input: { runId: st
       filed += 1;
     } catch (e: any) { problems.push(`${file.fileName}: ${String(e?.message ?? e).replace(/^Forbidden:\s*/, "")}`); }
   }
-  await decision(input.runId, null, "investor", input.action === "add" ? "added" : "matched", { key: g.key, onboardingId, filed, problems: problems.length }, userId);
-  return { ok: true, onboardingId, filed, problems };
+  // Matched: complete the existing profile from the documents (blanks filled, differences to review).
+  if (input.action === "match") {
+    try {
+      const { completeProfileFromReading } = await import("@/lib/investor-profile-fill.server");
+      profileResult = await completeProfileFromReading(userId, { onboardingId, investor: inv, sourceRef: g.files.map((f) => f.fileName).join(", ").slice(0, 120) });
+    } catch (e: any) { problems.push(`Profile details: ${String(e?.message ?? e).replace(/^Forbidden:\s*/, "")}`); }
+  }
+  await decision(input.runId, null, "investor", input.action === "add" ? "added" : "matched", { key: g.key, onboardingId, filed, problems: problems.length, filled: profileResult?.filled.length ?? 0, suggested: profileResult?.suggested.length ?? 0, related: profileResult?.related ?? 0 }, userId);
+  return { ok: true, onboardingId, filed, problems, profile: profileResult };
 }
 
 export async function listFundIntakeRuns(userId: string, offeringId: string) {

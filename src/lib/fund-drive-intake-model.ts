@@ -121,3 +121,19 @@ export function draftFromFolder(folder: string): FolderInvestorDraft {
   const parts = person.split(" ").filter(Boolean);
   return { type, firstName: parts[0] ?? "", lastName: parts.slice(1).join(" "), legalName: entity, email: "" };
 }
+
+/** Most files read with AI to fill one investor's profile in one go. */
+export const PROFILE_FILL_MAX_FILES = 15;
+export const PROFILE_FILL_MAX_BYTES = 10 * 1024 * 1024;
+
+type Named = { firstName: string | null; lastName: string | null; entityName: string | null };
+/**
+ * Which investor read from the folder is this roster investor: the one whose entity or
+ * person name matches theirs; the only one read when none match by name; otherwise none.
+ */
+export function pickInvestorFor<T extends Named>(names: readonly string[], list: readonly T[]): T | null {
+  const hit = list.filter((i) => names.some((n) => (i.entityName && namesMatch(i.entityName, n)) || (i.firstName && i.lastName && namesMatch(`${i.firstName} ${i.lastName}`, n))));
+  if (hit.length === 1) return hit[0]!;
+  if (hit.length > 1) return hit.find((i) => i.entityName && names.some((n) => namesMatch(i.entityName!, n))) ?? hit[0]!;
+  return list.length === 1 ? list[0]! : null;
+}

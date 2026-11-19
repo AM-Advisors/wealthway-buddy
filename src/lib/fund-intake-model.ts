@@ -4,7 +4,7 @@
  * file goes, and grouping investor readings across files. Display and routing only;
  * saving always goes through the existing setup, document and investor engines.
  */
-import type { ExtractedInvestor } from "@/lib/investor-doc-extract-model";
+import { mergeInvestorInto, type ExtractedInvestor } from "@/lib/investor-doc-extract-model";
 
 export type IntakeProvider = "drive" | "box";
 export type FolderLink = { provider: IntakeProvider; kind: "folder" | "shared"; id: string; url: string };
@@ -116,8 +116,8 @@ export function groupInvestors(readings: { fileId: string; fileName: string; doc
     for (const inv of r.investors) {
       if (!inv.firstName && !inv.lastName && !inv.entityName && !inv.email) continue;
       const g = out.find((x) => same(x.investor, inv));
-      if (!g) { out.push({ key: investorKey(inv), investor: { ...inv }, files: [{ fileId: r.fileId, fileName: r.fileName, kind }] }); continue; }
-      for (const k of Object.keys(inv) as (keyof ExtractedInvestor)[]) if (g.investor[k] == null && inv[k] != null) (g.investor as any)[k] = inv[k];
+      if (!g) { out.push({ key: investorKey(inv), investor: { ...inv, related: [...(inv.related ?? [])] }, files: [{ fileId: r.fileId, fileName: r.fileName, kind }] }); continue; }
+      mergeInvestorInto(g.investor, inv);
       if (!g.files.some((f) => f.fileId === r.fileId)) g.files.push({ fileId: r.fileId, fileName: r.fileName, kind });
     }
   }

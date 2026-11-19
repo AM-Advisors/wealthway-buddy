@@ -1208,3 +1208,4 @@
 - [x] View account page: add/remove client accounts with role, funds and services for that person (reuse existing access engines)
 - [x] Same email / same person shows the same accounts, clients, funds and details on every screen (View account, People directory, client People & Team, quick search)
 - [ ] Bonnie's old suspended login (bonnie@corpscapadvisors.com) still manages one fund: waiting on user to confirm removal
+- [x] AI document imports read every page and complete investor profiles (blanks filled, differences to review, owners/signers added)

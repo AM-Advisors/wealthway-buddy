@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { addFundDriveInvestorFn, approveFundDriveFileFn, fundDriveFileLinkFn, scanFundDriveFn, setFundDriveDecisionFn } from "@/lib/fund-drive-intake.functions";
-import { INTAKE_TARGETS, defaultSignedOn, draftFromFolder, rowStatus, type FolderInvestorDraft, type IntakeRow } from "@/lib/fund-drive-intake-model";
+import { addFundDriveInvestorFn, approveFundDriveFileFn, fillFundDriveProfileFn, fundDriveFileLinkFn, readFundDriveFileFn, scanFundDriveFn, setFundDriveDecisionFn } from "@/lib/fund-drive-intake.functions";
+import { fillSummary } from "@/lib/investor-profile-fill-model";
+import { INTAKE_TARGETS, PROFILE_FILL_MAX_BYTES, PROFILE_FILL_MAX_FILES, defaultSignedOn, draftFromFolder, rowStatus, type FolderInvestorDraft, type IntakeRow } from "@/lib/fund-drive-intake-model";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const STATUS: Record<ReturnType<typeof rowStatus>, { label: string; cls: string }> = {
@@ -58,7 +59,10 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
   const [search, setSearch] = useState("");
   const [bulk, setBulk] = useState(false);
   const addInvestor = useServerFn(addFundDriveInvestorFn);
-  const [adding, setAdding] = useState<{ folderName: string; draft: FolderInvestorDraft; confirmedNew: boolean; askConfirm: boolean; saving: boolean } | null>(null);
+  const [adding, setAdding] = useState<{ folderName: string; draft: FolderInvestorDraft; confirmedNew: boolean; askConfirm: boolean; saving: boolean; fillAfter: boolean } | null>(null);
+  const readFile = useServerFn(readFundDriveFileFn), fillProfile = useServerFn(fillFundDriveProfileFn);
+  // Folder name → progress text while its documents are read to fill in the profile.
+  const [filling, setFilling] = useState<Record<string, string>>({});
 
   const rows = q.data?.rows ?? [];
   const edit = (r: IntakeRow): Edit => edits[r.fileId] ?? { onboardingId: r.onboardingId, target: r.target, signedOn: defaultSignedOn(r.modifiedTime), title: r.fileName.replace(/\.[a-z0-9]{2,5}$/i, "") };
@@ -111,7 +115,35 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
     onApplied?.();
   }
   function startAdd(r: IntakeRow) {
-    setAdding({ folderName: r.folderName, draft: draftFromFolder(r.folderName), confirmedNew: false, askConfirm: false, saving: false });
+    setAdding({ folderName: r.folderName, draft: draftFromFolder(r.folderName), confirmedNew: false, askConfirm: false, saving: false, fillAfter: true });
+  }
+  /** Reads every document in the investor's folder (all pages) and fills in their profile. */
+  async function fillFromFolder(folderName: string, onboardingId: string, assigned: Record<string, Edit> = edits) {
+    const own = (r: IntakeRow) => (assigned[r.fileId] ?? edit(r)).onboardingId;
+    const files = rows.filter((r) => r.folderName === folderName && r.readable && (r.size == null || r.size <= PROFILE_FILL_MAX_BYTES) && r.decision !== "rejected" && (!own(r) || own(r) === onboardingId));
+    if (!files.length) return void toast.error("There are no readable documents in this folder.");
+    const list = files.slice(0, PROFILE_FILL_MAX_FILES);
+    const investors: unknown[] = [], failed: string[] = [];
+    let done = 0;
+    setFilling((f) => ({ ...f, [folderName]: `Reading 0 of ${list.length} documents…` }));
+    try {
+      for (let i = 0; i < list.length; i += 3) {
+        await Promise.all(list.slice(i, i + 3).map(async (r) => {
+          try { const reading = await readFile({ data: { fundId, fileId: r.fileId } }); investors.push(...reading.investors); }
+          catch (err: any) { failed.push(`${r.fileName}: ${err?.message ?? "couldn't be read"}`); }
+          finally { done++; setFilling((f) => ({ ...f, [folderName]: `Reading ${done} of ${list.length} documents…` })); }
+        }));
+      }
+      if (!investors.length) { toast.error(failed.length ? `The documents couldn't be read. ${failed[0]}` : "No investor details were found in these documents."); return; }
+      setFilling((f) => ({ ...f, [folderName]: "Filling in the profile…" }));
+      const out = await fillProfile({ data: { fundId, onboardingId, folderName, investors: investors as Record<string, unknown>[] } });
+      toast.success(fillSummary(out), { duration: 10_000 });
+      if (out.underReview) toast.message(`${out.underReview} owner or signer may already be on file. Harmonious will confirm before linking them.`);
+      if (failed.length) toast.warning(`${failed.length} document${failed.length === 1 ? "" : "s"} couldn't be read: ${failed.join(" · ")}`);
+      if (files.length > list.length) toast.message(`Read the first ${list.length} documents. Run it again after adding the rest to read more.`);
+      onApplied?.();
+    } catch (err: any) { toast.error(String(err?.message ?? "The profile couldn't be filled in").replace(/^Forbidden:\s*/, "")); }
+    finally { setFilling((f) => { const n = { ...f }; delete n[folderName]; return n; }); }
   }
   async function saveNewInvestor() {
     if (!adding) return;
@@ -120,17 +152,17 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
       const res = await addInvestor({ data: { fundId, folderName: adding.folderName, draft: adding.draft, confirmedNew: adding.confirmedNew } });
       qc.setQueryData(key, (old: any) => old ? { ...old, investors: [...old.investors, { onboardingId: res.onboardingId, label: res.label }].sort((a: any, b: any) => a.label.localeCompare(b.label)) } : old);
       // Every open file in the same Drive folder goes to the new investor; each still needs Approve.
-      setEdits((cur) => {
-        const next = { ...cur };
-        for (const r of rows) {
-          const st = statusOf(r);
-          if (r.folderName === adding.folderName && st !== "added" && st !== "unreadable" && !edit(r).onboardingId) next[r.fileId] = { ...edit(r), onboardingId: res.onboardingId };
-        }
-        return next;
-      });
+      const next = { ...edits };
+      for (const r of rows) {
+        const st = statusOf(r);
+        if (r.folderName === adding.folderName && st !== "added" && st !== "unreadable" && !edit(r).onboardingId) next[r.fileId] = { ...edit(r), onboardingId: res.onboardingId };
+      }
+      setEdits(next);
       toast.success(`Added ${res.label} to the fund. No invitation was sent. Approve each file to save it to them.`);
+      const { folderName, fillAfter } = adding;
       setAdding(null);
       onApplied?.();
+      if (fillAfter) void fillFromFolder(folderName, res.onboardingId, next);
     } catch (err: any) {
       const msg = String(err?.message ?? "Couldn't add the investor");
       const maybeSame = /may be this person|already exists/i.test(msg);
@@ -175,8 +207,9 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
           </thead>
           <tbody>
             {shown.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Nothing here.</td></tr>}
-            {shown.map((r) => {
+            {shown.map((r, idx) => {
               const e = edit(r), s = statusOf(r), locked = s === "added" || s === "unreadable", b = busy[r.fileId] || bulk;
+              const firstOfFolder = shown.findIndex((x) => x.folderName === r.folderName && edit(x).onboardingId === e.onboardingId) === idx;
               return (
                 <tr key={r.fileId} className="border-t align-top">
                   <td className="p-2">
@@ -187,6 +220,9 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
                     </select>
                     {!locked && !e.onboardingId && <button type="button" className="mt-1 block text-xs font-medium text-primary hover:underline" onClick={() => startAdd(r)}>Not on the fund? Add as a new investor</button>}
                     <p className="mt-1 text-xs text-muted-foreground">Drive folder: {r.folderName}</p>
+                    {e.onboardingId && firstOfFolder && (filling[r.folderName]
+                      ? <p className="mt-1 text-xs font-medium text-primary" role="status">{filling[r.folderName]}</p>
+                      : <button type="button" className="mt-1 block text-left text-xs font-medium text-primary hover:underline" onClick={() => void fillFromFolder(r.folderName, e.onboardingId!)}>Fill in their profile from this folder's documents</button>)}
                   </td>
                   <td className="p-2">
                     <button type="button" className="inline-flex items-center gap-1 text-left font-medium hover:underline" onClick={() => preview(r)}>{r.fileName}<ExternalLink className="h-3 w-3 shrink-0" /></button>
@@ -241,6 +277,10 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
               <label className="block">{d0.type === "individual" ? "Last name" : "Signer last name"}<Input className="mt-1" value={d0.lastName} onChange={(ev) => setDraft({ lastName: ev.target.value })} /></label>
             </div>
             <label className="block">Email (optional)<Input className="mt-1" type="email" autoComplete="off" value={d0.email} onChange={(ev) => setDraft({ email: ev.target.value })} placeholder="Add later if you don't have it" /></label>
+            <label className="flex items-start gap-2">
+              <input type="checkbox" className="mt-1" checked={!!adding?.fillAfter} onChange={(ev) => setAdding((a) => a ? { ...a, fillAfter: ev.target.checked } : a)} />
+              <span>Then read every document in this folder and fill in the rest of their profile (address, phone, owners and signers, amounts). Anything that differs goes to review.</span>
+            </label>
             {adding?.askConfirm && (
               <label className="flex items-start gap-2 rounded-md border border-destructive/40 p-2">
                 <input type="checkbox" className="mt-1" checked={adding.confirmedNew} onChange={(ev) => setAdding((a) => a ? { ...a, confirmedNew: ev.target.checked } : a)} />

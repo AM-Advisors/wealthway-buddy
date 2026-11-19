@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { amountToCents, groupInvestors, guessSort, investorFileDestination, investorFileKind, parseFolderLink } from "@/lib/fund-intake-model";
 
-const blank = { firstName: null, middleName: null, lastName: null, email: null, phone: null, profileType: null, entityName: null, addressLine1: null, addressLine2: null, city: null, region: null, postalCode: null, country: null, citizenship: null, amount: null };
+const blank = { firstName: null, middleName: null, lastName: null, email: null, phone: null, profileType: null, entityName: null, addressLine1: null, addressLine2: null, city: null, region: null, postalCode: null, country: null, citizenship: null, amount: null, preferredName: null, entityType: null, jurisdiction: null, trustType: null, mailingAddress: null, dateOfBirth: null, commitment: null, investmentDate: null, units: null, related: [] };
 
 describe("folder links", () => {
   it("reads Google Drive folder links", () => {

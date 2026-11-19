@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { InvestorDocumentDrop, type FileReading } from "@/components/investor-document-drop";
 import { uploadOnboardingDocForFn } from "@/lib/investor-extras.functions";
 import { SAVE_TARGETS, guessSaveTarget, namesMatch, type SaveTargetKey } from "@/lib/investor-document-save-model";
-import { FIELD_LABELS, fillBlankFormFields, mergeInvestors, type ExtractedInvestor } from "@/lib/investor-doc-extract-model";
+import { FIELD_LABELS, fillBlankFormFields, mergeInvestors, relatedRowsToAdd, type ExtractedInvestor } from "@/lib/investor-doc-extract-model";
 
 const SECTIONS = ["Contact", "Investment Profile", "Entity / Ownership", "Investment", "Eligibility", "Documents", "Review"] as const;
 type Related = { firstName: string; lastName: string; email: string; role: string; ownershipPercent: string };
@@ -48,10 +48,13 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const [found, setFound] = useState<ExtractedInvestor[]>([]);
   const [filledNote, setFilledNote] = useState<string | null>(null);
   const applyFound = (inv: ExtractedInvestor) => {
-    const r = fillBlankFormFields(f, inv, { profileTouched });
+    const r = fillBlankFormFields(f, inv, { profileTouched, isStaff });
     setF(r.form);
-    if (r.filled.some((k) => !["firstName", "lastName", "email", "profileType", "entityName", "amount"].includes(k))) setFull(true);
-    setFilledNote(r.filled.length ? `Filled from the documents: ${r.filled.map((k) => FIELD_LABELS[k]).join(", ")}. Check every box before saving.` : "Nothing new to fill: the boxes already have values. Check them against the documents.");
+    const owners = relatedRowsToAdd(related, inv);
+    if (owners.length) setRelated((l) => [...l.filter((x) => x.firstName || x.lastName), ...owners]);
+    if (owners.length || r.filled.some((k) => !["firstName", "lastName", "email", "profileType", "entityName", "amount"].includes(k))) setFull(true);
+    const labels = [...r.filled.map((k) => FIELD_LABELS[k]), ...(owners.length ? [`${owners.length} owner${owners.length === 1 ? "" : "s"} or signer${owners.length === 1 ? "" : "s"}`] : [])];
+    setFilledNote(labels.length ? `Filled from the documents: ${labels.join(", ")}. Check every box before saving.` : "Nothing new to fill: the boxes already have values. Check them against the documents.");
   };
   const uploadDoc = useServerFn(uploadOnboardingDocForFn);
   const [readFiles, setReadFiles] = useState<Array<{ file: File; kind: SaveTargetKey | ""; names: string[] }>>([]);

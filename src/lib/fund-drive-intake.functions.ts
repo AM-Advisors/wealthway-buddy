@@ -27,3 +27,11 @@ export const addFundDriveInvestorFn = createServerFn({ method: "POST" }).middlew
     draft: z.object({ type: z.enum(["individual", "entity", "trust"]), firstName: z.string().max(80), lastName: z.string().max(80), legalName: z.string().max(200), email: z.string().max(254) }),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).addIntakeInvestor(context.userId, data));
+
+export const readFundDriveFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ fundId: z.string().uuid(), fileId }).parse)
+  .handler(async ({ data, context }) => (await srv()).readIntakeFile(context.userId, data));
+
+export const fillFundDriveProfileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ fundId: z.string().uuid(), onboardingId: z.string().uuid(), folderName: z.string().max(500), investors: z.array(z.record(z.string(), z.unknown())).max(50) }).parse)
+  .handler(async ({ data, context }) => (await srv()).fillProfileFromIntake(context.userId, data));

@@ -1,3 +1,4 @@
+import { fillSummary } from "@/lib/investor-profile-fill-model";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -153,7 +154,7 @@ function IntakeRun({ offeringId, runId }: { offeringId: string; runId: string })
       {d.investors.length > 0 && (
         <section className="space-y-2">
           <h3 className="text-lg font-semibold">Investors ({d.investors.length})</h3>
-          <p className="text-sm text-muted-foreground">Adding saves the investor with no invitation. Their files go to their record for review; signed subscriptions are kept as earlier signed copies. Identity documents still go through Verification.</p>
+          <p className="text-sm text-muted-foreground">Every page of each document is read. Adding saves the investor with every detail found and no invitation; matching fills in what their record is missing and sends anything different to review. Their files go to their record for review; signed subscriptions are kept as earlier signed copies. Identity documents still go through Verification.</p>
           <div className="space-y-2">{d.investors.map((g: any) => <InvestorRow key={g.key} g={g} runId={runId} existing={d.existing} onDone={() => void q.refetch()} />)}</div>
         </section>
       )}
@@ -174,7 +175,7 @@ function InvestorRow({ g, runId, existing, onDone }: { g: any; runId: string; ex
     setBusy(true);
     try {
       const r: any = await apply({ data: { runId, key: g.key, action, onboardingId: action === "match" ? matchId : null, profileType: type, legalName: type === "individual" ? null : legalName, confirmedNew } });
-      if (action !== "skip") toast.success(`${action === "add" ? "Added" : "Matched"} ${name}. ${r.filed} file${r.filed === 1 ? "" : "s"} filed.`);
+      if (action !== "skip") toast.success(`${action === "add" ? "Added" : "Matched"} ${name}. ${r.filed} file${r.filed === 1 ? "" : "s"} filed.${r.profile ? ` ${fillSummary(r.profile)}` : ""}`, { duration: 10_000 });
       if (r.problems?.length) toast.error(r.problems.join(" · "));
       onDone();
     } catch (e) {
@@ -194,8 +195,12 @@ function InvestorRow({ g, runId, existing, onDone }: { g: any; runId: string; ex
         {g.decided?.action === "skipped" && <Badge variant="outline">Skipped</Badge>}
       </div>
       <p className="text-sm text-muted-foreground">
-        {[inv.email ?? "No email", inv.phone, [inv.city, inv.region].filter(Boolean).join(", "), inv.amount ? `Amount ${inv.amount}` : null].filter(Boolean).join(" · ")}
+        {[inv.email ?? "No email", inv.phone, [inv.addressLine1, inv.city, inv.region, inv.postalCode].filter(Boolean).join(", "), inv.citizenship ? `Citizenship ${inv.citizenship}` : null,
+          inv.amount ? `Amount $${Number(inv.amount).toLocaleString()}` : null, inv.commitment ? `Commitment $${Number(inv.commitment).toLocaleString()}` : null, inv.investmentDate ? `Dated ${inv.investmentDate}` : null].filter(Boolean).join(" · ")}
       </p>
+      {(inv.related ?? []).length > 0 && (
+        <p className="text-sm text-muted-foreground">Owners and signers: {(inv.related as any[]).map((p) => `${p.firstName} ${p.lastName}${p.ownershipPercent ? ` (${p.ownershipPercent}%)` : ""}${p.isSigner ? ", signs" : ""}`).join(" · ")}</p>
+      )}
       <div className="flex flex-wrap gap-1">{g.files.map((f: any) => <Badge key={f.fileId} variant="outline" title={f.fileName}>{INVESTOR_FILE_LABEL[f.kind as InvestorFileKind]}: {f.fileName}</Badge>)}</div>
       {!done && (
         <div className="flex flex-wrap items-center gap-2">
