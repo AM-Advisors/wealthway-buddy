@@ -160,6 +160,58 @@ export function visibleNav(nav: NavGroup[] = MARKETING_NAV): NavGroup[] {
     .filter((g) => g.href || g.items.length > 0);
 }
 
+/**
+ * Compact top-bar menu: the product groups (Fund Administration, SPVs, Cap
+ * Tables) fold into one Solutions menu so the bar stays to five short items.
+ * Built from visibleNav, so planned pages stay hidden here too.
+ */
+const HEADER_SOLUTION_GROUPS = ["Fund Administration", "SPVs", "Cap Tables", "Solutions"];
+const HEADER_DESCRIPTIONS: Record<string, string> = {
+  "/platform": "Onboarding, documents, banking and reporting in one place",
+  "/kyc-aml": "How investors, companies and owners are verified",
+  "/fund-administration": "Full administration for private funds",
+  "/spvs": "Form, close and run an SPV",
+  "/cap-table-management": "Equity, stakeholders and securities",
+  "/solutions": "Find the right fit for your team",
+  "/harmoniousclassroom": "Guides and articles",
+  "/resources": "Checklists, comparisons and buyer's guides",
+  "/about": "Who we are",
+  "/contactus": "Talk to our team",
+};
+const HEADER_LABELS: Record<string, string> = {
+  "/fund-administration": "Fund Administration",
+  "/spvs": "SPVs",
+  "/cap-table-management": "Cap Tables",
+  "/solutions": "All solutions",
+};
+
+export function headerNav(nav: NavGroup[] = visibleNav()): NavGroup[] {
+  const describe = (i: NavItem): NavItem => ({
+    ...i,
+    label: HEADER_LABELS[i.href] ?? i.label,
+    description: i.description ?? HEADER_DESCRIPTIONS[i.href],
+  });
+  const seen = new Set<string>();
+  const solutionItems: NavItem[] = [];
+  for (const g of nav.filter((g) => HEADER_SOLUTION_GROUPS.includes(g.label))) {
+    const items = g.items.length ? g.items : g.href ? [{ label: g.label, href: g.href, status: "live" as const }] : [];
+    for (const i of items) {
+      if (seen.has(i.href)) continue;
+      seen.add(i.href);
+      solutionItems.push(describe(i));
+    }
+  }
+  const out: NavGroup[] = [];
+  for (const g of nav) {
+    if (HEADER_SOLUTION_GROUPS.includes(g.label)) {
+      if (g.label === HEADER_SOLUTION_GROUPS[0] && solutionItems.length) out.push({ label: "Solutions", items: solutionItems });
+      continue;
+    }
+    out.push({ ...g, items: g.items.map(describe) });
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Calls to action
 // ---------------------------------------------------------------------------

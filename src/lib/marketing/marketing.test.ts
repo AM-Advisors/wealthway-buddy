@@ -220,3 +220,14 @@ describe("claims, metrics, pricing, comparisons", () => {
     }
   });
 });
+
+describe("header menu", () => {
+  it("keeps the top bar to five menus with products under Solutions", async () => {
+    const { headerNav } = await import("@/lib/marketing/site-config");
+    const nav = headerNav();
+    expect(nav.map((g) => g.label)).toEqual(["Platform", "Solutions", "Resources", "Pricing", "Company"]);
+    expect(nav.find((g) => g.label === "Solutions")?.items.map((i) => i.href)).toEqual([
+      "/fund-administration", "/spvs", "/cap-table-management", "/solutions",
+    ]);
+  });
+});
