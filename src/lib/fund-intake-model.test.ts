@@ -53,3 +53,12 @@ describe("grouping investors across files", () => {
   });
   it("amounts parse to cents", () => { expect(amountToCents("$50,000")).toBe(5_000_000); expect(amountToCents("about 50k")).toBeNull(); });
 });
+
+import { investorFileDestination as dest2, investorFileKind as kind2 } from "./fund-intake-model";
+describe("capital account statements in a shared folder pull", () => {
+  it("are kept on the investment as earlier records on new and migration funds", () => {
+    expect(kind2("Capital account statement", "Q4.pdf")).toBe("capital_account_statement");
+    expect(dest2("capital_account_statement", false)).toEqual({ to: "prior_signed", priorKind: "capital_account_statement" });
+    expect(dest2("capital_account_statement", true)).toEqual({ to: "prior_signed", priorKind: "capital_account_statement" });
+  });
+});

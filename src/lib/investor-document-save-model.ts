@@ -12,6 +12,7 @@ export const SAVE_TARGETS = [
   { key: "operating_agreement", label: "Entity operating or trust agreement", store: "upload", use: "accept_copy" },
   { key: "fund_operating_agreement", label: "Signed fund operating agreement", store: "prior", use: null },
   { key: "schedule_k1", label: "Schedule K-1", store: "prior", use: null },
+  { key: "capital_account_statement", label: "Capital account statement", store: "prior", use: null },
   { key: "ownership_list", label: "Ownership list", store: "upload", use: "accept_copy" },
   { key: "subscription_agreement", label: "Signed subscription agreement", store: "prior", use: "subscription_outside" },
   { key: "side_letter", label: "Signed side letter", store: "prior", use: null },
@@ -32,6 +33,7 @@ export const USE_LABEL: Record<NonNullable<SaveUse>, string> = {
 export function guessSaveTarget(documentKind: string): SaveTargetKey | null {
   const k = documentKind.toLowerCase();
   if (/\bk-?1\b|schedule k/.test(k)) return "schedule_k1";
+  if (/capital account|capital statement|partner (capital )?statement|investor statement/.test(k)) return "capital_account_statement";
   if (/\bw-?9\b|\bw-?8|tax form/.test(k)) return "tax_form";
   if (/accredit|cpa letter|attorney letter|verification letter/.test(k)) return "accreditation_proof";
   if (/subscription/.test(k)) return "subscription_agreement";
@@ -55,6 +57,7 @@ export const TARGET_HINT: Record<SaveTargetKey, string> = {
   operating_agreement: "The investor's own entity operating, partnership or trust agreement (KYC proof of the investing entity).",
   fund_operating_agreement: "The fund's or SPV's operating or LP agreement signed by the investor as a member; report whether it is signed and the signature date.",
   schedule_k1: "IRS Schedule K-1 issued by the fund to this investor; report the tax year end as document_date (YYYY-12-31).",
+  capital_account_statement: "Capital account statement issued to this investor by the fund or an earlier administrator; report the statement period end as document_date.",
   ownership_list: "List of owners or beneficial owners with percentages.",
   subscription_agreement: "Fund subscription agreement; report whether it is signed and the signature date.",
   side_letter: "Side letter between the fund and the investor; report whether it is signed and the date.",

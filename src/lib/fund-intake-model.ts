@@ -36,7 +36,7 @@ export function parseFolderLink(raw: string): FolderLink | null {
   return null;
 }
 
-const INVESTOR_WORDS = /\b(investors?|lps?|limited partners?|subscribers?|subscriptions? (docs?|signed|packets?)|kyc|aml|w-?9|w-?8|w8ben|accredit|passport|driver'?s? licen[cs]e|ids?|signed sub|k-?1)\b/i;
+const INVESTOR_WORDS = /\b(investors?|lps?|limited partners?|subscribers?|subscriptions? (docs?|signed|packets?)|kyc|aml|w-?9|w-?8|w8ben|accredit|passport|driver'?s? licen[cs]e|ids?|signed sub|k-?1|capital (account )?statements?|capital accounts?)\b/i;
 const FUND_WORDS = /\b(operating agreement|llc agreement|lpa|limited partnership agreement|ppm|private placement|memorandum|subscription agreement (template|form)|ein|ss-?4|cp ?575|wire instructions?|certificate of (formation|organization)|formation|term sheet|side letter template|articles)\b/i;
 const SKIP = /\.(xlsx?|csv|docx?|pptx?|zip|txt|mp4|mov)$/i;
 
@@ -61,17 +61,20 @@ export function readableType(name: string, mime: string | null | undefined): str
   return n.endsWith(".pdf") ? "application/pdf" : n.endsWith(".png") ? "image/png" : /\.jpe?g$/.test(n) ? "image/jpeg" : n.endsWith(".webp") ? "image/webp" : null;
 }
 
-export type InvestorFileKind = "identification" | "proof_of_address" | "accreditation_proof" | "entity_formation" | "operating_agreement" | "ownership_list" | "tax_form" | "signed_subscription" | "other";
+export type InvestorFileKind = "identification" | "proof_of_address" | "accreditation_proof" | "entity_formation" | "operating_agreement" | "ownership_list" | "tax_form" | "signed_subscription" | "capital_account_statement" | "schedule_k1" | "other";
 
 export const INVESTOR_FILE_LABEL: Record<InvestorFileKind, string> = {
   identification: "Government ID", proof_of_address: "Proof of address", accreditation_proof: "Accreditation proof",
   entity_formation: "Entity formation", operating_agreement: "Trust or operating agreement", ownership_list: "Owner list",
-  tax_form: "Signed W-9 or W-8", signed_subscription: "Signed subscription agreement", other: "Other",
+  tax_form: "Signed W-9 or W-8", signed_subscription: "Signed subscription agreement",
+  capital_account_statement: "Capital account statement", schedule_k1: "Schedule K-1", other: "Other",
 };
 
 /** Map the reader's document kind (and the file name) to where the file is filed for that investor. */
 export function investorFileKind(documentKind: string | null | undefined, fileName: string): InvestorFileKind {
   const t = `${documentKind ?? ""} ${fileName}`.toLowerCase();
+  if (/\bk-?1\b|schedule k/.test(t)) return "schedule_k1";
+  if (/capital account|capital statement|partner (capital )?statement|investor statement/.test(t)) return "capital_account_statement";
   if (/w-?9|w-?8|w8ben|tax form/.test(t)) return "tax_form";
   if (/subscription/.test(t)) return "signed_subscription";
   if (/passport|driver|licen[cs]e|government id|identification|\bid\b/.test(t)) return "identification";
@@ -88,8 +91,10 @@ export function investorFileKind(documentKind: string | null | undefined, fileNa
  * migration funds) are recorded as earlier signed copies; other files go to the investor's
  * uploads for review. Nothing here marks anything verified, signed or funded.
  */
-export function investorFileDestination(kind: InvestorFileKind, migration: boolean): { to: "prior_signed"; priorKind: "subscription_agreement" | "tax_form" | "accreditation" | "other" } | { to: "upload"; uploadKind: Exclude<InvestorFileKind, "signed_subscription" | "other"> } | { to: "none" } {
+export function investorFileDestination(kind: InvestorFileKind, migration: boolean): { to: "prior_signed"; priorKind: "subscription_agreement" | "tax_form" | "accreditation" | "capital_account_statement" | "schedule_k1" | "other" } | { to: "upload"; uploadKind: Exclude<InvestorFileKind, "signed_subscription" | "capital_account_statement" | "schedule_k1" | "other"> } | { to: "none" } {
   if (kind === "signed_subscription") return { to: "prior_signed", priorKind: "subscription_agreement" };
+  // Investment records from an earlier administrator: kept on the investment only, never posted to capital accounts.
+  if (kind === "capital_account_statement" || kind === "schedule_k1") return { to: "prior_signed", priorKind: kind };
   if (kind === "tax_form" && migration) return { to: "prior_signed", priorKind: "tax_form" };
   if (kind === "other") return migration ? { to: "prior_signed", priorKind: "other" } : { to: "none" };
   return { to: "upload", uploadKind: kind };

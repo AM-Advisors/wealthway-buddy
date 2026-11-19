@@ -5,27 +5,58 @@
  */
 import { nameTokens, namesMatch } from "@/lib/investor-document-save-model";
 
+/**
+ * Where an approved Drive file goes. "prior": kept on the investment as an earlier record
+ * (signed copies and investment documents such as capital account statements; evidence only,
+ * never marks anything signed, funded or verified). "upload": the investor's documents for review.
+ * "fund": a new version on the fund's Documents awaiting approval; no investor is needed.
+ */
+export const INTAKE_GROUPS = [
+  { key: "signed", label: "Investor's signed documents" },
+  { key: "investment", label: "Investment documents" },
+  { key: "investor", label: "Investor's ID and entity papers" },
+  { key: "fund", label: "Fund documents" },
+] as const;
+export type IntakeGroup = (typeof INTAKE_GROUPS)[number]["key"];
+
 export const INTAKE_TARGETS = [
-  { key: "subscription_agreement", label: "Signed outside · Subscription Agreement", store: "prior" },
-  { key: "operating_agreement", label: "Signed outside · Operating Agreement", store: "prior" },
-  { key: "side_letter", label: "Signed outside · Side letter", store: "prior" },
-  { key: "schedule_k1", label: "Signed outside · Schedule K-1", store: "prior" },
-  { key: "tax_form", label: "Signed outside · Tax form (W-9 / W-8)", store: "prior" },
-  { key: "accreditation", label: "Signed outside · Accreditation evidence", store: "prior" },
-  { key: "doc_identification", label: "Documents · Government ID", store: "upload" },
-  { key: "doc_proof_of_address", label: "Documents · Proof of address", store: "upload" },
-  { key: "doc_entity_formation", label: "Documents · Entity formation", store: "upload" },
-  { key: "doc_operating_agreement", label: "Documents · Entity operating or trust agreement", store: "upload" },
-  { key: "doc_ownership_list", label: "Documents · Ownership list", store: "upload" },
-  { key: "other", label: "Signed outside · Other document", store: "prior" },
+  { key: "subscription_agreement", label: "Signed outside · Subscription Agreement", store: "prior", group: "signed" },
+  { key: "operating_agreement", label: "Signed outside · Operating Agreement", store: "prior", group: "signed" },
+  { key: "side_letter", label: "Signed outside · Side letter", store: "prior", group: "signed" },
+  { key: "tax_form", label: "Signed outside · Tax form (W-9 / W-8)", store: "prior", group: "signed" },
+  { key: "accreditation", label: "Signed outside · Accreditation evidence", store: "prior", group: "signed" },
+  { key: "other", label: "Signed outside · Other document", store: "prior", group: "signed" },
+  { key: "capital_account_statement", label: "Investment · Capital account statement", store: "prior", group: "investment" },
+  { key: "schedule_k1", label: "Investment · Schedule K-1", store: "prior", group: "investment" },
+  { key: "capital_call_notice", label: "Investment · Capital call notice", store: "prior", group: "investment" },
+  { key: "distribution_notice", label: "Investment · Distribution notice", store: "prior", group: "investment" },
+  { key: "funding_confirmation", label: "Investment · Wire or funding confirmation (record only)", store: "prior", group: "investment" },
+  { key: "investment_other", label: "Investment · Other investment document", store: "prior", group: "investment" },
+  { key: "doc_identification", label: "Documents · Government ID", store: "upload", group: "investor" },
+  { key: "doc_proof_of_address", label: "Documents · Proof of address", store: "upload", group: "investor" },
+  { key: "doc_entity_formation", label: "Documents · Entity formation", store: "upload", group: "investor" },
+  { key: "doc_operating_agreement", label: "Documents · Entity operating or trust agreement", store: "upload", group: "investor" },
+  { key: "doc_ownership_list", label: "Documents · Ownership list", store: "upload", group: "investor" },
+  { key: "fund_operating_agreement", label: "Fund · Operating Agreement (fund's copy)", store: "fund", group: "fund", category: "operating_agreement" },
+  { key: "fund_subscription_agreement", label: "Fund · Subscription Agreement (blank form)", store: "fund", group: "fund", category: "subscription_agreement" },
+  { key: "fund_ppm", label: "Fund · Private placement memorandum", store: "fund", group: "fund", category: "ppm" },
+  { key: "fund_wire_form", label: "Fund · Wire instructions", store: "fund", group: "fund", category: "wire_form" },
+  { key: "fund_other", label: "Fund · Other fund document", store: "fund", group: "fund", category: "other" },
 ] as const;
 export type IntakeTarget = (typeof INTAKE_TARGETS)[number]["key"];
 export const intakeTarget = (k: string) => INTAKE_TARGETS.find((t) => t.key === k) ?? null;
+/** Fund documents belong to the fund, not to one investor. */
+export const targetNeedsInvestor = (k: string | null | undefined) => !k || intakeTarget(k)?.store !== "fund";
 
 /** Best guess from the file name; null means Operations pick. */
 export function classifyFileName(name: string): IntakeTarget | null {
   const n = name.toLowerCase().replace(/[_\-.]+/g, " ");
   if (/\bk ?1\b|schedule k/.test(n)) return "schedule_k1";
+  if (/capital account|capital statement|partner (capital )?statement|investor statement/.test(n)) return "capital_account_statement";
+  if (/capital call|drawdown notice/.test(n)) return "capital_call_notice";
+  if (/distribution (notice|statement)/.test(n)) return "distribution_notice";
+  if (/wire confirmation|funding confirmation|wire receipt/.test(n)) return "funding_confirmation";
+  if (/\bppm\b|private placement|offering memorandum/.test(n) && !/acknowledg|signature|signed/.test(n)) return "fund_ppm";
   if (/subscription|\bsub (agreement|doc)/.test(n)) return "subscription_agreement";
   if (/side letter/.test(n)) return "side_letter";
   if (/\bw ?9\b|\bw ?8/.test(n)) return "tax_form";
@@ -90,13 +121,14 @@ export type IntakeRow = {
   onboardingId: string | null; target: IntakeTarget | null; decision: IntakeDecision | null; readable: boolean;
 };
 
-/** Ready when investor, type are known and nothing has been decided. */
+/** Ready when the type is known (and the investor, unless it's a fund document) and nothing has been decided. */
 export function rowStatus(r: Pick<IntakeRow, "onboardingId" | "target" | "decision" | "readable">): "added" | "rejected" | "later" | "ready" | "review" | "unreadable" {
   if (r.decision === "approved") return "added";
   if (r.decision === "rejected") return "rejected";
   if (!r.readable) return "unreadable";
   if (r.decision === "later") return "later";
-  return r.onboardingId && r.target ? "ready" : "review";
+  if (!r.target) return "review";
+  return r.onboardingId || !targetNeedsInvestor(r.target) ? "ready" : "review";
 }
 
 /** Signed date default: the file's last-modified day, never in the future. */

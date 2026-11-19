@@ -18,6 +18,11 @@ export const PRIOR_DOC_KINDS = {
   side_letter: "Side letter",
   accreditation: "Accreditation evidence",
   schedule_k1: "Schedule K-1",
+  capital_account_statement: "Capital account statement",
+  capital_call_notice: "Capital call notice",
+  distribution_notice: "Distribution notice",
+  funding_confirmation: "Wire or funding confirmation",
+  investment_other: "Other investment document",
   other: "Other signed document",
 } as const;
 export type PriorDocKind = keyof typeof PRIOR_DOC_KINDS;

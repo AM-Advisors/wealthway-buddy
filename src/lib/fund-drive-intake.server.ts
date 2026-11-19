@@ -146,12 +146,20 @@ export async function setIntakeDecision(userId: string, input: { fundId: string;
   return { ok: true };
 }
 
-/** Approve: copy the Drive file into the investor's record through the existing engines. */
-export async function approveIntakeFile(userId: string, input: { fundId: string; fileId: string; onboardingId: string; target: string; signedOn: string; title: string }) {
+/**
+ * Approve: copy the Drive file through the existing engines: the investor's record (signed copies,
+ * investment documents, ID papers) or, for fund documents, a new version on the fund's Documents
+ * that still needs approval there.
+ */
+export async function approveIntakeFile(userId: string, input: { fundId: string; fileId: string; onboardingId?: string | null | undefined; target: string; signedOn: string; title: string }) {
   const d = await assertOps(userId);
-  await belongs(d, input.fundId, input.onboardingId);
   const t = intakeTarget(input.target);
   if (!t) throw new Error("Choose where this document goes.");
+  const onboardingId = t.store === "fund" ? null : input.onboardingId ?? null;
+  if (t.store !== "fund") {
+    if (!onboardingId) throw new Error("Pick the investor this document belongs to.");
+    await belongs(d, input.fundId, onboardingId);
+  }
   const prev = (await decisions(d, input.fundId)).get(input.fileId);
   if (prev?.decision === "approved") throw new Error("This file was already added.");
 
@@ -169,23 +177,34 @@ export async function approveIntakeFile(userId: string, input: { fundId: string;
   const signedOn = input.signedOn || defaultSignedOn(m.modifiedTime ?? null);
 
   let resultId: string;
-  if (t.store === "prior") {
+  if (t.store === "fund") {
+    const engine = await import("@/lib/offering-document-setup.server");
+    const category = (t as { category: "operating_agreement" | "subscription_agreement" | "ppm" | "wire_form" | "other" }).category;
+    const doc: any = await engine.createSetupDocument(userId, { offeringId: input.fundId, category, title: category === "other" ? (input.title.trim() || fileName.replace(/\.[^.]+$/, "")).slice(0, 200) : null });
+    const documentId = String(doc?.id ?? "");
+    if (!documentId) throw new Error("The fund document couldn't be added.");
+    const path = `${input.fundId}/setup/${documentId}/${Date.now()}-${fileName.replace(/[^\w.\-]+/g, "_")}`;
+    const up = await d.storage.from("offering-files").upload(path, new Blob([bytes as unknown as BlobPart], { type: r.as }), { contentType: r.as });
+    if (up.error) throw new Error("The file couldn't be saved.");
+    await engine.uploadDocumentVersion(userId, { documentId, filePath: path, fileName, fileSizeBytes: bytes.byteLength });
+    resultId = documentId;
+  } else if (t.store === "prior") {
     const prior = await import("@/lib/prior-signed-documents.server");
-    const start = await prior.startPriorUpload(d, userId, { fundId: input.fundId, onboardingId: input.onboardingId, fileName });
+    const start = await prior.startPriorUpload(d, userId, { fundId: input.fundId, onboardingId: onboardingId!, fileName });
     const up = await d.storage.from("signed-documents").uploadToSignedUrl(start.path, start.token, bytes, { contentType: r.as });
     if (up.error) throw new Error("The file couldn't be saved.");
     const rec = await prior.recordPriorDoc(d, userId, {
-      fundId: input.fundId, onboardingId: input.onboardingId, path: start.path, fileName, kind: t.key as any,
+      fundId: input.fundId, onboardingId: onboardingId!, path: start.path, fileName, kind: t.key as any,
       title: input.title.trim() || fileName, signedOn, note: "Added from the fund's Google Drive by Operations",
     });
     resultId = rec.id;
   } else {
     const { uploadDocFor } = await import("@/lib/investor-extras.server");
     let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-    const rec = await uploadDocFor(userId, { onboardingId: input.onboardingId, kind: t.key.replace(/^doc_/, "") as any, fileName, contentType: r.as, base64: btoa(bin) });
+    const rec = await uploadDocFor(userId, { onboardingId: onboardingId!, kind: t.key.replace(/^doc_/, "") as any, fileName, contentType: r.as, base64: btoa(bin) });
     resultId = rec.id;
   }
-  await logDecision(d, userId, input.fundId, input.onboardingId, { file_id: input.fileId, file_name: m.name, decision: "approved", target: t.key, result_id: resultId, signed_on: signedOn });
+  await logDecision(d, userId, input.fundId, onboardingId, { file_id: input.fileId, file_name: m.name, decision: "approved", target: t.key, result_id: resultId, signed_on: t.store === "fund" ? null : signedOn });
   return { ok: true, id: resultId };
 }
 

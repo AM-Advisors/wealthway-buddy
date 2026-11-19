@@ -14,7 +14,7 @@ export const setFundDriveDecisionFn = createServerFn({ method: "POST" }).middlew
   .handler(async ({ data, context }) => (await srv()).setIntakeDecision(context.userId, data));
 
 export const approveFundDriveFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(z.object({ fundId: z.string().uuid(), fileId, onboardingId: z.string().uuid(), target: z.string().min(1).max(60), signedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), title: z.string().max(200) }).parse)
+  .validator(z.object({ fundId: z.string().uuid(), fileId, onboardingId: z.string().uuid().nullish(), target: z.string().min(1).max(60), signedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), title: z.string().max(200) }).parse)
   .handler(async ({ data, context }) => (await srv()).approveIntakeFile(context.userId, data));
 
 export const fundDriveFileLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

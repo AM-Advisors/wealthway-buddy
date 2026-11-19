@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 const db = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const srv = () => import("@/lib/prior-signed-documents.server");
 const base = z.object({ fundId: z.string().uuid(), onboardingId: z.string().uuid() });
-const KINDS = ["subscription_agreement", "operating_agreement", "ppm_acknowledgment", "tax_form", "side_letter", "accreditation", "schedule_k1", "other"] as const;
+const KINDS = ["subscription_agreement", "operating_agreement", "ppm_acknowledgment", "tax_form", "side_letter", "accreditation", "schedule_k1", "capital_account_statement", "capital_call_notice", "distribution_notice", "funding_confirmation", "investment_other", "other"] as const;
 
 export const listPriorDocsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(base.parse)
   .handler(async ({ data, context }) => (await srv()).listPriorDocs(await db(), context.userId, data));

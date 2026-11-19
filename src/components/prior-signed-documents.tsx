@@ -17,9 +17,16 @@ const KINDS: Record<string, string> = {
   tax_form: "Tax form (W-9 / W-8)",
   side_letter: "Side letter",
   accreditation: "Accreditation evidence",
+  capital_account_statement: "Capital account statement",
+  capital_call_notice: "Capital call notice",
+  distribution_notice: "Distribution notice",
+  funding_confirmation: "Wire or funding confirmation (record only)",
+  investment_other: "Other investment document",
   other: "Other signed document",
 };
-type Kind = keyof typeof KINDS & ("subscription_agreement" | "operating_agreement" | "ppm_acknowledgment" | "tax_form" | "side_letter" | "accreditation" | "other");
+type Kind = keyof typeof KINDS & ("subscription_agreement" | "operating_agreement" | "ppm_acknowledgment" | "tax_form" | "side_letter" | "accreditation" | "capital_account_statement" | "capital_call_notice" | "distribution_notice" | "funding_confirmation" | "investment_other" | "other");
+/** Investment records (statements, notices, confirmations) carry a document date, not a signature date. */
+const INVESTMENT_KINDS = new Set(["capital_account_statement", "capital_call_notice", "distribution_notice", "funding_confirmation", "investment_other", "schedule_k1"]);
 
 /** Harmonious or the fund's managers load documents an investor already completed in another system. */
 export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string; onboardingId: string }) {
@@ -54,7 +61,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
 
   const reset = () => { setAdding(false); setFile(null); setTitle(""); setSignedOn(""); setNote(""); setReplacesId(null); };
   const save = async () => {
-    if (!file || !signedOn) { toast.error("Choose the file and the date it was signed."); return; }
+    if (!file || !signedOn) { toast.error(INVESTMENT_KINDS.has(kind) ? "Choose the file and the date on the document." : "Choose the file and the date it was signed."); return; }
     if (replacesId && !note.trim()) { toast.error("Give a reason for the replacement."); return; }
     setBusy(true);
     try {
@@ -90,7 +97,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
             <div className="min-w-0">
               <p className="break-words font-medium">{d.title}</p>
-              <p className="text-xs text-muted-foreground">{d.kindLabel !== d.title ? `${d.kindLabel} · ` : ""}Signed {d.signedOn} · Loaded by {d.uploadedBy}{outsideDone && d.kind === "subscription_agreement" && !d.replaced && !d.withdrawn ? " · Signed outside the platform" : ""}{d.replaced ? " · Replaced, retained copy" : ""}{d.withdrawn ? " · Undone, retained copy" : ""}</p>
+              <p className="text-xs text-muted-foreground">{d.kindLabel !== d.title ? `${d.kindLabel} · ` : ""}{INVESTMENT_KINDS.has(d.kind) ? "Dated" : "Signed"} {d.signedOn} · Loaded by {d.uploadedBy}{outsideDone && d.kind === "subscription_agreement" && !d.replaced && !d.withdrawn ? " · Signed outside the platform" : ""}{d.replaced ? " · Replaced, retained copy" : ""}{d.withdrawn ? " · Undone, retained copy" : ""}</p>
               {d.note && <p className="text-xs text-muted-foreground">{d.note}</p>}
               {d.withdrawn && d.withdrawnReason && <p className="text-xs text-muted-foreground">Undo reason: {d.withdrawnReason}</p>}
             </div>
@@ -113,7 +120,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
             <SelectContent>{kindOptions.map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
           </Select>
           <Input aria-label="Document name" placeholder={KINDS[kind]} value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} />
-          <label className="block text-xs text-muted-foreground">Date signed<Input type="date" value={signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSignedOn(e.target.value)} /></label>
+          <label className="block text-xs text-muted-foreground">{INVESTMENT_KINDS.has(kind) ? "Date on the document" : "Date signed"}<Input type="date" value={signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSignedOn(e.target.value)} /></label>
           <Input ref={fileRef} type="file" aria-label="Signed document file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           <Input aria-label="Note" placeholder={replacesId ? "Reason for replacement (required)" : "Note (optional)"} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
           <div className="flex gap-2">

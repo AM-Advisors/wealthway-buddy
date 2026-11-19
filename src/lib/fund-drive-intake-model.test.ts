@@ -44,3 +44,23 @@ describe("new investor from a Drive folder", () => {
     expect(draftFromFolder("P4L2 Holdings LLC")).toMatchObject({ type: "entity", firstName: "", legalName: "P4L2 Holdings LLC" });
   });
 });
+
+import { intakeTarget, targetNeedsInvestor } from "./fund-drive-intake-model";
+describe("fund and investment documents in Drive intake", () => {
+  it("capital account statements are investment records kept on the investment", () => {
+    expect(classifyFileName("Q3 2025 Capital Account Statement - Travis Roberts.pdf")).toBe("capital_account_statement");
+    expect(intakeTarget("capital_account_statement")).toMatchObject({ store: "prior", group: "investment" });
+  });
+  it("fund documents need no investor and are ready once the type is chosen", () => {
+    expect(targetNeedsInvestor("fund_ppm")).toBe(false);
+    expect(rowStatus({ onboardingId: null, target: "fund_ppm", decision: null, readable: true })).toBe("ready");
+    expect(intakeTarget("fund_operating_agreement")).toMatchObject({ store: "fund", category: "operating_agreement" });
+  });
+  it("investor documents still need the investor", () => {
+    expect(rowStatus({ onboardingId: null, target: "capital_account_statement", decision: null, readable: true })).toBe("review");
+  });
+  it("a signed PPM acknowledgment is not filed as the fund's PPM", () => {
+    expect(classifyFileName("PPM acknowledgment signed.pdf")).not.toBe("fund_ppm");
+    expect(classifyFileName("Fund II Private Placement Memorandum.pdf")).toBe("fund_ppm");
+  });
+});

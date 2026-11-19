@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { addFundDriveInvestorFn, approveFundDriveFileFn, fillFundDriveProfileFn, fundDriveFileLinkFn, readFundDriveFileFn, scanFundDriveFn, setFundDriveDecisionFn } from "@/lib/fund-drive-intake.functions";
 import { fillSummary } from "@/lib/investor-profile-fill-model";
-import { INTAKE_TARGETS, PROFILE_FILL_MAX_BYTES, PROFILE_FILL_MAX_FILES, defaultSignedOn, draftFromFolder, rowStatus, type FolderInvestorDraft, type IntakeRow } from "@/lib/fund-drive-intake-model";
+import { INTAKE_GROUPS, INTAKE_TARGETS, PROFILE_FILL_MAX_BYTES, targetNeedsInvestor, PROFILE_FILL_MAX_FILES, defaultSignedOn, draftFromFolder, rowStatus, type FolderInvestorDraft, type IntakeRow } from "@/lib/fund-drive-intake-model";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const STATUS: Record<ReturnType<typeof rowStatus>, { label: string; cls: string }> = {
@@ -37,7 +37,7 @@ export function FundDriveIntakeButton({ fundId, onApplied }: { fundId: string; o
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-[90vw]">
           <SheetHeader>
             <SheetTitle>Intake &amp; match from Drive</SheetTitle>
-            <SheetDescription>Files from this fund's Google Drive Investors folder, matched to investors. Nothing is saved until you approve it. Investors are not emailed. Operations only.</SheetDescription>
+            <SheetDescription>Files from this fund's Google Drive Investors folder, matched to investors. Add investor documents, investment documents such as capital account statements, and fund documents. Nothing is saved until you approve it. Investors are not emailed. Operations only.</SheetDescription>
           </SheetHeader>
           {open && <IntakeQueue fundId={fundId} onApplied={onApplied} />}
         </SheetContent>
@@ -85,12 +85,13 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
 
   async function doApprove(r: IntakeRow, quiet = false) {
     const e = edit(r);
-    if (!e.onboardingId || !e.target) { if (!quiet) toast.error("Pick the investor and where it goes first."); return false; }
+    const forInvestor = targetNeedsInvestor(e.target);
+    if (!e.target || (forInvestor && !e.onboardingId)) { if (!quiet) toast.error(e.target ? "Pick the investor this document belongs to." : "Choose where it goes first."); return false; }
     setBusy((b) => ({ ...b, [r.fileId]: true }));
     try {
-      await approve({ data: { fundId, fileId: r.fileId, onboardingId: e.onboardingId, target: e.target, signedOn: e.signedOn, title: e.title } });
-      setRow(r.fileId, { decision: "approved", onboardingId: e.onboardingId, target: e.target as any });
-      if (!quiet) toast.success(`Added ${r.fileName}`);
+      await approve({ data: { fundId, fileId: r.fileId, onboardingId: forInvestor ? e.onboardingId : null, target: e.target, signedOn: e.signedOn, title: e.title } });
+      setRow(r.fileId, { decision: "approved", onboardingId: forInvestor ? e.onboardingId : null, target: e.target as any });
+      if (!quiet) toast.success(forInvestor ? `Added ${r.fileName}` : `Added ${r.fileName} to the fund's Documents. Approve it there before investors see it.`);
       return true;
     } catch (err: any) { toast.error(`${r.fileName}: ${err?.message ?? "Couldn't add"}`); return false; }
     finally { setBusy((b) => ({ ...b, [r.fileId]: false })); }
@@ -199,16 +200,17 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
           <Button size="sm" onClick={approveAll} disabled={bulk || counts.ready === 0}>{bulk ? "Adding…" : `Approve & populate all ready (${counts.ready})`}</Button>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">Folder: {q.data?.folderName} · {rows.length} files. Subscription and operating agreements go to Signed before joining Harmonious; ID and entity papers go to Documents.</p>
+      <p className="text-sm text-muted-foreground">Folder: {q.data?.folderName} · {rows.length} files. Signed agreements go to Signed before joining Harmonious. Investment documents, such as capital account statements, K-1s and notices, are kept on the investment as records only. ID and entity papers go to the investor's Documents. Fund documents go to the fund's Documents as a new version that still needs approval there.</p>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-            <tr><th className="p-2">Investor</th><th className="p-2">File</th><th className="p-2">Goes to</th><th className="p-2">Signed on</th><th className="p-2">Status</th><th className="p-2 text-right">Action</th></tr>
+            <tr><th className="p-2">Investor</th><th className="p-2">File</th><th className="p-2">Goes to</th><th className="p-2">Date</th><th className="p-2">Status</th><th className="p-2 text-right">Action</th></tr>
           </thead>
           <tbody>
             {shown.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Nothing here.</td></tr>}
             {shown.map((r, idx) => {
               const e = edit(r), s = statusOf(r), locked = s === "added" || s === "unreadable", b = busy[r.fileId] || bulk;
+              const forInvestor = targetNeedsInvestor(e.target);
               const firstOfFolder = shown.findIndex((x) => x.folderName === r.folderName && edit(x).onboardingId === e.onboardingId) === idx;
               return (
                 <tr key={r.fileId} className="border-t align-top">
@@ -229,17 +231,23 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
                     {!locked && <Input className="mt-1 h-8" aria-label="Title" value={e.title} onChange={(ev) => patch(r.fileId, r, { title: ev.target.value })} />}
                   </td>
                   <td className="p-2">
-                    <select aria-label="Goes to" className="w-60 rounded-md border bg-background p-1.5" disabled={locked} value={e.target ?? ""} onChange={(ev) => patch(r.fileId, r, { target: ev.target.value || null })}>
+                    <select aria-label="Goes to" className="w-64 rounded-md border bg-background p-1.5" disabled={locked} value={e.target ?? ""} onChange={(ev) => patch(r.fileId, r, { target: ev.target.value || null })}>
                       <option value="">Choose…</option>
-                      {INTAKE_TARGETS.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+                      {INTAKE_GROUPS.map((g) => (
+                        <optgroup key={g.key} label={g.label}>
+                          {INTAKE_TARGETS.filter((t) => t.group === g.key).map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+                        </optgroup>))}
                     </select>
+                    {!forInvestor && <p className="mt-1 text-xs text-muted-foreground">Fund document: no investor needed. It's added to the fund's Documents for approval.</p>}
                   </td>
-                  <td className="p-2"><Input type="date" className="h-8 w-36" disabled={locked} value={e.signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(ev) => patch(r.fileId, r, { signedOn: ev.target.value })} /></td>
+                  <td className="p-2">{forInvestor
+                    ? <Input type="date" aria-label="Date on the document" className="h-8 w-36" disabled={locked} value={e.signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(ev) => patch(r.fileId, r, { signedOn: ev.target.value })} />
+                    : <span className="text-xs text-muted-foreground">Not needed</span>}</td>
                   <td className="p-2"><Badge variant="outline" className={STATUS[s].cls}>{STATUS[s].label}</Badge></td>
                   <td className="p-2">
                     {!locked && (
                       <div className="flex justify-end gap-1">
-                        <Button size="sm" disabled={b || !e.onboardingId || !e.target} onClick={async () => { if (await doApprove(r)) onApplied?.(); }}>Approve</Button>
+                        <Button size="sm" disabled={b || !e.target || (forInvestor && !e.onboardingId)} onClick={async () => { if (await doApprove(r)) onApplied?.(); }}>Approve</Button>
                         {s !== "later" && <Button size="sm" variant="outline" disabled={b} onClick={() => doDecide(r, "later")}>Review later</Button>}
                         {s !== "rejected" && <Button size="sm" variant="ghost" className="text-destructive" disabled={b} onClick={() => doDecide(r, "rejected")}>Reject</Button>}
                       </div>)}
