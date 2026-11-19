@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { FundRequestAiReader } from "@/components/fund-request-ai-reader";
 import {
   EXEMPTIONS, INVESTMENT_ASSET_TYPES, JURISDICTIONS, VEHICLE_STRUCTURES, defaultVehicle, eligibilityFor,
 } from "@/lib/client-portal-model";
@@ -303,6 +304,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
             {stepMissing(step).length > 0 && <CardDescription className="text-destructive">Still needed: {stepMissing(step)!.join(", ")}</CardDescription>}
           </CardHeader>
           <CardContent className="space-y-4">
+            {step === "details" && <FundRequestAiReader clientId={id} request={r} onChange={(u) => setR(u)} />}
             {step === "details" && spv && (
               <label className="flex items-start gap-3 rounded-md border bg-muted/40 p-3 text-sm">
                 <Checkbox checked={!!r.simplified} onCheckedChange={(c) => set("simplified", c === true)} className="mt-0.5" />

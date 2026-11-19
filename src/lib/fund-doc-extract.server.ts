@@ -20,6 +20,11 @@ async function assertFundAccess(userId: string, offeringId: string) {
 
 export async function readFundSetupDocument(userId: string, input: { offeringId: string; fileName: string; contentType: string; base64: string }): Promise<FundDocReading> {
   await assertFundAccess(userId, input.offeringId);
+  return readFundDocumentInMemory(input);
+}
+
+/** Reads one fund document in memory; callers authorize first. Nothing is stored. */
+export async function readFundDocumentInMemory(input: { fileName: string; contentType: string; base64: string }): Promise<FundDocReading> {
   const type = (DOC_READ_TYPES as readonly string[]).includes(input.contentType) ? input.contentType : null;
   if (!type) throw new Error("Upload a PDF or a photo (PNG, JPG or WEBP).");
   if (Math.floor((input.base64.length * 3) / 4) > DOC_READ_MAX_BYTES) throw new Error("That file is over 10 MB. Upload a smaller copy.");

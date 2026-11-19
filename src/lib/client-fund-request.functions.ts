@@ -88,7 +88,7 @@ export const uploadFundRequestFile = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireMember(context, data.clientId);
-    const allowed = ["application/pdf", "image/png", "image/jpeg", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"];
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"];
     if (!allowed.includes(data.contentType)) throw new Error("Upload a PDF, Word document or image.");
     const bytes = Buffer.from(data.base64, "base64");
     if (bytes.byteLength > 10 * 1024 * 1024) throw new Error("Files must be 10 MB or smaller.");
@@ -98,6 +98,23 @@ export const uploadFundRequestFile = createServerFn({ method: "POST" })
     const { error } = await db.storage.from("client-contracts").upload(path, bytes, { contentType: data.contentType, upsert: false });
     if (error) throw new Error("Upload failed. Please try again.");
     return { kind: data.kind, fileName: data.fileName, path };
+  });
+
+/** Read one fund document with AI for the new fund form; returns suggestions only, nothing is saved. */
+export const readFundRequestDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) =>
+    z.object({
+      clientId: z.string().uuid(),
+      fileName: z.string().min(1).max(200),
+      contentType: z.string().max(60),
+      base64: z.string().min(16).max(14_500_000),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await requireMember(context, data.clientId);
+    const { readFundDocumentInMemory } = await import("@/lib/fund-doc-extract.server");
+    return readFundDocumentInMemory({ fileName: data.fileName, contentType: data.contentType, base64: data.base64 });
   });
 
 /** Send the request: creates a closed Fund + pre-filled Fund Setup and tells Harmonious Operations. */
