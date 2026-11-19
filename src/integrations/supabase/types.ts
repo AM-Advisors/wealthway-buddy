@@ -46850,12 +46850,15 @@ export type Database = {
         Row: {
           bytes: number
           chunk_count: number
+          client_info: Json | null
           created_at: string
           device_id: string | null
           first_path: string | null
           id: string
+          ip_address: string | null
           kind: string
           last_activity_at: string
+          last_ip_address: string | null
           last_path: string | null
           note: string | null
           started_at: string
@@ -46866,12 +46869,15 @@ export type Database = {
         Insert: {
           bytes?: number
           chunk_count?: number
+          client_info?: Json | null
           created_at?: string
           device_id?: string | null
           first_path?: string | null
           id?: string
+          ip_address?: string | null
           kind: string
           last_activity_at?: string
+          last_ip_address?: string | null
           last_path?: string | null
           note?: string | null
           started_at?: string
@@ -46882,12 +46888,15 @@ export type Database = {
         Update: {
           bytes?: number
           chunk_count?: number
+          client_info?: Json | null
           created_at?: string
           device_id?: string | null
           first_path?: string | null
           id?: string
+          ip_address?: string | null
           kind?: string
           last_activity_at?: string
+          last_ip_address?: string | null
           last_path?: string | null
           note?: string | null
           started_at?: string

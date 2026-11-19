@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AmPage } from "@/components/account-management-ui";
 import { LoadError } from "@/components/load-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { downloadRecordingFn, listRecordingsFn, openRecordingFn } from "@/lib/session-recordings.functions";
+import { downloadRecordingFn, listRecordingsFn, openRecordingFn, recordingDetailsFn } from "@/lib/session-recordings.functions";
+import { clientInfoLines, duration, parseDevice, recordingBreakdown, type Breakdown } from "@/lib/recording-details";
 import { downloadBlob, replayHtml } from "@/lib/recording-download";
 import { recordingOverview } from "@/lib/recording-overview";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { ChevronDown, ChevronUp, Download, Laptop, MapPin, Smartphone, Tablet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/session-recordings")({
   head: () => ({ meta: [
@@ -49,23 +50,94 @@ function RecordingsPage() {
       {selected && <Player id={selected} onClose={() => setSelected(null)} />}
       {q.data && (q.data.recordings.length === 0 ? <p className="text-sm text-muted-foreground">No recordings yet.</p> : (
         <div className="divide-y rounded-lg border">
-          {q.data.recordings.map((r: any) => (
-            <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
-              <div className="min-w-0">
-                <p className="font-medium">{r.name} {r.email && r.email !== r.name && <span className="text-sm text-muted-foreground">· {r.email}</span>}</p>
-                <p className="text-sm text-muted-foreground">{fmt(r.started_at)} to {fmt(r.last_activity_at)} · {r.first_path}{r.last_path && r.last_path !== r.first_path ? ` → ${r.last_path}` : ""}</p>
-                {r.note && <p className="mt-1 text-sm">“{r.note}”</p>}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{r.kind === "screen" ? "Screen video" : "Page replay"}</Badge>
-                <Button size="sm" onClick={() => setSelected(r.id)}>Play</Button>
-                <DownloadRecording id={r.id} />
-              </div>
-            </div>
-          ))}
+          {q.data.recordings.map((r: any) => <RecordingRow key={r.id} r={r} fmt={fmt} onPlay={() => setSelected(r.id)} />)}
         </div>
       ))}
     </AmPage>
+  );
+}
+
+function RecordingRow({ r, fmt, onPlay }: { r: any; fmt: (s: string) => string; onPlay: () => void }) {
+  const [open, setOpen] = useState(false);
+  const dev = parseDevice(r.user_agent);
+  const DevIcon = dev.type === "Phone" ? Smartphone : dev.type === "Tablet" ? Tablet : Laptop;
+  const mins = (Date.parse(r.last_activity_at) - Date.parse(r.started_at)) / 1000;
+  return (
+    <div className="space-y-2 p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <p className="font-medium">{r.name} {r.email && r.email !== r.name && <span className="text-sm text-muted-foreground">· {r.email}</span>}</p>
+          <p className="text-sm text-muted-foreground">{fmt(r.started_at)} to {fmt(r.last_activity_at)} · {duration(mins)} · {r.first_path}{r.last_path && r.last_path !== r.first_path ? ` → ${r.last_path}` : ""}</p>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="inline-flex items-center gap-1"><DevIcon className="size-4 text-muted-foreground" />{dev.type} · {dev.os} · {dev.browser}</span>
+            {r.ip ? (
+              <span className="inline-flex items-center gap-1"><MapPin className="size-4 text-muted-foreground" />{r.ip}{r.place ? ` · ${r.place}` : ""}{r.ipSource === "sign-in" ? " (from sign-in)" : ""}</span>
+            ) : <span className="text-muted-foreground">Network address not recorded</span>}
+          </p>
+          {(r.localStart || r.network || r.lastIp) && (
+            <p className="text-xs text-muted-foreground">
+              {[r.localStart && `Their time ${r.localStart}`, r.network && `Network ${r.network}`, r.lastIp && `Address changed to ${r.lastIp}${r.lastPlace ? ` · ${r.lastPlace}` : ""}`].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          {r.note && <p className="text-sm">“{r.note}”</p>}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary">{r.kind === "screen" ? "Screen video" : "Page replay"}</Badge>
+          <Button size="sm" onClick={onPlay}>Play</Button>
+          <Button size="sm" variant="outline" onClick={() => setOpen((v) => !v)} aria-expanded={open}>{open ? <ChevronUp className="mr-1 size-4" /> : <ChevronDown className="mr-1 size-4" />}Details</Button>
+          <DownloadRecording id={r.id} />
+        </div>
+      </div>
+      {open && <RecordingDetails r={r} />}
+    </div>
+  );
+}
+
+function RecordingDetails({ r }: { r: any }) {
+  const load = useServerFn(recordingDetailsFn);
+  const q = useQuery({ queryKey: ["session-recording-details", r.id], queryFn: () => load({ data: { id: r.id } }), retry: false, staleTime: Infinity });
+  const info = clientInfoLines(r.client_info);
+  return (
+    <div className="space-y-3 rounded-md border bg-muted/30 p-3 text-sm">
+      {info.length > 0 ? <p className="text-muted-foreground">{info.join(" · ")}</p> : <p className="text-muted-foreground">Screen and window sizes are recorded for new recordings only.</p>}
+      {r.device_id && <p className="text-xs text-muted-foreground">Device marker {String(r.device_id).slice(0, 8)} (same marker means the same browser)</p>}
+      {q.isLoading && <p className="text-muted-foreground">Reading recording…</p>}
+      {q.isError && <LoadError error={q.error} what="Recording details" onRetry={() => q.refetch()} />}
+      {q.data?.kind === "screen" && <p>Screen video the person chose to record and send to Harmonious. {r.bytes ? `${(Number(r.bytes) / 1_048_576).toFixed(1)} MB.` : ""}</p>}
+      {q.data?.breakdown && <BreakdownView b={q.data.breakdown as Breakdown} />}
+    </div>
+  );
+}
+
+function BreakdownView({ b, onJump }: { b: Breakdown; onJump?: (offsetMs: number) => void }) {
+  const stat = (label: string, value: string | number) => <div className="rounded border bg-background p-2"><p className="text-xs text-muted-foreground">{label}</p><p className="font-semibold">{value}</p></div>;
+  const off = (ms: number) => duration(ms / 1000);
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+        {stat("Length", duration(b.durationSeconds))}{stat("On the page", duration(b.activeSeconds))}{stat("Away", duration(b.awaySeconds))}{stat("Pages", b.pages.length)}
+        {stat("Clicks", b.clicks)}{stat("Typing", b.typing)}{stat("Scrolls", b.scrolls)}{stat("Pauses over 1 min", b.idleGaps)}
+      </div>
+      {b.pages.length > 0 && (
+        <div>
+          <p className="mb-1 font-medium">Pages in order</p>
+          <ol className="space-y-0.5">{b.pages.map((p, i) => (
+            <li key={`${p.path}-${i}`} className="flex justify-between gap-2"><span className="truncate">{i + 1}. {p.path}</span><span className="shrink-0 text-muted-foreground">{duration(p.seconds)}</span></li>
+          ))}</ol>
+        </div>
+      )}
+      <div>
+        <p className="mb-1 font-medium">Markers</p>
+        {b.markers.length === 0 ? <p className="text-muted-foreground">No markers. Markers (leaving the tab, screenshot key, copying, errors) are saved on recordings made from now on.</p> : (
+          <ul className="space-y-0.5">{b.markers.map((m, i) => (
+            <li key={i} className="flex justify-between gap-2">
+              {onJump ? <button type="button" className="text-left underline-offset-2 hover:underline" onClick={() => onJump(m.offsetMs)}>{m.label}{m.detail ? ` · ${m.detail}` : ""}</button> : <span>{m.label}{m.detail ? ` · ${m.detail}` : ""}</span>}
+              <span className="shrink-0 text-muted-foreground">at {off(m.offsetMs)}</span>
+            </li>
+          ))}</ul>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -73,6 +145,9 @@ function Player({ id, onClose }: { id: string; onClose: () => void }) {
   const open = useServerFn(openRecordingFn);
   const q = useQuery({ queryKey: ["session-recording", id], queryFn: async () => (await open({ data: { id } })) as { kind: "replay"; events: unknown[] } | { kind: "screen"; url: string }, retry: false, staleTime: Infinity });
   const box = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
+  const d0 = q.data as any;
+  const breakdown = useMemo(() => (d0?.kind === "replay" ? recordingBreakdown(d0.events as unknown[]) : null), [d0]);
   useEffect(() => {
     const d = q.data as any;
     if (!d || d.kind !== "replay" || !box.current) return;
@@ -83,6 +158,7 @@ function Player({ id, onClose }: { id: string; onClose: () => void }) {
     void Promise.all([import("rrweb-player"), import("rrweb-player/dist/style.css")]).then(([m]) => {
       const P = (m as any).default;
       player = new P({ target: el, props: { events: d.events, width: Math.min(el.clientWidth || 960, 1100), height: 600, autoPlay: false, showController: true } });
+      playerRef.current = player;
     });
     return () => { try { player?.$destroy?.(); } catch { /* ignore */ } el.innerHTML = ""; };
   }, [q.data]);
@@ -93,6 +169,7 @@ function Player({ id, onClose }: { id: string; onClose: () => void }) {
       {q.isError && <LoadError error={q.error} what="This recording" onRetry={() => q.refetch()} />}
       {q.data?.kind === "screen" && <video src={q.data.url} controls className="w-full max-w-4xl rounded" />}
       <div ref={box} />
+      {breakdown && <details className="rounded-md border p-3 text-sm" open><summary className="cursor-pointer font-medium">Breakdown · click a marker to jump there</summary><div className="pt-3"><BreakdownView b={breakdown} onJump={(ms) => { try { playerRef.current?.goto?.(ms, false); } catch { /* ignore */ } }} /></div></details>}
     </div>
   );
 }

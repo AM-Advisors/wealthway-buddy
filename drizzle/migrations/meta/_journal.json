@@ -2990,6 +2990,13 @@
       "when": 1795105332437,
       "tag": "0426_prior_docs_investment_kinds",
       "breakpoints": true
+    },
+    {
+      "idx": 427,
+      "version": "7",
+      "when": 1795108442428,
+      "tag": "0427_session_recording_device_details",
+      "breakpoints": true
     }
   ]
 }

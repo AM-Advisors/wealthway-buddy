@@ -11,12 +11,28 @@ import { Textarea } from "@/components/ui/textarea";
 const FLUSH_MS = 10_000;
 export const RECORD_SCREEN_EVENT = "hm:record-screen";
 const deviceId = () => { try { return localStorage.getItem("hm-device-id") ?? undefined; } catch { return undefined; } };
+/** Non-identifying device facts for the recording list. */
+const clientInfo = () => {
+  try {
+    const sc = window.screen as Screen & { isExtended?: boolean };
+    const conn = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
+    return {
+      screen: `${sc.width}×${sc.height}`, window: `${window.innerWidth}×${window.innerHeight}`, pixelRatio: Math.round(window.devicePixelRatio * 100) / 100,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: navigator.language, touch: navigator.maxTouchPoints > 0,
+      extendedDisplay: typeof sc.isExtended === "boolean" ? sc.isExtended : null, connection: conn?.effectiveType ?? null,
+    };
+  } catch { return undefined; }
+};
+/** Content-free markers inside the replay (never typed values, copied text or page content). */
+export const REPLAY_MARK_EVENT = "hm:replay-mark";
+export const markReplay = (kind: string, detail?: string) => window.dispatchEvent(new CustomEvent(REPLAY_MARK_EVENT, { detail: { kind, detail } }));
 
 /** Signed-in only. Masked replay runs in the background with no on-screen control; screen video starts only from the account menu, with browser permission. */
 export function SessionRecorder() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const pathRef = useRef(pathname);
   pathRef.current = pathname;
+  useEffect(() => { markReplay("page", pathname); }, [pathname]);
   const start = useServerFn(startRecordingFn);
   const append = useServerFn(appendReplayChunkFn);
   const finish = useServerFn(finishScreenRecordingFn);
@@ -47,7 +63,7 @@ export function SessionRecorder() {
     };
     void (async () => {
       try {
-        const rec = await start({ data: { kind: "replay", path: pathRef.current, userAgent: navigator.userAgent, deviceId: deviceId() } });
+        const rec = await start({ data: { kind: "replay", path: pathRef.current, userAgent: navigator.userAgent, deviceId: deviceId(), clientInfo: clientInfo() } });
         if (cancelled) return;
         id = rec.id;
         const { record } = await import("rrweb");
@@ -61,6 +77,27 @@ export function SessionRecorder() {
           blockClass: "rr-block",
           sampling: { mousemove: 100, scroll: 150, input: "last" },
         }) ?? undefined;
+        const add = (kind: string, detail?: string) => { try { (record as any).addCustomEvent("hm", detail ? { kind, detail } : { kind }); } catch { /* ignore */ } };
+        const onMark = (e: Event) => { const d = (e as CustomEvent).detail ?? {}; if (d.kind) add(String(d.kind), d.detail ? String(d.detail).slice(0, 80) : undefined); };
+        const onVis = () => add(document.visibilityState === "hidden" ? "tab_hidden" : "tab_visible");
+        const onBlur = () => add("focus_lost");
+        const onFocus = () => add("focus_back");
+        const onKey = (e: KeyboardEvent) => { if (e.key === "PrintScreen") add("screenshot_key"); };
+        const onPrint = () => add("print");
+        const onCopy = () => add("copy");
+        const onOffline = () => add("offline");
+        const onOnline = () => add("online");
+        const onError = () => add("page_error");
+        let resizeT = 0;
+        const onResize = () => { window.clearTimeout(resizeT); resizeT = window.setTimeout(() => add("resize", `${window.innerWidth}×${window.innerHeight}`), 500); };
+        const listeners: [EventTarget, string, EventListener][] = [
+          [window, REPLAY_MARK_EVENT, onMark], [document, "visibilitychange", onVis], [window, "blur", onBlur], [window, "focus", onFocus],
+          [window, "keyup", onKey as EventListener], [window, "beforeprint", onPrint], [document, "copy", onCopy],
+          [window, "offline", onOffline], [window, "online", onOnline], [window, "error", onError], [window, "unhandledrejection", onError], [window, "resize", onResize],
+        ];
+        for (const [t, n, f] of listeners) t.addEventListener(n, f);
+        const stopRecord = stop;
+        stop = () => { for (const [t, n, f] of listeners) t.removeEventListener(n, f); stopRecord?.(); };
       } catch { /* recording is best-effort and never blocks the page */ }
     })();
     const timer = window.setInterval(() => { void flush(); }, FLUSH_MS);
@@ -94,6 +131,8 @@ export function SessionRecorder() {
       mr.onstop = () => { stream.getTracks().forEach((t) => t.stop()); setRecording(false); setPending(new Blob(chunks, { type: "video/webm" })); };
       stream.getVideoTracks()[0]?.addEventListener("ended", () => { if (mr.state !== "inactive") mr.stop(); });
       mr.start(1000);
+      markReplay("screen_video_started");
+      mr.addEventListener("stop", () => markReplay("screen_video_stopped"));
       recorderRef.current = mr;
       setRecording(true);
     } catch { toast.error("Screen recording was not started."); }
@@ -103,7 +142,7 @@ export function SessionRecorder() {
     if (!pending) return;
     setSaving(true);
     try {
-      const rec = await start({ data: { kind: "screen", path: pathRef.current, userAgent: navigator.userAgent, deviceId: deviceId() } });
+      const rec = await start({ data: { kind: "screen", path: pathRef.current, userAgent: navigator.userAgent, deviceId: deviceId(), clientInfo: clientInfo() } });
       if (!("token" in rec) || !rec.token) throw new Error("upload");
       const up = await supabase.storage.from("session-recordings").uploadToSignedUrl(rec.path, rec.token, pending, { contentType: "video/webm" });
       if (up.error) throw up.error;
