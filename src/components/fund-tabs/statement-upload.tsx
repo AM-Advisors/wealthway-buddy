@@ -32,11 +32,22 @@ export function StatementUpload({ fundId, investors, canEnter = false }: { fundI
   const q = useQuery({ queryKey: key, queryFn: () => list({ data: { fundId } }) });
   const [busy, setBusy] = useState(false);
   const refresh = () => { void invalidateFund(qc, fundId); };
-  const onFile = async (f: File | undefined) => {
-    if (!f) return;
+  const [progress, setProgress] = useState<string | null>(null);
+  /** Several statements at once: read one after another so each gets its own upload to check. */
+  const onFiles = async (list: FileList | null) => {
+    const files = Array.from(list ?? []);
+    if (!files.length) return;
     setBusy(true);
-    try { const r = await upload({ data: { fundId, fileName: f.name, contentType: f.type, base64: await fileToBase64(f) } }); toast.success(`Read ${r.lines} transaction(s). Check them below.`); refresh(); }
-    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    let ok = 0, lines = 0;
+    try {
+      for (const [i, f] of files.entries()) {
+        setProgress(`Reading ${i + 1} of ${files.length}: ${f.name}`);
+        try { const r = await upload({ data: { fundId, fileName: f.name, contentType: f.type, base64: await fileToBase64(f) } }); ok++; lines += Number(r.lines ?? 0); }
+        catch (e) { toast.error(`${f.name}: ${(e as Error).message}`); }
+      }
+      if (ok) toast.success(`Read ${ok} statement${ok === 1 ? "" : "s"} with ${lines} transaction(s). Check them below.`);
+      refresh();
+    } finally { setBusy(false); setProgress(null); }
   };
   const lineM = useMutation({ mutationFn: (a: { lineId: string; category: string | null; onboardingId: string | null; skip: boolean }) => update({ data: { fundId, ...a } }), onSuccess: refresh, onError: (e: Error) => toast.error(e.message) });
   const applyM = useMutation({ mutationFn: (uploadId: string) => apply({ data: { fundId, uploadId } }), onSuccess: (r: any) => { toast.success(`${r.applied} line(s) added to the books and Banking.${(r.receiptNotes ?? []).length ? "" : " Investor deposits are recorded on their investments."}`); for (const n of (r.receiptNotes ?? []) as string[]) toast.warning(n); refresh(); }, onError: (e: Error) => toast.error(e.message) });
@@ -45,10 +56,11 @@ export function StatementUpload({ fundId, investors, canEnter = false }: { fundI
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Bank statements</CardTitle>
-        <CardDescription>Upload a statement (PDF or CSV). The platform reads each transaction and suggests what it is; you check every line, then apply it to the books. Lines already in the books are skipped. Nothing moves money.</CardDescription>
+        <CardDescription>Upload one or more statements (PDF or CSV). The platform reads each transaction and suggests what it is; you check every line, then apply it to the books. Lines already in the books are skipped. Nothing moves money.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Input type="file" accept=".pdf,.csv,.txt,application/pdf,text/csv" disabled={busy} onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} />
+        <Input type="file" multiple aria-label="Bank statement files" accept=".pdf,.csv,.txt,application/pdf,text/csv" disabled={busy} onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
+        <p className="text-xs text-muted-foreground">{progress ?? "You can pick several statements at once."}</p>
         {canEnter && <ManualStatementForm fundId={fundId} />}
         {busy && <p className="text-sm text-muted-foreground">Reading the statement… this can take up to a minute.</p>}
         {(q.data ?? []).map((u: any) => {
