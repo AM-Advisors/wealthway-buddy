@@ -304,7 +304,6 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
             {stepMissing(step).length > 0 && <CardDescription className="text-destructive">Still needed: {stepMissing(step)!.join(", ")}</CardDescription>}
           </CardHeader>
           <CardContent className="space-y-4">
-            {step === "details" && <FundRequestAiReader clientId={id} request={r} onChange={(u) => setR(u)} />}
             {step === "details" && spv && (
               <label className="flex items-start gap-3 rounded-md border bg-muted/40 p-3 text-sm">
                 <Checkbox checked={!!r.simplified} onCheckedChange={(c) => set("simplified", c === true)} className="mt-0.5" />
@@ -404,6 +403,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                     </div>
                   </div>
                 )}
+<FundRequestAiReader clientId={id} request={r} onChange={(u) => setR(u)} />
                 <DocUploads clientId={id} kinds={entityDocKinds(r)} docs={r.documents} onChange={(d) => set("documents", d)} />
               </>
             )}
@@ -465,6 +465,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                 <F label="Offering documents">
                   <Pick value={r.documents_path} onChange={(v) => set("documents_path", v as any)} options={[{ value: "have", label: "I have documents to upload" }, { value: "prepare", label: "Harmonious to prepare from templates" }]} />
                 </F>
+                {r.documents_path !== "prepare" && <FundRequestAiReader clientId={id} request={r} onChange={(u) => setR(u)} />}
                 {r.documents_path === "have" && <DocUploads clientId={id} kinds={DOC_KINDS} docs={r.documents} onChange={(d) => set("documents", d)} />}
                 <p className="text-xs text-muted-foreground">You can review, approve and set up signing for these documents yourself before anything goes to investors.</p>
               </div>

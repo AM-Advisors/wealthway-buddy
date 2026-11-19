@@ -91,7 +91,7 @@ export function FundRequestAiReader({ clientId, request, onChange }: { clientId:
       <div className="flex items-start gap-2">
         <Sparkles className="mt-0.5 size-4 text-primary" aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">Start from your fund documents</p>
+          <p className="text-sm font-medium">Upload and read documents with AI</p>
           <p className="text-sm text-muted-foreground">Upload the operating agreement, PPM, subscription agreement, EIN letter or term sheet, several at once. We read them, save them to this request, and suggest answers. You choose which answers to use.</p>
         </div>
       </div>
