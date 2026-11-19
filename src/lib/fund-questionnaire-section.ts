@@ -40,12 +40,30 @@ export function questionsForInvestment(questions: Question[], startedAt: string 
 export function mergeSection<T extends { questions?: Question[] }>(base: T, section: QuestionSection | null, startedAt?: string | null): T & { sectionTitle?: string; sectionVersion?: number; sectionStartKey?: string } {
   if (!section) return base;
   const cutoff = section.newInvestmentsOnly ? section.approvedAt ?? null : null;
-  if (startedBeforeCutoff(startedAt, cutoff)) return base;
   const baseQs = base.questions ?? [];
-  const extra = newSectionQuestions(baseQs, section.questions).map((q) => (cutoff ? { ...q, newInvestmentsFrom: cutoff } : q));
+  // A question carried over from an earlier "new investors only" version keeps that version's start time.
+  const extra = newSectionQuestions(baseQs, section.questions)
+    .map((q) => {
+      const from = cutoff ? q.newInvestmentsFrom ?? cutoff : null;
+      return from ? { ...q, newInvestmentsFrom: from } : q;
+    })
+    .filter((q) => !startedBeforeCutoff(startedAt, q.newInvestmentsFrom));
   const first = extra[0];
   if (!first) return base;
   return { ...base, questions: [...baseQs, ...extra], sectionTitle: section.title, sectionVersion: section.version, sectionStartKey: first.key };
+}
+
+/** At approval of a "new investors only" version: questions already in the previous approved
+ * "new investors only" version keep its start time, so investors who began in between are still asked. */
+export function carryNewInvestmentCutoffs(
+  previous: { questions: Question[]; approvedAt: string | null; newInvestmentsOnly: boolean | null } | null,
+  next: Question[],
+  nextNewInvestmentsOnly: boolean,
+): Question[] {
+  const stripped = next.map(({ newInvestmentsFrom: _drop, ...q }) => q as Question);
+  if (!nextNewInvestmentsOnly || !previous?.newInvestmentsOnly || !previous.approvedAt) return stripped;
+  const prior = new Map(previous.questions.map((q) => [q.key, q.newInvestmentsFrom ?? previous.approvedAt]));
+  return stripped.map((q) => (prior.get(q.key) ? { ...q, newInvestmentsFrom: prior.get(q.key)! } : q));
 }
 
 /** Validates a draft before saving: unique fs_ keys, labels, and options for select questions. */

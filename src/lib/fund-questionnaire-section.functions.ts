@@ -100,8 +100,11 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
       if (error || !sourceAgreementApproved(version)) throw new Error("Approve the source agreement version before publishing its questions.");
     }
     // Staff authority is checked above; saving or AI analysis never supplies this approval.
+    const { data: prev } = await db.from("fund_questionnaire_sections").select("questions, approved_at, new_investments_only").eq("offering_id", row.offering_id).eq("status", "approved").order("version", { ascending: false }).limit(1).maybeSingle();
+    const { carryNewInvestmentCutoffs } = await import("./fund-questionnaire-section");
+    const questions = carryNewInvestmentCutoffs(prev ? { questions: prev.questions as any, approvedAt: prev.approved_at, newInvestmentsOnly: prev.new_investments_only } : null, row.questions as any, !!row.new_investments_only);
     await db.from("fund_questionnaire_sections").update({ status: "retired" }).eq("offering_id", row.offering_id).eq("status", "approved");
-    const { error } = await db.from("fund_questionnaire_sections").update({ status: "approved", approved_by: context.userId, approved_at: new Date().toISOString() }).eq("id", row.id).eq("status", "draft");
+    const { error } = await db.from("fund_questionnaire_sections").update({ status: "approved", questions: questions as any, approved_by: context.userId, approved_at: new Date().toISOString() }).eq("id", row.id).eq("status", "draft");
     if (error) throw new Error(error.message);
     return { ok: true };
   });
