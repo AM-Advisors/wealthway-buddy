@@ -26,4 +26,14 @@ describe("document follow-up status", () => {
   it("reading-only documents never need a signature", () => {
     expect(followUpStatus({ ...base, usage: "reference", sentAt: "x" })).toBe("read_only");
   });
+  it("a signing request out with no portal send or open still needs follow-up", () => {
+    const s = followUpStatus({ ...base, execution: "sent" });
+    expect(s).toBe("sent_unopened");
+    expect(needsFollowUp(s)).toBe(true);
+  });
+  it("partly signed is shown as partly signed and still needs follow-up", () => {
+    const s = followUpStatus({ ...base, execution: "partially_signed", openedAt: "x" });
+    expect(s).toBe("partly_signed");
+    expect(needsFollowUp(s)).toBe(true);
+  });
 });

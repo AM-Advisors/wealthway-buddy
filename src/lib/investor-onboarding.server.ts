@@ -2081,7 +2081,21 @@ export async function applyBankActivity(
 
   const row = await onboardingRow(onboardingId);
   const expected = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
-  const funded = Number(row.funded_amount_cents ?? 0) + Number(txn.amount_cents);
+  // Money already recorded by hand for this investment (same amount, not yet confirmed by a bank
+  // line) is confirmed by this deposit instead of being counted a second time.
+  const { data: priorMoney } = await db()
+    .from("investor_onboarding_events")
+    .select("id, event, detail")
+    .eq("onboarding_id", row.id)
+    .in("event", ["manual_receipt_recorded", "bank_transaction_matched"]);
+  const { manualReceiptToConfirm } = await import("@/lib/manual-receipt-match");
+  const confirmsManualReceiptId = manualReceiptToConfirm(
+    ((priorMoney ?? []) as any[]).filter((e) => e.event === "manual_receipt_recorded").map((e) => ({ id: String(e.id), amountCents: Number(e.detail?.amountCents ?? 0) })),
+    ((priorMoney ?? []) as any[]).filter((e) => e.event === "bank_transaction_matched").map((e) => ({ confirmsManualReceiptId: e.detail?.confirmsManualReceiptId ? String(e.detail.confirmsManualReceiptId) : null })),
+    Number(txn.amount_cents),
+  );
+  if (confirmsManualReceiptId) reasons = [...reasons, "Confirms money already recorded by hand; not counted again"];
+  const funded = Number(row.funded_amount_cents ?? 0) + (confirmsManualReceiptId ? 0 : Number(txn.amount_cents));
   const status: FundingStatus = deriveFundingStatus({
     acceptedAmountCents: expected,
     reconciledCents: funded,
@@ -2099,7 +2113,7 @@ export async function applyBankActivity(
     subjectTable: "bank_transactions",
     subjectId: txn.id,
     toStatus: status,
-    detail: { amountCents: txn.amount_cents, reasons },
+    detail: { amountCents: txn.amount_cents, reasons, confirmsManualReceiptId },
     actorUserId: actor.userId,
     actorRole: "harmonious",
   });

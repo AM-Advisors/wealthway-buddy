@@ -156,6 +156,7 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
   const assetNames = new Map(((an ?? []) as any[]).map((a) => [a.id, [a.issuer_name, a.asset_name].filter(Boolean).join(" · ")]));
   let applied = 0;
   const receiptNotes: string[] = [];
+  const staffActor = await isStaff(uid);
   for (const l of todo) {
     const category = l.confirmed_category ?? l.suggested_category;
     const { data: tx, error } = await d.from("bank_transactions").insert({
@@ -178,15 +179,21 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
     }
     await d.from("bank_statement_lines").update({ applied_tx_id: tx.id, confirmed_category: category }).eq("id", l.id);
     // Investor deposits on a statement connect into Banking the same way a bank-feed match does.
+    // Only Harmonious counts money toward an investor; a manager's upload leaves the deposit tagged but
+    // unmatched so it stays in the review queue. The match is marked only after the receipt is counted.
     if (l.matched_onboarding_id && l.direction === "in") {
-      const { data: ob } = await d.from("investor_onboardings").select("application_id").eq("id", l.matched_onboarding_id).maybeSingle();
-      await d.from("bank_transactions").update({ matched_application_id: (ob as any)?.application_id ?? null, matched_by: uid, matched_at: new Date().toISOString() }).eq("id", tx.id);
-      try {
-        const engine = await import("@/lib/investor-onboarding.server");
-        await engine.applyBankActivity(uid, { bankTransactionId: String(tx.id), onboardingId: String(l.matched_onboarding_id) });
-        await engine.reconcileInvestmentReadiness(String(l.matched_onboarding_id), { actorUserId: uid, trigger: "statement_applied" });
-      } catch (e) {
-        receiptNotes.push(`${l.description}: ${e instanceof Error ? e.message : "receipt needs Harmonious review"}`);
+      if (!staffActor) {
+        receiptNotes.push(`${l.description}: Harmonious will confirm this deposit before it counts toward the investor.`);
+      } else {
+        try {
+          const engine = await import("@/lib/investor-onboarding.server");
+          await engine.applyBankActivity(uid, { bankTransactionId: String(tx.id), onboardingId: String(l.matched_onboarding_id) });
+          const { data: ob } = await d.from("investor_onboardings").select("application_id").eq("id", l.matched_onboarding_id).maybeSingle();
+          await d.from("bank_transactions").update({ matched_application_id: (ob as any)?.application_id ?? null, matched_by: uid, matched_at: new Date().toISOString() }).eq("id", tx.id);
+          await engine.reconcileInvestmentReadiness(String(l.matched_onboarding_id), { actorUserId: uid, trigger: "statement_applied" });
+        } catch (e) {
+          receiptNotes.push(`${l.description}: ${e instanceof Error ? e.message : "receipt needs Harmonious review"}`);
+        }
       }
     }
     applied++;

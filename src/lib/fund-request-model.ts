@@ -253,17 +253,27 @@ export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { n
  * the preferred side wins when it has a value, otherwise the other side's value fills it.
  * Two or more classes are left as entered (each class keeps its own terms).
  */
-export function alignSingleClass(r: FundRequest, prefer: "fund" | "class" = "fund"): FundRequest {
+/**
+ * Keeps a one-class request's fund terms and class terms identical.
+ * `exact` lists fund term keys the person just edited: those copy verbatim from
+ * the preferred side, so clearing a box clears it instead of restoring the old value.
+ */
+export function alignSingleClass(
+  r: FundRequest,
+  prefer: "fund" | "class" = "fund",
+  exact: ReadonlyArray<"management_fee" | "carried_interest" | "preferred_return" | "minimum_investment"> = [],
+): FundRequest {
   if ((r.classes ?? []).length !== 1) return r;
   const c = r.classes[0]!;
-  const pick = (fund: string | undefined, cls: string | undefined) => {
+  const pick = (key: (typeof exact)[number], fund: string | undefined, cls: string | undefined) => {
     const f = String(fund ?? "").trim(); const k = String(cls ?? "").trim();
+    if (exact.includes(key)) return prefer === "fund" ? f : k;
     return prefer === "fund" ? (f || k) : (k || f);
   };
-  const fee = pick(r.management_fee, c.fee);
-  const carry = pick(r.carried_interest, c.carry);
-  const hurdle = pick(r.preferred_return, c.hurdle);
-  const minimum = pick(r.minimum_investment, c.minimum);
+  const fee = pick("management_fee", r.management_fee, c.fee);
+  const carry = pick("carried_interest", r.carried_interest, c.carry);
+  const hurdle = pick("preferred_return", r.preferred_return, c.hurdle);
+  const minimum = pick("minimum_investment", r.minimum_investment, c.minimum);
   if (fee === r.management_fee && carry === r.carried_interest && hurdle === r.preferred_return && minimum === r.minimum_investment
     && fee === c.fee && carry === c.carry && hurdle === c.hurdle && minimum === c.minimum) return r;
   return { ...r, management_fee: fee, carried_interest: carry, preferred_return: hurdle, minimum_investment: minimum, classes: [{ ...c, fee, carry, hurdle, minimum }] };

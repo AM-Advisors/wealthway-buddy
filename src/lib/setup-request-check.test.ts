@@ -101,6 +101,19 @@ describe("one-class funds have one set of terms", () => {
     const r = alignSingleClass({ ...one, classes: [{ ...one.classes[0]!, minimum: "50000" }] }, "class");
     expect(r.minimum_investment).toBe("50000");
   });
+  it("clearing the fund fee or minimum clears it instead of restoring the old value", () => {
+    const synced = alignSingleClass({ ...one, minimum_investment: "50000" });
+    const r = alignSingleClass({ ...synced, management_fee: "", minimum_investment: "" }, "fund", ["management_fee", "minimum_investment"]);
+    expect(r.management_fee).toBe("");
+    expect(r.minimum_investment).toBe("");
+    expect(r.classes[0]).toMatchObject({ fee: "", minimum: "", carry: "20%" });
+  });
+  it("clearing the single class minimum clears the fund minimum", () => {
+    const synced = alignSingleClass({ ...one, minimum_investment: "50000" });
+    const r = alignSingleClass({ ...synced, classes: [{ ...synced.classes[0]!, minimum: "" }] }, "class", ["management_fee", "carried_interest", "preferred_return", "minimum_investment"]);
+    expect(r.minimum_investment).toBe("");
+    expect(r.management_fee).toBe("1%");
+  });
   it("two classes keep their own terms", () => {
     const two = { ...one, classes: [...one.classes, { name: "Class B", fee: "0%", carry: "0%", hurdle: "", minimum: "" }] };
     expect(alignSingleClass(two)).toBe(two);

@@ -13,6 +13,7 @@ import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund
 import { ManagerLaunchCard } from "@/components/manager-launch-card";
 import { FundStatusCard } from "@/components/fund-status-card";
 import { FundSalesHandoff } from "@/components/fund-sales-handoff";
+import { requestFundPaymentsSection } from "@/components/fund-tabs/accounting-workspace";
 
 
 /** The single Operations fund page: Setup (incl. launch readiness), Investors and every client tab. */
@@ -53,7 +54,7 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
     {d.retired || !d.canSeeOperations ? setupBody : <FundWorkspace fundId={fundId} mode="harmonious" tab={tab} onTab={(v) => onTab(v)}
       headerExtra={<>
         <DemoFundToggle fundId={fundId} />
-        <Button size="sm" variant="outline" onClick={() => { onTab("accounting"); setTimeout(() => document.getElementById("fund-payments")?.scrollIntoView({ behavior: "smooth" }), 80); }}>Payments</Button>
+        <Button size="sm" variant="outline" onClick={() => { requestFundPaymentsSection(); onTab("accounting"); }}>Payments</Button>
       </>}
       extraTabs={[{ value: "setup", label: "Setup", content: <FundSetupForm offeringId={fundId} mode="staff" staffExtras={setupBody} /> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }, { value: "formation", label: "Formation & EIN", content: <OperationsFund fundId={fundId} /> }]} />}
   </main>;

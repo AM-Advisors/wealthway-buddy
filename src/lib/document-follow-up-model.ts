@@ -6,7 +6,7 @@
  */
 import type { ExecutionState } from "@/lib/offering-document-model";
 
-export type FollowUpStatus = "signed" | "awaiting_fund" | "opened_unsigned" | "sent_unopened" | "not_sent" | "read_only";
+export type FollowUpStatus = "signed" | "awaiting_fund" | "partly_signed" | "opened_unsigned" | "sent_unopened" | "not_sent" | "read_only";
 
 export type FollowUpInput = {
   usage: "signature" | "acknowledgment" | "reference" | null;
@@ -20,14 +20,17 @@ export function followUpStatus(i: FollowUpInput): FollowUpStatus {
   if (i.usage === "reference") return "read_only";
   if (i.usage === "acknowledgment" ? i.acknowledged : i.execution === "fully_executed") return "signed";
   if (i.usage !== "acknowledgment" && i.execution === "awaiting_countersignature") return "awaiting_fund";
+  // A signing request already out (or some signers done) still owes signatures, even with no portal send/open recorded.
+  if (i.usage !== "acknowledgment" && i.execution === "partially_signed") return "partly_signed";
   if (i.openedAt) return "opened_unsigned";
-  if (i.sentAt) return "sent_unopened";
+  if (i.sentAt || (i.usage !== "acknowledgment" && i.execution === "sent")) return "sent_unopened";
   return "not_sent";
 }
 
 export const FOLLOW_UP_LABELS: Record<FollowUpStatus, string> = {
   signed: "Signed",
   awaiting_fund: "Signed · awaiting fund signature",
+  partly_signed: "Partly signed · waiting on other signers",
   opened_unsigned: "Opened · not signed",
   sent_unopened: "Sent · not opened",
   not_sent: "Not sent",
@@ -35,4 +38,4 @@ export const FOLLOW_UP_LABELS: Record<FollowUpStatus, string> = {
 };
 
 /** Statuses where the investor still owes a signature. */
-export const needsFollowUp = (s: FollowUpStatus) => s === "opened_unsigned" || s === "sent_unopened";
+export const needsFollowUp = (s: FollowUpStatus) => s === "partly_signed" || s === "opened_unsigned" || s === "sent_unopened";

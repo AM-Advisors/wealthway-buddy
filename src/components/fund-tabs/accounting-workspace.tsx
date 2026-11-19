@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
@@ -24,9 +24,32 @@ const SECTIONS = [
 ] as const;
 type Section = (typeof SECTIONS)[number]["id"];
 
+/** Set by "Payments" buttons before switching to Accounting; read once when the section mounts. */
+let pendingPaymentsOpen = false;
+const OPEN_PAYMENTS_EVENT = "fund-accounting-open-payments";
+/** Opens Accounting → Harmonious fees (fund payments) and scrolls to it, whether or not Accounting is already showing. */
+export function requestFundPaymentsSection() {
+  pendingPaymentsOpen = true;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(OPEN_PAYMENTS_EVENT));
+}
+
 /** Fund → Accounting: where Harmonious enters the fund's real records. Records only; nothing moves money. */
 export function AccountingWorkspace({ fundId, staff, extra }: { fundId: string; staff: boolean; extra?: React.ReactNode }) {
   const [section, setSection] = useState<Section>("statements");
+  const [scrollToPayments, setScrollToPayments] = useState(false);
+  // Payments links (#fund-payments) and the fund page's Payments button land on the fees section.
+  useEffect(() => {
+    if (!staff) return;
+    const open = () => { pendingPaymentsOpen = false; setSection("fees"); setScrollToPayments(true); };
+    if (pendingPaymentsOpen || window.location.hash === "#fund-payments") open();
+    window.addEventListener(OPEN_PAYMENTS_EVENT, open);
+    return () => window.removeEventListener(OPEN_PAYMENTS_EVENT, open);
+  }, [staff]);
+  useEffect(() => {
+    if (!scrollToPayments || section !== "fees") return;
+    const t = setTimeout(() => { document.getElementById("fund-payments")?.scrollIntoView({ behavior: "smooth" }); setScrollToPayments(false); }, 150);
+    return () => clearTimeout(t);
+  }, [scrollToPayments, section]);
   const load = useServerFn(fundBooksFn);
   const q = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
   const d = q.data as any;

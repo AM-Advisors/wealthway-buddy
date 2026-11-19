@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { transitionTask } from "@/lib/staff-tasks.functions";
+import { transitionTask, updateTask } from "@/lib/staff-tasks.functions";
 
 type Mode = null | "handoff" | "block" | "next" | "complete" | "missing";
 
 /** Accountable owner, handoff acceptance, blockers and completion for one staff task. */
 export function TaskHandoffPanel({ t, viewer, staff }: { t: any; viewer: string; staff: { id: string; name: string }[] }) {
   const run = useServerFn(transitionTask);
+  const assign = useServerFn(updateTask);
   const qc = useQueryClient();
   const [mode, setMode] = useState<Mode>(null);
   const [v, setV] = useState({ to: "", nextAction: t.next_action ?? "", targetDate: t.due_date ?? "", followUp: t.follow_up_date ?? "", text: "", note: "", ref: "" });
@@ -22,6 +23,16 @@ export function TaskHandoffPanel({ t, viewer, staff }: { t: any; viewer: string;
   const owner = t.assignee_user_id ?? t.created_by;
   const isOwner = owner === viewer;
   const isReceiver = t.handoff_to_user_id === viewer;
+  // Team-queue tasks made by the system (or by a client) have no staff owner yet; any staff member can take one.
+  const unowned = !t.assignee_user_id && !isOwner;
+  const take = async () => {
+    setBusy(true);
+    try {
+      await assign({ data: { id: t.id, assignee: viewer } as any });
+      toast.success("You now own this task. Complete, block or hand it off below.");
+      qc.invalidateQueries({ queryKey: ["staff-tasks"] }); qc.invalidateQueries({ queryKey: ["staff-task-history", t.id] });
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
   const closed = ["done", "cancelled"].includes(t.status);
 
   const go = async (action: string, payload: Record<string, unknown> = {}, ok = "Saved.") => {
@@ -54,7 +65,9 @@ export function TaskHandoffPanel({ t, viewer, staff }: { t: any; viewer: string;
           {isOwner && t.handoff_to_user_id && <Button size="sm" variant="outline" disabled={busy} onClick={() => go("cancel_handoff", {}, "Handoff withdrawn.")}>Withdraw handoff</Button>}
           {isOwner && <Button size="sm" variant="outline" onClick={() => setMode("block")}>Blocked</Button>}
           {isOwner && <Button size="sm" variant="ghost" onClick={() => setMode("next")}>Update next step</Button>}
-          {!isOwner && !isReceiver && <p className="text-xs text-muted-foreground">Only the accountable owner can change this task's next step.</p>}
+          {unowned && !isReceiver && <Button size="sm" disabled={busy} onClick={take}>Take this task</Button>}
+          {unowned && !isReceiver && <p className="self-center text-xs text-muted-foreground">No one owns this team task yet. Take it to complete it, mark it blocked or hand it off.</p>}
+          {!isOwner && !isReceiver && !unowned && <p className="text-xs text-muted-foreground">Only the accountable owner can change this task's next step.</p>}
         </div>
       )}
       {mode === "handoff" && (

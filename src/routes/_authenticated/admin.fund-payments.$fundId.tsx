@@ -4,7 +4,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/admin/fund-payments/$fundId")({
   beforeLoad: ({ params }) => {
-    throw redirect({ to: "/ops/fund/$fundId", params: { fundId: params.fundId }, search: { tab: "accounting" } });
+    throw redirect({ to: "/ops/fund/$fundId", params: { fundId: params.fundId }, search: { tab: "accounting" }, hash: "fund-payments" });
   },
   head: () => ({
     meta: [

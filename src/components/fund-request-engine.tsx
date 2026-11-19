@@ -73,12 +73,14 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     }
   }, [dq.data]);
 
-  const FUND_TERM_KEYS: (keyof FundRequest)[] = ["management_fee", "carried_interest", "preferred_return", "minimum_investment"];
+  const TERM_KEYS = ["management_fee", "carried_interest", "preferred_return", "minimum_investment"] as const;
+  const FUND_TERM_KEYS: (keyof FundRequest)[] = [...TERM_KEYS];
   // One class = one set of terms: fund terms and that class's terms always feed each other.
   const set = <K extends keyof FundRequest>(k: K, v: FundRequest[K]) => setR((p) => {
     const next = { ...p, [k]: v };
-    if (FUND_TERM_KEYS.includes(k)) return alignSingleClass(next, "fund");
-    if (k === "classes") return alignSingleClass(next, p.classes.length === 1 ? "class" : "fund");
+    // The edited side wins verbatim, so emptying a fee or minimum clears it on both sides.
+    if (FUND_TERM_KEYS.includes(k)) return alignSingleClass(next, "fund", [k as (typeof TERM_KEYS)[number]]);
+    if (k === "classes") return p.classes.length === 1 ? alignSingleClass(next, "class", TERM_KEYS) : alignSingleClass(next, "fund");
     return next;
   });
   const setKind = (kind: string) =>
