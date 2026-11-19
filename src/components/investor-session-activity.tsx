@@ -24,7 +24,7 @@ export function InvestorSessionActivity({ onboardingId }: { onboardingId: string
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Sign-ins and activity</CardTitle>
-        <CardDescription>Recorded sign-ins, pages viewed, clicks, emails and invitation-link opens, newest first. Typed values are never recorded. Staff only.</CardDescription>
+        <CardDescription>Recorded sign-ins, pages viewed, clicks, emails and invitation-link opens, newest first. Times show in the investor's own time zone, with the approximate address from their IP. Typed values are never recorded. Staff only.</CardDescription>
       </CardHeader>
       <CardContent className="text-sm">
         {q.isLoading ? <p className="text-muted-foreground">Loading…</p>
@@ -35,12 +35,12 @@ export function InvestorSessionActivity({ onboardingId }: { onboardingId: string
             {sessions.slice(0, shown).map((s) => {
               const first = s.items[s.items.length - 1]!;
               return <div key={s.id + first.created_at} className="rounded-md border p-3">
-                <p className="font-medium">{new Date(first.created_at).toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">{[first.ip, [first.city, first.region, first.country].filter(Boolean).join(", "), device(first.user_agent)].filter(Boolean).join(" · ")}</p>
+                <p className="font-medium" title={`Your time: ${new Date(first.created_at).toLocaleString()}`}>{first.localWhen ? `${first.localWhen} (their time)` : new Date(first.created_at).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{[first.ip ? `IP ${first.ip}` : null, first.place || [first.city, first.region, first.country].filter(Boolean).join(", "), device(first.user_agent)].filter(Boolean).join(" · ")}</p>
                 <ul className="mt-2 space-y-1">
                   {[...s.items].reverse().map((e) => <li key={e.id} className="flex flex-wrap justify-between gap-2">
                     <span>{human(e.action || e.event_type)}{e.path ? <span className="text-muted-foreground"> · {e.path}</span> : null}</span>
-                    <span className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleTimeString()}</span>
+                    <span className="text-xs text-muted-foreground" title={[e.ip ? `IP ${e.ip}` : null, e.place, `Your time: ${new Date(e.created_at).toLocaleString()}`].filter(Boolean).join(" · ")}>{e.localWhen ?? new Date(e.created_at).toLocaleTimeString()}</span>
                   </li>)}
                 </ul>
               </div>;

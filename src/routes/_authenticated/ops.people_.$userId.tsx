@@ -87,12 +87,13 @@ function AccountActivity({ userId }: { userId: string }) {
           <h1 className="text-3xl">{d.name || d.email}</h1>
           {d.suspended && <Badge variant="destructive">Login suspended</Badge>}
           <p className="mt-1 text-sm text-muted-foreground">{d.email} · Account created {when(d.createdAt)} · Email confirmed {when(d.confirmedAt)} · Last signed in {when(d.lastSignIn)}</p>
+          {d.lastSignInPlace && <p className="text-sm">Last sign-in from {d.lastSignInPlace.place || "an unknown location"}{d.lastSignInPlace.ip ? ` · IP ${d.lastSignInPlace.ip}` : ""}{d.lastSignInPlace.localWhen ? ` · ${d.lastSignInPlace.localWhen} their time` : ""}</p>}
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
         <section className="space-y-3 border-y py-4">
           <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg">Session & activity</h2><Badge variant="outline">{SESSION_LABELS[d.sessionStatus.state]}</Badge><span className="text-sm text-muted-foreground">{d.sessionStatus.at ? when(d.sessionStatus.at) : "No session evidence"}</span></div>
           <p className="text-sm">Last activity: {d.lastActivity ? `${d.lastActivity.label || d.lastActivity.path || "Recorded activity"} · ${when(d.lastActivity.created_at)}` : "Not recorded"}</p>
-          <p className="text-xs text-muted-foreground">Updated {when(d.checkedAt)} · A recorded sign-out applies to that session; other devices may still be signed in. Current online presence is not confirmed.</p>
+          <p className="text-xs text-muted-foreground">Updated {when(d.checkedAt)} · A recorded sign-out applies to that session; other devices may still be signed in. Current online presence is not confirmed. Activity times show in the person's own time zone from their IP address; addresses are approximate.</p>
         </section>
         {d.email && <MfaResetPanel email={d.email} userId={userId} />}
         <EmailCorrectionCard userId={userId} personId={null} />
@@ -116,7 +117,10 @@ function AccountActivity({ userId }: { userId: string }) {
             <ul className="divide-y">{events.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2"><Badge variant={e.kind === "Viewed" ? "secondary" : "outline"}>{e.kind}</Badge><span className="truncate">{e.what}</span>{e.path && e.what !== e.path && <span className="text-xs text-muted-foreground">{e.path}</span>}</div>
-                <span className="text-xs text-muted-foreground">{when(e.when)}</span>
+                <div className="text-right text-xs text-muted-foreground">
+                  <p title={`Your time: ${when(e.when)}`}>{e.localWhen ? `${e.localWhen} their time` : when(e.when)}</p>
+                  {(e.ip || e.place) && <p>{[e.place, e.ip ? `IP ${e.ip}` : null].filter(Boolean).join(" · ")}</p>}
+                </div>
               </li>))}
             </ul>
           )}

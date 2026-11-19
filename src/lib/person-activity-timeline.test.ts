@@ -30,3 +30,14 @@ describe("outsideAccountEvents", () => {
     expect(rows.map((r) => r.what)).toEqual(["Opened their invitation link", "Email opened: investor invitation", "Email sent: Your invitation"]);
   });
 });
+
+describe("clicks carry their session's IP", () => {
+  it("copies the sign-in IP onto clicks in that session", () => {
+    const rows = attachClicksToSessions(
+      [{ ...sec("a", "2026-11-01T10:00:00Z", "s1"), ip: "8.8.8.8", city: "Miami" }],
+      [{ id: "c1", kind: "click", path: "/home", label: "Go", created_at: "2026-11-01T10:05:00Z" }],
+    );
+    expect(rows.find((r) => r.id === "activity:c1")?.ip).toBe("8.8.8.8");
+    expect(rows.find((r) => r.id === "activity:c1")?.city).toBe("Miami");
+  });
+});

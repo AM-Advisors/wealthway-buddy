@@ -31288,6 +31288,48 @@ export type Database = {
           },
         ]
       }
+      ip_geolocations: {
+        Row: {
+          city: string | null
+          country: string | null
+          country_code: string | null
+          ip: string
+          looked_up_at: string
+          network: string | null
+          postal: string | null
+          region: string | null
+          region_code: string | null
+          source: string | null
+          time_zone: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
+          ip: string
+          looked_up_at?: string
+          network?: string | null
+          postal?: string | null
+          region?: string | null
+          region_code?: string | null
+          source?: string | null
+          time_zone?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
+          ip?: string
+          looked_up_at?: string
+          network?: string | null
+          postal?: string | null
+          region?: string | null
+          region_code?: string | null
+          source?: string | null
+          time_zone?: string | null
+        }
+        Relationships: []
+      }
       irs_correspondence: {
         Row: {
           created_at: string

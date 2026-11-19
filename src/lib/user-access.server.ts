@@ -418,21 +418,29 @@ export async function personActivity(viewer: string, subjectId: string, options:
     if (options.to) q = q.lte("created_at", options.to);
     return q.limit(101);
   };
-  const [{ data: prof }, { data: auth }, { data: acts }, { data: audits }, { data: access }, { data: roles }, security, sessionEvents, revocation, latestActivity] = await Promise.all([
+  const ipTrail = () => {
+    let q = db.from("security_events").select("ip,created_at").eq("user_id", subjectId).not("ip", "is", null).order("created_at", { ascending: false });
+    if (options.before) q = q.lt("created_at", options.before);
+    if (options.from) q = q.gte("created_at", new Date(Date.parse(options.from) - 12 * 3600_000).toISOString());
+    if (options.to) q = q.lte("created_at", options.to);
+    return q.limit(2000);
+  };
+  const [{ data: prof }, { data: auth }, { data: acts }, { data: audits }, { data: access }, { data: roles }, security, sessionEvents, revocation, latestActivity, ipRows] = await Promise.all([
     db.from("profiles").select("legal_name, email").eq("user_id", subjectId).maybeSingle(),
     db.auth.admin.getUserById(subjectId),
     activityQuery("staff_activity_events", "id, kind, path, label, created_at", "user_id"),
     activityQuery("access_audit_events", "id, action, created_at", "actor_user_id"),
     activityQuery("user_access_events", "id, action, reason, created_at", "subject_id"),
     db.from("user_roles").select("role").eq("user_id", subjectId),
-    activityQuery("security_events", "id,event_type,action,path,created_at", "user_id").neq("event_type", "heartbeat").neq("event_type", "page_view"),
-    db.from("security_events").select("event_type,action,created_at").eq("user_id", subjectId).in("event_type", ["sign_in", "sign_out", "session_timeout"]).order("created_at", { ascending: false }).limit(50),
+    activityQuery("security_events", "id,event_type,action,path,ip,created_at", "user_id").neq("event_type", "heartbeat").neq("event_type", "page_view"),
+    db.from("security_events").select("event_type,action,ip,created_at").eq("user_id", subjectId).in("event_type", ["sign_in", "sign_out", "session_timeout"]).order("created_at", { ascending: false }).limit(50),
     db.from("security_session_revocations").select("revoked_after").eq("user_id", subjectId).maybeSingle(),
     db.from("staff_activity_events").select("created_at,path,label").eq("user_id", subjectId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    ipTrail(),
   ]);
   const kindLabel: Record<string, string> = { page: "Viewed", click: "Clicked", action: "Action" };
   const events = [
-    ...((security.data ?? []) as any[]).map(a => ({ id: `security:${a.id}`, when: a.created_at, kind: "Security", what: `${String(a.event_type).replace(/_/g, " ")}${a.action ? ` — ${a.action}` : ""}`, path: a.path })),
+    ...((security.data ?? []) as any[]).map(a => ({ id: `security:${a.id}`, when: a.created_at, kind: "Security", what: `${String(a.event_type).replace(/_/g, " ")}${a.action ? ` — ${a.action}` : ""}`, path: a.path, ip: a.ip as string | null })),
     ...((acts ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: kindLabel[a.kind] ?? a.kind, what: a.label || a.path || "", path: a.path })),
     ...((audits ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Action", what: String(a.action).replace(/_/g, " "), path: null })),
     ...((access ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Access change", what: `${String(a.action).replace(/_/g, " ")}${a.reason && !String(a.action).startsWith("email_") ? ` — ${a.reason}` : ""}`, path: null })),
@@ -493,6 +501,17 @@ export async function personActivity(viewer: string, subjectId: string, options:
     verifications: (kvFull.data ?? []) as any[],
     profiles: (profs.data ?? []) as any[],
   };
+  // Each row carries its IP, approximate address and the person's own local time. Rows without
+  // their own IP (clicks, page views) take the latest recorded IP from the same browsing period.
+  const { ipAt, locate } = await import("@/lib/ip-geo");
+  const { placesForIps } = await import("@/lib/ip-geo.server");
+  const points = ((ipRows.data ?? []) as any[]).map((r) => ({ at: r.created_at as string, ip: r.ip as string }));
+  const lastSignIn = ((sessionEvents.data ?? []) as any[]).find((e) => e.event_type === "sign_in" && e.ip);
+  const shown = timeline.slice(0, 100) as (typeof timeline[number] & { ip?: string | null })[];
+  const rowIp = (e: (typeof shown)[number]) => (e.kind === "Email" || e.kind === "Invitation" ? null : e.ip ?? ipAt(points, String(e.when))?.ip ?? null);
+  const places = await placesForIps(db, [lastSignIn?.ip, ...shown.map(rowIp)], 20);
+  const located = shown.map((e) => ({ ...e, ...locate(String(e.when), rowIp(e), places) }));
+  const lastSignInPlace = lastSignIn ? { when: lastSignIn.created_at as string, ...locate(lastSignIn.created_at, lastSignIn.ip, places) } : null;
   const { accountSessionStatus } = await import("@/lib/account-session-status");
   return {
     sessionStatus: sessionEvents.error || revocation.error ? { state: "unknown" as const, at: null } : accountSessionStatus(sessionEvents.data ?? [], revocation.data?.revoked_after ?? null, u?.last_sign_in_at ?? null),
@@ -510,6 +529,6 @@ export async function personActivity(viewer: string, subjectId: string, options:
     investments: connections.investments,
     connections,
     suspended: !!(u as any)?.banned_until && new Date((u as any).banned_until) > new Date(),
-    events: timeline.slice(0, 100), nextCursor: timeline.length > 100 ? timeline[99]?.when ?? null : null,
+    events: located, lastSignInPlace, nextCursor: timeline.length > 100 ? timeline[99]?.when ?? null : null,
   };
 }

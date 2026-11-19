@@ -63,6 +63,12 @@ export async function recordSecurityEvent(input: SecurityEventInput) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const geo = readRequestGeo();
+    // Sign-ins record an approximate address from the IP (once per IP, cached) when the host gives none.
+    if (input.eventType === "sign_in" && geo.ip && !geo.city) {
+      const { placesForIps } = await import("@/lib/ip-geo.server");
+      const place = (await placesForIps(supabaseAdmin, [geo.ip], 1)).get(geo.ip);
+      if (place) { geo.city = place.city; geo.region = place.region; geo.country = geo.country ?? place.country; }
+    }
     const lat = num(input.lat);
     const lng = num(input.lng);
     const deviceHash = input.deviceId ? await sha256(`${input.userId ?? ""}:${input.deviceId}`) : null;
