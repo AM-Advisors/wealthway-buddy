@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { listSendableDocumentsFn, sendDocumentsFn } from "@/lib/offering-document-send.functions";
 import { FOLLOW_UP_LABELS, needsFollowUp, type FollowUpStatus } from "@/lib/document-follow-up-model";
+import { AddInvestorDocument } from "@/components/add-investor-document";
 
 type FollowUpDoc = { id: string; title: string; version: number };
 type FollowUpInv = { onboardingId: string; name: string; tracking: { documentId: string; sentAt: string | null; openedAt: string | null; opens: number; status: FollowUpStatus }[] };
@@ -53,7 +54,7 @@ function DocumentFollowUp({ documents, investors }: { documents: FollowUpDoc[]; 
   );
 }
 
-export function SendFundDocuments({ offeringId }: { offeringId: string }) {
+export function SendFundDocuments({ offeringId, onOpenTab }: { offeringId: string; onOpenTab?: (tab: string) => void }) {
   const list = useServerFn(listSendableDocumentsFn);
   const send = useServerFn(sendDocumentsFn);
   const qc = useQueryClient();
@@ -85,16 +86,23 @@ export function SendFundDocuments({ offeringId }: { offeringId: string }) {
   const docTitle = new Map((data?.documents ?? []).map((d) => [d.id, d.title]));
 
   return (
+    <div className="space-y-4">
+    <AddInvestorDocument
+      offeringId={offeringId}
+      onOpenTab={onOpenTab}
+      onUseNote={(n) => setNote(n.slice(0, 1000))}
+      onAdded={(id) => { setDocs((d) => (d.includes(id) ? d : [...d, id])); void qc.invalidateQueries({ queryKey: key }); }}
+    />
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Send className="h-5 w-5" /> Send documents to investors</CardTitle>
-        <CardDescription>Send the fund's in-use subscription agreement, operating agreement and offering documents. Each investor gets an email with a sign-in link and sees the documents in their portal.</CardDescription>
+        <CardDescription>Send the fund's in-use documents: agreements, offering documents, valuation reports and investor updates. Each investor gets an email with a sign-in link and sees the documents in their portal.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.isError ? (
           <p className="text-sm text-destructive">{(q.error as Error).message}</p>
         ) : !data?.documents.length ? (
-          <p className="text-sm text-muted-foreground">No documents are in use for this fund yet. Harmonious approves and puts documents in use during Fund Setup; they'll appear here once ready.</p>
+          <p className="text-sm text-muted-foreground">No documents are in use for this fund yet. Add one above, or approve the fund's agreements under Review &amp; approve; they'll appear here once in use.</p>
         ) : (
           <>
             <div>
@@ -154,5 +162,6 @@ export function SendFundDocuments({ offeringId }: { offeringId: string }) {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
 import { documentApplies, DOCUMENT_CATEGORY_LABELS } from "@/lib/offering-document-model";
 import { investorDocuments } from "@/lib/offering-document-setup.server";
+import { SHAREABLE_KIND_LABEL } from "@/lib/investor-update-reader-model";
 
 const db = () => supabaseAdmin as any;
 const PORTAL = CLIENT_ORIGIN_DEFAULT;
@@ -44,7 +45,7 @@ async function loadRoster(offeringId: string) {
 }
 
 async function activeDocs(offeringId: string) {
-  const { data } = await db().from("offering_documents").select("id, title, document_category, usage, applicability, active_version").eq("offering_id", offeringId).not("active_version", "is", null).order("sort_order");
+  const { data } = await db().from("offering_documents").select("id, title, doc_type, document_category, usage, applicability, active_version").eq("offering_id", offeringId).is("removed_at", null).not("active_version", "is", null).order("sort_order");
   return ((data ?? []) as any[]).filter((d) => !d.document_category || SENDABLE.includes(d.document_category));
 }
 
@@ -82,7 +83,7 @@ export async function listSendableDocuments(userId: string, offeringId: string) 
     documents: docs.map((d) => ({
       id: d.id as string,
       title: d.title as string,
-      category: (DOCUMENT_CATEGORY_LABELS as any)[d.document_category] ?? "Document",
+      category: (SHAREABLE_KIND_LABEL as any)[d.doc_type] && d.doc_type !== "other" ? (SHAREABLE_KIND_LABEL as any)[d.doc_type] : (DOCUMENT_CATEGORY_LABELS as any)[d.document_category] ?? "Document",
       version: d.active_version as number,
       usage: d.usage as string,
       appliesTo: roster.filter((r) => documentApplies(d.applicability, r)).map((r) => r.onboardingId),

@@ -205,7 +205,7 @@ export async function uploadDocumentVersion(userId: string, input: { documentId:
   return appendDocumentVersion(userId, d, input);
 }
 
-async function appendDocumentVersion(userId: string, d: any, input: { filePath: string; fileName: string; fileSizeBytes: number; effectiveDate?: string | null | undefined; selfServeGenerated?: boolean; generationIssues?: string[] }) {
+async function appendDocumentVersion(userId: string, d: any, input: { filePath: string; fileName: string; fileSizeBytes: number; effectiveDate?: string | null | undefined; selfServeGenerated?: boolean; generationIssues?: string[]; notifyReview?: boolean }) {
   if (!input.filePath.startsWith(`${d.offering_id}/`)) throw new Error("That file does not belong to this fund.");
   const { data: latest } = await db().from("offering_document_versions").select("version, signing_config, self_serve_review_state").eq("offering_document_id", d.id).order("version", { ascending: false }).limit(1).maybeSingle();
   const version = Number(latest?.version ?? 0) + 1;
@@ -230,8 +230,37 @@ async function appendDocumentVersion(userId: string, d: any, input: { filePath: 
   await db().from("offering_documents").update({ current_version: version, file_updated_at: now() }).eq("id", d.id);
   await event(d.offering_id, d.id, version, "version_uploaded", userId, { fileName: input.fileName });
   const { data: savedVersion } = await db().from("offering_document_versions").select("id").eq("offering_document_id", d.id).eq("version", version).maybeSingle();
-  if (savedVersion) await (await import("./fund-review-notify.server")).notifyFundReview("document", savedVersion.id);
+  if (savedVersion && input.notifyReview !== false) await (await import("./fund-review-notify.server")).notifyFundReview("document", savedVersion.id);
   return { version };
+}
+
+/**
+ * Fund-wide, read-only document for every investor (valuation report, investor update),
+ * added by that fund's manager or Harmonious from Send to investors. It is one canonical
+ * Offering Document: never required for onboarding, never signed, and put in use with the
+ * same self-serve approval and legal-name gate as any upload. Sending stays a separate step.
+ */
+export async function addFundWideReferenceDocument(userId: string, input: { offeringId: string; docType: "valuation_report" | "investor_update" | "other"; title: string; filePath: string; fileName: string; fileSizeBytes: number; effectiveDate?: string | null | undefined }) {
+  const actor = await setupActor(userId);
+  if (!actor.isStaff && !actor.offeringIds.includes(input.offeringId)) forbid("you do not manage that fund.");
+  const title = input.title.trim().replace(/\s+/g, " ");
+  if (!title || title.length > 200) throw new Error("Give the document a clear name (up to 200 characters).");
+  if (!input.filePath.startsWith(`${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
+  await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: input.offeringId }, "offering_document_approval");
+  const { data: d, error } = await db().from("offering_documents")
+    .insert({ offering_id: input.offeringId, title, doc_type: input.docType, document_category: "other", body: "", requires_signature: false, investor_required: false, usage: "reference", applicability: { profileTypes: [], classKeys: [] } })
+    .select("*").single();
+  if (error || !d) throw new Error(error?.message ?? "The document couldn't be added.");
+  await event(input.offeringId, d.id, null, "document_created", userId, { category: "other", docType: input.docType, via: "send_to_investors" });
+  try {
+    const { version } = await appendDocumentVersion(userId, d, { filePath: input.filePath, fileName: input.fileName, fileSizeBytes: input.fileSizeBytes, effectiveDate: input.effectiveDate ?? null, notifyReview: false });
+    await activateDocumentVersion(userId, { documentId: d.id, version });
+    return { documentId: d.id as string, version };
+  } catch (e) {
+    // Never leave a half-added document in the fund's list; the row is kept, marked removed.
+    await db().from("offering_documents").update({ removed_at: now(), removed_by: userId, removed_reason: "Could not be put in use when added" }).eq("id", d.id);
+    throw e;
+  }
 }
 
 async function versionRow(documentId: string, version: number) {

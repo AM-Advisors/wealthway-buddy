@@ -25,7 +25,7 @@ export function FundDocumentsHub({ fundId, staff }: { fundId: string; staff: boo
       <TabsContent value="files">{tab === "files" && <DocumentsTab fundId={fundId} />}</TabsContent>
       <TabsContent value="library">{tab === "library" && <DocumentLibrary scope={{ offeringId: fundId }} />}</TabsContent>
       <TabsContent value="approve">{tab === "approve" && <OfferingDocumentsSetup offeringId={fundId} />}</TabsContent>
-      <TabsContent value="send">{tab === "send" && <SendFundDocuments offeringId={fundId} />}</TabsContent>
+      <TabsContent value="send">{tab === "send" && <SendFundDocuments offeringId={fundId} onOpenTab={setTab} />}</TabsContent>
       <TabsContent value="review">{tab === "review" && <div className="space-y-3"><p className="text-sm text-muted-foreground">Document approval permits signing; approval to fund remains a separate review.</p><InvestorDocumentReview offeringId={fundId} /></div>}</TabsContent>
       {!staff && <TabsContent value="more">{tab === "more" && <FundWorkspaceSection title="More document tools" description="Other document areas for your funds." items={[
         { title: "Document inbox", description: "Review investor uploads and signed copies filed back.", to: "/manager/inbox" },
