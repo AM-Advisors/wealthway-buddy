@@ -52962,6 +52962,10 @@ export type Database = {
         Args: { _stakeholder_id: string }
         Returns: boolean
       }
+      claim_client_welcome: {
+        Args: { _client_id: string; _email: string }
+        Returns: string
+      }
       claim_exact_investment_application: {
         Args: { p_offering_id: string; p_persona_id: string }
         Returns: string
@@ -53413,6 +53417,10 @@ export type Database = {
       register_stepup_attempt: {
         Args: { p_id: string; p_max: number; p_user_id: string }
         Returns: number
+      }
+      release_client_welcome_claim: {
+        Args: { _id: string }
+        Returns: undefined
       }
       release_person_creation_lock: {
         Args: { _key: string; _token: string }

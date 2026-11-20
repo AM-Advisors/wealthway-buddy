@@ -280,15 +280,6 @@ export const maybeSendClientWelcome = createServerFn({ method: "POST" })
       const clientId = data.clientId && ids.includes(data.clientId) ? data.clientId : ids[0];
       if (!clientId) return { sent: false as const, reason: "no_client" as const };
 
-      const { data: already } = await context.supabase
-        .from("contract_audit_events")
-        .select("id")
-        .eq("area", "welcome email")
-        .eq("client_id", clientId)
-        .contains("new_value", { user_id: context.userId })
-        .limit(1);
-      if (already && already.length > 0) return { sent: false as const, reason: "already_sent" as const };
-
       const [{ data: profile }, { data: client }] = await Promise.all([
         context.supabase
           .from("profiles")
@@ -299,6 +290,16 @@ export const maybeSendClientWelcome = createServerFn({ method: "POST" })
       ]);
       const email = profile?.email as string | undefined;
       if (!email) return { sent: false as const, reason: "no_email" as const };
+
+      // Claim the one welcome email for this person+client before sending.
+      // Clients cannot read contract_audit_events, so a select here would
+      // always look empty and resend on every portal visit; the database
+      // claim is the only reliable once-per-person check.
+      const { data: claimId } = await context.supabase.rpc("claim_client_welcome", {
+        _client_id: clientId,
+        _email: email,
+      } as any);
+      if (!claimId) return { sent: false as const, reason: "already_sent" as const };
 
       const origin = process.env["SITE_URL"] || "https://app.harmonious.co";
       const result = await sendTemplateEmail("client-welcome", email, {
@@ -311,17 +312,9 @@ export const maybeSendClientWelcome = createServerFn({ method: "POST" })
         idempotencyKey: `client-welcome-${context.userId}-${clientId}`,
       });
 
-      if (result.sent) {
-        await context.supabase.from("contract_audit_events").insert({
-          actor_id: context.userId,
-          actor_role: "client",
-          client_id: clientId,
-          area: "welcome email",
-          action: "sent",
-          target: email,
-          new_value: { user_id: context.userId, email } as any,
-          source: "portal",
-        });
+      if (!result.sent) {
+        // Let a later visit retry instead of burning the one claim on a failure.
+        await context.supabase.rpc("release_client_welcome_claim", { _id: claimId } as any);
       }
       return result.sent
         ? { sent: true as const }
