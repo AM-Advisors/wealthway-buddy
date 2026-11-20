@@ -1241,3 +1241,7 @@
 - [x] Same email / same person shows the same accounts, clients, funds and details on every screen (View account, People directory, client People & Team, quick search)
 - [ ] Bonnie's old suspended login (bonnie@corpscapadvisors.com) still manages one fund: waiting on user to confirm removal
 - [x] AI document imports read every page and complete investor profiles (blanks filled, differences to review, owners/signers added)
+
+## Fund files from storage folders + Adobe Sign (2026-11-20)
+- [ ] File storage-folder papers under matching funds and save investors directly (earlier investments, no emails): waiting on folder access
+- [ ] Connect Adobe Sign and bring in signed agreements the same way: waiting on account address + admin key
