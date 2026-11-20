@@ -1243,5 +1243,5 @@
 - [x] AI document imports read every page and complete investor profiles (blanks filled, differences to review, owners/signers added)
 
 ## Fund files from storage folders + Adobe Sign (2026-11-20)
-- [ ] File storage-folder papers under matching funds and save investors directly (earlier investments, no emails): waiting on folder access
+- [ ] File storage-folder papers under matching funds and save investors directly (earlier investments, no emails): waiting on storage admin to enable reading every person's folders (checked Nov 20: still blocked)
 - [ ] Connect Adobe Sign and bring in signed agreements the same way: waiting on account address + admin key
