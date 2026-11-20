@@ -192,6 +192,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Offering statement", url: "/admin/offering-statement", description: "Offering statement drafting", cap: "regulatory", step: "Prepare" },
       { title: "Formation reference data", url: "/ops/formation-reference", description: "Formation providers, state fees and formation packages", step: "Reference" },
       { title: "Document templates", url: "/ops/document-templates", description: "Reusable fund documents with versioning and approval", step: "Review" },
+      { title: "Signatures across funds", url: "/ops/signatures", description: "Side letters, subscription and other agreements: who each is waiting on, what is stuck, resend", step: "Track" },
       { title: "Documents & signatures", url: "/ops/documents", description: "Document repository and signature status", cap: "documents", step: "Track" },
       { title: "Document activity", url: "/admin/document-log", description: "Who opened or signed what", cap: "documents", step: "Reference" },
       { title: "Fund access", url: "/admin/access", description: "Who can open each fund", step: "Reference" },

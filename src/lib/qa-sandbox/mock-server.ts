@@ -60,6 +60,7 @@ import { createQaFoundation, handleQaFoundationCall, QA_FOUNDATION_FNS, type QaF
 import { createQaCustomServices, handleQaCustomServiceCall, QA_CUSTOM_SERVICE_FNS, type QaCustomServices } from "./custom-services-fixture";
 import { createQaFundSubmissions, handleQaFundSubmissionCall, QA_FUND_SUBMISSION_FNS, type QaFundSubmissions } from "./fund-submission-fixture";
 import { createQaPowerOfAttorney, handleQaPowerOfAttorneyCall, QA_POA_FNS, type QaPowerOfAttorney } from "./poa-fixture";
+import { createQaSignatures, handleQaSignatureCall, QA_SIGNATURE_FNS, type QaSignatures } from "./signatures-fixture";
 
 export type QaRole = "staff" | "manager";
 
@@ -83,6 +84,7 @@ export type QaState = {
   customServices?: QaCustomServices;
   fundSubmissions?: QaFundSubmissions;
   powerOfAttorney?: QaPowerOfAttorney;
+  signatures?: QaSignatures;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -110,6 +112,7 @@ const KNOWN_FNS = [
   ...QA_CUSTOM_SERVICE_FNS,
   ...QA_FUND_SUBMISSION_FNS,
   ...QA_POA_FNS,
+  ...QA_SIGNATURE_FNS,
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -140,6 +143,7 @@ export function handleQaServerCall(fnName: string, data: any, state: QaState): u
   if ((QA_CUSTOM_SERVICE_FNS as readonly string[]).includes(fnName)) return handleQaCustomServiceCall(fnName, data, (state.customServices ??= createQaCustomServices()));
   if ((QA_FUND_SUBMISSION_FNS as readonly string[]).includes(fnName)) return handleQaFundSubmissionCall(fnName, data, (state.fundSubmissions ??= createQaFundSubmissions()));
   if ((QA_POA_FNS as readonly string[]).includes(fnName)) return handleQaPowerOfAttorneyCall(fnName, data, (state.powerOfAttorney ??= createQaPowerOfAttorney()));
+  if ((QA_SIGNATURE_FNS as readonly string[]).includes(fnName)) return handleQaSignatureCall(fnName, data, state.role, (state.signatures ??= createQaSignatures()));
   switch (fnName) {
     case "investorComplianceFn": {
       if (data?.onboardingId === "qa-financial-investment") return {

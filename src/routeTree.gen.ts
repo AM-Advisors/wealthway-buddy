@@ -72,6 +72,7 @@ import { Route as AuthenticatedSharedFundsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated/shares'
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
 import { Route as AuthenticatedSignatoryRouteImport } from './routes/_authenticated/signatory'
+import { Route as AuthenticatedSignaturesRouteImport } from './routes/_authenticated/signatures'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedStartFundRouteImport } from './routes/_authenticated/start-fund'
 import { Route as AuthenticatedStatementsRouteImport } from './routes/_authenticated/statements'
@@ -303,6 +304,7 @@ import { Route as AuthenticatedOpsSealedArchiveRouteImport } from './routes/_aut
 import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
 import { Route as AuthenticatedOpsServiceEngagementsRouteImport } from './routes/_authenticated/ops.service-engagements'
 import { Route as AuthenticatedOpsSessionRecordingsRouteImport } from './routes/_authenticated/ops.session-recordings'
+import { Route as AuthenticatedOpsSignaturesRouteImport } from './routes/_authenticated/ops.signatures'
 import { Route as AuthenticatedOpsSoftwareIssuesRouteImport } from './routes/_authenticated/ops.software-issues'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStalledRouteImport } from './routes/_authenticated/ops.stalled'
@@ -829,6 +831,11 @@ const AuthenticatedSignOffRoute = AuthenticatedSignOffRouteImport.update({
 const AuthenticatedSignatoryRoute = AuthenticatedSignatoryRouteImport.update({
   id: '/signatory',
   path: '/signatory',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSignaturesRoute = AuthenticatedSignaturesRouteImport.update({
+  id: '/signatures',
+  path: '/signatures',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
@@ -2164,6 +2171,12 @@ const AuthenticatedOpsSessionRecordingsRoute =
     path: '/ops/session-recordings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsSignaturesRoute =
+  AuthenticatedOpsSignaturesRouteImport.update({
+    id: '/ops/signatures',
+    path: '/ops/signatures',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSoftwareIssuesRoute =
   AuthenticatedOpsSoftwareIssuesRouteImport.update({
     id: '/ops/software-issues',
@@ -3410,6 +3423,7 @@ export interface FileRoutesByFullPath {
   '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/signatory': typeof AuthenticatedSignatoryRoute
+  '/signatures': typeof AuthenticatedSignaturesRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/start-fund': typeof AuthenticatedStartFundRoute
   '/statements': typeof AuthenticatedStatementsRoute
@@ -3634,6 +3648,7 @@ export interface FileRoutesByFullPath {
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/session-recordings': typeof AuthenticatedOpsSessionRecordingsRoute
+  '/ops/signatures': typeof AuthenticatedOpsSignaturesRoute
   '/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/stalled': typeof AuthenticatedOpsStalledRoute
@@ -3904,6 +3919,7 @@ export interface FileRoutesByTo {
   '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/signatory': typeof AuthenticatedSignatoryRoute
+  '/signatures': typeof AuthenticatedSignaturesRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/start-fund': typeof AuthenticatedStartFundRoute
   '/statements': typeof AuthenticatedStatementsRoute
@@ -4125,6 +4141,7 @@ export interface FileRoutesByTo {
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/session-recordings': typeof AuthenticatedOpsSessionRecordingsRoute
+  '/ops/signatures': typeof AuthenticatedOpsSignaturesRoute
   '/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/stalled': typeof AuthenticatedOpsStalledRoute
@@ -4400,6 +4417,7 @@ export interface FileRoutesById {
   '/_authenticated/shares': typeof AuthenticatedSharesRoute
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
   '/_authenticated/signatory': typeof AuthenticatedSignatoryRoute
+  '/_authenticated/signatures': typeof AuthenticatedSignaturesRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/start-fund': typeof AuthenticatedStartFundRoute
   '/_authenticated/statements': typeof AuthenticatedStatementsRoute
@@ -4624,6 +4642,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/_authenticated/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/_authenticated/ops/session-recordings': typeof AuthenticatedOpsSessionRecordingsRoute
+  '/_authenticated/ops/signatures': typeof AuthenticatedOpsSignaturesRoute
   '/_authenticated/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/stalled': typeof AuthenticatedOpsStalledRoute
@@ -4900,6 +4919,7 @@ export interface FileRouteTypes {
     | '/shares'
     | '/sign-off'
     | '/signatory'
+    | '/signatures'
     | '/staff'
     | '/start-fund'
     | '/statements'
@@ -5124,6 +5144,7 @@ export interface FileRouteTypes {
     | '/ops/security-compliance'
     | '/ops/service-engagements'
     | '/ops/session-recordings'
+    | '/ops/signatures'
     | '/ops/software-issues'
     | '/ops/ss4'
     | '/ops/stalled'
@@ -5394,6 +5415,7 @@ export interface FileRouteTypes {
     | '/shares'
     | '/sign-off'
     | '/signatory'
+    | '/signatures'
     | '/staff'
     | '/start-fund'
     | '/statements'
@@ -5615,6 +5637,7 @@ export interface FileRouteTypes {
     | '/ops/security-compliance'
     | '/ops/service-engagements'
     | '/ops/session-recordings'
+    | '/ops/signatures'
     | '/ops/software-issues'
     | '/ops/ss4'
     | '/ops/stalled'
@@ -5889,6 +5912,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shares'
     | '/_authenticated/sign-off'
     | '/_authenticated/signatory'
+    | '/_authenticated/signatures'
     | '/_authenticated/staff'
     | '/_authenticated/start-fund'
     | '/_authenticated/statements'
@@ -6113,6 +6137,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/security-compliance'
     | '/_authenticated/ops/service-engagements'
     | '/_authenticated/ops/session-recordings'
+    | '/_authenticated/ops/signatures'
     | '/_authenticated/ops/software-issues'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/stalled'
@@ -6856,6 +6881,13 @@ declare module '@tanstack/react-router' {
       path: '/signatory'
       fullPath: '/signatory'
       preLoaderRoute: typeof AuthenticatedSignatoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/signatures': {
+      id: '/_authenticated/signatures'
+      path: '/signatures'
+      fullPath: '/signatures'
+      preLoaderRoute: typeof AuthenticatedSignaturesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/staff': {
@@ -8473,6 +8505,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/session-recordings'
       fullPath: '/ops/session-recordings'
       preLoaderRoute: typeof AuthenticatedOpsSessionRecordingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/signatures': {
+      id: '/_authenticated/ops/signatures'
+      path: '/ops/signatures'
+      fullPath: '/ops/signatures'
+      preLoaderRoute: typeof AuthenticatedOpsSignaturesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/software-issues': {
@@ -10221,6 +10260,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSharesRoute: typeof AuthenticatedSharesRoute
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
   AuthenticatedSignatoryRoute: typeof AuthenticatedSignatoryRoute
+  AuthenticatedSignaturesRoute: typeof AuthenticatedSignaturesRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedStartFundRoute: typeof AuthenticatedStartFundRoute
   AuthenticatedStatementsRoute: typeof AuthenticatedStatementsRoute
@@ -10402,6 +10442,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
   AuthenticatedOpsServiceEngagementsRoute: typeof AuthenticatedOpsServiceEngagementsRoute
   AuthenticatedOpsSessionRecordingsRoute: typeof AuthenticatedOpsSessionRecordingsRoute
+  AuthenticatedOpsSignaturesRoute: typeof AuthenticatedOpsSignaturesRoute
   AuthenticatedOpsSoftwareIssuesRoute: typeof AuthenticatedOpsSoftwareIssuesRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStalledRoute: typeof AuthenticatedOpsStalledRoute
@@ -10550,6 +10591,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSharesRoute: AuthenticatedSharesRoute,
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
   AuthenticatedSignatoryRoute: AuthenticatedSignatoryRoute,
+  AuthenticatedSignaturesRoute: AuthenticatedSignaturesRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedStartFundRoute: AuthenticatedStartFundRoute,
   AuthenticatedStatementsRoute: AuthenticatedStatementsRoute,
@@ -10767,6 +10809,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsServiceEngagementsRoute,
   AuthenticatedOpsSessionRecordingsRoute:
     AuthenticatedOpsSessionRecordingsRoute,
+  AuthenticatedOpsSignaturesRoute: AuthenticatedOpsSignaturesRoute,
   AuthenticatedOpsSoftwareIssuesRoute: AuthenticatedOpsSoftwareIssuesRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStalledRoute: AuthenticatedOpsStalledRoute,

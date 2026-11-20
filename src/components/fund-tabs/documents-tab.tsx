@@ -27,11 +27,14 @@ import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn, designateFundReplacementFn } from "@/lib/fund-file-signing.functions";
 import { listSetupDocumentsFn } from '@/lib/fund-setup-canonical.functions';
 import { SigningTracker } from "./signing-tracker";
+import { SignatureCenter } from "@/components/signature-center";
+import { useRouterState } from "@tanstack/react-router";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
 
 export function DocumentsTab({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
+  const onOps = useRouterState({ select: (st) => st.location.pathname.startsWith("/ops") });
   const access = useServerFn(fundDocumentGenerationAccessFn);
   const permission = useQuery({ queryKey: ["fund-document-generation-access", fundId], queryFn: () => access({ data: { offeringId: fundId } }) });
   const canGenerate = Boolean(permission.data?.templates || permission.data?.starter);
@@ -127,6 +130,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   ];
   return (
     <div className="space-y-5">
+      <SignatureCenter surface={onOps ? "ops" : "client"} offeringId={fundId} />
       <OfferingDocumentsSetup offeringId={fundId} onChanged={refresh} />
       <SigningTracker fundId={fundId} files={files} signing={sig.data} loading={q.isPending || sig.isPending} error={q.isError || sig.isError} />
       <Card>
