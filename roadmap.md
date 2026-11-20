@@ -1,5 +1,11 @@
 # Roadmap
 
+## Erebor cleanup (2026-11-20)
+- [x] Kimberly's side letter now named for the trust (new version; original kept)
+- [x] Three leftover side letter requests declined with reasons
+- [x] Withdrawn test account's signing request cancelled, so Thomas no longer shows as waiting
+- [x] Final close date set to Nov 20, 2026; fund stays open
+
 ## Kelby sign-in (2026-11-19)
 - [x] Found why: his company's email scanner opened and used up his reset link; first invite link was replaced by a second one
 - [x] Password reset links now need a Continue click, so scanners can't use them up
