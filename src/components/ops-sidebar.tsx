@@ -74,7 +74,6 @@ type NavItem = { id: string; title: string; url: string; icon: string; badge?: n
 
 /** Key screens shown as sub-items under each Operations area (filtered by capability). */
 const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]> = {
-  clients: [{ title: "ROAS billing update", url: "/ops/billing/roas-update" }, { title: "ROAS payments", url: "/ops/billing/payments" }],
   funds: [{ title: "Service engagements", url: "/ops/service-engagements" }, { title: "Locked edit approvals", url: "/ops/locked-edits", always: true }, { title: "EIN / SS-4 queue", url: "/ops/ss4" }, { title: "Documents & signatures", url: "/ops/documents" }, { title: "HubSpot tickets", url: "/ops/hubspot-tickets" }, { title: "HubSpot deal migration", url: "/ops/hubspot-deals" }, { title: "Client Portal Launch", url: "/ops/client-portal-launch" }, { title: "Migrations", url: "/ops/fund-migration/requests" }],
   investors: [{ title: "Investor onboarding & KYC", url: "/admin/investor-onboarding" }],
   capital: [{ title: "Banking", url: "/ops/banking" }, { title: "Distributions", url: "/ops/distributions" }, { title: "Capital calls & funding", url: "/admin/funding" }],
@@ -200,6 +199,12 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const has = (...r: string[]) => staffRoles.some((x) => r.includes(x));
   const leader = has("super_admin", "executive", "admin");
   const toItem = (s: (typeof sections)[number]) => ({ ...s, sub: (OPS_SUB[s.id] ?? []).filter((x) => x.always || allowedUrls.has(x.url)) });
+  // The two ROAS billing screens live together under their own "ROAS client billing" menu section.
+  const ROAS_URLS = ["/ops/billing/roas-update", "/ops/billing/payments"];
+  const roasItems: NavItem[] = ([
+    { id: "roas-update", title: "ROAS billing update", url: "/ops/billing/roas-update", icon: "report" },
+    { id: "roas-payments", title: "ROAS payments", url: "/ops/billing/payments", icon: "money" },
+  ] as NavItem[]).filter((i) => allowedUrls.has(i.url));
   const commandSub = [["My Work", "my-work"], ["Funds & SPVs", "portfolio"], ["SLA", "sla"], ["Client Actions", "client-actions"], ["Investor Exceptions", "investors"], ["Third-Party Blockers", "third-party"], ["Approvals", "approvals"], ["Requests", "requests"], ["Calendar", "calendar"], ["Reporting", "reporting"], ["Capital Activity", "capital"], ["Exceptions", "exceptions"], ["Service Limits", "limits"], ["Service Reviews", "reviews"], ["Team Capacity", "capacity"], ["Leadership", "leadership"], ...(leader || has("finance") ? [["Service Economics", "economics"]] : [])].map(([title, v]) => ({ title: title!, url: `/ops/command-center?view=${v}` }));
   const opsItems: NavItem[] = salesOnly ? [] : [
     { id: "ops-command", title: "Command Center", url: "/ops/command-center", icon: "report", sub: [{ title: "Overview", url: "/ops/command-center" }, ...commandSub] },
@@ -316,6 +321,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     const deduped = dedupeNav([
       { id: "commercial", label: "Connected workflow", items: canSee("commercial", staffRoles) ? [{ id: "commercial-workflow", title: "Client and revenue workflow", url: "/ops/commercial", icon: "briefcase" }] : [] },
       { id: "operations", label: "Operations", items: opsItems },
+      { id: "roas-billing", label: "ROAS client billing", items: roasItems },
       { id: "finance", label: "Accounting & Finance", items: financeItems },
       { id: "sales", label: "Sales", items: salesItems },
       { id: "account-management", label: "Account Management", items: amItems },
@@ -330,7 +336,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const G = (id: string) => groups.byId[id] ?? [];
 
   const exact = (i: NavItem) => pathname === i.url;
-  const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
+  const opsActive = (i: NavItem) => ROAS_URLS.includes(pathname) ? pathname === i.url : i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
 
 
   const close = () => {
@@ -454,6 +460,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             )}
             <SidebarFavorites collapsed={collapsed} onNavigate={close} />
             <NavSection id="operations" label="Operations" items={G("operations")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
+            <NavSection id="roas-billing" label="ROAS client billing" items={G("roas-billing")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => pathname === i.url} />
             <NavSection id="finance" label="Accounting & Finance" items={G("finance")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="commercial" label="Connected workflow" items={G("commercial")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="sales" label="Sales" items={G("sales")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />

@@ -152,3 +152,18 @@ describe("process-based work areas keep per-screen access", () => {
     expect(inv.screens.map((s) => s.url)).not.toContain("/ops/readiness");
   });
 });
+
+describe("ROAS client billing menu section", () => {
+  const ROAS = ["/ops/billing/roas-update", "/ops/billing/payments"];
+
+  it("lists both ROAS billing screens under their own section, never nested under Clients", () => {
+    const src = readFileSync("src/components/ops-sidebar.tsx", "utf8");
+    expect(src).toContain('label: "ROAS client billing"');
+    expect(src).toContain('<NavSection id="roas-billing"');
+    for (const url of ROAS) expect(src).toContain(`url: "${url}"`);
+    // The old nested sub-list under Clients must be gone: no clients key in OPS_SUB.
+    const opsSub = src.slice(src.indexOf("const OPS_SUB"), src.indexOf("const FINANCE_IDS"));
+    expect(opsSub).not.toMatch(/(^|\n)\s*clients:\s*\[/);
+    for (const url of ROAS) expect(opsSub).not.toContain(url);
+  });
+});

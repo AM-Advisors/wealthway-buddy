@@ -1,5 +1,10 @@
 # Roadmap
 
+## ROAS billing in the Operations menu (2026-11-20)
+- [x] "ROAS billing update" and "ROAS payments" no longer hide as a sub-list under Clients
+- [x] Both sit under their own "ROAS client billing" menu section, always visible
+- [x] Menu test added; 16 menu tests pass; preview build OK
+
 ## Erebor cleanup (2026-11-20)
 - [x] Kimberly's side letter now named for the trust (new version; original kept)
 - [x] Three leftover side letter requests declined with reasons
