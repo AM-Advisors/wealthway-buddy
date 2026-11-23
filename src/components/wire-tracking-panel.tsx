@@ -100,7 +100,7 @@ export function WireTrackingPanel({ offeringId }: { offeringId?: string } = {}) 
           <div className="divide-y rounded-lg border">
             {rows.map((row) => (
               <div
-                key={row.applicationId}
+                key={(row as any).rowKey ?? row.applicationId}
                 className="flex flex-wrap items-start justify-between gap-3 p-3"
               >
                 <div className="min-w-0">

@@ -235,6 +235,31 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
     const taxDocuments = ((taxRes as any).data ?? []) as any[];
     const invitedCount = ((accessRes as any).data ?? []).length;
 
+    // Current investment records for this fund, joined with older applications
+    // the same way as the manager panel, so the investor count and committed
+    // total include investors who never had an older application.
+    const { data: onbRows } = await supabase
+      .from("investor_onboardings")
+      .select("id, offering_id, investor_user_id, application_id, stage, funding_status, is_test_investor, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, removed_at, merged_into_onboarding_id")
+      .eq("offering_id", offeringId)
+      .limit(2000);
+    const { managerFundCounts } = await import("@/lib/manager-panel-model");
+    const settledByApp = new Map<string, number>();
+    for (const p of payments) {
+      if (p.status !== "settled") continue;
+      settledByApp.set(p.application_id as string, (settledByApp.get(p.application_id as string) ?? 0) + Number(p.amount_cents ?? 0));
+    }
+    const canonicalOnbs = ((onbRows ?? []) as any[]).filter((o) => o.is_test_investor !== true);
+    const testAppIds = new Set(((onbRows ?? []) as any[]).filter((o) => o.is_test_investor === true && o.application_id).map((o) => o.application_id as string));
+    const canonicalCounts = managerFundCounts(
+      offeringId,
+      canonicalOnbs,
+      applications.filter((a: any) => !testAppIds.has(a.id)).map((a: any) => ({ ...a, offering_id: offeringId })),
+      settledByApp,
+      new Set([...wires.map((w) => w.application_id as string), ...settledByApp.keys()]),
+    );
+    const investorCount = canonicalCounts.total;
+
     const signable = documents.filter((d) => d.requires_signature);
     const roomCategories = [...new Set(roomDocuments.map((d) => String(d.category ?? "Other")))];
 
@@ -362,10 +387,10 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       {
         key: "investors",
         label: "Investors invited",
-        done: invitedCount > 0 || applications.length > 0,
+        done: invitedCount > 0 || investorCount > 0,
         detail:
-          invitedCount > 0 || applications.length > 0
-            ? `${applications.length} application${applications.length === 1 ? "" : "s"} · ${invitedCount} invited`
+          invitedCount > 0 || investorCount > 0
+            ? `${investorCount} investor${investorCount === 1 ? "" : "s"} · ${invitedCount} invited`
             : "Invite your first investor",
         href: "/manager/investors",
       },
@@ -462,7 +487,6 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       return "funding";
     }
 
-    let committedCents = 0;
     let receivedCents = 0;
     let inTransitCents = 0;
 
@@ -477,7 +501,6 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       const inFlight = appPayments
         .filter((p) => p.status === "processing" || p.status === "awaiting_wire")
         .reduce((sum, p) => sum + (p.amount_cents ?? 0), 0);
-      committedCents += app.commitment_cents ?? 0;
       receivedCents += settled;
       inTransitCents += inFlight;
       const latestWire = appWires
@@ -506,14 +529,8 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       };
     });
 
-    const stageCounts = {
-      total: rows.length,
-      identity: rows.filter((r) => r.stage === "identity").length,
-      accreditation: rows.filter((r) => r.stage === "accreditation").length,
-      documents: rows.filter((r) => r.stage === "documents").length,
-      funding: rows.filter((r) => r.stage === "funding").length,
-      complete: rows.filter((r) => r.stage === "complete").length,
-    };
+    const { total, identity, accreditation, documents: inDocuments, funding, complete } = canonicalCounts;
+    const stageCounts = { total, identity, accreditation, documents: inDocuments, funding, complete };
 
     let setupStatus: { percent: number | null; stage: string | null; launchState: string | null } = { percent: null, stage: null, launchState: null };
     try {
@@ -571,8 +588,8 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       applications: rows,
       counts: stageCounts,
       totals: {
-        committedCents,
-        receivedCents,
+        committedCents: canonicalCounts.committedCents,
+        receivedCents: Math.max(receivedCents, canonicalCounts.receivedCents),
         inTransitCents,
         targetRaiseCents: Number((offering as any).target_raise_cents ?? 0),
       },

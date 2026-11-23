@@ -143,3 +143,39 @@ export async function applicationPartyNames(appIds: string[]): Promise<Map<strin
     return new Map();
   }
 }
+
+/**
+ * Display name for current investment records: the investing party's legal
+ * name, then the person's name. Callers must already have authorized the
+ * funds these records belong to.
+ */
+export async function onboardingPartyNames(onboardingIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (onboardingIds.length === 0) return out;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const rows: any[] = [];
+    for (let i = 0; i < onboardingIds.length; i += 300) {
+      const { data } = await admin
+        .from("investor_onboardings")
+        .select("id, person_id, investment_profiles(legal_name, display_label)")
+        .in("id", onboardingIds.slice(i, i + 300));
+      rows.push(...((data ?? []) as any[]));
+    }
+    const personIds = [...new Set(rows.map((r) => r.person_id).filter(Boolean))] as string[];
+    const { data: people } = personIds.length
+      ? await admin.from("persons").select("id, preferred_name, legal_first_name, legal_last_name").in("id", personIds)
+      : { data: [] as any[] };
+    const personName = new Map(
+      ((people ?? []) as any[]).map((p) => [p.id as string, (p.preferred_name as string) || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ")]),
+    );
+    for (const r of rows) {
+      const name = String(r.investment_profiles?.legal_name || r.investment_profiles?.display_label || personName.get(r.person_id) || "").trim();
+      if (name) out.set(r.id as string, name);
+    }
+  } catch {
+    // Names are display-only; rows fall back to "Investor".
+  }
+  return out;
+}

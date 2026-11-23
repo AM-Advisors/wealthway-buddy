@@ -161,12 +161,17 @@ export const listClientPeople = createServerFn({ method: "GET" })
 async function clientRelationshipPeople(db: any, clientId: string, funds: { id: string; name: string }[], fm: { user_id: string; offering_id: string }[]) {
   const { maskEmail, mergeRelationships } = await import("@/lib/client-people");
   const fundIds = funds.map((f) => f.id);
-  const [{ data: apps }, { data: dels }] = await Promise.all([
+  // Investors come from current investment records and any older application.
+  const [{ data: apps }, { data: dels }, { data: onbs }] = await Promise.all([
     fundIds.length ? db.from("investor_applications").select("user_id, offering_id").in("offering_id", fundIds) : { data: [] },
     db.from("delegations").select("delegate_user_id, scope_type, scope_id, authority_level").eq("status", "active").in("scope_id", [clientId, ...fundIds]),
+    fundIds.length
+      ? db.from("investor_onboardings").select("investor_user_id, offering_id, stage").in("offering_id", fundIds).is("removed_at", null).is("merged_into_onboarding_id", null).not("stage", "in", "(declined,cancelled)").limit(5000)
+      : { data: [] },
   ]);
   const edges = [
     ...fm.map((m) => ({ userId: m.user_id, kind: "fund_manager" as const, offeringId: m.offering_id })),
+    ...((onbs ?? []) as any[]).map((o) => ({ userId: o.investor_user_id, kind: "investor" as const, offeringId: o.offering_id })),
     ...((apps ?? []) as any[]).map((a) => ({ userId: a.user_id, kind: "investor" as const, offeringId: a.offering_id })),
     ...((dels ?? []) as any[]).map((d) => ({ userId: d.delegate_user_id, kind: "delegate" as const, offeringId: d.scope_id === clientId ? null : d.scope_id, detail: String(d.authority_level ?? "") })),
   ].filter((e) => e.userId);

@@ -137,3 +137,40 @@ export function canonicalApplicationNames(
   }
   return out;
 }
+
+export type ReviewOnboarding = PanelOnboarding & { approved_to_fund_at?: string | null; is_test_investor?: boolean | null };
+export type ReviewApplication = PanelApplication & { status?: string | null; manager_review_status?: string | null };
+
+/** A signed investment waiting on the fund manager's approval, read from the row alone. */
+export function awaitingManagerApproval(o: ReviewOnboarding): boolean {
+  return o.stage === "harmonious_review" && !o.approved_to_fund_at && !o.removed_at && !o.merged_into_onboarding_id;
+}
+
+/**
+ * One "Funds you manage" line for the home page, from the same canonical join
+ * as the manager panel: current investment records plus older applications no
+ * investment replaced. Test investors (and the older application linked to
+ * one) never count. Reviews are signed investments awaiting the manager, plus
+ * older unlinked applications still marked for review.
+ */
+export function reviewerFundLine(
+  fundId: string,
+  onboardings: readonly ReviewOnboarding[],
+  applications: readonly ReviewApplication[],
+  appsWithRecords: ReadonlySet<string> = new Set(),
+): { investors: number; committedCents: number; needsReview: number } {
+  const testAppIds = new Set(onboardings.filter((o) => o.is_test_investor === true && o.application_id).map((o) => o.application_id as string));
+  const counted = onboardings.filter((o) => o.is_test_investor !== true);
+  const apps = applications.filter((a) => !testAppIds.has(a.id));
+  const counts = managerFundCounts(fundId, counted, apps, new Map(), appsWithRecords);
+  const joined = joinFundRecords(
+    apps.filter((a) => a.offering_id === fundId),
+    counted.filter((o) => o.offering_id === fundId && !ENDED_STAGES.has(String(o.stage ?? ""))),
+    (app) => appsWithRecords.has(app.id) || applicationHoldsValue(app),
+  );
+  const investments = [...joined.linked.map((l) => l.investment), ...joined.investmentsOnly];
+  const needsReview =
+    investments.filter(awaitingManagerApproval).length +
+    joined.applicationsOnly.filter((a) => a.status === "submitted" || a.manager_review_status === "pending").length;
+  return { investors: counts.total, committedCents: counts.committedCents, needsReview };
+}

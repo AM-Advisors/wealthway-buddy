@@ -923,7 +923,29 @@ export const getWireTracking = createServerFn({ method: "GET" })
     if (appsError) throw new Error(appsError.message);
     const applications = (apps ?? []) as any[];
     const appIds = applications.map((a) => a.id as string);
-    if (appIds.length === 0) return { rows: [] as any[], totals: emptyWireTotals() };
+
+    // Current investment records: linked ones refine their older application's
+    // row; ones with no older application get their own row.
+    const { data: onbData } = await supabase
+      .from("investor_onboardings")
+      .select("id, offering_id, investor_user_id, application_id, stage, funding_status, approved_to_fund_at, investor_reports_sent_at, is_test_investor, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, updated_at, removed_at, merged_into_onboarding_id")
+      .in("offering_id", fundIds)
+      .limit(5000);
+    const { joinFundRecords, applicationHoldsValue } = await import("@/lib/investment-record-mapping");
+    const { ENDED_STAGES } = await import("@/lib/manager-panel-model");
+    const liveOnbs = ((onbData ?? []) as any[]).filter((o) => o.is_test_investor !== true && !ENDED_STAGES.has(String(o.stage ?? "")));
+    const linkedOnb = new Map<string, any>();
+    const investmentsOnly: any[] = [];
+    for (const id of fundIds) {
+      const joined = joinFundRecords(
+        applications.filter((a) => a.offering_id === id),
+        liveOnbs.filter((o) => o.offering_id === id),
+        (app: any) => applicationHoldsValue(app),
+      );
+      for (const l of joined.linked) linkedOnb.set(l.application.id as string, l.investment);
+      investmentsOnly.push(...joined.investmentsOnly);
+    }
+    if (appIds.length === 0 && investmentsOnly.length === 0) return { rows: [] as any[], totals: emptyWireTotals() };
 
     const empty = { data: [] as any[] };
     const [{ data: wires }, { data: payments }, { data: profiles }] = await Promise.all([
@@ -932,19 +954,19 @@ export const getWireTracking = createServerFn({ method: "GET" })
         .select(
           "id, application_id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, status, reviewed_at, created_at",
         )
-        .in("application_id", appIds)
+        .in("application_id", appIds.length ? appIds : ["00000000-0000-0000-0000-000000000000"])
         .order("created_at", { ascending: false })
         .limit(2000),
       supabase
         .from("payments")
         .select("id, application_id, method, amount_cents, status, reference_code, expected_date, confirmed_at, updated_at")
-        .in("application_id", appIds)
+        .in("application_id", appIds.length ? appIds : ["00000000-0000-0000-0000-000000000000"])
         .limit(2000),
-      applications.length
+      applications.length || investmentsOnly.length
         ? supabase
             .from("profiles")
             .select("user_id, legal_name, email")
-            .in("user_id", [...new Set(applications.map((a) => a.user_id as string))])
+            .in("user_id", [...new Set([...applications.map((a) => a.user_id as string), ...investmentsOnly.map((o) => o.investor_user_id as string)].filter(Boolean))])
         : empty,
     ]);
 
@@ -962,6 +984,32 @@ export const getWireTracking = createServerFn({ method: "GET" })
       }
     }
 
+    const { investmentWireStage } = await import("@/lib/wire-tracking-model");
+    const { investmentAmountCents } = await import("@/lib/investment-amounts");
+    const { onboardingPartyNames } = await import("@/lib/profile-name.server");
+    const investmentName = await onboardingPartyNames(investmentsOnly.map((o) => o.id as string));
+    const investmentRows = investmentsOnly.map((o) => {
+      const profile = o.investor_user_id ? profileOf.get(o.investor_user_id as string) : null;
+      return {
+        rowKey: `investment:${o.id}`,
+        applicationId: null as string | null,
+        fundId: o.offering_id as string,
+        fundName: fundName.get(o.offering_id as string) ?? "Fund",
+        investorName: investmentName.get(o.id as string) || (profile?.legal_name as string) || (profile?.email as string) || "Investor",
+        investorEmail: (profile?.email as string) ?? null,
+        commitmentCents: investmentAmountCents(o) ?? null,
+        method: null as string | null,
+        amountCents: (o.funded_amount_cents as number | null) ?? null,
+        referenceCode: null as string | null,
+        expectedDate: null as string | null,
+        fundingStatus: (o.funding_status as string) ?? "not_started",
+        stage: investmentWireStage(o),
+        wire: null,
+        bankConfirmedAt: null as string | null,
+        updatedAt: (o.updated_at as string) ?? null,
+      };
+    });
+
     const rows = applications
       .map((app) => {
         const profile = profileOf.get(app.user_id as string);
@@ -971,7 +1019,8 @@ export const getWireTracking = createServerFn({ method: "GET" })
         const confirmedAt = (payment?.confirmed_at as string) ?? null;
 
         let stage: "not_started" | "awaiting_wire" | "submitted" | "processing" | "received" | "problem";
-        if (fundingStatus === "settled" || confirmedAt) stage = "received";
+        const onb = linkedOnb.get(app.id as string);
+        if (fundingStatus === "settled" || confirmedAt || isReconciledFunding(onb?.funding_status)) stage = "received";
         else if (fundingStatus === "failed" || fundingStatus === "returned" || fundingStatus === "cancelled")
           stage = "problem";
         else if (fundingStatus === "processing") stage = "processing";
@@ -980,6 +1029,7 @@ export const getWireTracking = createServerFn({ method: "GET" })
         else stage = "not_started";
 
         return {
+          rowKey: `application:${app.id}`,
           applicationId: app.id as string,
           fundId: app.offering_id as string,
           fundName: fundName.get(app.offering_id as string) ?? "Fund",
@@ -1008,6 +1058,7 @@ export const getWireTracking = createServerFn({ method: "GET" })
           updatedAt: (payment?.updated_at as string) ?? (app.updated_at as string) ?? null,
         };
       })
+      .concat(investmentRows as any[])
       .filter((r) => r.stage !== "not_started" || r.commitmentCents)
       .sort((a, b) => {
         const order = { submitted: 0, processing: 1, problem: 2, awaiting_wire: 3, received: 4, not_started: 5 } as any;

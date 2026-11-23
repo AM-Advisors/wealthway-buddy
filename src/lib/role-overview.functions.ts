@@ -158,56 +158,63 @@ export const getRoleOverview = createServerFn({ method: "GET" })
     } | null = null;
 
     if (isReviewer) {
-      let appsQuery = supabase
-        .from("investor_applications")
-        .select("id, offering_id, status, commitment_cents, manager_review_status");
-      if (!isAdmin) {
-        if (managedOfferingIds.length === 0) appsQuery = appsQuery.in("offering_id", ["00000000-0000-0000-0000-000000000000"]);
-        else appsQuery = appsQuery.in("offering_id", managedOfferingIds);
-      }
-      const { data: reviewApps } = await appsQuery;
-      const rows = (reviewApps ?? []) as any[];
-
-      const byFund = new Map<string, ReviewerFundLine>();
-      for (const row of rows) {
-        const key = row.offering_id as string;
-        const line =
-          byFund.get(key) ??
-          ({
-            offeringId: key,
-            fundName: offerings.get(key)?.name ?? "Fund",
-            investors: 0,
-            committedCents: 0,
-            needsReview: 0,
-          } satisfies ReviewerFundLine);
-        line.investors += 1;
-        line.committedCents += row.commitment_cents ?? 0;
-        if (row.status === "submitted" || row.manager_review_status === "pending")
-          line.needsReview += 1;
-        byFund.set(key, line);
-      }
+      // Current investment records (investor_onboardings) plus older
+      // applications no investment replaced, joined the same way as the
+      // manager panel, so this card matches the fund workspace.
+      const NONE = ["00000000-0000-0000-0000-000000000000"];
+      const scope = isAdmin ? null : managedOfferingIds.length ? managedOfferingIds : NONE;
+      const scoped = (q: any) => (scope ? q.in("offering_id", scope) : q);
+      const [appsRes, onbsRes] = await Promise.all([
+        scoped(
+          supabase
+            .from("investor_applications")
+            .select("id, offering_id, user_id, status, commitment_cents, manager_review_status, kyc_status, aml_status, accreditation_status, documents_status, funding_status"),
+        ).limit(5000),
+        scoped(
+          supabase
+            .from("investor_onboardings")
+            .select("id, offering_id, investor_user_id, application_id, stage, funding_status, approved_to_fund_at, is_test_investor, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, removed_at, merged_into_onboarding_id"),
+        ).limit(5000),
+      ]);
+      const apps = ((appsRes as any).data ?? []) as any[];
+      const onbs = ((onbsRes as any).data ?? []) as any[];
+      if ((onbsRes as any).error) console.error("[role-overview] investment records unavailable", (onbsRes as any).error.message);
 
       let wiresToReview = 0;
-      let uploadsToReview = 0;
-      if (rows.length > 0) {
-        const ids = rows.map((r) => r.id as string);
-        const [{ count: wires }, { count: uploads }] = await Promise.all([
-          supabase
+      const appsWithRecords = new Set<string>();
+      if (apps.length > 0) {
+        const ids = apps.map((r) => r.id as string);
+        const pending: any[] = [];
+        for (let i = 0; i < ids.length; i += 300) {
+          const { data } = await supabase
             .from("wire_confirmations")
-            .select("id", { count: "exact", head: true })
-            .in("application_id", ids)
-            .in("status", ["submitted", "pending"]),
-          supabase
-            .from("investor_documents")
-            .select("id", { count: "exact", head: true })
-            .in("application_id", ids)
-            .eq("review_status", "pending"),
-        ]);
-        wiresToReview = wires ?? 0;
-        uploadsToReview = uploads ?? 0;
+            .select("id, application_id")
+            .in("application_id", ids.slice(i, i + 300))
+            .in("status", ["submitted", "pending"]);
+          pending.push(...((data ?? []) as any[]));
+        }
+        wiresToReview = pending.length;
+        for (const w of pending) appsWithRecords.add(w.application_id as string);
       }
 
-      const funds = [...byFund.values()].sort((a, b) => a.fundName.localeCompare(b.fundName));
+      // Uploads waiting for review, whether filed on an investment or an older application.
+      let uploadsQuery = supabase.from("investor_documents").select("id").eq("review_status", "pending");
+      if (scope) uploadsQuery = uploadsQuery.in("offering_id", scope);
+      const { data: uploads } = await uploadsQuery.limit(5000);
+      const uploadsToReview = ((uploads ?? []) as any[]).length;
+
+      const { reviewerFundLine } = await import("@/lib/manager-panel-model");
+      const fundIds = isAdmin
+        ? [...new Set([...apps.map((a) => a.offering_id as string), ...onbs.map((o) => o.offering_id as string)])]
+        : managedOfferingIds;
+      const funds = fundIds
+        .map<ReviewerFundLine>((id) => ({
+          offeringId: id,
+          fundName: offerings.get(id)?.name ?? "Fund",
+          ...reviewerFundLine(id, onbs, apps, appsWithRecords),
+        }))
+        .filter((f) => !isAdmin || f.investors > 0 || f.needsReview > 0)
+        .sort((a, b) => a.fundName.localeCompare(b.fundName));
       manager = {
         funds,
         needsReview: funds.reduce((s, f) => s + f.needsReview, 0),
