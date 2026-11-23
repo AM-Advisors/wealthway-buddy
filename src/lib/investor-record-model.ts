@@ -59,6 +59,18 @@ export function canManageFundRecords(actor: Actor, offeringId: string) {
   return actor.isStaff || actor.managedOfferingIds.includes(offeringId);
 }
 
+/**
+ * Who may see a fund's investor roster. Staff and exact-fund managers manage it;
+ * live exact-fund team access (granted or listed with View fund) and active
+ * company membership of the owning client may only view it. Writes never use this.
+ */
+export type RosterAccess = "manage" | "view" | null;
+export function fundRosterAccess(input: { isStaff: boolean; managesFund: boolean; teamRosterView: boolean; activeClientMember: boolean }): RosterAccess {
+  if (input.isStaff || input.managesFund) return "manage";
+  if (input.teamRosterView || input.activeClientMember) return "view";
+  return null;
+}
+
 /** Strip anything forbidden or staff-only (for managers) from an input patch. */
 export function sanitizePatch<T extends Record<string, unknown>>(patch: T, actor: Actor): Partial<T> {
   const out: Record<string, unknown> = {};

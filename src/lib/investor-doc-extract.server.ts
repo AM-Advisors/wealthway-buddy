@@ -12,10 +12,9 @@ import { DOC_READ_MAX_BYTES, DOC_READ_TYPES, EXTRACT_SCHEMA, extractInstructions
 const MODEL = "openai/gpt-6.1-sol";
 
 export async function readNewInvestorDocument(userId: string, input: { offeringId: string; fileName: string; contentType: string; base64: string }): Promise<DocumentReading> {
-  const { onboardingActor } = await import("@/lib/investor-onboarding.server");
-  const { canManageFundRecords } = await import("@/lib/investor-record-model");
-  const actor = await onboardingActor(userId);
-  if (!canManageFundRecords(actor, input.offeringId)) throw new Error("Forbidden: you do not manage that fund.");
+  // Same check as adding an investor: staff, this fund's managers, or a fund team member with "Manage investors".
+  const { investorDeskActor } = await import("@/lib/investor-onboarding.server");
+  const actor = await investorDeskActor(userId, input.offeringId);
 
   const type = (DOC_READ_TYPES as readonly string[]).includes(input.contentType) ? input.contentType : null;
   if (!type) throw new Error("Upload a PDF or a photo (PNG, JPG or WEBP).");

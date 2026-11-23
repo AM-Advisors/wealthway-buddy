@@ -4,7 +4,7 @@
  * (same Person → Investment Profile → Investment model, idempotent).
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { onboardingActor, forbid, launchedOffering, startOnboarding } from "@/lib/investor-onboarding.server";
+import { onboardingActor, forbid, investorDeskActor, launchedOffering, startOnboarding } from "@/lib/investor-onboarding.server";
 import { recordAccessEvent } from "@/lib/access-control.server";
 import { appUrl } from "@/lib/app-origins";
 import { generateLinkToken, linkCanStart, linkStatus, publicLinkView, rateLimited, tokenLooksValid, LINK_UNAVAILABLE, RATE_WINDOW_MINUTES } from "@/lib/fund-onboarding-link";
@@ -19,16 +19,16 @@ async function currentLink(offeringId: string) {
   return data as any;
 }
 
-/** Staff, or a Fund Manager of this exact fund. Nobody else. View/copy only for managers. */
+/** View/copy: staff, a Fund Manager of this exact fund, or a fund team member with "Manage investors". */
 async function assertLinkViewer(userId: string, offeringId: string) {
-  const actor = await onboardingActor(userId);
-  if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not have access to this fund's onboarding link.");
-  return actor;
+  return investorDeskActor(userId, offeringId).catch(() => forbid("you do not have access to this fund's onboarding link."));
 }
 
-/** Staff, or a Fund Manager of this exact fund (client self-service). Every change is recorded. */
+/** Create, regenerate, enable or disable: staff, or a Fund Manager of this exact fund. Every change is recorded. */
 async function assertLinkManager(userId: string, offeringId: string) {
-  return assertLinkViewer(userId, offeringId);
+  const actor = await onboardingActor(userId);
+  if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("only the fund manager can change this fund's onboarding link.");
+  return actor;
 }
 
 export async function getFundLink(userId: string, offeringId: string) {

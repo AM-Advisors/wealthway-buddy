@@ -111,9 +111,10 @@ export async function uploadDocFor(userId: string, input: { onboardingId: string
   const d = await db();
   const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, application_id, investment_profile_id, person_id, removed_at").eq("id", input.onboardingId).maybeSingle();
   if (!ob || ob.removed_at) throw new Error("This investment isn't available.");
-  const { onboardingActor } = await import("./investor-onboarding.server");
-  const actor = await onboardingActor(userId);
-  if (!actor.isStaff && !actor.managedOfferingIds.includes(ob.offering_id)) throw new Error("Forbidden: you do not manage that fund.");
+  // Documents attached while adding: staff, this fund's managers, or a fund team member with "Manage investors".
+  // Uploads never mark anything reviewed or verified.
+  const { investorDeskActor } = await import("./investor-onboarding.server");
+  const actor = await investorDeskActor(userId, ob.offering_id);
   if (!ob.investment_profile_id) throw new Error("Choose the investing profile first.");
   const bytes = Buffer.from(input.base64, "base64");
   if (bytes.length === 0) throw new Error("That file is empty.");

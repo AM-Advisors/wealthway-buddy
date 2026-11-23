@@ -87,17 +87,17 @@ export function PersonalLinkCopyButton({ onboardingId }: { onboardingId: string 
 }
 
 /** One-click invite: creates the investor's personal link if needed, then emails it. Uses the same authorized link engine. */
-export function InviteInvestorButton({ onboardingId }: { onboardingId: string }) {
+export function InviteInvestorButton({ onboardingId, compact = false }: { onboardingId: string; compact?: boolean }) {
   const load = useServerFn(getPersonalInvestmentLink), create = useServerFn(createPersonalInvestmentLink), send = useServerFn(sendPersonalInvestmentLink), qc = useQueryClient();
   const key = ["personal-investment-link", onboardingId];
   const { data } = useQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
   const [busy, setBusy] = useState(false);
   if (!data) return null;
   if (data.link?.state === "claimed") return <p className="text-sm text-muted-foreground">Invite accepted. No new invite is needed.</p>;
-  if (!data.hasEmail) return <p className="text-sm text-muted-foreground">Add the investor's email to send an invite.</p>;
+  if (!data.hasEmail) return compact ? null : <p className="text-sm text-muted-foreground">Add the investor's email to send an invite.</p>;
   if (!data.link && !data.canCreate) return null;
   return <div className="space-y-1">
-    <Button size="lg" className="w-full justify-start text-base sm:w-auto" disabled={busy} onClick={async () => {
+    <Button size={compact ? "sm" : "lg"} variant={compact ? "outline" : "default"} className={compact ? "whitespace-nowrap" : "w-full justify-start text-base sm:w-auto"} disabled={busy} onClick={async () => {
       setBusy(true);
       try {
         if (!data.link) await create({ data: { onboardingId } });
@@ -107,7 +107,7 @@ export function InviteInvestorButton({ onboardingId }: { onboardingId: string })
       } catch (e) { toast.error((e as Error).message); }
       finally { setBusy(false); }
     }}>{busy ? "Sending…" : data.link?.lastSentAt ? "Resend invite" : "Invite investor"}</Button>
-    {data.link?.lastSentAt ? <p className="text-xs text-muted-foreground">Last invited {new Date(data.link.lastSentAt).toLocaleDateString()}</p> : null}
+    {data.link?.lastSentAt && !compact ? <p className="text-xs text-muted-foreground">Last invited {new Date(data.link.lastSentAt).toLocaleDateString()}</p> : null}
   </div>;
 }
 

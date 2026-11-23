@@ -79,6 +79,18 @@ vi.mock("@/lib/investor-onboarding.server", () => {
     inviteForAddedEmail: (...args) => inviteForAddedEmail(...args),
     forbid: (m: string) => { throw new Error(`Forbidden: ${m}`); },
     onboardingActor: actor,
+    // Adding/inviting: managers/staff only in these fixtures (fund team "Manage investors" is covered in fund-roster-access.test.ts).
+    investorDeskActor: async (u: string, offeringId: string) => {
+      const a = await actor(u);
+      if (a.isStaff || a.managedOfferingIds.includes(offeringId)) return { ...a, viaTeam: false };
+      throw new Error("Forbidden: you do not manage that fund.");
+    },
+    // Roster reads: managers/staff only in these fixtures (team/company viewers are covered in fund-roster-access.test.ts).
+    fundRosterViewer: async (u: string, offeringId: string) => {
+      const a = await actor(u);
+      if (a.isStaff || a.managedOfferingIds.includes(offeringId)) return { actor: a, readOnly: false };
+      throw new Error("Forbidden: you do not have access to this fund's investors.");
+    },
     launchedOffering: async (id: string) => ({ offering: { id }, setup: {} }),
     reconcileAfter: async (ids: string[]) => { reconciled.push(...ids.filter(Boolean)); },
     computeReadinessFor: async () => ({ result: { closeReady: false, nextAction: null, stages: [] } }),

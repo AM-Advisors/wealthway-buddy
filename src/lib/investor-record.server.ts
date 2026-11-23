@@ -7,7 +7,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-  onboardingActor, assertOnboardingAccess, forbid, launchedOffering, reconcileAfter, computeReadinessFor,
+  onboardingActor, assertOnboardingAccess, forbid, fundRosterViewer, investorDeskActor, launchedOffering, reconcileAfter, computeReadinessFor,
   type OnboardingActor,
 } from "@/lib/investor-onboarding.server";
 import {
@@ -90,7 +90,8 @@ async function loadCandidates(personIds: string[], offeringId: string) {
 }
 
 export async function searchInvestors(userId: string, input: { offeringId: string; email?: string | null; name?: string | null; entityName?: string | null }) {
-  await fundActor(userId, input.offeringId);
+  // Adding an investor: staff, this fund's managers, or a fund team member with "Manage investors".
+  await investorDeskActor(userId, input.offeringId);
   return { matches: rankMatches(input, await candidates(input.offeringId, input)) };
 }
 
@@ -150,7 +151,7 @@ export async function createInvestor(userId: string, input: {
   /** Assistant or team member who fills in the details and may add the investor's email (interactive add only). */
   helper?: { fullName: string; email: string } | null;
 }) {
-  const actor = await fundActor(userId, input.offeringId);
+  const actor = await investorDeskActor(userId, input.offeringId);
   if (input.allowMissingEmail && !actor.isStaff) forbid("only staff can save an investor without an email.");
   if (input.taxId && !/^\d{9}$/.test(input.taxId)) fail("The SSN / Tax ID must be 9 digits.");
   const source: EntrySource = input.source ?? sourceFor(actor);
@@ -300,7 +301,9 @@ export async function createInvestor(userId: string, input: {
 
 /** Interactive manual addition only; imports continue to use createInvestor without email. */
 export async function createInvestorAndInvite(userId: string, input: Parameters<typeof createInvestor>[1]) {
-  const actor = await fundActor(userId, input.offeringId);
+  const actor = await investorDeskActor(userId, input.offeringId);
+  // Helpers are named by the fund manager from the investor's record, not by fund team members.
+  if (actor.viaTeam && input.helper?.email?.trim()) forbid("only the fund manager can name a helper for an investor.");
   const saved = await createInvestor(userId, input);
   // A helper is invited by their own email to fill in details, including the investor's email.
   let helperInvited: boolean | null = null;
@@ -616,7 +619,8 @@ async function endFundAccessAfterRemoval(investorUserId: string, offeringId: str
 function personName(p: any) { return (p?.preferred_name || `${p?.legal_first_name ?? ""} ${p?.legal_last_name ?? ""}`.trim()) || null; }
 
 export async function fundInvestorRecords(userId: string, offeringId: string) {
-  const actor = await fundActor(userId, offeringId);
+  // Read-only viewers (fund team or company members) see the roster without contact details.
+  const { actor, readOnly, canAddInvestors } = await fundRosterViewer(userId, offeringId);
   const { data: rows } = await db().from("investor_onboardings")
     .select("id, application_id, offering_id, person_id, investor_user_id, investment_profile_id, stage, requested_amount_cents, commitment_amount_cents, accepted_amount_cents, entry_source, investor_confirmed_at, invitation_id, created_at")
     .eq("offering_id", offeringId).is("removed_at", null).not("stage", "in", "(declined,cancelled)").order("created_at", { ascending: false });
@@ -636,6 +640,8 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
   const prMap = new Map(((profiles ?? []) as any[]).map((p) => [p.id, p]));
   return {
     isStaff: actor.isStaff,
+    readOnly,
+    canAddInvestors,
     items: list.map((r) => {
       const p = r.person_id ? pMap.get(r.person_id) : uMap.get(r.investor_user_id);
       const pr = prMap.get(r.investment_profile_id);
@@ -646,7 +652,7 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
         openConflicts: open.filter((s) => s.source !== "fund_manager").length, openReviews: open.filter((s) => s.source === "fund_manager").length,
       });
       return {
-        onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? pr?.display_label ?? "Investor", nameMissing: !personName(p), email: p?.email ?? null,
+        onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? pr?.display_label ?? "Investor", nameMissing: !personName(p), email: readOnly && !canAddInvestors ? null : (p?.email ?? null),
         profileLabel: pr?.display_label ?? null, profileType: pr ? PROFILE_TYPE_LABELS[formProfileType(pr.profile_type)] : null,
         amountCents: r.requested_amount_cents, commitmentCents: r.commitment_amount_cents,
         ...(actor.isStaff ? { acceptedCents: r.accepted_amount_cents } : {}),

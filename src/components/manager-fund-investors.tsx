@@ -1,4 +1,4 @@
-import { InviteInvestorMenuItem } from "@/components/personal-investment-link";
+import { InviteInvestorButton, InviteInvestorMenuItem } from "@/components/personal-investment-link";
 import { TestInvestorBadge } from "@/components/test-investor-control";
 import { FillForInvestorButton } from "@/components/fill-for-investor";
 import { useApplicationRoute, useInvestorRecordRoute } from "@/lib/use-investor-record-route";
@@ -74,9 +74,11 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
 
   const records = useQuery({ queryKey: ["fund-investor-records", fundId], queryFn: () => loadRecords({ data: { offeringId: fundId } }) });
   const readiness = useQuery({ queryKey: ["fund-readiness", fundId], queryFn: () => loadReadiness({ data: { offeringId: fundId } }), retry: false });
-  const board = useQuery({ queryKey: ["fund-investor-progress", fundId], queryFn: () => loadBoard({ data: { offeringId: fundId } }) });
-  const actions = useQuery({ queryKey: ["fund-investor-actions", fundId], queryFn: () => loadActions({ data: { fundId } }) });
-  const home = useQuery({ queryKey: ["manager-fund-home", fundId], queryFn: () => loadHome({ data: { offeringId: fundId } }) });
+  // Read-only viewers (fund team or company members) get the roster only; manager-only lists are not requested.
+  const manageable = records.isSuccess && !records.data.readOnly;
+  const board = useQuery({ queryKey: ["fund-investor-progress", fundId], queryFn: () => loadBoard({ data: { offeringId: fundId } }), enabled: manageable });
+  const actions = useQuery({ queryKey: ["fund-investor-actions", fundId], queryFn: () => loadActions({ data: { fundId } }), enabled: manageable });
+  const home = useQuery({ queryKey: ["manager-fund-home", fundId], queryFn: () => loadHome({ data: { offeringId: fundId } }), enabled: manageable });
 
   const initial = useRouterState({ select: (st) => (st.location.search as any)?.add as string | undefined });
   const [panel, setPanel] = useState<Panel>(initial ? PANEL_FROM_SEARCH[initial] ?? null : null);
@@ -84,6 +86,12 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   const [search, setSearch] = useState("");
   const drill = useRouterState({ select: (st) => ({ stage: (st.location.search as any)?.stage as string | undefined, bucket: (st.location.search as any)?.bucket as string | undefined }) });
   const isStaff = Boolean(records.data?.isStaff ?? actions.data?.isStaff);
+  const readOnly = Boolean(records.data?.readOnly);
+  // A fund team member with "Manage investors" adds and invites investors and copies the fund link;
+  // opening, editing and removing records stay with the fund manager (server-checked).
+  const canAdd = !readOnly || Boolean(records.data?.canAddInvestors);
+  const teamMember = readOnly && canAdd;
+  const TEAM_PANELS: Panel[] = ["create", "bulkInvite"];
 
   const refresh = () => ["fund-investor-records", "fund-readiness", "fund-investor-progress", "fund-investor-actions", "manager-fund-home"].forEach((k) => qc.invalidateQueries({ queryKey: [k, fundId] }));
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } };
@@ -109,7 +117,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   const knownEmails = new Set([...itemEmails, ...legacy.map((a) => norm(a.email)).filter(Boolean)]);
   const pendingOnboard = (((board.data as any)?.items ?? []) as any[]).filter((i) => String(i.id).startsWith("invite:")).filter((i) => !known(i.investorName, i.email ?? i.investorEmail, knownNames, knownEmails));
   const pendingAccess = (actions.data?.pending ?? []).filter((p: any) => !known(p.name, p.email, knownNames, knownEmails));
-  const countsLoading = readiness.isLoading || board.isLoading || actions.isLoading || home.isLoading;
+  const countsLoading = readiness.isLoading || (manageable && (board.isLoading || actions.isLoading || home.isLoading));
   const summary = fundInvestorsSummary(items.map((i) => i.onboardingId), readinessRows, pendingOnboard.length + pendingAccess.length);
 
   const term = search.trim().toLowerCase();
@@ -184,19 +192,19 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Everyone investing in this fund. Click a name to see everything about that investor.</p></div>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+        <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">{teamMember ? "Everyone investing in this fund. You can add and invite investors; the fund manager changes their details." : readOnly ? "Everyone investing in this fund. You can view this list; the fund manager adds and changes investors." : "Everyone investing in this fund. Click a name to see everything about that investor."}</p></div>
+        {canAdd && <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button className="flex-1 sm:flex-none" onClick={() => setChooser(true)}><Plus className="mr-1 h-4 w-4" />Add investor</Button>
           <Button variant="outline" data-view-safe onClick={copyLink}><LinkIcon className="mr-1 h-4 w-4" />Copy link</Button>
           {isStaff && <FundDriveIntakeButton fundId={fundId} onApplied={() => { void qc.invalidateQueries(); }} />}
-        </div>
+        </div>}
       </div>
 
       <Dialog open={chooser} onOpenChange={setChooser}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Add investors</DialogTitle><DialogDescription>Choose how you'd like to add them.</DialogDescription></DialogHeader>
           <div className="grid gap-2">
-            {addOptions.filter((o) => !o.staff || isStaff).map((o) => (
+            {addOptions.filter((o) => (!o.staff || isStaff) && (!teamMember || TEAM_PANELS.includes(o.p))).map((o) => (
               <button key={o.title} type="button" onClick={() => { setPanel(o.p); setChooser(false); }} className="rounded-lg border p-3 text-left transition-colors hover:bg-muted">
                 <p className="font-medium">{o.title}</p><p className="text-sm text-muted-foreground">{o.body}</p>
               </button>))}
@@ -209,10 +217,10 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
         </DialogContent>
       </Dialog>
 
-      {panel && <Card>
+      {panel && (!readOnly || (teamMember && TEAM_PANELS.includes(panel))) && <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0"><CardTitle className="text-base">{panelTitle}</CardTitle><Button size="icon" variant="ghost" aria-label="Close" onClick={() => setPanel(null)}><X className="h-4 w-4" /></Button></CardHeader>
         <CardContent>
-          {panel === "create" && <CreateInvestor fundId={fundId} isStaff={isStaff} onDone={() => { setPanel(null); refresh(); }} />}
+          {panel === "create" && <CreateInvestor fundId={fundId} isStaff={isStaff} teamMember={teamMember} onDone={() => { setPanel(null); refresh(); }} />}
           {panel === "records" && <BulkInvestorRecords fundId={fundId} isStaff={isStaff} />}
           {panel === "existing" && <AddExistingInvestor fundId={fundId} />}
           {panel === "invite" && <ManagerAddInvestor fundId={fundId} />}
@@ -234,16 +242,16 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
             <Input className="sm:w-64" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search investors" aria-label="Search investors" />
             {drill.stage || drill.bucket ? <p className="text-sm">Showing: <b>{drill.stage ? (FUNNEL_LABELS as any)[drill.stage] ?? drill.stage : (MANAGER_BUCKET_LABELS as any)[drill.bucket!] ?? drill.bucket}</b> · <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="underline">Show all</Link></p> : null}
           </div>
-          {shown.length === 0 && shownLegacy.length === 0 && shownInvites === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{term ? "No investors match your search." : "No investors yet. Use Add investor to begin."}</p> :
+          {shown.length === 0 && shownLegacy.length === 0 && shownInvites === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{term ? "No investors match your search." : canAdd ? "No investors yet. Use Add investor to begin." : "No investors yet."}</p> :
             <ul className="divide-y rounded-md border">
-              {shown.map((r) => { const s = oneStatus(r); return (
-                <li key={r.onboardingId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
-                  <Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
+              {shown.map((r) => { const s = oneStatus(r); const body = (<>
                     <div className="min-w-0"><p className="truncate font-medium">{r.name}{readinessById.get(r.onboardingId)?.isTestInvestor && <TestInvestorBadge className="ml-2 border-accent text-foreground" />}</p>
                       <p className="truncate text-xs text-muted-foreground">{r.nameMissing && r.profileLabel && r.profileLabel === r.name ? "Contact name needed" : (r.profileLabel ?? r.profileType ?? "Profile needed")}{r.claimState === "prepared" ? " · Not signed in yet" : ""}</p></div>
                     <p className="text-sm">{money(r.amountCents)}</p>
                     <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p>{stageChips(r.onboardingId)}</div>
-                  </Link><FillForInvestorButton onboardingId={r.onboardingId} name={r.name} />{rowMenu(r)}
+                  </>); const rowClass = "grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4"; return (
+                <li key={r.onboardingId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
+                  {readOnly ? <><div className={rowClass}>{body}</div>{teamMember && !r.hasAccount ? <InviteInvestorButton onboardingId={r.onboardingId} compact /> : null}</> : <><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} className={rowClass}>{body}</Link><FillForInvestorButton onboardingId={r.onboardingId} name={r.name} />{rowMenu(r)}</>}
                 </li>); })}
               {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); const linked = linkedRecords.get(row.applicationId); return (
                 <li key={row.applicationId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
@@ -270,12 +278,12 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
           {isStaff ? <InvestorRecordsSync fundId={fundId} /> : null}
         </div>
 
-      <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="rounded-xl border">
+      {!readOnly && <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="rounded-xl border">
         <CollapsibleTrigger className="flex w-full items-center justify-between p-3 text-left font-medium">More for this fund: link, settings and reports<ChevronDown className={`h-4 w-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} /></CollapsibleTrigger>
         <CollapsibleContent className="space-y-5 border-t p-3">
           {moreOpen && <><FundOnboardingLinkCard fundId={fundId} /><FundOnboardingSettings fundId={fundId} />{moreSections}</>}
         </CollapsibleContent>
-      </Collapsible>
+      </Collapsible>}
     </section>
   );
 }

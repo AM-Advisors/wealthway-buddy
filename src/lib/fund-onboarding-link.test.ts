@@ -43,6 +43,12 @@ const onboardings = new Map<string, string>();
 vi.mock("@/lib/investor-onboarding.server", () => ({
   forbid: (m: string) => { throw new Error(`Forbidden: ${m}`); },
   onboardingActor: async (u: string) => ({ userId: u, isStaff: u === STAFF, managedOfferingIds: u === MGR_A ? [FUND_A] : u === MGR_B ? [FUND_B] : [] }),
+  // No fund team entries in these fixtures: only staff and exact-fund managers pass.
+  investorDeskActor: async (u: string, offeringId: string) => {
+    const a = { userId: u, isStaff: u === STAFF, managedOfferingIds: u === MGR_A ? [FUND_A] : u === MGR_B ? [FUND_B] : [] };
+    if (a.isStaff || a.managedOfferingIds.includes(offeringId)) return { ...a, viaTeam: false };
+    throw new Error("Forbidden: you do not manage that fund.");
+  },
   assertStaff: async (u: string) => { if (u !== STAFF) throw new Error("Forbidden: staff only"); return { userId: u, isStaff: true, managedOfferingIds: [] }; },
   launchedOffering: async (id: string) => { if (!openFunds.has(id)) throw new Error("This fund is not open for investor onboarding yet."); return { offering: { id, name: id === FUND_A ? "Chapter 7" : "Fund B", client_id: null }, setup: {} }; },
   // Same idempotency contract as the canonical startOnboarding: one open onboarding per fund + person.

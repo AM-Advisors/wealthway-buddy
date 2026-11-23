@@ -23,7 +23,8 @@ const SECTIONS = ["Contact", "Investment Profile", "Entity / Ownership", "Invest
 type Related = { firstName: string; lastName: string; email: string; role: string; ownershipPercent: string };
 
 /** Search first, then Quick Add or Full Details. Every write re-authorizes on the server. */
-export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; isStaff: boolean; onDone?: () => void }) {
+/** teamMember: a fund team member with "Manage investors" adds and invites only; the fund manager opens and edits records. */
+export function CreateInvestor({ fundId, isStaff, onDone, teamMember = false }: { fundId: string; isStaff: boolean; onDone?: () => void; teamMember?: boolean }) {
   const recordTo = useInvestorRecordRoute();
   const search = useServerFn(searchInvestorsFn);
   const create = useServerFn(createInvestorFn);
@@ -218,7 +219,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         ) : null}
         <Button variant="outline" size="sm" onClick={runSearch}>Search existing investors</Button>
 
-        {canSaveWithoutEmail(isStaff, type) && !chosen ? (
+        {!teamMember && canSaveWithoutEmail(isStaff, type) && !chosen ? (
           <div className="space-y-3 rounded-md border p-3">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={helperOn} onChange={(e) => setHelperOn(e.target.checked)} />
@@ -318,8 +319,12 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           </div>
         ) : null}
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => save(true)} disabled={busy}>{busy ? "Saving…" : isStaff ? "Save & Continue" : "Add & invite · Open record"}</Button>
-          <Button variant="outline" onClick={() => save(false)} disabled={busy}>{isStaff ? "Save" : "Add & invite"}</Button>
+          {teamMember
+            ? <Button onClick={() => save(false)} disabled={busy}>{busy ? "Saving…" : "Add & invite"}</Button>
+            : <>
+              <Button onClick={() => save(true)} disabled={busy}>{busy ? "Saving…" : isStaff ? "Save & Continue" : "Add & invite · Open record"}</Button>
+              <Button variant="outline" onClick={() => save(false)} disabled={busy}>{isStaff ? "Save" : "Add & invite"}</Button>
+            </>}
         </div>
       </CardContent>
     </Card>

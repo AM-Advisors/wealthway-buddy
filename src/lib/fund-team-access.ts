@@ -160,3 +160,16 @@ export function fundOpenMode(f: {
   if (f.companyRolesForFund.some((r) => r !== "client_readonly")) return "workspace";
   return f.sharedRole === "fund_viewer" ? "viewer" : "workspace";
 }
+
+/**
+ * A listed fund team member whose own login-linked entry has "Manage investors"
+ * may add investors, copy the fund's onboarding link and send investor invitations
+ * on that exact fund. Never edits, removals, approvals, signing, banking or money.
+ */
+export function listedTeamManagesInvestors(
+  row: { user_id?: string | null; removed_at?: string | null; permissions?: readonly string[] | null },
+  userId: string,
+): boolean {
+  if (!userId || row.user_id !== userId || row.removed_at) return false;
+  return (row.permissions ?? []).includes("investors");
+}

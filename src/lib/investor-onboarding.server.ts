@@ -111,6 +111,52 @@ export async function onboardingActor(userId: string | null | undefined): Promis
   };
 }
 
+/**
+ * Read access to one fund's investor roster. Managing stays with staff and exact-fund
+ * managers; live exact-fund team access or active membership of the owning client
+ * gives a read-only view. Every write keeps onboardingActor/canManageFundRecords.
+ */
+export async function fundRosterViewer(userId: string, offeringId: string): Promise<{ actor: OnboardingActor; readOnly: boolean; canAddInvestors: boolean }> {
+  const actor = await onboardingActor(userId);
+  const { fundRosterAccess } = await import("@/lib/investor-record-model");
+  const managesFund = actor.managedOfferingIds.includes(offeringId);
+  if (fundRosterAccess({ isStaff: actor.isStaff, managesFund, teamRosterView: false, activeClientMember: false }) === "manage") return { actor, readOnly: false, canAddInvestors: true };
+  // "Manage investors" on the fund team: view the roster, add and invite; never edit or remove.
+  const desk = await investorDeskActor(userId, offeringId).catch(() => null);
+  if (desk?.viaTeam) return { actor, readOnly: true, canAddInvestors: true };
+  const [{ liveGrants }, { hasFundTeamPermission }] = await Promise.all([import("@/lib/fund-team-access.functions"), import("@/lib/fund-team-access")]);
+  const grants = (await liveGrants(db(), actor.userId)) as { offering_id: string; role: any }[];
+  const teamRosterView = grants.some((g) => g.offering_id === offeringId && hasFundTeamPermission(g.role, "fund.roster.view"));
+  let activeClientMember = false;
+  if (!teamRosterView) {
+    const { data: off } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
+    if (off?.client_id) {
+      const { data: cu } = await db().from("client_users").select("id").eq("user_id", actor.userId).eq("client_id", off.client_id).is("revoked_at", null).limit(1).maybeSingle();
+      activeClientMember = Boolean(cu);
+    }
+  }
+  const access = fundRosterAccess({ isStaff: false, managesFund: false, teamRosterView, activeClientMember });
+  if (!access) forbid("you do not have access to this fund's investors.");
+  return { actor, readOnly: true, canAddInvestors: false };
+}
+
+/**
+ * Adding and inviting investors on one fund: staff, that fund's managers, or a listed
+ * fund team member whose own login-linked entry has "Manage investors". The team path
+ * never widens managedOfferingIds, so edits, removals, approvals, signing and money
+ * keep their manager-only checks.
+ */
+export type InvestorDeskActor = OnboardingActor & { viaTeam: boolean };
+export async function investorDeskActor(userId: string, offeringId: string): Promise<InvestorDeskActor> {
+  const actor = await onboardingActor(userId);
+  if (actor.isStaff || actor.managedOfferingIds.includes(offeringId)) return { ...actor, viaTeam: false };
+  const { listedTeamManagesInvestors } = await import("@/lib/fund-team-access");
+  const { data } = await db().from("fund_team_members").select("user_id, removed_at, permissions")
+    .eq("offering_id", offeringId).eq("user_id", actor.userId).is("removed_at", null);
+  if (((data ?? []) as any[]).some((r) => listedTeamManagesInvestors(r, actor.userId))) return { ...actor, viaTeam: true };
+  forbid("you do not manage that fund.");
+}
+
 export async function assertStaff(userId: string): Promise<OnboardingActor> {
   const actor = await onboardingActor(userId);
   if (!actor.isStaff) forbid("Harmonious investor operations authority is required.");
@@ -2467,10 +2513,7 @@ export async function inviteInvestor(
     expiresInDays?: number;
   },
 ) {
-  const actor = await onboardingActor(userId);
-  if (!actor.isStaff && !actor.managedOfferingIds.includes(input.offeringId)) {
-    forbid("you do not manage that fund.");
-  }
+  const actor = await investorDeskActor(userId, input.offeringId);
   const { offering: invitedOffering } = await launchedOffering(input.offeringId);
   if (input.intendedAmountCents != null && input.intendedAmountCents <= 0) fail("Enter the investment amount.");
 
@@ -2512,7 +2555,7 @@ export async function inviteInvestor(
     // Derived from the offering's configuration - never chosen at invite time.
     exemption: ((invitedOffering as any).reg_type ?? null) as string | null,
     link: `/onboard/${data.token}`,
-    emailSent: await sendOnboardInvitationEmail(data, invitedOffering, actor.userId),
+    emailSent: await sendOnboardInvitationEmail(data, invitedOffering, actor.userId, undefined, { fundNameAsSender: actor.viaTeam }),
   };
 }
 
@@ -2520,7 +2563,7 @@ export async function inviteInvestor(
  * The one onboarding email. Only the opaque invitation reference travels in
  * the link - never KYC, profile, bank or document identifiers.
  */
-export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string, log?: { onboardingId: string; fundNameAsSender?: boolean }) {
+export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string, log?: { onboardingId: string; fundNameAsSender?: boolean }, opts?: { fundNameAsSender?: boolean }) {
   try {
     const { onboardInvitationUrl } = await import("@/lib/onboard-portal-model");
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
@@ -2534,7 +2577,7 @@ export async function sendOnboardInvitationEmail(invitation: any, offering: any,
         investorName: invitation.invited_name || "",
         fundName: offering?.name ?? "the fund",
         // A helper's name never appears as the inviting manager; the fund name is used instead.
-        managerName: (log?.fundNameAsSender ? null : (manager as any)?.legal_name) ?? offering?.name ?? "Your fund manager",
+        managerName: (log?.fundNameAsSender || opts?.fundNameAsSender ? null : (manager as any)?.legal_name) ?? offering?.name ?? "Your fund manager",
         amountCents: invitation.intended_amount_cents ?? null,
         ctaUrl: onboardInvitationUrl(String(invitation.token)),
       },
@@ -2560,11 +2603,12 @@ export async function resendOnboardInvitation(userId: string, invitationId: stri
   const actor = await onboardingActor(userId);
   const { data: inv } = await db().from("fund_invitations").select("*").eq("id", invitationId).maybeSingle();
   if (!inv) fail("That invitation was not found.");
-  if (!actor.isStaff && !actor.managedOfferingIds.includes(inv.offering_id)) forbid("you do not manage that fund.");
+  const desk = await investorDeskActor(actor.userId, inv.offering_id);
   const problem = invitationUsableError(inv, nowIso());
   if (problem) fail(problem);
   const { data: offering } = await db().from("offerings").select("id, name").eq("id", inv.offering_id).maybeSingle();
-  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId);
+  // A fund team member's own name never appears as the inviting manager.
+  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId, undefined, { fundNameAsSender: desk.viaTeam });
   await recordEvent({
     onboardingId: null,
     offeringId: inv.offering_id,
@@ -3088,8 +3132,7 @@ export async function investmentReadiness(userId: string, onboardingId: string) 
 
 export async function fundReadiness(userId: string, offeringId: string, viewerOverride?: "manager") {
   const { readinessView } = await import("@/lib/investment-readiness");
-  const actor = await onboardingActor(userId);
-  if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not manage that fund.");
+  const { actor } = await fundRosterViewer(userId, offeringId);
   // Staff may render the narrower manager view (View As preview); never the reverse.
   const viewer = viewerOverride === "manager" || !actor.isStaff ? "manager" : "staff";
   const { data } = await db().from("investor_onboardings").select("*").eq("offering_id", offeringId).not("stage", "in", "(declined,cancelled)");
@@ -3174,16 +3217,15 @@ async function linkView(row: any) {
   const expired = inv.expires_at && inv.expires_at < nowIso();
   return { url: onboardInvitationUrl(String(inv.token)), createdAt: inv.created_at, expiresAt: inv.expires_at, lastSentAt: inv.last_sent_at, claimed: Boolean(row.investor_user_id || inv.accepted_at), state: inv.status === "revoked" || inv.status === "disabled" ? "disabled" : expired ? "expired" : row.investor_user_id || inv.accepted_at ? "claimed" : "active" };
 }
+/** Personal links: staff, this fund's managers, or a fund team member with "Manage investors". */
 async function managerOrStaff(userId: string, offeringId: string) {
-  const actor = await onboardingActor(userId);
-  if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not manage that fund.");
-  return actor;
+  return investorDeskActor(userId, offeringId);
 }
 export async function getPersonalLink(userId: string, onboardingId: string) {
   const row = await personalLinkRow(onboardingId);
   const actor = await onboardingActor(userId);
   const isInvestor = row.investor_user_id === userId;
-  if (!isInvestor && !actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) forbid("you do not have access to that investor.");
+  if (!isInvestor && !actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) await investorDeskActor(userId, row.offering_id).catch(() => forbid("you do not have access to that investor."));
   const { data: setup } = await db().from("fund_setups").select("launch_state, launched_at").eq("offering_id", row.offering_id).maybeSingle();
   const launched = Boolean(setup?.launched_at);
   const link = await linkView(row);
@@ -3218,7 +3260,8 @@ export async function sendPersonalLink(userId: string, onboardingId: string) {
   const { data: inv } = await db().from("fund_invitations").select("*").eq("id", row.invitation_id).maybeSingle();
   if (!inv || (inv.expires_at && inv.expires_at < nowIso())) fail("This link has expired. Ask Harmonious to replace it.");
   const { data: offering } = await db().from("offerings").select("*").eq("id", row.offering_id).maybeSingle();
-  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId, { onboardingId });
+  // A fund team member's own name never appears as the inviting manager.
+  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId, { onboardingId, fundNameAsSender: actor.viaTeam });
   await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_emailed", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: sent }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
   return { emailSent: Boolean(sent) };
 }
@@ -3257,7 +3300,7 @@ export async function recordPersonalLinkCopy(userId: string, onboardingId: strin
   const row = await personalLinkRow(onboardingId);
   const actor = await onboardingActor(userId);
   const isInvestor = row.investor_user_id === userId;
-  if (!isInvestor && !actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) forbid("you do not have access to that investor.");
+  if (!isInvestor && !actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) await investorDeskActor(userId, row.offering_id).catch(() => forbid("you do not have access to that investor."));
   await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_copied", actorUserId: userId, actorRole: isInvestor ? "investor" : actor.isStaff ? "harmonious" : "manager" });
   return { ok: true };
 }

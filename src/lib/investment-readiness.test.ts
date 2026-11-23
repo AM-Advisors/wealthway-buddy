@@ -132,7 +132,8 @@ describe("server wiring", () => {
   const seg = src.slice(src.indexOf("investment readiness"), src.indexOf("export async function getPersonalLink"));
   it("uses the canonical access check and fund scoping", () => {
     expect(seg).toContain("assertOnboardingAccess(userId, onboardingId)");
-    expect(seg).toContain('forbid("you do not manage that fund.")');
+    // Fund-wide readiness uses the shared roster check (managers manage, team/company viewers read).
+    expect(seg).toContain("fundRosterViewer(userId, offeringId)");
     expect(seg).toContain("readinessView(result, access.role)");
   });
   it("never writes to investment, compliance, funding or email records", () => {
