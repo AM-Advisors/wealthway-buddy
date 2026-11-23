@@ -19,3 +19,21 @@ describe("fundSignerReturnUrl", () => {
     expect(url).not.toContain("/onboard/");
   });
 });
+
+import { preparedSignerReturnUrl, signerDoneUrl } from "@/lib/sign-window-url";
+
+describe("preparedSignerReturnUrl", () => {
+  const fund = "fa5ff8b9-e69e-40b9-b9dc-5c6f54d6c88f";
+  it("returns the GP and fund manager to the fund's Documents page", () => {
+    expect(preparedSignerReturnUrl("general_partner", fund)).toBe(`https://app.harmonious.co/manager/fund/${fund}/documents`);
+    expect(preparedSignerReturnUrl("fund_manager", fund)).toBe(`https://app.harmonious.co/manager/fund/${fund}/documents`);
+  });
+  it("returns the investor to their portal", () => {
+    expect(preparedSignerReturnUrl("investor", fund)).toBe("https://app.harmonious.co/portal");
+  });
+  it("returns trustees, joint owners and other signers to the public thank-you page", () => {
+    for (const role of ["trustee", "joint_owner", "authorized_signatory", "company_representative", "other"]) {
+      expect(preparedSignerReturnUrl(role, fund)).toBe(signerDoneUrl());
+    }
+  });
+});

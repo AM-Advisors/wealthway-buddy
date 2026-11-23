@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
-import { fundSignerReturnUrl } from "@/lib/sign-window-url";
+import { fundSignerReturnUrl, signerDoneUrl } from "@/lib/sign-window-url";
 
 import { openRequestReusable } from "@/lib/signing-source-pin";
 
@@ -259,7 +259,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
             redirectUrl,
             signers: [
               // Order 1: the named signer (emailed by Box) or the investor; order 2: the fund's countersigner.
-              { email: signerEmail, name: signerName, order: 1, externalUserId: `${application.id}:${doc.id}:${namedSigner ? "named_signer" : "investor"}`, emailOnly: Boolean(namedSigner) },
+              { email: signerEmail, name: signerName, order: 1, externalUserId: `${application.id}:${doc.id}:${namedSigner ? "named_signer" : "investor"}`, emailOnly: Boolean(namedSigner), ...(namedSigner ? { redirectUrl: signerDoneUrl() } : {}) },
               { email: countersigner.email, name: countersigner.name, order: 2, externalUserId: `${application.id}:${doc.id}:fund_manager`, redirectUrl: fundSignerReturnUrl(String(doc.offering_id)) },
             ],
           });
@@ -274,7 +274,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       documentName: `${offering?.name ?? "Harmonious"} · ${doc.title}`,
       message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
       externalId: `${application.id}:${doc.id}`,
-      redirectUrl,
+      // A named signer (trustee, officer) may not be the investor's login, so they get the public thank-you page.
+      redirectUrl: namedSigner ? signerDoneUrl() : redirectUrl,
     });
 
     const now = new Date().toISOString();

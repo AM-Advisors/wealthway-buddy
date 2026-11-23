@@ -16,3 +16,15 @@ export function newTabSigningUrl(embedUrl: string | null | undefined): string | 
 export function fundSignerReturnUrl(offeringId: string, origin = "https://app.harmonious.co"): string {
   return `${origin.replace(/\/+$/, "")}/manager/fund/${encodeURIComponent(offeringId)}/documents`;
 }
+
+/** Public "Signed. Thank you." page for signers who may not have (or be signed in to) the investor's account. */
+export function signerDoneUrl(origin = "https://app.harmonious.co"): string {
+  return `${origin.replace(/\/+$/, "")}/api/public/sign/done`;
+}
+
+/** Return page per prepared-agreement role: fund roles to fund Documents, the investor to their portal, anyone else to the public thank-you page. */
+export function preparedSignerReturnUrl(roleKey: string, offeringId: string, origin = "https://app.harmonious.co"): string {
+  if (roleKey === "fund_manager" || roleKey === "general_partner") return fundSignerReturnUrl(offeringId, origin);
+  if (roleKey === "investor") return `${origin.replace(/\/+$/, "")}/portal`;
+  return signerDoneUrl(origin);
+}
