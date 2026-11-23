@@ -170,6 +170,8 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
   const [busy, setBusy] = useState(false);
   const blocked = ready.data && !ready.data.ready ? ready.data.reason : null;
   const email = async () => {
+    if (busy) return;
+    if (ready.data?.active && !window.confirm(`Email a new link? The link sent ${day(ready.data.active.sentAt) ?? "earlier"} will stop working.`)) return;
     setBusy(true);
     try {
       let r: any;
@@ -186,17 +188,37 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
     } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't send the link."); }
     finally { setBusy(false); }
   };
+  const [copied, setCopied] = useState<string | null>(null);
   const copy = async () => {
-    const res = await getLink({ data: { ...args, withLink: true } }).catch((e) => { toast.error(e instanceof Error ? e.message : "Couldn't make the link."); return null; });
-    const url = res?.url;
-    if (!url) return;
-    try { await navigator.clipboard.writeText(url); toast.success("Sign link copied. It replaces any earlier link and works for 14 days."); void ready.refetch(); }
-    catch { window.prompt("Copy this sign link:", url); }
+    if (busy) return;
+    // A new link stops the one already emailed, so say so before replacing it.
+    if (ready.data?.active && !window.confirm(`Make a new link? The link sent ${day(ready.data.active.sentAt) ?? "earlier"} will stop working, including any link already emailed to the investor.`)) return;
+    setBusy(true);
+    try {
+      const res = await getLink({ data: { ...args, withLink: true } }).catch((e) => { toast.error(e instanceof Error ? e.message : "Couldn't make the link."); return null; });
+      if (res?.url) { setCopied(res.url); void ready.refetch(); }
+    } finally { setBusy(false); }
   };
   return (
     <>
       <Button variant="outline" onClick={email} disabled={busy || !ready.data?.ready}>Email sign link</Button>
-      <Button variant="ghost" onClick={copy} disabled={!ready.data?.ready}>Copy sign link</Button>
+      <Button variant="ghost" onClick={copy} disabled={busy || !ready.data?.ready}>Copy sign link</Button>
+      <Dialog open={!!copied} onOpenChange={(o) => { if (!o) setCopied(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl">Sign link ready</DialogTitle>
+            <DialogDescription className="text-base">Copy the whole link, including the code at the end. It works for 14 days and replaces any earlier link.</DialogDescription>
+          </DialogHeader>
+          <Input readOnly value={copied ?? ""} onFocus={(e) => e.currentTarget.select()} aria-label="Sign link" className="text-base" />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCopied(null)}>Done</Button>
+            <Button onClick={async () => {
+              try { await navigator.clipboard.writeText(copied ?? ""); toast.success("Sign link copied."); }
+              catch { toast.error("Couldn't copy. Press and hold the link above to copy it."); }
+            }}>Copy link</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {ready.data?.active && (
         <>
           <Button variant="ghost" onClick={async () => {

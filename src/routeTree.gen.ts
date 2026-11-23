@@ -475,6 +475,7 @@ import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/pa
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicProposalViewRouteImport } from './routes/api/public/proposal/view'
 import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
+import { Route as ApiPublicSignIndexRouteImport } from './routes/api/public/sign/index'
 import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign/$token'
 import { Route as ApiPublicSignDoneRouteImport } from './routes/api/public/sign/done'
 import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
@@ -3167,6 +3168,11 @@ const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
   path: '/api/public/security/revoke',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSignIndexRoute = ApiPublicSignIndexRouteImport.update({
+  id: '/api/public/sign/',
+  path: '/api/public/sign/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSignTokenRoute = ApiPublicSignTokenRouteImport.update({
   id: '/api/public/sign/$token',
   path: '/api/public/sign/$token',
@@ -3846,6 +3852,7 @@ export interface FileRoutesByFullPath {
   '/ops/funds/': typeof AuthenticatedOpsFundsIndexRoute
   '/ops/help/': typeof AuthenticatedOpsHelpIndexRoute
   '/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
+  '/api/public/sign/': typeof ApiPublicSignIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/client/invoices/$invoiceId/quote': typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
@@ -4340,6 +4347,7 @@ export interface FileRoutesByTo {
   '/ops/funds': typeof AuthenticatedOpsFundsIndexRoute
   '/ops/help': typeof AuthenticatedOpsHelpIndexRoute
   '/ops/investors': typeof AuthenticatedOpsInvestorsIndexRoute
+  '/api/public/sign': typeof ApiPublicSignIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/client/invoices/$invoiceId/quote': typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
@@ -4844,6 +4852,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/funds/': typeof AuthenticatedOpsFundsIndexRoute
   '/_authenticated/ops/help/': typeof AuthenticatedOpsHelpIndexRoute
   '/_authenticated/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
+  '/api/public/sign/': typeof ApiPublicSignIndexRoute
   '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/_authenticated/client/invoices_/$invoiceId/quote': typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
@@ -5348,6 +5357,7 @@ export interface FileRouteTypes {
     | '/ops/funds/'
     | '/ops/help/'
     | '/ops/investors/'
+    | '/api/public/sign/'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/client/invoices/$invoiceId/quote'
@@ -5842,6 +5852,7 @@ export interface FileRouteTypes {
     | '/ops/funds'
     | '/ops/help'
     | '/ops/investors'
+    | '/api/public/sign'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/client/invoices/$invoiceId/quote'
@@ -6345,6 +6356,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/funds/'
     | '/_authenticated/ops/help/'
     | '/_authenticated/ops/investors/'
+    | '/api/public/sign/'
     | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
     | '/_authenticated/client/invoices_/$invoiceId/quote'
@@ -6464,6 +6476,7 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  ApiPublicSignIndexRoute: typeof ApiPublicSignIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -9730,6 +9743,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSecurityRevokeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sign/': {
+      id: '/api/public/sign/'
+      path: '/api/public/sign'
+      fullPath: '/api/public/sign/'
+      preLoaderRoute: typeof ApiPublicSignIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sign/$token': {
       id: '/api/public/sign/$token'
       path: '/api/public/sign/$token'
@@ -11123,6 +11143,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  ApiPublicSignIndexRoute: ApiPublicSignIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
