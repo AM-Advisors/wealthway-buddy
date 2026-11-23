@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, FileText, Loader2, X } from "lucide-react";
+import { CheckCircle2, ExternalLink, FileText, Loader2, X } from "lucide-react";
+import { newTabSigningUrl } from "@/lib/sign-window-url";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -231,6 +232,13 @@ export function DocumentSignCard({
               <DialogDescription className="text-xs">Click each yellow Sign here tag, then choose Type, Draw or Upload for your signature.</DialogDescription>
             </div>
             <div className="flex items-center gap-2">
+              {newTabSigningUrl(url) && (
+                <Button asChild type="button" variant="outline" size="sm">
+                  <a href={newTabSigningUrl(url)!} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-1 h-4 w-4" aria-hidden /> Open in a new tab
+                  </a>
+                </Button>
+              )}
               <Button type="button" variant="outline" size="sm" onClick={onDownload}>
                 Download
               </Button>
@@ -264,7 +272,8 @@ export function DocumentSignCard({
           <footer className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-2 border-t bg-background px-4 py-3">
             <p className="text-xs text-muted-foreground">
               Your signature is recorded securely and confirmed by Harmonious. Closing this
-              window does not sign the agreement. If you see an error, press Try again.
+              window does not sign the agreement. If the document stays blank, press Open in a new
+              tab, sign there, then come back and press Done.
             </p>
             <div className="flex items-center gap-2">
               <Button
