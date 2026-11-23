@@ -33,3 +33,23 @@ export function citizenshipToRecord(input: { profileType: string | null | undefi
   const a = typeof input.answer === "string" ? input.answer.trim() : "";
   return a ? a.slice(0, 60) : null;
 }
+
+/**
+ * Financial facts the same investing profile gave for an earlier investment,
+ * used as editable starting answers. Per-investment statements (third-party
+ * funding, politically exposed, expected activity) are always asked again,
+ * and the investor still confirms everything with their typed name.
+ */
+export const REUSABLE_FINANCIAL_FACTS = [
+  "citizenship", "residence", "occupation", "businessNature",
+  "sourceOfFunds", "sourceOfFundsDetail", "fundsOriginCountry", "sourceOfWealth", "sourceOfWealthDetail",
+] as const;
+
+export function priorFinancialFacts(prior: Record<string, unknown> | null | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of REUSABLE_FINANCIAL_FACTS) {
+    const v = prior?.[key];
+    if (typeof v === "string" && v.trim()) out[key] = v.trim();
+  }
+  return out;
+}

@@ -154,6 +154,7 @@ function AmlCard({ onboardingId, d, refresh }: { onboardingId: string; d: any; r
   return (
     <section aria-label="Financial background" className="space-y-4 border-t pt-4" data-private>
       <h3 className="text-lg font-semibold">Financial background</h3>
+      {d.aml.prefilledFromEarlier ? <p role="note" className="text-base text-muted-foreground">We filled in the answers you gave for an earlier investment. Check them, change anything that's different, and answer the rest.</p> : null}
       <div className="space-y-4">
         {fields.map((f) => (
           <div key={f} className="space-y-2">

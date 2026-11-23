@@ -457,6 +457,17 @@ export async function investorComplianceView(userId: string, onboardingId: strin
     .select("answers, review_status")
     .eq("onboarding_id", ob.id).eq("kind", "bsa_aml").is("superseded_by", null)
     .order("created_at", { ascending: false }).limit(1);
+  // Nothing saved for this investment yet: start from the same investing profile's earlier factual answers.
+  let priorAml: Record<string, string> = {};
+  if (!amlLatest?.[0] && ob.investment_profile_id) {
+    const { data: earlier } = await d
+      .from("compliance_questionnaire_responses")
+      .select("answers")
+      .eq("investment_profile_id", ob.investment_profile_id).eq("kind", "bsa_aml").neq("onboarding_id", ob.id).is("superseded_by", null)
+      .order("created_at", { ascending: false }).limit(1);
+    const { priorFinancialFacts } = await import("@/lib/investor-financial-background");
+    priorAml = priorFinancialFacts(((earlier ?? []) as any[])[0]?.answers ?? null);
+  }
   const { data: demo } = await d
     .from("compliance_questionnaire_responses")
     .select("id").eq("onboarding_id", ob.id).eq("kind", "demographics").is("superseded_by", null).limit(1);
@@ -485,7 +496,8 @@ export async function investorComplianceView(userId: string, onboardingId: strin
     aml: {
       state: r.amlState.state,
       fields: amlFields(policy, { profileType: profile.profile_type, commitmentCents: r.commitmentCents, known, answers: (amlLatest?.[0]?.answers ?? {}) as any }),
-      answers: amlLatest?.[0]?.answers ?? {},
+      answers: amlLatest?.[0]?.answers ?? priorAml,
+      prefilledFromEarlier: !amlLatest?.[0] && Object.keys(priorAml).length > 0,
       submitted: Boolean(amlLatest?.[0]),
     },
     demographics: { submitted: Boolean(demo?.[0]) },

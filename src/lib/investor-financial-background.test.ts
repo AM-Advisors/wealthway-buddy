@@ -38,3 +38,14 @@ describe("certified citizenship fills the person record", async () => {
     expect(citizenshipToRecord({ profileType: "llc", current: null, answer: "India" })).toBeNull();
   });
 });
+
+import { priorFinancialFacts } from "./investor-financial-background";
+describe("priorFinancialFacts", () => {
+  it("reuses earlier factual answers but never the per-investment statements", () => {
+    const out = priorFinancialFacts({ occupation: "Harmonious", sourceOfFunds: "employment_income", fundsOriginCountry: "USA", politicallyExposed: "no", thirdPartyFunding: "no", expectedActivity: "single_investment" });
+    expect(out).toEqual({ occupation: "Harmonious", sourceOfFunds: "employment_income", fundsOriginCountry: "USA" });
+  });
+  it("skips blank answers", () => {
+    expect(priorFinancialFacts({ occupation: "  " })).toEqual({});
+  });
+});
