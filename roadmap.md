@@ -1260,3 +1260,5 @@
 - [x] Blank-window rescue after about 10 seconds
 - [x] Signature checked and recorded on return from the signing tab
 - [x] Opened-but-never-loaded signing windows on the fund to-do list and the stuck signatures list
+
+- [x] Checklist: when the investor signed and only the fund countersignature is left, show "Investor signed, waiting on fund countersignature" with the fund as next owner

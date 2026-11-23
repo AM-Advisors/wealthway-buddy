@@ -198,6 +198,8 @@ function fromRequirement(r: RequirementResult): Pick<ReadinessItem, "status" | "
   if (s === "review_required") return { status: "under_review", owner: "harmonious", action: r.key === "tax_documentation" ? "Confirm uploaded tax form" : `Review ${r.label.toLowerCase()}` };
   if (s === "refresh_required") return { status: "needs_investor", owner: "investor", action: `Update ${r.label.toLowerCase()}` };
   if (r.key === "subscription_documents") return { status: "in_progress", owner: null, action: null };
+  // The investor already signed; the step stays open only for the fund's countersignature.
+  if (r.key === "signature" && r.awaitingCountersign) return { status: "needs_fund_manager", owner: "fund_manager", action: "Investor signed, waiting on fund countersignature" };
   if (HARMONIOUS_WHEN_MISSING.has(r.key)) {
     return { status: "needs_harmonious", owner: "harmonious", action: "Complete compliance screening" };
   }

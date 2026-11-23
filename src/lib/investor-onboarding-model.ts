@@ -229,6 +229,8 @@ export interface RequirementResult {
   /** Pending screening may permit signing only; it never satisfies funding readiness. */
   signingAllowed?: boolean;
   reason?: string;
+  /** Signature only: the investor signed everything; only the fund's countersignature is left. Display/ownership only, never satisfies signing. */
+  awaitingCountersign?: boolean;
 }
 
 export interface OfferingRequirements {

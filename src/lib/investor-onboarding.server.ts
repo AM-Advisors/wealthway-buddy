@@ -614,6 +614,17 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       entityRequirement.reason = `Upload: ${missingEntityDocs.map((r) => r.label).join(", ")}.`;
     }
   }
+  // Investor signed every required document and only the fund's countersignature is left:
+  // say so and hand the step to the fund. The step itself stays open until the fund signs.
+  const sigReqRow = requirements.find((r) => r.key === "signature");
+  if (sigReqRow && sigReqRow.state === "missing" && row.application_id && obligations.needsSignature.length) {
+    const investorSide = await investorSideSignedDocuments(row);
+    const waitingFund = obligations.needsSignature.filter((d) => !signedIds.has(d.id));
+    if (waitingFund.length && waitingFund.every((d) => investorSide.has(String(d.id)))) {
+      sigReqRow.awaitingCountersign = true;
+      sigReqRow.reason = "Investor signed, waiting on fund countersignature.";
+    }
+  }
   const ackedIds = new Set((obligations.needsAck.length || retained.retainedIds.length ? ackList : []).map((a) => a.documentId));
   const ackIds = new Set(obligations.needsAck.map((x) => x.id));
   const documents = applicableDocs
