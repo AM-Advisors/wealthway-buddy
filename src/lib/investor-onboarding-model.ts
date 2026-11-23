@@ -529,6 +529,16 @@ export function signingRequirementSatisfied(r: RequirementResult): boolean {
     || ((r.key === "aml" || r.key === "accreditation") && r.state === "review_required" && r.signingAllowed === true);
 }
 
+/** In plain words, what still stands between this investment and signing (same rule as verificationAllowsSigning). */
+export function signingBlockerReasons(requirements: RequirementResult[]): string[] {
+  const keys: RequirementKey[] = ["identity_verification", "entity_verification", "beneficial_owners", "aml", "eligibility", "accreditation"];
+  const out: string[] = [];
+  if (!requirements.some((r) => r.key === "identity_verification")) out.push("Identity check");
+  if (!requirements.some((r) => r.key === "aml")) out.push("Compliance screening");
+  for (const r of requirements) if (keys.includes(r.key) && !signingRequirementSatisfied(r)) out.push(r.reason ? `${r.label}: ${r.reason}` : r.label);
+  return out;
+}
+
 export function verificationAllowsSigning(requirements: RequirementResult[]): boolean {
   const keys: RequirementKey[] = ["identity_verification", "entity_verification", "beneficial_owners", "aml", "eligibility", "accreditation"];
   return requirements.some((r) => r.key === "identity_verification")

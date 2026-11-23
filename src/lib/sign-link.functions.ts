@@ -33,14 +33,20 @@ async function facts(userId: string, data: z.infer<typeof input>) {
   const contact = ob.investor_user_id ? await (await import("@/lib/user-contact.server")).loadUserContact(d, ob.investor_user_id) : null;
   const email = (contact?.email || person?.email || null) as string | null;
   const name = (contact?.name || person?.preferred_name || [person?.legal_first_name, person?.legal_last_name].filter(Boolean).join(" ") || "there") as string;
-  const readiness = signLinkReadiness({
+  const base = {
     removed: !!ob.removed_at,
     email,
     requiresSignature: !!doc?.requires_signature,
     documentInFund: doc?.offering_id === data.fundId,
     investorSigned: signed,
     identityVerified: String(person?.kyc_status ?? "") === "approved",
-  });
+  };
+  // Same gate the signing page uses, so a link is never sent that would stop at "not ready to sign".
+  let readiness = signLinkReadiness(base);
+  if (readiness.ready) {
+    const { onboardingSigningBlockers } = await import("@/lib/investor-onboarding.server");
+    readiness = signLinkReadiness({ ...base, signingBlockers: await onboardingSigningBlockers(ob.id) });
+  }
   return { ob, doc, email, name, readiness };
 }
 

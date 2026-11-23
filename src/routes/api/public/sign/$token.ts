@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import logoNavy from "@/assets/logo-navy.png.asset.json";
 
 /**
  * Sign without signing in. GET only shows a confirmation page (email scanners
@@ -10,8 +11,8 @@ const esc = (v: string) => v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 function page(title: string, body: string, status = 200) {
   return new Response(
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)} | Harmonious</title>
-<style>body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#fff;color:#221F20}main{max-width:560px;margin:0 auto;padding:48px 24px}h1{font-family:Rubik,system-ui,sans-serif;color:#142647;font-size:28px;margin:0 0 12px}p{font-size:18px;line-height:1.5}button{margin-top:16px;width:100%;padding:18px;font-size:20px;border:0;border-radius:10px;background:#142647;color:#fff;cursor:pointer}.brand{color:#5DC6D1;font-weight:600;letter-spacing:.04em;margin-bottom:24px}</style></head>
-<body><main><div class="brand">HARMONIOUS</div>${body}</main></body></html>`,
+<style>body{margin:0;font-family:Poppins,system-ui,sans-serif;background:#fff;color:#221F20}main{max-width:560px;margin:0 auto;padding:48px 24px}h1{font-family:Rubik,system-ui,sans-serif;color:#142647;font-size:28px;margin:0 0 12px}p{font-size:18px;line-height:1.5}button{margin-top:16px;width:100%;padding:18px;font-size:20px;border:0;border-radius:10px;background:#142647;color:#fff;cursor:pointer}.brand{display:block;height:36px;width:auto;margin-bottom:28px}</style></head>
+<body><main><img class="brand" src="${logoNavy.url}" alt="Harmonious">${body}</main></body></html>`,
     { status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex" } },
   );
 }
@@ -69,7 +70,10 @@ export const Route = createFileRoute("/api/public/sign/$token")({
             return page("Signed", `<h1>Already signed</h1><p>${esc(LINK_STATE_MESSAGE.used)}</p>`);
           }
           console.error("sign link open failed", msg);
-          return page("Not ready yet", `<h1>This document isn't ready to sign yet</h1><p>${esc(msg || "Please try again in a few minutes.")}</p><p>If this keeps happening, reply to the email you received.</p>`, 409);
+          const notVerified = /verification must be approved|under review|not ready for signing/i.test(msg);
+          return page("Not ready yet", notVerified
+            ? `<h1>This document isn't ready to sign yet</h1><p>A few steps on your investment still need to be finished before you can sign. Your fund manager can see what's left and will be in touch.</p><p>You can reply to the email you received with any questions.</p>`
+            : `<h1>This document isn't ready to sign yet</h1><p>${esc(msg || "Please try again in a few minutes.")}</p><p>If this keeps happening, reply to the email you received.</p>`, 409);
         }
       },
     },

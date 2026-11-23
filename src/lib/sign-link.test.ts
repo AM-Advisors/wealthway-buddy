@@ -12,3 +12,29 @@ describe("sign link", () => {
   it("is not offered once signed", () => expect(signLinkReadiness({ ...ok, investorSigned: true }).ready).toBe(false));
   it("is not offered for removed investors", () => expect(signLinkReadiness({ ...ok, removed: true }).ready).toBe(false));
 });
+
+describe("signing link waits for the shared signing gate", () => {
+  const ok = { removed: false, email: "a@b.co", requiresSignature: true, documentInFund: true, investorSigned: false, identityVerified: true };
+  it("refuses while business documents or owners are missing", async () => {
+    const { signLinkReadiness } = await import("./sign-link");
+    const r = signLinkReadiness({ ...ok, signingBlockers: ["Owners and signers: We still need: trustee"] });
+    expect(r.ready).toBe(false);
+    expect(r.reason).toContain("Owners and signers");
+  });
+  it("is ready when nothing blocks signing", async () => {
+    const { signLinkReadiness } = await import("./sign-link");
+    expect(signLinkReadiness({ ...ok, signingBlockers: [] }).ready).toBe(true);
+  });
+});
+
+describe("signingBlockerReasons", () => {
+  it("lists only unfinished signing requirements", async () => {
+    const { signingBlockerReasons } = await import("./investor-onboarding-model");
+    const out = signingBlockerReasons([
+      { key: "identity_verification", label: "Identity", state: "valid" },
+      { key: "aml", label: "Screening", state: "review_required", signingAllowed: true },
+      { key: "beneficial_owners", label: "Owners and signers", state: "missing" as any, reason: "We still need: trustee" },
+    ] as any);
+    expect(out).toEqual(["Owners and signers: We still need: trustee"]);
+  });
+});

@@ -1171,6 +1171,17 @@ export async function assertApplicationSigningVerification(userId: string, appli
   }
 }
 
+/** What still blocks signing for this investment, in plain words (empty when it may sign). Staff/manager callers only. */
+export async function onboardingSigningBlockers(onboardingId: string): Promise<string[]> {
+  const { data: row } = await db().from("investor_onboardings").select("*").eq("id", onboardingId).is("removed_at", null).maybeSingle();
+  if (!row) return ["This investment is not ready for signing."];
+  const facts = await gatherFacts(row);
+  const { signingBlockerReasons } = await import("@/lib/investor-onboarding-model");
+  const out = signingBlockerReasons(facts.requirements);
+  if ((await openExceptions(row.id)).some((e: any) => e.severity === "blocking")) out.push("An open review on this investment");
+  return out;
+}
+
 /** Same signing gate for sign-without-sign-in links: the recorded investment, not an account. */
 export async function assertOnboardingSigningVerification(onboardingId: string) {
   const { data: row, error } = await db().from("investor_onboardings").select("*").eq("id", onboardingId).is("removed_at", null).maybeSingle();
