@@ -321,7 +321,7 @@ export function buildMyFunds(facts: MyFundsFacts, funds: readonly FundRow[], out
   const managed = new Set(facts.managedFundIds);
   const invested = new Set(facts.investorFundIds);
   const team = new Set(facts.teamFundIds ?? []);
-  const label: Record<FundRelationship, string> = { fund_manager: "Fund Manager", investor: "Investor", fund_team: "Fund team (view only)" };
+  const label: Record<FundRelationship, string> = { fund_manager: "Fund Manager", investor: "Investor", fund_team: "Fund team" };
   return funds
     .filter((f) => managed.has(f.id) || invested.has(f.id) || team.has(f.id))
     .map((f) => {

@@ -9,20 +9,20 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { listedTeamViewerRole } from "@/lib/fund-team-access";
 import { buildMyFunds, investorFundView, platformAgreementHistory, workspaceCategories } from "@/lib/client-portal-model";
 
 async function relationshipFundIds(context: any) {
   const s = context.supabase;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const [{ data: fm }, { data: pos }, { data: apps }, { data: team }] = await Promise.all([
+  const [{ data: fm }, { data: pos }, { data: apps }] = await Promise.all([
     s.from("fund_managers").select("offering_id").eq("user_id", context.userId),
     s.from("investor_positions").select("offering_id").eq("investor_user_id", context.userId),
     s.from("investor_applications").select("offering_id").eq("user_id", context.userId),
-    (supabaseAdmin as any).from("fund_team_members").select("offering_id, user_id, removed_at, permissions").eq("user_id", context.userId).is("removed_at", null),
   ]);
   const ids = (rows: any) => [...new Set(((rows ?? []) as any[]).map((r) => String(r.offering_id)).filter(Boolean))];
-  const teamFundIds = ids(((team ?? []) as any[]).filter((t) => listedTeamViewerRole(t, context.userId)));
+  // Shared access: Fund Team Access grants plus listed Team entries, resolved by the same reader as Shared funds.
+  const { liveGrants } = await import("@/lib/fund-team-access.functions");
+  const teamFundIds = ids(await liveGrants(supabaseAdmin as any, context.userId));
   return { managedFundIds: ids(fm), investorFundIds: [...new Set([...ids(pos), ...ids(apps)])], teamFundIds };
 }
 

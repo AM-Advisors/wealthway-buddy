@@ -16,7 +16,7 @@ describe("listed fund team members see their fund", () => {
   });
   it("My Funds lists a team-only fund as view only, opening the shared fund view", () => {
     const [row] = buildMyFunds({ managedFundIds: [], investorFundIds: [], teamFundIds: ["f1"] }, [fund]);
-    expect(row?.relationshipLabel).toBe("Fund team (view only)");
+    expect(row?.relationshipLabel).toBe("Fund team");
     expect(row?.path).toBe("/shared-funds");
     expect(row?.search).toEqual({ fund: "f1" });
     expect(row?.outstandingActions).toBeNull();

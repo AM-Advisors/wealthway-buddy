@@ -257,7 +257,8 @@ export const listMySharedFunds = createServerFn({ method: "GET" })
     return { funds: live.map((g) => ({ fundId: g.offering_id, name: names.get(g.offering_id) ?? "Fund", role: g.role as FundTeamRole })) };
   });
 
-async function liveGrants(db: any, userId: string) {
+/** Live shared-fund access (grants and listed Team entries) for this exact login. Server-only callers. */
+export async function liveGrants(db: any, userId: string) {
   const { data } = await db.from("fund_team_grants").select("offering_id, role, status, expires_at, granted_by, scope").eq("grantee_user_id", userId).eq("status", "active");
   const out: any[] = [];
   const seen = new Set<string>();
