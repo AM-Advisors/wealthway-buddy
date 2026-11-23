@@ -1940,6 +1940,43 @@ async function advanceSubscriptionToReview(row: any, requirements: RequirementRe
   await notifyInvestorApproval({ onboardingId: row.id, action: "review", ref: `subscription-ready:${row.id}` });
 }
 
+/** Submit subscription on its own once the signing service confirms every investor signature.
+ *  Same executed record as the investor's Submit click (written once, never rewritten), marked automatic. */
+async function autoSubmitSignedSubscription(row: any, facts: any, blocking: number, ctx: { actorUserId: string | null; trigger: string }) {
+  const { shouldAutoSubmitSubscription, autoSubmitSigner, lastSignedAt } = await import("./subscription-auto-submit");
+  if (!shouldAutoSubmitSubscription({ stage: String(row.stage), removed: Boolean(row.removed_at), executed: Boolean(row.executed_snapshot), blockingExceptions: blocking, requirements: facts.requirements, confirmedSignatures: (facts.completedSignatures ?? []).length })) return false;
+  const signer = autoSubmitSigner({
+    signatures: facts.completedSignatures ?? [], isEntity: Boolean(facts.isEntity),
+    profileLegalName: facts.profile?.legal_name ?? null, personName: [facts.person?.legal_first_name, facts.person?.legal_middle_name, facts.person?.legal_last_name].filter(Boolean).join(" ") || null,
+  });
+  if (!signer) return false;
+  const { onboardingPreflight } = await import("@/lib/onboarding-compliance.server");
+  if ((await onboardingPreflight(row.id)).length) return false;
+  let version = row.document_template_version as number | null;
+  if (!version) {
+    const { data: docs } = await db().from("offering_documents").select("current_version").eq("offering_id", row.offering_id);
+    version = ((docs ?? []) as any[]).length ? Math.max(...((docs ?? []) as any[]).map((d) => Number(d.current_version ?? 1))) : null;
+  }
+  if (!version) return false;
+  const entityName = facts.isEntity ? (facts.profile?.legal_name ?? facts.profile?.display_label ?? null) : null;
+  const snapshot = {
+    signedAt: lastSignedAt(facts.completedSignatures ?? []) ?? nowIso(), signerName: signer.signerName, capacity: signer.capacity,
+    attribution: signatureAttribution({ signerName: signer.signerName, capacity: signer.capacity, entityName }),
+    investmentProfileId: row.investment_profile_id, profileType: facts.profile?.profile_type ?? null, profileLegalName: facts.profile?.legal_name ?? null,
+    offeringId: row.offering_id, requestedAmountCents: row.requested_amount_cents, documentTemplateVersion: version,
+    questionnaireVersion: row.questionnaire_version, submittedAutomatically: true,
+  };
+  const { data: done, error } = await db().from("investor_onboardings")
+    .update({ executed_snapshot: snapshot, document_template_version: version, updated_at: nowIso() })
+    .eq("id", row.id).is("executed_snapshot", null).is("removed_at", null).select("id").maybeSingle();
+  if (error || !done) return false;
+  row.executed_snapshot = snapshot; row.document_template_version = version;
+  await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "signature_completed", toStatus: row.stage, actorUserId: ctx.actorUserId, actorRole: "system",
+    detail: { attribution: snapshot.attribution, automatic: true, trigger: ctx.trigger } });
+  await syncInvitation(row);
+  return true;
+}
+
 /** Read-only eligibility for the existing exact-investment approval button. */
 export async function subscriptionApprovalAvailable(userId: string, onboardingId: string) {
   const row = await onboardingRow(onboardingId);
@@ -3078,6 +3115,7 @@ export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { 
     }
   }
   await advanceSubscriptionToReview(row, facts.requirements, blocking, ctx);
+  if (await autoSubmitSignedSubscription(row, facts, blocking, ctx)) ({ result, facts } = await computeReadinessFor(row));
   const { shouldAdvanceVerifiedInvestor } = await import("./verification-auto-advance");
   if (shouldAdvanceVerifiedInvestor(row.stage, facts.requirements, Boolean(row.removed_at))) {
     const { data: advanced, error } = await db().from("investor_onboardings")

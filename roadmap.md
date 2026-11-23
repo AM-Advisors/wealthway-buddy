@@ -1,5 +1,9 @@
 # Roadmap
 
+## Submit subscription happens on its own (2026-11-23)
+- [x] Once all investor signatures are confirmed, the subscription submits with no extra click
+- [x] Chris Par's Erebor subscription submitted; no other in-progress investment had the same gap
+
 ## Shared screen video links (2026-11-23)
 - [x] Share link on each screen video in Screen recordings; page replays stay private
 - [x] Viewers type name and email before watching; every viewing listed with time, device and address
