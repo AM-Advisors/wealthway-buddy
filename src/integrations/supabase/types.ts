@@ -6229,6 +6229,7 @@ export type Database = {
       }
       client_contacts: {
         Row: {
+          added_for_offering_id: string | null
           client_id: string
           created_at: string
           created_by: string | null
@@ -6252,6 +6253,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          added_for_offering_id?: string | null
           client_id: string
           created_at?: string
           created_by?: string | null
@@ -6275,6 +6277,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          added_for_offering_id?: string | null
           client_id?: string
           created_at?: string
           created_by?: string | null

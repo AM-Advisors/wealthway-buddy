@@ -16,3 +16,12 @@ describe("fund team invitations stay on that fund", () => {
     expect(helper).not.toContain('from("client_contacts")');
   });
 });
+
+describe("contacts created from a fund screen stay on that fund", () => {
+  const src = readFileSync("src/lib/fund-signatories.server.ts", "utf8");
+  it("marks every new contact made from a fund screen with that fund", () => {
+    const inserts = src.split('from("client_contacts").insert(').slice(1).map((s) => s.slice(0, 400));
+    expect(inserts.length).toBe(3);
+    for (const i of inserts) expect(i).toContain("added_for_offering_id");
+  });
+});

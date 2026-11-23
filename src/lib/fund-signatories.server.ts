@@ -138,7 +138,7 @@ export async function inviteFundPerson(userId: string, input: { offeringId: stri
     const { data: ex } = await db().from("client_contacts").select("id").eq("client_id", o.client_id).ilike("email", email).eq("status", "active").limit(1).maybeSingle();
     if (ex) contactId = ex.id;
     else {
-      const { data: c, error } = await db().from("client_contacts").insert({ client_id: o.client_id, full_name: (input.fullName ?? email).trim(), email, status: "active", created_by: userId }).select("id").single();
+      const { data: c, error } = await db().from("client_contacts").insert({ client_id: o.client_id, full_name: (input.fullName ?? email).trim(), email, status: "active", created_by: userId, added_for_offering_id: input.offeringId }).select("id").single();
       if (error || !c) throw new Error(error?.message ?? "Could not add that contact.");
       contactId = c.id;
     }
@@ -269,7 +269,7 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
       await db().from("client_contacts").update({ designations: matched.designations, updated_at: new Date().toISOString() }).eq("id", contactId);
     } else {
       const { data: c, error } = await db().from("client_contacts").insert({
-        client_id: o.client_id, full_name: row.full_name, email: row.email, title: row.title, designations: row.designations, status: "active", created_by: userId,
+        client_id: o.client_id, full_name: row.full_name, email: row.email, title: row.title, designations: row.designations, status: "active", created_by: userId, added_for_offering_id: input.offeringId,
       }).select("id").single();
       if (error || !c) throw new Error(error?.message ?? "Could not add that contact.");
       contactId = c.id;
@@ -500,7 +500,7 @@ export async function addRequestedSignatory(userId: string, offeringId: string, 
       await db().from("client_contacts").update({ designations: matched.designations, updated_at: new Date().toISOString() }).eq("id", contactId);
     } else {
       const { data: c, error } = await db().from("client_contacts").insert({
-        client_id: o.client_id, full_name: row.full_name, email: row.email, title: row.title, designations: row.designations, status: "active", created_by: userId,
+        client_id: o.client_id, full_name: row.full_name, email: row.email, title: row.title, designations: row.designations, status: "active", created_by: userId, added_for_offering_id: offeringId,
       }).select("id").single();
       if (error || !c) return { added: false, note: error?.message ?? "Could not add the signer as a client contact." };
       contactId = c.id;

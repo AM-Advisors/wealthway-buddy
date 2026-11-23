@@ -3032,6 +3032,13 @@
       "when": 1795445483604,
       "tag": "0432_fund_team_member_invited_at",
       "breakpoints": true
+    },
+    {
+      "idx": 433,
+      "version": "7",
+      "when": 1795448976007,
+      "tag": "0433_fund_scoped_contacts",
+      "breakpoints": true
     }
   ]
 }
