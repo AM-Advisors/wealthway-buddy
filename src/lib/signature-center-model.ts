@@ -5,6 +5,8 @@
  * record; status comes only from the signer rows themselves.
  */
 
+import { windowNeverLoaded } from "@/lib/signing-window";
+
 export type AgreementKind = "side_letter" | "subscription" | "operating_agreement" | "other";
 export type SignerRole = "investor" | "fund_signatory" | "other";
 export type SignatureSource = "fund_file" | "subscription" | "subscription_not_started";
@@ -20,6 +22,10 @@ export type RawSigner = {
   status: string;
   sentAt: string | null;
   signedAt: string | null;
+  /** When the signer last opened the signing window (subscription requests only). */
+  windowOpenedAt?: string | null;
+  /** When the signing service recorded the document loading for this signer. */
+  viewedAt?: string | null;
 };
 
 export type RawItem = {
@@ -79,6 +85,8 @@ export type ItemView = {
   /** Whole days since the item last moved. */
   waitingDays: number | null;
   stuck: boolean;
+  /** The waiting signer opened the signing window, but the document never loaded. */
+  neverLoaded: boolean;
   label: string;
   signedCount: number;
   signerCount: number;
@@ -94,22 +102,24 @@ export function itemView(item: RawItem, now: Date = new Date()): ItemView {
   const nameOf = (s: RawSigner) => `${s.name?.trim() || "Signer"} (${ROLE_LABELS[s.role].toLowerCase()})`;
   if (problem) {
     const what = String(problem.status).toLowerCase() === "declined" ? "Declined by" : String(problem.status).toLowerCase() === "expired" ? "Expired for" : "Signing error for";
-    return { status: "problem", waitingOn: problem, waitingDays: null, stuck: true, label: `${what} ${nameOf(problem)}`, signedCount, signerCount: active.length };
+    return { status: "problem", waitingOn: problem, waitingDays: null, stuck: true, neverLoaded: false, label: `${what} ${nameOf(problem)}`, signedCount, signerCount: active.length };
   }
   const waitingOn = active.find((s) => signerState(s.status) !== "signed") ?? null;
   if (item.executedAt || (!waitingOn && active.length > 0)) {
-    return { status: "signed", waitingOn: null, waitingDays: null, stuck: false, label: "Signed by everyone", signedCount, signerCount: active.length };
+    return { status: "signed", waitingOn: null, waitingDays: null, stuck: false, neverLoaded: false, label: "Signed by everyone", signedCount, signerCount: active.length };
   }
   const previous = waitingOn ? active.filter((s) => s.order < waitingOn.order).map((s) => time(s.signedAt)) : [];
   const since = Math.max(...[time(waitingOn?.sentAt), time(item.createdAt), ...previous].filter((n) => Number.isFinite(n)), Number.NEGATIVE_INFINITY);
   const waitingDays = Number.isFinite(since) ? Math.max(0, Math.floor((now.getTime() - since) / dayMs)) : null;
   const who = waitingOn ? nameOf(waitingOn) : "the investor";
+  const neverLoaded = !!waitingOn && windowNeverLoaded({ status: waitingOn.status, viewedAt: waitingOn.viewedAt ?? null, windowOpenedAt: waitingOn.windowOpenedAt ?? null }, now);
   return {
     status: "waiting",
     waitingOn,
     waitingDays,
-    stuck: waitingDays !== null && waitingDays >= STUCK_AFTER_DAYS,
-    label: `Waiting on ${who}`,
+    stuck: neverLoaded || (waitingDays !== null && waitingDays >= STUCK_AFTER_DAYS),
+    neverLoaded,
+    label: neverLoaded ? `Signing window never loaded for ${who}` : `Waiting on ${who}`,
     signedCount,
     signerCount: active.length,
   };

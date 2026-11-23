@@ -104,7 +104,7 @@ export async function loadSignatureCenter(viewer: { userId: string; email: strin
     for (const o of extraOb) { onboardings.set(o.id, o); byApp.set(o.application_id, o); }
   }
   const mineSig = new Set(((dssMineRaw ?? []) as any[]).map((r) => r.signature_id));
-  const signerRows = await chunked(dsRows.map((s) => s.id), async (p) => (await d().from("document_signature_signers").select("id, signature_id, offering_id, role_key, signing_order, signer_name, signer_email, signer_user_id, status, sent_at, signed_at, required, created_at").in("signature_id", p)).data ?? []) as any[];
+  const signerRows = await chunked(dsRows.map((s) => s.id), async (p) => (await d().from("document_signature_signers").select("id, signature_id, offering_id, role_key, signing_order, signer_name, signer_email, signer_user_id, status, sent_at, signed_at, required, created_at, viewed_at, window_opened_at").in("signature_id", p)).data ?? []) as any[];
   const signersBySig = new Map<string, any[]>();
   for (const r of signerRows) signersBySig.set(r.signature_id, [...(signersBySig.get(r.signature_id) ?? []), r]);
 
@@ -153,7 +153,7 @@ export async function loadSignatureCenter(viewer: { userId: string; email: strin
     const doc = docById.get(s.offering_document_id);
     const rows = signersBySig.get(s.id) ?? [];
     const signers: RawSigner[] = rows.length
-      ? rows.filter((r) => r.required !== false).map((r) => ({ id: r.id, name: r.signer_name, email: r.signer_email, userId: r.signer_user_id, role: role(r.role_key), order: r.signing_order ?? 1, status: r.status, sentAt: r.sent_at, signedAt: r.signed_at }))
+      ? rows.filter((r) => r.required !== false).map((r) => ({ id: r.id, name: r.signer_name, email: r.signer_email, userId: r.signer_user_id, role: role(r.role_key), order: r.signing_order ?? 1, status: r.status, sentAt: r.sent_at, signedAt: r.signed_at, viewedAt: r.viewed_at ?? null, windowOpenedAt: r.window_opened_at ?? null }))
       : [{ id: s.id, name: s.signer_name ?? investorOf(ob), email: s.signer_email, userId: ob.investor_user_id, role: "investor", order: 1, status: s.signed_at || s.provider_status === "completed" ? "signed" : "waiting", sentAt: s.provider_sent_at, signedAt: s.signed_at ?? s.provider_completed_at }];
     items.push(finish({ id: `ds:${s.id}`, source: "subscription", offeringId: ob.offering_id, fundName: fundName.get(ob.offering_id) ?? "Fund", title: doc?.title ?? "Subscription Agreement", kindHint: doc?.doc_type ?? null, investorName: investorOf(ob), onboardingId: ob.id, createdAt: s.provider_sent_at ?? rows[0]?.created_at ?? null, executedAt: s.executed_at, signers }, ob, s.id));
   }

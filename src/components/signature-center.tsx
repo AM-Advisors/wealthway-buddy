@@ -98,7 +98,7 @@ export function SignatureCenter({ surface, offeringId, everything, title = "Sign
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {([
               ["waiting", "Waiting", counts.waiting],
-              ["stuck", `Stuck ${STUCK_AFTER_DAYS}+ days`, counts.stuck],
+              ["stuck", "Stuck", counts.stuck],
               ["signed", "Signed", counts.signed],
               ["all", "All", counts.all],
             ] as [StatusFilter, string, number][]).map(([key, label, n]) => (
@@ -131,7 +131,7 @@ export function SignatureCenter({ surface, offeringId, everything, title = "Sign
 
           {list.length === 0 ? (
             <p className="rounded-lg border p-4 text-base text-muted-foreground">
-              {status === "waiting" ? "Nothing is waiting for a signature." : status === "stuck" ? "Nothing has been waiting longer than a week." : "No agreements match."}
+              {status === "waiting" ? "Nothing is waiting for a signature." : status === "stuck" ? `Nothing is stuck. Items show here after ${STUCK_AFTER_DAYS} days without a signature, or when a signing window never loaded.` : "No agreements match."}
             </p>
           ) : (
             <ul className="space-y-3">
@@ -200,6 +200,11 @@ function Row({ r, surface, showFund, onRemind }: { r: any; surface: Surface; sho
       </div>
 
       <p className="text-base font-medium">{v.label}{v.status === "waiting" && v.waitingDays !== null ? ` ${ago(v.waitingDays)}` : ""}{r.source === "subscription_not_started" ? " · not opened yet" : ""}</p>
+      {v.neverLoaded && (
+        <p className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-sm">
+          They opened the signing window, but the document never loaded. Ask them to press <strong>Open in a new tab</strong> in the signing window, or to use Chrome.
+        </p>
+      )}
 
       <ol className="flex flex-wrap gap-2 text-sm">
         {signers.map((s: any, i: number) => {

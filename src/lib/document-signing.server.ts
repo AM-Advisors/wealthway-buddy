@@ -290,6 +290,7 @@ export async function openSigningSession(
     );
     if (liveSigner?.embedUrl) {
       await syncSignersFromBox(admin, agreementId);
+      await markWindowOpened(admin, resolved.signature.id, userId, resolved.profile.email);
       return { signingUrl: liveSigner.embedUrl, signRequestId: agreementId, reused: true };
     }
   }
@@ -437,7 +438,29 @@ export async function openSigningSession(
   );
   if (!mySigner?.embedUrl) throw new SigningRefusal("provider_unavailable");
 
+  await markWindowOpened(admin, signatureId, userId, resolved.profile.email);
   return { signingUrl: mySigner.embedUrl, signRequestId: detail.id, reused: false };
+}
+
+/**
+ * Records when this signer last opened the signing window. Evidence only: it
+ * never changes signing status, and the stuck lists compare it with the signing
+ * service's own "loaded" record.
+ */
+async function markWindowOpened(admin: any, signatureId: string, userId: string, email: string | null) {
+  const now = new Date().toISOString();
+  const byUser = await admin
+    .from("document_signature_signers")
+    .update({ window_opened_at: now })
+    .eq("signature_id", signatureId)
+    .eq("signer_user_id", userId)
+    .select("id");
+  if ((byUser.data ?? []).length || !email) return;
+  await admin
+    .from("document_signature_signers")
+    .update({ window_opened_at: now })
+    .eq("signature_id", signatureId)
+    .eq("signer_email", email.toLowerCase());
 }
 
 /**

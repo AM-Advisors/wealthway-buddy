@@ -128,7 +128,7 @@ export const refreshSigningState = createServerFn({ method: "POST" })
     });
 
     const agreementId = resolved.signature?.provider_agreement_id as string | undefined;
-    if (!agreementId) return { state: "not_sent" as const };
+    if (!agreementId) return { state: "not_sent" as const, youSigned: false, viewed: false };
 
     await syncSignersFromBox(supabaseAdmin, agreementId).catch(() => null);
     const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
@@ -136,10 +136,21 @@ export const refreshSigningState = createServerFn({ method: "POST" })
 
     const { data: rows } = await supabaseAdmin
       .from("document_signature_signers")
-      .select("status, required")
+      .select("status, required, signer_user_id, signer_email, viewed_at")
       .eq("signature_id", resolved.signature.id);
 
-    return { state: executionState((rows ?? []) as any[]) };
+    // Only this person's own row: "you signed" / "it loaded" never comes from another signer.
+    const email = String((context.claims as any)?.email ?? "").toLowerCase();
+    const list = (rows ?? []) as any[];
+    const mine =
+      list.find((r) => r.signer_user_id === userId) ??
+      (email ? list.find((r) => String(r.signer_email ?? "").toLowerCase() === email) : undefined);
+    const myStatus = String(mine?.status ?? "");
+    return {
+      state: executionState(list),
+      youSigned: myStatus === "signed",
+      viewed: Boolean(mine?.viewed_at) || ["viewed", "signed", "declined"].includes(myStatus),
+    };
   });
 
 // ---------------------------------------------------------------------------

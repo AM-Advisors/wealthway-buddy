@@ -69,3 +69,23 @@ describe("filters", () => {
     expect(matchesFilters(row, { status: "all", kind: "subscription", search: "" })).toBe(false);
   });
 });
+
+describe("signing window never loaded", () => {
+  const now = new Date("2026-11-23T20:00:00Z");
+  const item = (signer: Record<string, unknown>) => ({
+    id: "ds:1", source: "subscription" as const, offeringId: "f", fundName: "Fund", title: "Subscription Agreement", kindHint: "subscription",
+    investorName: "Chris", onboardingId: "o", createdAt: "2026-11-23T19:17:00Z", executedAt: null,
+    signers: [{ id: "s", name: "Chris", email: null, userId: "u", role: "investor" as const, order: 1, status: "sent", sentAt: "2026-11-23T19:17:00Z", signedAt: null, ...signer }],
+  });
+  it("marks the item stuck the same day when the window never loaded", () => {
+    const v = itemView(item({ windowOpenedAt: "2026-11-23T19:17:00Z", viewedAt: null }), now);
+    expect(v.stuck).toBe(true);
+    expect(v.neverLoaded).toBe(true);
+    expect(v.status).toBe("waiting");
+  });
+  it("does not mark it stuck once the document loaded", () => {
+    const v = itemView(item({ status: "viewed", windowOpenedAt: "2026-11-23T19:17:00Z", viewedAt: "2026-11-23T19:17:30Z" }), now);
+    expect(v.stuck).toBe(false);
+    expect(v.neverLoaded).toBe(false);
+  });
+});

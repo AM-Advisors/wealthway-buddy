@@ -75,3 +75,27 @@ describe("buildInvestorTodos", () => {
     expect(items).toHaveLength(1);
   });
 });
+
+describe("signing window that never loaded", () => {
+  it("puts it first on the fund's to-do list for that investor", () => {
+    const items = buildInvestorTodos({
+      investors: [inv({ questionnaireSubmitted: false })],
+      newDocs: [],
+      accreditationPendingApplicationIds: new Set<string>(),
+      signaturePending: [],
+      signingNeverLoaded: [{ onboardingId: "ob1", title: "Subscription Agreement" }],
+    });
+    expect(items[0]?.kind).toBe("signing_window");
+    expect(items[0]?.label).toBe("Subscription Agreement: signing window didn't load");
+  });
+  it("never shows it on another investor", () => {
+    const items = buildInvestorTodos({
+      investors: [inv()],
+      newDocs: [],
+      accreditationPendingApplicationIds: new Set<string>(),
+      signaturePending: [],
+      signingNeverLoaded: [{ onboardingId: "other", title: "Subscription Agreement" }],
+    });
+    expect(items).toEqual([]);
+  });
+});

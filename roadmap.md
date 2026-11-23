@@ -1248,3 +1248,9 @@
 
 - [x] Brittany: "Forbidden: you do not manage that fund" opening LaaSy (fund team viewer)
 - [x] Initial contacts added from a fund see only that fund
+
+## Signing safeguards (2026-11-23)
+- [x] Safari and iPhone/iPad open signing in a new tab
+- [x] Blank-window rescue after about 10 seconds
+- [x] Signature checked and recorded on return from the signing tab
+- [x] Opened-but-never-loaded signing windows on the fund to-do list and the stuck signatures list

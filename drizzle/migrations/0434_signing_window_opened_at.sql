@@ -1,0 +1,2 @@
+ALTER TABLE public.document_signature_signers ADD COLUMN IF NOT EXISTS window_opened_at timestamptz;
+CREATE INDEX IF NOT EXISTS document_signature_signers_window_opened_idx ON public.document_signature_signers (offering_id, window_opened_at) WHERE window_opened_at IS NOT NULL AND viewed_at IS NULL;

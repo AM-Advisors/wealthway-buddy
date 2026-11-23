@@ -54,6 +54,27 @@ export async function managerInvestorTodos(userId: string, fundId: string) {
     )
     .filter((x: any) => x.countersign || x.approve)
     .map((x: any) => ({ onboardingId: x.onboardingId as string, countersign: x.countersign as boolean }));
+  // Signing windows the investor opened that the signing service never saw load.
+  const { windowNeverLoaded } = await import("@/lib/signing-window");
+  const { data: opened } = await d
+    .from("document_signature_signers")
+    .select("application_id, offering_document_id, status, viewed_at, window_opened_at, role_key")
+    .eq("offering_id", fundId)
+    .not("window_opened_at", "is", null)
+    .is("viewed_at", null)
+    .eq("status", "sent");
+  const now = new Date();
+  const stuckRows = ((opened ?? []) as any[]).filter(
+    (r) => r.role_key !== "fund_manager" && windowNeverLoaded({ status: r.status, viewedAt: r.viewed_at, windowOpenedAt: r.window_opened_at }, now),
+  );
+  const stuckDocIds = [...new Set(stuckRows.map((r) => r.offering_document_id).filter(Boolean))];
+  const { data: stuckDocs } = stuckDocIds.length
+    ? await d.from("offering_documents").select("id, title").in("id", stuckDocIds)
+    : { data: [] };
+  const docTitle = new Map(((stuckDocs ?? []) as any[]).map((x) => [x.id, x.title as string]));
+  const signingNeverLoaded = stuckRows
+    .map((r) => ({ onboardingId: obByApplication.get(r.application_id) ?? "", title: docTitle.get(r.offering_document_id) ?? "Subscription document" }))
+    .filter((x) => x.onboardingId);
   const investors: ManagerInvestorTodoInput[] = rows.map((r) => {
     const p = personMap.get(r.person_id);
     return {
@@ -71,6 +92,7 @@ export async function managerInvestorTodos(userId: string, fundId: string) {
     newDocs,
     accreditationPendingApplicationIds: new Set(((apps ?? []) as any[]).map((a) => a.id as string)),
     signaturePending,
+    signingNeverLoaded,
   });
   const counts: Record<string, number> = {};
   for (const it of items) counts[it.kind] = (counts[it.kind] ?? 0) + 1;

@@ -17,7 +17,7 @@ export const KIND_LABELS: Record<string, string> = {
   accreditation_proof: "accreditation proof",
 };
 
-export type ManagerTodoKind = "accreditation" | "document_copy" | "signature" | "countersign" | "verification" | "questionnaire";
+export type ManagerTodoKind = "signing_window" | "accreditation" | "document_copy" | "signature" | "countersign" | "verification" | "questionnaire";
 export type ManagerInvestorTodo = {
   onboardingId: string;
   investorName: string;
@@ -35,7 +35,7 @@ export type ManagerInvestorTodoInput = {
   questionnaireSubmitted: boolean;
 };
 
-const KIND_ORDER: ManagerTodoKind[] = ["accreditation", "document_copy", "signature", "countersign", "verification", "questionnaire"];
+const KIND_ORDER: ManagerTodoKind[] = ["signing_window", "accreditation", "document_copy", "signature", "countersign", "verification", "questionnaire"];
 
 /** Pure: turns recorded states into one list of manager to-dos. */
 export function buildInvestorTodos(args: {
@@ -43,6 +43,8 @@ export function buildInvestorTodos(args: {
   newDocs: { onboardingId: string | null; docKind: string }[];
   accreditationPendingApplicationIds: Set<string>;
   signaturePending: { onboardingId: string; countersign: boolean }[];
+  /** Subscription documents whose signing window the investor opened but that never loaded. */
+  signingNeverLoaded?: { onboardingId: string; title: string }[];
 }): ManagerInvestorTodo[] {
   const docsByOnboarding = new Map<string, string[]>();
   for (const d of args.newDocs) {
@@ -57,6 +59,10 @@ export function buildInvestorTodos(args: {
   for (const inv of args.investors) {
     const push = (kind: ManagerTodoKind, label: string, detail: string | null = null) =>
       items.push({ onboardingId: inv.onboardingId, investorName: inv.investorName, kind, label, detail });
+    for (const s of args.signingNeverLoaded ?? []) {
+      if (s.onboardingId !== inv.onboardingId) continue;
+      push("signing_window", `${s.title}: signing window didn't load`, "Ask them to press Open in a new tab, or use Chrome");
+    }
     for (const kind of docsByOnboarding.get(inv.onboardingId) ?? []) {
       if (kind === "accreditation_proof") push("accreditation", "Review accreditation proof");
       else if ((MANAGER_REVIEW_KINDS as readonly string[]).includes(kind)) push("document_copy", `Review uploaded ${KIND_LABELS[kind] ?? "document"}`);

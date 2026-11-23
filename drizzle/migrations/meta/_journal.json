@@ -3039,6 +3039,13 @@
       "when": 1795448976007,
       "tag": "0433_fund_scoped_contacts",
       "breakpoints": true
+    },
+    {
+      "idx": 434,
+      "version": "7",
+      "when": 1795463425655,
+      "tag": "0434_signing_window_opened_at",
+      "breakpoints": true
     }
   ]
 }

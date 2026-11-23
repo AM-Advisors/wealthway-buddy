@@ -16046,6 +16046,7 @@ export type Database = {
           status: string
           updated_at: string
           viewed_at: string | null
+          window_opened_at: string | null
         }
         Insert: {
           application_id: string
@@ -16072,6 +16073,7 @@ export type Database = {
           status?: string
           updated_at?: string
           viewed_at?: string | null
+          window_opened_at?: string | null
         }
         Update: {
           application_id?: string
@@ -16098,6 +16100,7 @@ export type Database = {
           status?: string
           updated_at?: string
           viewed_at?: string | null
+          window_opened_at?: string | null
         }
         Relationships: [
           {
