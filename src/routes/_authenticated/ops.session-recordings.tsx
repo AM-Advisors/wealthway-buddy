@@ -202,22 +202,38 @@ function ScreenWithCamera({ url, cameraUrl, cameraVideo }: { url: string; camera
 function DownloadRecording({ id }: { id: string }) {
   const download = useServerFn(downloadRecordingFn);
   const [busy, setBusy] = useState(false);
+  const [pct, setPct] = useState(0);
   const run = async () => {
-    setBusy(true);
+    setBusy(true); setPct(0);
     try {
       const d = await download({ data: { id } });
+      const v = await import("@/lib/recording-video");
+      const mp4 = await v.canMakeMp4();
       if (d.kind === "screen") {
         const cam = (d as any).cameraUrl as string | null | undefined;
-        if (cam) { const a = document.createElement("a"); a.href = cam; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); }
-        window.setTimeout(() => { window.location.href = d.url; }, cam ? 400 : 0);
+        const urls = [d.url, ...(cam ? [cam] : [])];
+        for (let i = 0; i < urls.length; i++) {
+          const blob = await (await fetch(urls[i]!)).blob();
+          const name = i === 0 ? d.fileName : d.fileName.replace(/\.webm$/, "-camera.webm");
+          if (!mp4) { downloadBlob(blob, name); continue; }
+          const out = await v.webmToMp4(blob, (p) => setPct(Math.round(((i + p) / urls.length) * 100)));
+          downloadBlob(out, v.mp4Name(name));
+        }
+        if (!mp4) toast.info("This browser can't make MP4 files, so the original video was saved. Try Chrome for MP4.");
         return;
       }
       if ((d.events as unknown[]).length < 2) { toast.info("This replay has too little activity to download."); return; }
+      if (mp4) {
+        const out = await v.replayToMp4(d.events as any[], (p) => setPct(Math.round(p * 100)));
+        downloadBlob(out, v.mp4Name(d.fileName));
+        return;
+      }
       const [js, css] = await Promise.all([import("rrweb-player/dist/index.js?raw"), import("rrweb-player/dist/style.css?raw")]);
       downloadBlob(new Blob([replayHtml(d.events as unknown[], "Page replay", js.default, css.default)], { type: "text/html;charset=utf-8" }), d.fileName);
+      toast.info("This browser can't make MP4 files, so the replay was saved as a page. Try Chrome for MP4.");
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
-  return <Button size="sm" variant="outline" disabled={busy} onClick={() => void run()} aria-label="Download recording"><Download className="mr-1 size-4" />{busy ? "Preparing…" : "Download"}</Button>;
+  return <Button size="sm" variant="outline" disabled={busy} onClick={() => void run()} aria-label="Download recording"><Download className="mr-1 size-4" />{busy ? `Making video… ${pct}%` : "Download video"}</Button>;
 }
 
 function Overview({ rows, onSearch }: { rows: any[]; onSearch: (s: string) => void }) {
