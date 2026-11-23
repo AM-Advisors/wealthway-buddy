@@ -46,6 +46,8 @@ interface Props {
   onDownloadSigned?: (() => void) | undefined;
   downloading?: boolean;
   approvalLabel?: string;
+  /** Opened from a Sign now link: show one large button that opens the full signing page in a tab. */
+  autoStart?: boolean;
 }
 
 function formatWhen(value: string | null) {
@@ -71,6 +73,7 @@ export function DocumentSignCard({
   onDownloadSigned,
   downloading,
   approvalLabel,
+  autoStart,
 }: Props) {
   const queryClient = useQueryClient();
   const start = useServerFn(startSigningSession);
@@ -108,11 +111,11 @@ export function DocumentSignCard({
     setNotYet(false);
   }
 
-  async function openSession() {
+  async function openSession(forceTab = false) {
     // Safari blocks this signing window inside another page, so open a tab right away.
     // The tab must be opened during the click itself or the browser blocks it.
     let tab: Window | null = null;
-    if (prefersNewTab(typeof navigator === "undefined" ? "" : navigator.userAgent)) {
+    if (forceTab || prefersNewTab(typeof navigator === "undefined" ? "" : navigator.userAgent)) {
       tab = window.open("", "_blank");
       try {
         if (tab) {
@@ -280,9 +283,21 @@ export function DocumentSignCard({
           </div>
         </CardHeader>
 
+        {autoStart && requiresSignature && !executed && !awaitingOthers && (
+          <CardContent>
+            <div className="space-y-3 rounded-lg border-2 border-primary bg-primary/5 p-4">
+              <p className="text-lg font-semibold">This is the document waiting for your signature.</p>
+              <p className="text-base text-muted-foreground">It opens in a new tab. Sign there, then come back here and your signature is recorded automatically.</p>
+              <Button type="button" size="lg" className="w-full text-base sm:w-auto" onClick={() => void openSession(true)} disabled={opening || checking}>
+                {opening ? "Preparing…" : "Open document to sign"}
+              </Button>
+            </div>
+          </CardContent>
+        )}
+
         <CardContent className="flex flex-wrap items-center gap-2">
           {requiresSignature && !executed && !awaitingOthers && (
-            <Button type="button" onClick={openSession} disabled={opening || checking}>
+            <Button type="button" onClick={() => void openSession()} disabled={opening || checking}>
               {opening ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Preparing…

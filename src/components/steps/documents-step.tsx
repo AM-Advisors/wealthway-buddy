@@ -1,5 +1,5 @@
 import { useStepView } from "@/hooks/use-step-view";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -59,6 +59,8 @@ function formatUsd(cents: number) {
 }
 
 export function DocumentsStep({ offeringId }: { offeringId?: string }) {
+  // Sign now links (?sign=<documentId>) highlight that one document.
+  const signTarget = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["sign"] ?? "") }) || undefined;
   useStepView("documents");
   const scope = offeringId ? { offering_id: offeringId } : {};
   const navigate = useNavigate();
@@ -447,6 +449,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                   downloading={pdfBusy === doc.id}
                   onDownload={() => downloadPdf(doc.id)}
                   onDownloadSigned={signature ? () => onDownload(signature.id) : undefined}
+                  autoStart={signTarget === doc.id}
                 />
               );
             }

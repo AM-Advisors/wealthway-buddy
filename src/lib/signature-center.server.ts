@@ -28,6 +28,8 @@ export type CenterItem = RawItem & {
   signLink: SignLink | null;
   remind: RemindAction | null;
   lastRemindedAt: string | null;
+  /** Subscription document the investor still signs (Sign now link). */
+  signDocId?: string | null;
 };
 
 async function chunked<T>(ids: string[], run: (part: string[]) => Promise<T[]>): Promise<T[]> {
@@ -155,7 +157,7 @@ export async function loadSignatureCenter(viewer: { userId: string; email: strin
     const signers: RawSigner[] = rows.length
       ? rows.filter((r) => r.required !== false).map((r) => ({ id: r.id, name: r.signer_name, email: r.signer_email, userId: r.signer_user_id, role: role(r.role_key), order: r.signing_order ?? 1, status: r.status, sentAt: r.sent_at, signedAt: r.signed_at, viewedAt: r.viewed_at ?? null, windowOpenedAt: r.window_opened_at ?? null }))
       : [{ id: s.id, name: s.signer_name ?? investorOf(ob), email: s.signer_email, userId: ob.investor_user_id, role: "investor", order: 1, status: s.signed_at || s.provider_status === "completed" ? "signed" : "waiting", sentAt: s.provider_sent_at, signedAt: s.signed_at ?? s.provider_completed_at }];
-    items.push(finish({ id: `ds:${s.id}`, source: "subscription", offeringId: ob.offering_id, fundName: fundName.get(ob.offering_id) ?? "Fund", title: doc?.title ?? "Subscription Agreement", kindHint: doc?.doc_type ?? null, investorName: investorOf(ob), onboardingId: ob.id, createdAt: s.provider_sent_at ?? rows[0]?.created_at ?? null, executedAt: s.executed_at, signers }, ob, s.id));
+    items.push(finish({ id: `ds:${s.id}`, source: "subscription", offeringId: ob.offering_id, fundName: fundName.get(ob.offering_id) ?? "Fund", title: doc?.title ?? "Subscription Agreement", kindHint: doc?.doc_type ?? null, investorName: investorOf(ob), onboardingId: ob.id, createdAt: s.provider_sent_at ?? rows[0]?.created_at ?? null, executedAt: s.executed_at, signers, signDocId: s.offering_document_id } as RawItem, ob, s.id));
   }
 
   // Investments at the signing step that haven't opened their subscription yet.
@@ -187,7 +189,7 @@ export async function loadSignatureCenter(viewer: { userId: string; email: strin
     }
     // People who only sign see names, never other signers' email addresses.
     const signers = managed ? raw.signers : raw.signers.map((s) => ({ ...s, email: null }));
-    return { ...raw, signers, kind: agreementKind(raw.title, raw.kindHint), isTest: !!ob?.is_test_investor, managed, yourTurn, signLink, remind, lastRemindedAt: null };
+    return { ...raw, signDocId: (raw as any).signDocId ?? null, signers, kind: agreementKind(raw.title, raw.kindHint), isTest: !!ob?.is_test_investor, managed, yourTurn, signLink, remind, lastRemindedAt: null };
   }
 
   const keys = uniq(items.map((i) => i.remind?.key));

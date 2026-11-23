@@ -32,7 +32,8 @@ export const Route = createFileRoute("/_authenticated/investment/$onboardingId")
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { step?: string; tab?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { step?: string; tab?: string; sign?: string } => ({
+    ...(typeof search["sign"] === "string" ? { sign: search["sign"] as string } : {}),
     ...(typeof search["step"] === "string" ? { step: search["step"] as string } : {}),
     ...(typeof search["tab"] === "string" ? { tab: search["tab"] as string } : {}),
   }),
