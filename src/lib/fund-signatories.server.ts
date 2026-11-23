@@ -525,3 +525,40 @@ export async function addRequestedSignatory(userId: string, offeringId: string, 
     return { added: false, note: (e instanceof Error ? e.message : String(e)).replace(/^Forbidden:\s*/i, "") };
   }
 }
+
+/**
+ * Sign-up invitation for one fund team member (fund-team-invite.ts rules). Claims
+ * invited_at atomically before sending so repeats never double-send; releases the claim
+ * if the email fails. Uses the existing contact invite: view access only, never manager rights.
+ */
+export async function inviteTeamMember(userId: string, offeringId: string, memberId: string, resend = false) {
+  await staffFor(userId, offeringId);
+  const { teamInviteDecision } = await import("@/lib/fund-team-invite");
+  const { data: m } = await db().from("fund_team_members").select("id, full_name, email, team_role, user_id, invited_at, removed_at").eq("id", memberId).eq("offering_id", offeringId).maybeSingle();
+  if (!m) throw new Error("That team member is not on this fund.");
+  const decision = teamInviteDecision({ teamRole: m.team_role, email: m.email, userId: m.user_id, invitedAt: m.invited_at, removedAt: m.removed_at, resend });
+  if (!decision.invite) return { status: "skipped" as const, reason: decision.reason };
+  // Already invited as this fund's client contact (e.g. the form's invite box): record it, never send twice.
+  if (!resend) {
+    const { data: o } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
+    const { data: c } = o?.client_id
+      ? await db().from("client_contacts").select("invited_at").eq("client_id", o.client_id).ilike("email", decision.email).not("invited_at", "is", null).limit(1).maybeSingle()
+      : { data: null };
+    if (c?.invited_at) {
+      await db().from("fund_team_members").update({ invited_at: c.invited_at }).eq("id", memberId).is("invited_at", null);
+      return { status: "skipped" as const, reason: "already_invited" as const };
+    }
+  }
+  const now = new Date().toISOString();
+  let claim = db().from("fund_team_members").update({ invited_at: now }).eq("id", memberId);
+  claim = m.invited_at ? claim.eq("invited_at", m.invited_at) : claim.is("invited_at", null);
+  const { data: claimed } = await claim.select("id");
+  if (!claimed?.length) return { status: "skipped" as const, reason: "already_invited" as const };
+  try {
+    await inviteFundPerson(userId, { offeringId, fullName: m.full_name, email: decision.email });
+    return { status: "invited" as const };
+  } catch (e) {
+    await db().from("fund_team_members").update({ invited_at: m.invited_at ?? null }).eq("id", memberId).eq("invited_at", now);
+    return { status: "failed" as const, note: (e as Error).message };
+  }
+}

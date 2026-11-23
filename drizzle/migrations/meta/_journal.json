@@ -3025,6 +3025,13 @@
       "when": 1795143175807,
       "tag": "0431_welcome_email_once_per_person",
       "breakpoints": true
+    },
+    {
+      "idx": 432,
+      "version": "7",
+      "when": 1795445483604,
+      "tag": "0432_fund_team_member_invited_at",
+      "breakpoints": true
     }
   ]
 }

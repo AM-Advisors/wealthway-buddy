@@ -26234,6 +26234,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          invited_at: string | null
           offering_id: string
           permissions: string[]
           phone: string | null
@@ -26251,6 +26252,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          invited_at?: string | null
           offering_id: string
           permissions?: string[]
           phone?: string | null
@@ -26268,6 +26270,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          invited_at?: string | null
           offering_id?: string
           permissions?: string[]
           phone?: string | null

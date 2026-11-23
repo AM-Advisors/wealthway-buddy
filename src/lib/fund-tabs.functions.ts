@@ -77,7 +77,17 @@ export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([r
     const managerInvite = await autoInviteFundManager({ actorId: context.userId, offeringId: data.fundId, email: data.email, name: data.fullName, source: "team", teamRole: data.teamRole });
     const { syncTeamMemberSignatory } = await import("@/lib/fund-signatories.server");
     const sync = await syncTeamMemberSignatory(context.userId, data.fundId, memberId!);
-    return { ok: true, signerNote: sync.note, managerInvite: { status: managerInvite.status, note: managerInvite.note } };
+    // Everyone else on the team with an email gets one sign-up invitation (view access as recorded).
+    const teamInvite = managerInvite.status === "invited" || managerInvite.status === "access_given"
+      ? null
+      : await (await import("@/lib/fund-signatories.server")).inviteTeamMember(context.userId, data.fundId, memberId!).catch((e: Error) => ({ status: "failed" as const, note: e.message }));
+    return { ok: true, signerNote: sync.note, managerInvite: { status: managerInvite.status, note: managerInvite.note }, teamInvite };
+  });
+
+export const resendTeamInviteFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: uuid }).parse)
+  .handler(async ({ data, context }) => {
+    const s = await srv(); await s.assertFund(context.userId, data.fundId);
+    return (await import("@/lib/fund-signatories.server")).inviteTeamMember(context.userId, data.fundId, data.id, true);
   });
 
 export const removeTeamMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: uuid }).parse)

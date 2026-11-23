@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { TEAM_PERMISSIONS, TEAM_ROLES } from "@/lib/fund-doc-templates";
-import { decideFeesFn, fundTeamFn, removeTeamMemberFn, saveTeamMemberFn, setFeesFn } from "@/lib/fund-tabs.functions";
+import { decideFeesFn, fundTeamFn, removeTeamMemberFn, resendTeamInviteFn, saveTeamMemberFn, setFeesFn } from "@/lib/fund-tabs.functions";
+import { teamInviteStatus } from "@/lib/fund-team-invite";
 import { fmtDate, toPct } from "./shared";
 import { FundPersonPicker } from "@/components/fund-person-picker";
 import { inviteFundPersonFn, listFundPeopleFn } from "@/lib/fund-setup-canonical.functions";
@@ -27,6 +28,13 @@ export function TeamTab({ fundId }: { fundId: string }) {
   const q = useQuery({ queryKey: ["fund-team", fundId], queryFn: () => load({ data: { fundId } }) });
   const [editing, setEditing] = useState<any | null>(null);
   const d = q.data;
+  const qc = useQueryClient();
+  const resendFn = useServerFn(resendTeamInviteFn);
+  const resend = useMutation({
+    mutationFn: (id: string) => resendFn({ data: { fundId, id } }),
+    onSuccess: (r: any) => { r?.status === "invited" ? toast.success("Invitation sent") : toast.error(r?.note ?? "Invitation not sent"); invalidateFund(qc, fundId); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (q.error || !d) return <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the team."}</p>;
   const people = d.members.filter((m: any) => !PROVIDERS.includes(m.team_role));
@@ -41,7 +49,13 @@ export function TeamTab({ fundId }: { fundId: string }) {
             <p className="text-xs text-muted-foreground">{[m.email, m.phone].filter(Boolean).join(" · ") || "No contact details"}</p>
             <div className="mt-1 flex flex-wrap gap-1">{(m.permissions as string[]).map((p) => <Badge key={p} variant={p === "authorized_signatory" ? "default" : "secondary"}>{permLabel(p)}</Badge>)}</div>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setEditing(m)}>Edit</Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">{teamInviteStatus({ userId: m.user_id, invitedAt: m.invited_at, email: m.email })}</span>
+            {!m.user_id && m.email && !["gp", "manager"].includes(m.team_role) && (
+              <Button size="sm" variant="ghost" disabled={resend.isPending} onClick={() => resend.mutate(m.id)}>{m.invited_at ? "Resend" : "Send invite"}</Button>
+            )}
+            <Button size="sm" variant="outline" onClick={() => setEditing(m)}>Edit</Button>
+          </div>
         </div>
       ))}
     </div>
@@ -164,7 +178,9 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
       else if (mi?.note) toast.warning(mi.note);
       if (mi?.status === "invited" || mi?.status === "access_given") {
         // The fund manager invitation already covers signing in; no second email.
-      } else if (sendInvite) {
+      } else if (res?.teamInvite?.status === "invited") toast.success("Saved and sign-up invitation sent");
+      else if (res?.teamInvite?.status === "failed") toast.error(`Saved, but the invitation wasn't sent: ${res.teamInvite.note}`);
+      else if (sendInvite) {
         try { await invite({ data: { offeringId: fundId, contactKey: pick.startsWith("contact:") ? pick : null, fullName: f.fullName, email: f.email } }); toast.success("Saved and invitation sent"); }
         catch (e: any) { toast.error(`Saved, but the invitation wasn't sent: ${e.message}`); }
       } else if (!mi?.note) toast.success("Saved");

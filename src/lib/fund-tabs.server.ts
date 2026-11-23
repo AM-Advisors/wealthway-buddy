@@ -190,8 +190,17 @@ export async function team(fundId: string) {
   const ids = ((managers ?? []) as any[]).map((m) => m.user_id);
   const managerNames = await (async () => { const { loadAccountNames } = await import("@/lib/profile-name.server"); return loadAccountNames(ids); })();
   const feeRows = (fees ?? []) as any[];
+  // Team members invited through their client contact show that invitation too.
+  const { data: off } = await d.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
+  const { data: contacts } = (off as any)?.client_id
+    ? await d.from("client_contacts").select("email, invited_at").eq("client_id", (off as any).client_id).not("invited_at", "is", null)
+    : { data: [] };
+  const contactInvited = new Map(((contacts ?? []) as any[]).map((c) => [String(c.email ?? "").toLowerCase(), c.invited_at as string]));
   return {
-    members: (members ?? []) as any[],
+    members: ((members ?? []) as any[]).map((m) => {
+      const ci = m.email ? contactInvited.get(String(m.email).toLowerCase()) : undefined;
+      return ci && (!m.invited_at || ci > m.invited_at) ? { ...m, invited_at: ci } : m;
+    }),
     signedInManagers: ids.map((id) => ({ name: managerNames.get(id) ?? "Fund manager", email: null })),
     activeFee: feeRows.find((f) => f.status === "active") ?? null,
     pendingFee: feeRows.find((f) => f.status === "pending_approval") ?? null,

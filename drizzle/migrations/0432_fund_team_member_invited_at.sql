@@ -1,0 +1,2 @@
+ALTER TABLE public.fund_team_members ADD COLUMN IF NOT EXISTS invited_at timestamptz;
+COMMENT ON COLUMN public.fund_team_members.invited_at IS 'When this team member was last sent a sign-up invitation; claimed atomically before sending so repeats never double-send.';
