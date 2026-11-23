@@ -143,7 +143,7 @@ export const listOfferings = createServerFn({ method: "GET" })
 
     const { data: applications } = await context.supabase
       .from("investor_applications")
-      .select("id, user_id, offering_id, source, funding_status, commitment_cents");
+      .select("id, user_id, offering_id, source, status, funding_status, commitment_cents");
     // Current investment records, so funds onboarded only on the current
     // pipeline show their investors (same join as the manager panel).
     const { data: investments } = await context.supabase

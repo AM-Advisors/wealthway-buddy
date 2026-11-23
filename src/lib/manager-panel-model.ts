@@ -5,7 +5,7 @@
  * Amounts follow investment-amounts.ts, so the cards match the fund workspace.
  */
 import { applicationHoldsValue, joinFundRecords } from "@/lib/investment-record-mapping";
-import { investmentAmountCents, reconciledFundedCents } from "@/lib/investment-amounts";
+import { countsInFundTotals, investmentAmountCents, reconciledFundedCents } from "@/lib/investment-amounts";
 import { effectiveFundingStatus, isReconciledFunding } from "@/lib/funding-status";
 
 export type PanelStage = "identity" | "accreditation" | "documents" | "funding" | "complete";
@@ -23,12 +23,14 @@ export type PanelOnboarding = {
   funded_amount_cents?: number | null;
   removed_at?: string | null;
   merged_into_onboarding_id?: string | null;
+  is_test_investor?: boolean | null;
 };
 
 export type PanelApplication = {
   id: string;
   offering_id: string;
   user_id?: string | null;
+  status?: string | null;
   kyc_status?: string | null;
   aml_status?: string | null;
   accreditation_status?: string | null;
@@ -50,6 +52,14 @@ export type PanelFundCounts = {
 
 /** Ended investments never count on the manager home. */
 export const ENDED_STAGES = new Set(["declined", "cancelled"]);
+
+/** Older applications the investor or staff closed out; they never count. */
+export const ENDED_APPLICATION_STATUSES = new Set(["withdrawn", "rejected", "declined", "cancelled"]);
+
+/** An investment that counts on fund cards: live, not ended, not a test investor. */
+function countedOnboarding(o: PanelOnboarding): boolean {
+  return countsInFundTotals(o) && !ENDED_STAGES.has(String(o.stage ?? ""));
+}
 
 /** Which step an investment is on, from its recorded stage and funding. */
 export function onboardingPanelStage(o: { stage?: string | null }, fundingStatus: string | null | undefined): PanelStage {
@@ -85,6 +95,8 @@ function applicationPanelStage(app: PanelApplication): PanelStage {
  * Counts for one fund. Each live investment counts once (its linked older
  * application is folded in); unlinked older applications still count unless a
  * current investment for the same login replaced them and they hold nothing.
+ * Test investors, removed/merged/ended investments, withdrawn applications and
+ * applications tied only to such investments never count.
  * `settledByApplication` is reconciled money recorded on older applications;
  * `appsWithRecords` are applications holding wires or payments.
  */
@@ -96,8 +108,20 @@ export function managerFundCounts(
   appsWithRecords: ReadonlySet<string> = new Set(),
 ): PanelFundCounts {
   const counts: PanelFundCounts = { total: 0, identity: 0, accreditation: 0, documents: 0, funding: 0, complete: 0, committedCents: 0, receivedCents: 0 };
-  const ownApps = applications.filter((a) => a.offering_id === fundId);
-  const ownOnbs = onboardings.filter((o) => o.offering_id === fundId && !ENDED_STAGES.has(String(o.stage ?? "")));
+  const fundOnbs = onboardings.filter((o) => o.offering_id === fundId);
+  const ownOnbs = fundOnbs.filter(countedOnboarding);
+  // An older application whose only investment records were removed, merged,
+  // ended or marked test never counts on its own, matching the fund workspace.
+  const countedLinks = new Set(ownOnbs.map((o) => o.application_id).filter(Boolean) as string[]);
+  const droppedLinks = new Set(
+    fundOnbs.filter((o) => o.application_id && !countedOnboarding(o)).map((o) => o.application_id as string),
+  );
+  const ownApps = applications.filter(
+    (a) =>
+      a.offering_id === fundId &&
+      !ENDED_APPLICATION_STATUSES.has(String(a.status ?? "")) &&
+      !(droppedLinks.has(a.id) && !countedLinks.has(a.id)),
+  );
   const joined = joinFundRecords(ownApps, ownOnbs, (app) => appsWithRecords.has(app.id) || applicationHoldsValue(app));
   const investments = [
     ...joined.linked.map((l) => ({ onb: l.investment, app: l.application as PanelApplication | null })),

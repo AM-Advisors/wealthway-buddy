@@ -794,7 +794,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       supabase
         .from("investor_applications")
         .select(
-          "id, offering_id, user_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
+          "id, offering_id, user_id, status, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
         )
         .in("offering_id", ids)
         .limit(2000),
@@ -802,7 +802,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       supabase
         .from("investor_onboardings")
         .select(
-          "id, offering_id, investor_user_id, application_id, stage, funding_status, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, removed_at, merged_into_onboarding_id",
+          "id, offering_id, investor_user_id, application_id, stage, funding_status, is_test_investor, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, removed_at, merged_into_onboarding_id",
         )
         .in("offering_id", ids)
         .limit(5000),

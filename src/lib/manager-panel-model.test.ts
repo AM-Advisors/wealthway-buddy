@@ -50,6 +50,33 @@ describe("manager home fund cards", () => {
     expect(managerFundCounts(F, onbs, [], new Map()).total).toBe(0);
   });
 
+  it("never counts withdrawn applications", () => {
+    const apps = [{ id: "a1", offering_id: F, user_id: "u1", status: "withdrawn", commitment_cents: 12_345_678_900 }];
+    const c = managerFundCounts(F, [], apps, new Map());
+    expect(c.total).toBe(0);
+    expect(c.committedCents).toBe(0);
+  });
+
+  it("never counts test investors or an application tied only to a removed test investment", () => {
+    const onbs = [
+      { id: "o1", offering_id: F, application_id: "a1", investor_user_id: "u1", stage: "harmonious_review", is_test_investor: true, removed_at: "2026-10-21" },
+      { id: "o2", offering_id: F, investor_user_id: "u2", stage: "signature", is_test_investor: true, requested_amount_cents: 1_000_000 },
+    ];
+    const apps = [{ id: "a1", offering_id: F, user_id: "u1", status: "in_progress", commitment_cents: 250_000_000 }];
+    const c = managerFundCounts(F, onbs, apps, new Map());
+    expect(c.total).toBe(0);
+    expect(c.committedCents).toBe(0);
+  });
+
+  it("Erebor case: 5 real investors plus 5 withdrawn test applications counts 5", () => {
+    const onbs = [1, 2, 3, 4, 5].map((n) => ({ id: `o${n}`, offering_id: F, application_id: `a${n}`, investor_user_id: `u${n}`, stage: "signature", requested_amount_cents: 43_000_000 }));
+    const real = [1, 2, 3, 4, 5].map((n) => ({ id: `a${n}`, offering_id: F, user_id: `u${n}`, status: "in_progress", commitment_cents: 43_000_000 }));
+    const tests = [6, 7, 8, 9, 10].map((n) => ({ id: `a${n}`, offering_id: F, user_id: `t${n}`, status: "withdrawn", commitment_cents: 2_500_000_000 }));
+    const c = managerFundCounts(F, onbs, [...real, ...tests], new Map());
+    expect(c.total).toBe(5);
+    expect(c.committedCents).toBe(215_000_000);
+  });
+
   it("maps stages to steps", () => {
     expect(onboardingPanelStage({ stage: "eligibility" }, "not_funded")).toBe("accreditation");
     expect(onboardingPanelStage({ stage: "awaiting_funds" }, "not_funded")).toBe("funding");
