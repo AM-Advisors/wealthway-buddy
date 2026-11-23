@@ -16140,6 +16140,7 @@ export type Database = {
           provider_agreement_id: string | null
           provider_completed_at: string | null
           provider_declined_at: string | null
+          provider_delivery: string | null
           provider_error: string | null
           provider_expires_at: string | null
           provider_file_id: string | null
@@ -16192,6 +16193,7 @@ export type Database = {
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
           provider_declined_at?: string | null
+          provider_delivery?: string | null
           provider_error?: string | null
           provider_expires_at?: string | null
           provider_file_id?: string | null
@@ -16244,6 +16246,7 @@ export type Database = {
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
           provider_declined_at?: string | null
+          provider_delivery?: string | null
           provider_error?: string | null
           provider_expires_at?: string | null
           provider_file_id?: string | null

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { revokeSignLinkFn, sendSignLinkFn, signLinkFn } from "@/lib/sign-link.functions";
+import { revokeSignLinkFn, sendSignLinkFn, signLinkFn, signingServiceEmailFn } from "@/lib/sign-link.functions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -165,6 +165,7 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
   const getLink = useServerFn(signLinkFn);
   const sendLink = useServerFn(sendSignLinkFn);
   const revoke = useServerFn(revokeSignLinkFn);
+  const viaService = useServerFn(signingServiceEmailFn);
   const args = { fundId, onboardingId, documentId };
   const ready = useQuery({ queryKey: ["sign-link", onboardingId, documentId], queryFn: () => getLink({ data: args }), retry: false, staleTime: 60_000 });
   const [busy, setBusy] = useState(false);
@@ -172,6 +173,7 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
   const email = async () => {
     if (busy) return;
     if (ready.data?.active && !window.confirm(`Email a new link? The link sent ${day(ready.data.active.sentAt) ?? "earlier"} will stop working.`)) return;
+    if (ready.data?.providerEmail && !window.confirm("The signing service already emailed this document. If the investor opens the Harmonious link instead, that email stops working. Continue?")) return;
     setBusy(true);
     try {
       let r: any;
@@ -186,6 +188,29 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
       toast.success(`Sign link emailed to ${r?.recipientEmail ?? "the investor"}. They can sign without signing in.`);
       void ready.refetch();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't send the link."); }
+    finally { setBusy(false); }
+  };
+  const serviceEmail = async () => {
+    if (busy) return;
+    const open = ready.data?.providerEmail;
+    const ask = open
+      ? `Send the signing service email again? It was first sent ${day(open.sentAt) ?? "earlier"}.`
+      : "Have the signing service email the investor directly? The email comes from the signing service, not Harmonious, and any Harmonious sign link for this document stops working.";
+    if (!window.confirm(ask)) return;
+    setBusy(true);
+    try {
+      let r: any;
+      try { r = await viaService({ data: args }); }
+      catch (e) {
+        const msg = e instanceof Error ? e.message : "";
+        if (!/24 hours/.test(msg)) throw e;
+        const reason = window.prompt("The signing service already emailed this today. A Super Admin can send another. Why is another needed?");
+        if (!reason?.trim()) return;
+        r = await viaService({ data: { ...args, overrideReason: reason.trim() } });
+      }
+      toast.success(`${r?.resent ? "Sent again" : "Sent"} from the signing service to ${r?.recipientEmail ?? "the investor"}. Their signature shows here when they finish.`);
+      void ready.refetch();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't send through the signing service."); }
     finally { setBusy(false); }
   };
   const [copied, setCopied] = useState<string | null>(null);
@@ -203,6 +228,14 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
     <>
       <Button variant="outline" onClick={email} disabled={busy || !ready.data?.ready}>Email sign link</Button>
       <Button variant="ghost" onClick={copy} disabled={busy || !ready.data?.ready}>Copy sign link</Button>
+      <Button variant="ghost" onClick={serviceEmail} disabled={busy || !ready.data?.ready}>
+        {ready.data?.providerEmail ? "Resend from signing service" : "Email from signing service"}
+      </Button>
+      {ready.data?.providerEmail && (
+        <span className="text-sm text-muted-foreground">
+          Signing service emailed {day(ready.data.providerEmail.sentAt)}{ready.data.providerEmail.openedAt ? ` · opened ${day(ready.data.providerEmail.openedAt)}` : " · not opened yet"}
+        </span>
+      )}
       <Dialog open={!!copied} onOpenChange={(o) => { if (!o) setCopied(null); }}>
         <DialogContent>
           <DialogHeader>

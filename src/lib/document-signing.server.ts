@@ -275,6 +275,22 @@ export async function openSigningSessionForLink(
   }, input.redirectUrl);
 }
 
+/**
+ * Staff or the fund's manager asked the signing service to email the investor directly.
+ * Same resolution and verification as the no-sign-in link; any open copy is replaced.
+ */
+export async function sendSigningByProviderEmail(
+  admin: any,
+  input: { onboardingId: string; offeringDocumentId: string; signerEmail: string; redirectUrl: string },
+): Promise<{ signRequestId: string }> {
+  const resolved = await resolveSigningForLink(admin, input);
+  const res = await openSessionCore(admin, resolved, resolved.application.user_id || null, async () => {
+    const { assertOnboardingSigningVerification } = await import("@/lib/investor-onboarding.server");
+    await assertOnboardingSigningVerification(input.onboardingId);
+  }, input.redirectUrl, { emailSigner: true });
+  return { signRequestId: res.signRequestId };
+}
+
 export async function resolveSigningForLink(
   admin: any,
   input: { onboardingId: string; offeringDocumentId: string; signerEmail: string },
@@ -317,7 +333,9 @@ async function openSessionCore(
   userId: string | null,
   verify: () => Promise<void>,
   redirectUrl = "https://app.harmonious.co/portal",
+  opts: { emailSigner?: boolean } = {},
 ): Promise<OpenSessionResult> {
+  const emailSigner = Boolean(opts.emailSigner);
   const mine = signerRowFor(resolved.signers, userId ?? "", resolved.profile.email);
 
   // No request yet: the investor is the required signer on their own agreement.
@@ -350,11 +368,10 @@ async function openSessionCore(
   const { openRequestReusable } = await import("@/lib/signing-source-pin");
   const { data: docMeta } = await admin.from("offering_documents").select("document_category").eq("id", resolved.document.id).maybeSingle();
   const reusable = openRequestReusable({ sentAt: resolved.signature?.provider_sent_at, documentCategory: docMeta?.document_category ?? null });
-  if (agreementId && resolved.signature?.provider_status === "out_for_signature" && !reusable && !resolved.signers.some((s) => s.status === "signed")) {
-    const { cancelSignRequest } = await import("@/lib/box.server");
-    await cancelSignRequest(agreementId).catch(() => null);
-  }
-  if (agreementId && resolved.signature?.provider_status === "out_for_signature" && reusable) {
+  const openOut = Boolean(agreementId && resolved.signature?.provider_status === "out_for_signature" && !resolved.signers.some((s) => s.status === "signed"));
+  // Only one copy stays open: a fresh signing-service email, or a stale copy, replaces the open request.
+  let cancelOld = openOut && (!reusable || emailSigner);
+  if (!emailSigner && agreementId && resolved.signature?.provider_status === "out_for_signature" && reusable) {
     const live = await getSignRequestDetail(agreementId).catch(() => null);
     const liveSigner = live?.signers.find(
       (s) => s.email === String(resolved.profile.email).toLowerCase(),
@@ -365,6 +382,21 @@ async function openSessionCore(
       await markWindowOpened(admin, resolved.signature.id, userId, resolved.profile.email);
       return { signingUrl: liveSigner.embedUrl, signRequestId: agreementId, reused: true };
     }
+    // An open request the signing service emails has no in-page window: replace it rather than leave two open.
+    if (openOut && mapSignStatus(String(live?.status ?? "")) === "out_for_signature") cancelOld = true;
+  }
+  if (cancelOld && agreementId) {
+    // Never replace a copy the signer already signed at the signing service: record it instead.
+    const live = await getSignRequestDetail(agreementId).catch(() => null);
+    const { liveSignatureRecorded } = await import("@/lib/document-signing");
+    if (liveSignatureRecorded(live, resolved.profile.email)) {
+      await syncSignersFromBox(admin, agreementId).catch(() => null);
+      const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
+      await syncBoxSignRequest(agreementId).catch(() => null);
+      throw new SigningRefusal("already_signed");
+    }
+    const { cancelSignRequest } = await import("@/lib/box.server");
+    await cancelSignRequest(agreementId).catch(() => null);
   }
 
   const { fileId, versionId } = await ensureBoxSourceFile(admin, resolved);
@@ -402,6 +434,8 @@ async function openSessionCore(
         name: signerName,
         order: 1,
         externalUserId: `${resolved.application.id}:${resolved.document.id}:${userId}`,
+        // The signing service emails the investor directly; no in-page window is issued.
+        emailOnly: emailSigner,
       },
       ...(dualSigner?.email ? [{
         email: String(dualSigner.email).toLowerCase(),
@@ -426,6 +460,9 @@ async function openSessionCore(
     provider: "box_sign",
     provider_agreement_id: detail.id,
     provider_status: "out_for_signature",
+    provider_delivery: emailSigner ? "provider_email" : null,
+    provider_signing_url: null,
+    provider_viewed_at: null,
     provider_source_file_id: fileId,
     source_file_version_id: detail.sourceFileVersionId ?? versionId,
     locked_at: now,
@@ -502,8 +539,11 @@ async function openSessionCore(
       box_file_version_id: detail.sourceFileVersionId ?? versionId,
       document_title: resolved.document.title,
       signer_capacity: capacity,
+      delivery: emailSigner ? "provider_email" : "in_app",
     },
   });
+
+  if (emailSigner) return { signingUrl: "", signRequestId: detail.id, reused: false };
 
   const mySigner = detail.signers.find(
     (s) => s.email === String(resolved.profile.email).toLowerCase(),

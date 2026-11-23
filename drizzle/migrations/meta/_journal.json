@@ -3067,6 +3067,13 @@
       "when": 1795466180982,
       "tag": "0437_onboarding_unique_profile_active_only",
       "breakpoints": true
+    },
+    {
+      "idx": 438,
+      "version": "7",
+      "when": 1795469771173,
+      "tag": "0438_signature_provider_delivery",
+      "breakpoints": true
     }
   ]
 }

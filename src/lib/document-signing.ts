@@ -331,3 +331,15 @@ export function investorSideSigned(input: {
   const mine = input.signers.filter((s) => s.roleKey !== "fund_manager" && s.required !== false);
   return mine.length > 0 && mine.every((s) => s.status === "signed");
 }
+
+/**
+ * Has the signing service already recorded this signer's signature on an open request?
+ * Our own rows can lag the signing service, so a request is never replaced before checking this.
+ */
+export function liveSignatureRecorded(detail: { status: string; signers: { email: string; decision: string | null }[] } | null, email: string | null): boolean {
+  if (!detail) return false;
+  const st = String(detail.status ?? "").toLowerCase();
+  if (st === "signed" || st === "completed") return true;
+  const em = String(email ?? "").toLowerCase();
+  return detail.signers.some((x) => x.email === em && x.decision === "signed");
+}

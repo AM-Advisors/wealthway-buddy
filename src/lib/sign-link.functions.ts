@@ -6,7 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { signLinkPath, signLinkReadiness } from "@/lib/sign-link";
+import { PROVIDER_EMAIL_EVENTS, providerEmailAction, signLinkPath, signLinkReadiness } from "@/lib/sign-link";
 
 const input = z.object({
   fundId: z.string().uuid(),
@@ -67,15 +67,31 @@ async function activeLink(data: z.infer<typeof input>) {
   return row && linkState(row) === "active" ? { sentAt: row.created_at as string, openedAt: (row.opened_at ?? null) as string | null, expiresAt: row.expires_at as string } : null;
 }
 
+async function currentSignature(applicationId: string | null, documentId: string) {
+  if (!applicationId) return null;
+  const d = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+  const { data } = await d.from("document_signatures").select("id, provider_agreement_id, provider_status, provider_delivery, provider_sent_at, provider_viewed_at")
+    .eq("application_id", applicationId).eq("offering_document_id", documentId).maybeSingle();
+  return data ?? null;
+}
+
+/** The open copy the signing service emailed the investor, if any. */
+function providerEmailState(sig: any) {
+  return sig && providerEmailAction({ delivery: sig.provider_delivery, providerStatus: sig.provider_status, agreementId: sig.provider_agreement_id }) === "resend"
+    ? { sentAt: sig.provider_sent_at as string | null, openedAt: (sig.provider_viewed_at ?? null) as string | null }
+    : null;
+}
+
 /** Readiness, the current link's evidence, and (on Copy) a fresh no-sign-in link that replaces the old one. */
 export const signLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((x: unknown) => input.extend({ withLink: z.boolean().optional() }).parse(x))
   .handler(async ({ data, context }) => {
     const f = await facts(context.userId, data);
     const active = await activeLink(data);
-    if (!f.readiness.ready) return { ready: false, reason: f.readiness.reason, url: null as string | null, active };
-    if (!data.withLink) return { ready: true, reason: null, url: null as string | null, active };
-    return { ready: true, reason: null, url: await newLink(context.userId, data, f.email!), active };
+    const providerEmail = providerEmailState(await currentSignature(f.ob.application_id ?? null, data.documentId));
+    if (!f.readiness.ready) return { ready: false, reason: f.readiness.reason, url: null as string | null, active, providerEmail };
+    if (!data.withLink) return { ready: true, reason: null, url: null as string | null, active, providerEmail };
+    return { ready: true, reason: null, url: await newLink(context.userId, data, f.email!), active, providerEmail };
   });
 
 /** Emails a fresh no-sign-in link through the shared signing email (24h limit, Super Admin override, audited). */
@@ -115,4 +131,53 @@ export const revokeSignLinkFn = createServerFn({ method: "POST" }).middleware([r
     const { logFundAudit } = await import("@/lib/fund-audit.server");
     await logFundAudit(context.userId, { offeringId: data.fundId, eventType: "signing_link_cancelled", summary: "No-sign-in signing link cancelled", values: { onboarding: data.onboardingId, document: data.documentId } }).catch(() => null);
     return { ok: true };
+  });
+
+/**
+ * Has the signing service email the investor directly (its own email, no Harmonious sign-in).
+ * Same readiness and verification as the sign link; an open emailed copy is resent, otherwise a
+ * fresh request replaces any open copy and cancels Harmonious sign links. One a day, Super Admin override, audited.
+ */
+export const signingServiceEmailFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((x: unknown) => input.parse(x))
+  .handler(async ({ data, context }) => {
+    const f = await facts(context.userId, data);
+    if (!f.readiness.ready) throw new Error(f.readiness.reason ?? "This can't be sent yet.");
+    if (!f.ob.application_id) throw new Error("This investment isn't ready for signing yet.");
+    const d = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+    const sig = await currentSignature(f.ob.application_id, data.documentId);
+    if (sig?.id) {
+      const { data: recent } = await d.from("signature_audit_events").select("id").eq("signature_id", sig.id)
+        .in("event_type", [...PROVIDER_EMAIL_EVENTS]).gte("created_at", new Date(Date.now() - 86400_000).toISOString()).limit(1);
+      if ((recent ?? []).length) {
+        if (!data.overrideReason) throw new Error("The signing service already emailed this in the last 24 hours.");
+        const { data: sa } = await d.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "super_admin").maybeSingle();
+        if (!sa) throw new Error("The signing service already emailed this in the last 24 hours. Only a Super Admin can send another today.");
+      }
+    }
+    const action = providerEmailAction({ delivery: sig?.provider_delivery ?? null, providerStatus: sig?.provider_status ?? null, agreementId: sig?.provider_agreement_id ?? null });
+    let signatureId: string | null = sig?.id ?? null;
+    if (action === "resend") {
+      const { resendSignRequest } = await import("@/lib/box.server");
+      await resendSignRequest(sig.provider_agreement_id);
+    } else {
+      // Harmonious sign links would replace the emailed copy, so they stop now.
+      await d.from("signing_access_links").update({ revoked_at: new Date().toISOString() })
+        .eq("onboarding_id", data.onboardingId).eq("offering_document_id", data.documentId).is("revoked_at", null).is("used_at", null);
+      const { PORTAL_ORIGIN } = await import("@/lib/account-invite.server");
+      const { sendSigningByProviderEmail } = await import("@/lib/document-signing.server");
+      await sendSigningByProviderEmail(d, { onboardingId: data.onboardingId, offeringDocumentId: data.documentId, signerEmail: f.email!, redirectUrl: `${PORTAL_ORIGIN}/api/public/sign/done` });
+      signatureId = (await currentSignature(f.ob.application_id, data.documentId))?.id ?? null;
+    }
+    await d.from("signature_audit_events").insert({
+      application_id: f.ob.application_id, signature_id: signatureId,
+      event_type: action === "resend" ? "provider_email_resent" : "provider_email_sent",
+      metadata: { by: context.userId, recipient: f.email, ...(data.overrideReason ? { override_reason: data.overrideReason } : {}) },
+    });
+    const { logFundAudit } = await import("@/lib/fund-audit.server");
+    await logFundAudit(context.userId, {
+      offeringId: data.fundId, eventType: "signing_service_email", summary: action === "resend" ? "Signing service email resent to the investor" : "Signing service emailed the investor directly",
+      values: { onboarding: data.onboardingId, document: data.documentId, ...(data.overrideReason ? { override_reason: data.overrideReason } : {}) },
+    }).catch(() => null);
+    return { recipientEmail: f.email, resent: action === "resend" };
   });

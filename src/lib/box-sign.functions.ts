@@ -184,6 +184,14 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     // An unsigned older request is cancelled so only the guided copy stays open.
     if (existing?.provider === "box_sign" && existing.provider_agreement_id && existing.provider_status === "out_for_signature") {
+      // Never replace a copy already signed at the signing service; record it instead.
+      const { getSignRequestDetail } = await import("@/lib/box.server");
+      const { liveSignatureRecorded } = await import("@/lib/document-signing");
+      if (liveSignatureRecorded(await getSignRequestDetail(existing.provider_agreement_id).catch(() => null), signerEmail)) {
+        const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
+        await syncBoxSignRequest(existing.provider_agreement_id).catch(() => null);
+        throw new Error("This document is already signed. Refresh the page to see it.");
+      }
       const { cancelSignRequest } = await import("@/lib/box.server");
       await cancelSignRequest(existing.provider_agreement_id).catch(() => null);
     }
@@ -282,6 +290,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       provider_agreement_id: request.id,
       provider_status: "out_for_signature",
       provider_signing_url: namedSigner ? null : request.signingUrl,
+      // Opening in the app replaces any copy the signing service emailed the investor.
+      provider_delivery: null,
       provider_source_file_id: fileId,
       provider_last_event_at: now,
       provider_sent_at: now,

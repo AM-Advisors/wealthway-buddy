@@ -24,3 +24,11 @@ export function signLinkReadiness(f: SignLinkFacts): { ready: boolean; reason: s
   if (f.signingBlockers?.length) return { ready: false, reason: `Finish these before sending a signing link: ${f.signingBlockers.join("; ")}.` };
   return { ready: true, reason: null };
 }
+
+/** When the signing service already emailed an open copy, send it again; otherwise send a fresh one. */
+export function providerEmailAction(s: { delivery: string | null; providerStatus: string | null; agreementId: string | null }): "resend" | "send" {
+  return s.delivery === "provider_email" && s.providerStatus === "out_for_signature" && !!s.agreementId ? "resend" : "send";
+}
+
+/** One signing-service email per document a day; only a Super Admin with a reason may send another. */
+export const PROVIDER_EMAIL_EVENTS = ["provider_email_sent", "provider_email_resent"] as const;

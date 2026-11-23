@@ -38,3 +38,33 @@ describe("signingBlockerReasons", () => {
     expect(out).toEqual(["Owners and signers: We still need: trustee"]);
   });
 });
+
+describe("signing service email", () => {
+  it("resends when the signing service already emailed an open copy", async () => {
+    const { providerEmailAction } = await import("./sign-link");
+    expect(providerEmailAction({ delivery: "provider_email", providerStatus: "out_for_signature", agreementId: "r1" })).toBe("resend");
+  });
+  it("sends a fresh copy when the open request is an in-app one", async () => {
+    const { providerEmailAction } = await import("./sign-link");
+    expect(providerEmailAction({ delivery: null, providerStatus: "out_for_signature", agreementId: "r1" })).toBe("send");
+  });
+  it("sends a fresh copy when the emailed request is no longer open", async () => {
+    const { providerEmailAction } = await import("./sign-link");
+    expect(providerEmailAction({ delivery: "provider_email", providerStatus: "cancelled", agreementId: "r1" })).toBe("send");
+  });
+});
+
+describe("an open request is never replaced after the signer signed", () => {
+  it("treats a signer's recorded signature as signed even before our records catch up", async () => {
+    const { liveSignatureRecorded } = await import("./document-signing");
+    expect(liveSignatureRecorded({ status: "viewed", signers: [{ email: "chris@x.co", decision: "signed" }, { email: "gp@x.co", decision: null }] }, "Chris@x.co")).toBe(true);
+  });
+  it("treats a completed request as signed", async () => {
+    const { liveSignatureRecorded } = await import("./document-signing");
+    expect(liveSignatureRecorded({ status: "signed", signers: [] }, "chris@x.co")).toBe(true);
+  });
+  it("allows replacing an unsigned open request", async () => {
+    const { liveSignatureRecorded } = await import("./document-signing");
+    expect(liveSignatureRecorded({ status: "sent", signers: [{ email: "chris@x.co", decision: null }] }, "chris@x.co")).toBe(false);
+  });
+});
