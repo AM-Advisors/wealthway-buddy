@@ -209,7 +209,7 @@ async function ensureBoxSourceFile(
   const { uploadFile, fileVersionId, signingFileName } = await import("@/lib/box.server");
 
   const { investmentDocumentSource } = await import("@/lib/investment-document-source.server");
-  const source = await investmentDocumentSource(admin, resolved.document.id, resolved.application.id);
+  const source = await investmentDocumentSource(admin, resolved.document.id, resolved.application.id, undefined, { newRequest: true });
   let bytes = source.bytes;
 
   if (!bytes) {

@@ -4,8 +4,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 
-/** Requests sent from this time carry guided (pre-placed) signature fields. */
-const GUIDED_SIGNING_SINCE = "2026-11-18T21:00:00Z";
+import { openRequestReusable } from "@/lib/signing-source-pin";
 
 const startSchema = z.object({ offering_document_id: z.string().uuid(), onboarding_id: z.string().uuid().optional() });
 
@@ -64,7 +63,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const { data: doc } = await supabase
       .from("offering_documents")
-      .select("id, title, body, doc_type, requires_signature, offering_id, signing_mode, countersigner_user_id, signature_template_version")
+      .select("id, title, body, doc_type, requires_signature, offering_id, signing_mode, countersigner_user_id, signature_template_version, document_category")
       .eq("id", data.offering_document_id)
       .maybeSingle();
     if (!doc || doc.offering_id !== application.offering_id) {
@@ -167,8 +166,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       existing.provider_status === "out_for_signature" &&
       String((existing as any).signer_email ?? "").toLowerCase() === signerEmail.toLowerCase() &&
       (!gateSnapshot || (existing as any).snapshot_id === gateSnapshot.id) &&
-      // Requests sent before guided signing have no placed fields; replace them.
-      new Date(String((existing as any).provider_sent_at ?? 0)).getTime() >= Date.parse(GUIDED_SIGNING_SINCE)
+      // Requests sent before guided signing, or blank subscription copies, are replaced.
+      openRequestReusable({ sentAt: (existing as any).provider_sent_at, documentCategory: (doc as any).document_category })
     ) {
       const live = await getSignRequest(existing.provider_agreement_id).catch(() => null);
       if (namedSigner) {
@@ -191,7 +190,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const { investmentDocumentSource } = await import("@/lib/investment-document-source.server");
     const snapshot = gateSnapshot ? await (supabaseAdmin as any).from("investor_document_snapshots").select("merge_values").eq("id", gateSnapshot.id).single() : { data: null };
-    const source = await investmentDocumentSource(supabaseAdmin, doc.id, application.id, snapshot.data?.merge_values);
+    const source = await investmentDocumentSource(supabaseAdmin, doc.id, application.id, snapshot.data?.merge_values, { newRequest: true });
     const { buildOfferingPdf } = await import("@/lib/offering-pdf.server");
     const rawPdfBytes = source.bytes ?? await buildOfferingPdf({
       offeringName: offering?.name ?? "Harmonious",
@@ -300,7 +299,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
     if (signatureId) {
       const { error } = await supabaseAdmin
         .from("document_signatures")
-        .update({ ...row, pdf_path: null, provider_completed_at: null, manager_notified_at: null })
+        .update({ ...row, pdf_path: null, provider_completed_at: null, manager_notified_at: null, cancelled_at: null, cancelled_by: null })
         .eq("id", signatureId);
       if (error) throw new Error(error.message);
     } else {

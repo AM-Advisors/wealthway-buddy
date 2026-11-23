@@ -1,8 +1,9 @@
 import { documentReadSource } from "./offering-document-reader";
 import { fillSubscriptionDocx } from "./subscription-docx";
+import { signingSourcePinned } from "./signing-source-pin";
 
 /** Called only after the caller has authorized this document and investment. */
-export async function investmentDocumentSource(db: any, documentId: string, applicationId: string | null, snapshotValues?: Record<string, string>) {
+export async function investmentDocumentSource(db: any, documentId: string, applicationId: string | null, snapshotValues?: Record<string, string>, opts: { newRequest?: boolean } = {}) {
   const { data: doc, error } = await db.from("offering_documents").select("id, offering_id, body, file_path, active_version, document_category, signing_mode, countersigner_user_id").eq("id", documentId).single();
   if (error || !doc) throw new Error("The agreement could not be loaded.");
   const [versions, investment, signature] = await Promise.all([
@@ -13,7 +14,8 @@ export async function investmentDocumentSource(db: any, documentId: string, appl
   if (versions.error || investment.error || signature.error) throw new Error("The investment agreement version could not be loaded.");
   const ob = investment.data;
   if (ob && ob.offering_id !== doc.offering_id) throw new Error("This agreement is not part of the investment.");
-  const pinRequired = signature.data?.provider_completed_at || (signature.data?.provider_sent_at && !signature.data?.cancelled_at && signature.data?.provider_status !== "cancelled");
+  // A new request replaces the open one, so it is built from the current version and filled for this investor.
+  const pinRequired = signingSourcePinned(signature.data, opts);
   const pinned = pinRequired
     ? (versions.data ?? []).find((v: any) => v.version === signature.data.signature_template_version)?.id : null;
   if (pinRequired && !pinned && versions.data?.length) throw new Error("The original signing version is unavailable. Contact your fund manager.");
