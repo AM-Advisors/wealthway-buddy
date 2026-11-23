@@ -246,7 +246,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
             <ul className="divide-y rounded-md border">
               {shown.map((r) => { const s = oneStatus(r); const body = (<>
                     <div className="min-w-0"><p className="truncate font-medium">{r.name}{readinessById.get(r.onboardingId)?.isTestInvestor && <TestInvestorBadge className="ml-2 border-accent text-foreground" />}</p>
-                      <p className="truncate text-xs text-muted-foreground">{r.nameMissing && r.profileLabel && r.profileLabel === r.name ? "Contact name needed" : (r.profileLabel ?? r.profileType ?? "Profile needed")}{r.claimState === "prepared" ? " · Not signed in yet" : ""}</p></div>
+                      <p className="truncate text-xs text-muted-foreground">{r.nameMissing && r.profileLabel && r.profileLabel === r.name ? "Contact name needed" : (r.profileLabel ?? r.profileType ?? "Profile needed")}{r.claimState === "prepared" ? (r.invited ? " · Invited, not signed in yet" : " · Not signed in yet") : ""}</p></div>
                     <p className="text-sm">{money(r.amountCents)}</p>
                     <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p>{stageChips(r.onboardingId)}</div>
                   </>); const rowClass = "grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4"; return (

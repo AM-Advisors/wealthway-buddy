@@ -229,13 +229,14 @@ export async function createInvestor(userId: string, input: {
 
   const inv = investmentRow(input.investment, actor);
   let onboardingId: string | null = null;
-  if (person.user_id) {
-    // The investor already started this Fund without choosing a profile: attach, don't duplicate.
-    const { data: open } = await db().from("investor_onboardings").select("id").eq("offering_id", input.offeringId).eq("investor_user_id", person.user_id)
+  {
+    // The investor already started this Fund, or was invited to it, without a profile: attach, don't duplicate.
+    const openQ = db().from("investor_onboardings").select("id, person_id").eq("offering_id", input.offeringId)
       .is("investment_profile_id", null).is("removed_at", null).not("stage", "in", TERMINAL).limit(1);
+    const { data: open } = person.user_id ? await openQ.or(`investor_user_id.eq.${person.user_id},person_id.eq.${person.id}`) : await openQ.eq("person_id", person.id);
     if ((open ?? [])[0]) {
       onboardingId = open[0].id;
-      const { error } = await db().from("investor_onboardings").update({ investment_profile_id: profileId, ...inv, last_activity_at: nowIso() }).eq("id", onboardingId);
+      const { error } = await db().from("investor_onboardings").update({ investment_profile_id: profileId, ...(open[0].person_id ? {} : { person_id: person.id }), ...inv, last_activity_at: nowIso() }).eq("id", onboardingId);
       if (error) fail(error.message);
     }
   }
@@ -341,6 +342,94 @@ export async function createInvestorAndInvite(userId: string, input: Parameters<
   } catch {
     return { ...saved, emailSent: false, helperInvited };
   }
+}
+
+/* ---------------------------------------------------------------- invited */
+
+/**
+ * Every investor invitation lists the investor on the fund roster right away: one canonical
+ * investment (status "Invited / not started") tied to the invitation. Reuses an open investment
+ * already in this fund, never guesses between people sharing an email, and never sends email.
+ * Callers authorize the invite first; failures here never undo a saved invitation.
+ */
+export async function ensureInvitedInvestment(input: {
+  actor: { userId: string; isStaff: boolean };
+  offeringId: string; email: string; name?: string | null; amountCents?: number | null;
+  /** Onboarding invitation (/onboard/<token>) to attach; fund-access grants pass null. */
+  invitationId?: string | null;
+  /** Login created or found for a fund-access invitation. */
+  knownUserId?: string | null;
+}): Promise<{ onboardingId: string | null; created: boolean }> {
+  const { planInvitedInvestment, splitInvitedName } = await import("@/lib/invited-investment-model");
+  const email = normEmail(input.email);
+  if (!email) return { onboardingId: null, created: false };
+  const source: EntrySource = input.actor.isStaff ? "harmonious" : "fund_manager";
+  const locate = async () => {
+    const { data: people } = await db().from("persons").select("id, user_id").is("merged_into_person_id", null).ilike("email", email).limit(5);
+    const candidates = ((people ?? []) as any[]).map((p) => ({ id: p.id as string, userId: (p.user_id as string | null) ?? null }));
+    const { data: own } = input.knownUserId ? await db().from("persons").select("id").eq("user_id", input.knownUserId).is("merged_into_person_id", null).limit(1) : { data: [] as any[] };
+    const ownPersonId = ((own ?? []) as any[])[0]?.id ?? null;
+    const personIds = [...new Set([...candidates.map((c) => c.id), ...(ownPersonId ? [ownPersonId] : [])])];
+    const userIds = [...new Set([...candidates.map((c) => c.userId).filter(Boolean), ...(input.knownUserId ? [input.knownUserId] : [])])] as string[];
+    const ors = [personIds.length ? `person_id.in.(${personIds.join(",")})` : null, userIds.length ? `investor_user_id.in.(${userIds.join(",")})` : null].filter(Boolean).join(",");
+    const { data: open } = ors
+      ? await db().from("investor_onboardings").select("id, invitation_id").eq("offering_id", input.offeringId).is("removed_at", null).not("stage", "in", TERMINAL).or(ors).order("created_at", { ascending: true }).limit(5)
+      : { data: [] as any[] };
+    return planInvitedInvestment({
+      open: ((open ?? []) as any[]).map((o) => ({ id: o.id as string, invitationId: (o.invitation_id as string | null) ?? null })),
+      candidates, knownUserId: input.knownUserId ?? null, ownPersonId, hasOnboardingInvitation: Boolean(input.invitationId),
+    });
+  };
+  const attach = async (onboardingId: string) => {
+    const { data } = await db().from("investor_onboardings").update({ invitation_id: input.invitationId }).eq("id", onboardingId).is("invitation_id", null).select("id");
+    if ((data ?? []).length) await logChanges([{ offeringId: input.offeringId, onboardingId, table: "investor_onboardings", id: onboardingId, field: "invitation_id", from: null, to: input.invitationId, source, actor: input.actor.userId }]);
+  };
+
+  let plan = await locate();
+  if (plan.kind === "existing") {
+    if (plan.attachInvitation) await attach(plan.onboardingId);
+    return { onboardingId: plan.onboardingId, created: false };
+  }
+  if (plan.kind === "ambiguous") return { onboardingId: null, created: false };
+
+  const { firstName, lastName } = splitInvitedName(input.name);
+  return withPersonCreationLock({ email, firstName, lastName }, async () => {
+    // Re-check inside the lock so two invites for the same email never create two people.
+    plan = await locate();
+    if (plan.kind === "existing") {
+      if (plan.attachInvitation) await attach(plan.onboardingId);
+      return { onboardingId: plan.onboardingId, created: false };
+    }
+    if (plan.kind === "ambiguous") return { onboardingId: null, created: false };
+    const changes: Change[] = [];
+    let personId = plan.personId;
+    if (plan.createPerson) {
+      const row = sanitizePatch({ legal_first_name: firstName ?? undefined, legal_last_name: lastName ?? undefined, email } as Record<string, unknown>, input.actor as OnboardingActor);
+      const { data: p, error } = await db().from("persons").insert({ ...row, user_id: null, entry_source: source, created_by: input.actor.userId, onboarding_state: "account_created" }).select("id").single();
+      if (error) fail(error.message);
+      personId = p.id;
+      changes.push(...Object.entries(row).map(([f, v]) => ({ offeringId: input.offeringId, onboardingId: null, table: "persons", id: p.id as string, field: f, from: null, to: v, source, actor: input.actor.userId })));
+    }
+    const { data: created, error } = await db().from("investor_onboardings").insert({
+      offering_id: input.offeringId, person_id: personId, investor_user_id: plan.investorUserId, investment_profile_id: null,
+      invitation_id: input.invitationId ?? null, stage: "started", entry_source: source, created_by: input.actor.userId,
+      requested_amount_cents: input.amountCents && input.amountCents > 0 ? input.amountCents : null,
+    }).select("id").single();
+    if (error) {
+      if ((error as any).code === "23505") {
+        const again = await locate();
+        return { onboardingId: again.kind === "existing" ? again.onboardingId : null, created: false };
+      }
+      fail(error.message);
+    }
+    const onboardingId = created.id as string;
+    for (const c of changes) c.onboardingId = onboardingId;
+    changes.push({ offeringId: input.offeringId, onboardingId, table: "investor_onboardings", id: onboardingId, field: "added_to_fund", from: null, to: { via: "invitation", invitationId: input.invitationId ?? null }, source, actor: input.actor.userId });
+    await logChanges(changes);
+    await onbEvent(onboardingId, input.offeringId, "investor_record_created", input.actor as OnboardingActor, { source, via: "invitation" });
+    await reconcileAfter([onboardingId], { actorUserId: input.actor.userId, trigger: "investor_invited" });
+    return { onboardingId, created: true };
+  });
 }
 
 const PERSON_FIELDS = ["legal_first_name", "legal_middle_name", "legal_last_name", "preferred_name", "email", "phone", "date_of_birth", "citizenship_country", "address_line1", "address_line2", "city", "region", "postal_code", "country", "mailing_address"];
@@ -652,7 +741,7 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
         openConflicts: open.filter((s) => s.source !== "fund_manager").length, openReviews: open.filter((s) => s.source === "fund_manager").length,
       });
       return {
-        onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? pr?.display_label ?? "Investor", nameMissing: !personName(p), email: readOnly && !canAddInvestors ? null : (p?.email ?? null),
+        onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? pr?.display_label ?? (readOnly && !canAddInvestors ? null : p?.email) ?? "Investor", nameMissing: !personName(p), email: readOnly && !canAddInvestors ? null : (p?.email ?? null),
         profileLabel: pr?.display_label ?? null, profileType: pr ? PROFILE_TYPE_LABELS[formProfileType(pr.profile_type)] : null,
         amountCents: r.requested_amount_cents, commitmentCents: r.commitment_amount_cents,
         ...(actor.isStaff ? { acceptedCents: r.accepted_amount_cents } : {}),

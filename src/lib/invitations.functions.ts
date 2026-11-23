@@ -205,6 +205,21 @@ export async function grantFundAccess(input: GrantInput) {
     .select("id");
   if (inviteError) throw new Error(inviteError.message);
 
+  // Investors invited this way are listed on each fund's roster right away, like every other invite.
+  if (role === "investor") {
+    try {
+      const { onboardingActor } = await import("@/lib/investor-onboarding.server");
+      const { ensureInvitedInvestment } = await import("@/lib/investor-record.server");
+      const actor = await onboardingActor(actorId);
+      for (const offeringId of offeringIds) {
+        await ensureInvitedInvestment({ actor, offeringId, email, name, knownUserId: targetUserId, invitationId: null })
+          .catch((e) => console.error("[invitations] invited investor not listed", (e as Error).message));
+      }
+    } catch (e) {
+      console.error("[invitations] invited investor not listed", (e as Error).message);
+    }
+  }
+
   return ((invitations ?? []) as any[]).map((i) => i.id as string);
 }
 

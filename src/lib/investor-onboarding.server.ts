@@ -2423,9 +2423,10 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
   const investorIds = [...new Set(rows.map((r) => r.investor_user_id).filter(Boolean))];
   const personIds = [...new Set(rows.filter((r) => !r.investor_user_id && r.person_id).map((r) => r.person_id))];
   const { data: prepared } = personIds.length
-    ? await db().from("persons").select("id, legal_first_name, legal_last_name").in("id", personIds)
+    ? await db().from("persons").select("id, legal_first_name, legal_last_name, email").in("id", personIds)
     : { data: [] as any[] };
-  const byPerson = new Map(((prepared ?? []) as any[]).map((p) => [p.id, `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim()]));
+  // Invited investors may have no name yet: show their invited email instead of a generic label.
+  const byPerson = new Map(((prepared ?? []) as any[]).map((p) => [p.id, `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim() || p.email || null]));
   const { data: people } = investorIds.length
     ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", investorIds)
     : { data: [] as any[] };
@@ -2549,13 +2550,26 @@ export async function inviteInvestor(
     actorUserId: actor.userId,
     actorRole: actor.isStaff ? "harmonious" : "manager",
   });
+  // Every invited investor is listed on the fund roster right away ("Invited / not started"),
+  // the same as Add one investor. A listing problem never undoes the saved invitation.
+  let onboardingId: string | null = null;
+  try {
+    const { ensureInvitedInvestment } = await import("@/lib/investor-record.server");
+    onboardingId = (await ensureInvitedInvestment({
+      actor, offeringId: input.offeringId, email: data.email, name: input.name ?? null,
+      amountCents: input.intendedAmountCents ?? null, invitationId: data.id,
+    })).onboardingId;
+  } catch (e) {
+    console.error("[onboard] invited investor not listed", (e as Error).message);
+  }
   return {
     invitationId: data.id as string,
+    onboardingId,
     token: data.token as string,
     // Derived from the offering's configuration - never chosen at invite time.
     exemption: ((invitedOffering as any).reg_type ?? null) as string | null,
     link: `/onboard/${data.token}`,
-    emailSent: await sendOnboardInvitationEmail(data, invitedOffering, actor.userId, undefined, { fundNameAsSender: actor.viaTeam }),
+    emailSent: await sendOnboardInvitationEmail(data, invitedOffering, actor.userId, onboardingId ? { onboardingId, fundNameAsSender: actor.viaTeam } : undefined, { fundNameAsSender: actor.viaTeam }),
   };
 }
 
