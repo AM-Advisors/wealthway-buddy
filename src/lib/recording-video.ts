@@ -8,6 +8,33 @@ export function frameTimes(durationMs: number, fps = REPLAY_FPS, maxFrames = 720
   return Array.from({ length: n }, (_, i) => Math.min(durationMs, i * step));
 }
 
+export type ReplayFrame = { atMs: number; startSec: number; durSec: number };
+
+/** rrweb pointer moves (MouseMove=1, TouchMove=6) never change the captured page picture. */
+export function changesPage(e: { type?: number; data?: { source?: number } }): boolean {
+  return !(e?.type === 3 && (e.data?.source === 1 || e.data?.source === 6));
+}
+
+/**
+ * Frames worth capturing: the first one, then only frames where the page changed since the
+ * previous frame. Still stretches are held as one longer frame, so the video plays the same.
+ */
+export function replayFrames(changeOffsetsMs: number[], durationMs: number, fps = REPLAY_FPS, maxFrames = 7200): ReplayFrame[] {
+  const times = frameTimes(durationMs, fps, maxFrames);
+  const offs = [...changeOffsetsMs].sort((a, b) => a - b);
+  const step = 1 / fps;
+  const out: ReplayFrame[] = [];
+  let j = 0;
+  for (let i = 0; i < times.length; i++) {
+    const t = times[i]!;
+    let changed = i === 0;
+    while (j < offs.length && offs[j]! <= t) { if (i > 0 && offs[j]! > times[i - 1]!) changed = true; j++; }
+    if (changed) out.push({ atMs: t, startSec: i * step, durSec: step });
+    else out[out.length - 1]!.durSec += step;
+  }
+  return out;
+}
+
 export const mp4Name = (name: string) => name.replace(/\.(webm|html)$/i, "") + ".mp4";
 
 export async function canMakeMp4(): Promise<boolean> {
@@ -49,9 +76,12 @@ export async function replayToMp4(events: any[], onProgress: (p: number) => void
     const source = new mb.CanvasSource(canvas, { codec: "avc", bitrate: mb.QUALITY_MEDIUM });
     output.addVideoTrack(source, { frameRate: REPLAY_FPS });
     await output.start();
-    const times = frameTimes(meta.totalTime);
-    for (let i = 0; i < times.length; i++) {
-      replayer.pause(times[i]!);
+    const start = Number(meta.startTime) || Number(events[0]?.timestamp) || 0;
+    const offsets = events.filter(changesPage).map((e) => Number(e.timestamp) - start);
+    const frames = replayFrames(offsets, meta.totalTime);
+    for (let i = 0; i < frames.length; i++) {
+      const f = frames[i]!;
+      replayer.pause(f.atMs);
       await new Promise((r) => requestAnimationFrame(() => r(null)));
       const doc = iframe?.contentDocument;
       ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
@@ -61,8 +91,8 @@ export async function replayToMp4(events: any[], onProgress: (p: number) => void
           ctx.drawImage(shot, 0, 0, w, h);
         } catch { /* keep blank frame */ }
       }
-      await source.add(i / REPLAY_FPS, 1 / REPLAY_FPS);
-      onProgress((i + 1) / times.length);
+      await source.add(f.startSec, f.durSec);
+      onProgress((i + 1) / frames.length);
     }
     await output.finalize();
     replayer.destroy();
