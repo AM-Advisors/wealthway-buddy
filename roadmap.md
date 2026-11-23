@@ -1,5 +1,10 @@
 # Roadmap
 
+## Shared screen video links (2026-11-23)
+- [x] Share link on each screen video in Screen recordings; page replays stay private
+- [x] Viewers type name and email before watching; every viewing listed with time, device and address
+- [x] Link can be copied again, replaced or turned off; works 30 days; camera/microphone only when chosen
+
 ## Helper-run identity check (2026-11-23)
 - [x] Helpers (investor's helper, fund managers/team, Harmonious) can run the investor's identity check with an ID photo, no selfie
 - [x] Clears only when the ID is genuine, current, and name and birthday match the record; watchlist screening runs too

@@ -3074,6 +3074,20 @@
       "when": 1795469771173,
       "tag": "0438_signature_provider_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 439,
+      "version": "7",
+      "when": 1795476995004,
+      "tag": "0439_recording_share_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 440,
+      "version": "7",
+      "when": 1795477057247,
+      "tag": "0440_video_share_links",
+      "breakpoints": true
     }
   ]
 }

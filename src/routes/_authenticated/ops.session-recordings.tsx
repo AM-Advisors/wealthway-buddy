@@ -12,6 +12,7 @@ import { clientInfoLines, duration, parseDevice, recordingBreakdown, type Breakd
 import { downloadBlob, replayHtml } from "@/lib/recording-download";
 import { recordingOverview } from "@/lib/recording-overview";
 import { toast } from "sonner";
+import { VideoSharePanel } from "@/components/video-share-panel";
 import { ChevronDown, ChevronUp, Download, Laptop, MapPin, Smartphone, Tablet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/session-recordings")({
@@ -37,7 +38,7 @@ function RecordingsPage() {
   const q = useQuery({ queryKey: ["session-recordings", kind, search], queryFn: () => list({ data: { kind, search: search || undefined } }), retry: false });
   const fmt = (s: string) => new Date(s).toLocaleString();
   return (
-    <AmPage title="Screen recordings" intro="Replays hide everything people type. Screen videos, including any camera and microphone, are ones people agreed to record and chose to send. Each opening and download is logged.">
+    <AmPage title="Screen recordings" intro="Replays hide everything people type. Screen videos, including any camera and microphone, are ones people agreed to record and chose to send. Each opening and download is logged. Screen videos can be shared by link; everyone who watches is listed.">
       <div className="flex flex-wrap gap-2">
         {([[undefined, "All"], ["replay", "Page replays"], ["screen", "Sent screen videos"]] as const).map(([k, l]) => (
           <Button key={l} variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}>{l}</Button>
@@ -59,6 +60,7 @@ function RecordingsPage() {
 
 function RecordingRow({ r, fmt, onPlay }: { r: any; fmt: (s: string) => string; onPlay: () => void }) {
   const [open, setOpen] = useState(false);
+  const [share, setShare] = useState(false);
   const dev = parseDevice(r.user_agent);
   const DevIcon = dev.type === "Phone" ? Smartphone : dev.type === "Tablet" ? Tablet : Laptop;
   const mins = (Date.parse(r.last_activity_at) - Date.parse(r.started_at)) / 1000;
@@ -87,9 +89,11 @@ function RecordingRow({ r, fmt, onPlay }: { r: any; fmt: (s: string) => string; 
           <Button size="sm" onClick={onPlay}>Play</Button>
           <Button size="sm" variant="outline" onClick={() => setOpen((v) => !v)} aria-expanded={open}>{open ? <ChevronUp className="mr-1 size-4" /> : <ChevronDown className="mr-1 size-4" />}Details</Button>
           <DownloadRecording id={r.id} />
+          {r.kind === "screen" && <Button size="sm" variant="outline" onClick={() => setShare((v) => !v)} aria-expanded={share}>{share ? "Hide sharing" : "Share link"}</Button>}
         </div>
       </div>
       {open && <RecordingDetails r={r} />}
+      {share && r.kind === "screen" && <VideoSharePanel recordingId={r.id} />}
     </div>
   );
 }

@@ -479,6 +479,7 @@ import { Route as ApiPublicSignIndexRouteImport } from './routes/api/public/sign
 import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign/$token'
 import { Route as ApiPublicSignDoneRouteImport } from './routes/api/public/sign/done'
 import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
+import { Route as ApiPublicWatchTokenRouteImport } from './routes/api/public/watch/$token'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -3188,6 +3189,11 @@ const ApiPublicSlackEventsRoute = ApiPublicSlackEventsRouteImport.update({
   path: '/api/public/slack/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWatchTokenRoute = ApiPublicWatchTokenRouteImport.update({
+  id: '/api/public/watch/$token',
+  path: '/api/public/watch/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksBoxSignRoute =
   ApiPublicWebhooksBoxSignRouteImport.update({
     id: '/api/public/webhooks/box-sign',
@@ -3835,6 +3841,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
   '/api/public/sign/done': typeof ApiPublicSignDoneRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/watch/$token': typeof ApiPublicWatchTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -4330,6 +4337,7 @@ export interface FileRoutesByTo {
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
   '/api/public/sign/done': typeof ApiPublicSignDoneRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/watch/$token': typeof ApiPublicWatchTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -4835,6 +4843,7 @@ export interface FileRoutesById {
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
   '/api/public/sign/done': typeof ApiPublicSignDoneRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
+  '/api/public/watch/$token': typeof ApiPublicWatchTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -5340,6 +5349,7 @@ export interface FileRouteTypes {
     | '/api/public/sign/$token'
     | '/api/public/sign/done'
     | '/api/public/slack/events'
+    | '/api/public/watch/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/auth/preview'
@@ -5835,6 +5845,7 @@ export interface FileRouteTypes {
     | '/api/public/sign/$token'
     | '/api/public/sign/done'
     | '/api/public/slack/events'
+    | '/api/public/watch/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/auth/preview'
@@ -6339,6 +6350,7 @@ export interface FileRouteTypes {
     | '/api/public/sign/$token'
     | '/api/public/sign/done'
     | '/api/public/slack/events'
+    | '/api/public/watch/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/auth/preview'
@@ -6471,6 +6483,7 @@ export interface RootRouteChildren {
   ApiPublicSignTokenRoute: typeof ApiPublicSignTokenRoute
   ApiPublicSignDoneRoute: typeof ApiPublicSignDoneRoute
   ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
+  ApiPublicWatchTokenRoute: typeof ApiPublicWatchTokenRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -9771,6 +9784,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSlackEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/watch/$token': {
+      id: '/api/public/watch/$token'
+      path: '/api/public/watch/$token'
+      fullPath: '/api/public/watch/$token'
+      preLoaderRoute: typeof ApiPublicWatchTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/box-sign': {
       id: '/api/public/webhooks/box-sign'
       path: '/api/public/webhooks/box-sign'
@@ -11138,6 +11158,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSignTokenRoute: ApiPublicSignTokenRoute,
   ApiPublicSignDoneRoute: ApiPublicSignDoneRoute,
   ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
+  ApiPublicWatchTokenRoute: ApiPublicWatchTokenRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

@@ -43498,6 +43498,97 @@ export type Database = {
           },
         ]
       }
+      recording_share_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          first_viewed_at: string | null
+          id: string
+          include_camera: boolean
+          last_viewed_at: string | null
+          recipient_email: string
+          recipient_name: string
+          recording_id: string
+          revoked_at: string | null
+          token_hash: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          first_viewed_at?: string | null
+          id?: string
+          include_camera?: boolean
+          last_viewed_at?: string | null
+          recipient_email: string
+          recipient_name: string
+          recording_id: string
+          revoked_at?: string | null
+          token_hash: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          first_viewed_at?: string | null
+          id?: string
+          include_camera?: boolean
+          last_viewed_at?: string | null
+          recipient_email?: string
+          recipient_name?: string
+          recording_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recording_share_links_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "session_recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recording_share_views: {
+        Row: {
+          id: string
+          ip_address: string | null
+          link_id: string
+          recording_id: string
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          link_id: string
+          recording_id: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          link_id?: string
+          recording_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recording_share_views_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "recording_share_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       related_person_reviews: {
         Row: {
           candidate_person_ids: string[]
@@ -52183,6 +52274,94 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "valuation_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_share_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          include_camera: boolean
+          last_viewed_at: string | null
+          recording_id: string
+          revoked_at: string | null
+          token: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          include_camera?: boolean
+          last_viewed_at?: string | null
+          recording_id: string
+          revoked_at?: string | null
+          token: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          include_camera?: boolean
+          last_viewed_at?: string | null
+          recording_id?: string
+          revoked_at?: string | null
+          token?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_share_links_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "session_recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_share_views: {
+        Row: {
+          id: string
+          ip_address: string | null
+          link_id: string
+          recording_id: string
+          user_agent: string | null
+          viewed_at: string
+          viewer_email: string
+          viewer_name: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          link_id: string
+          recording_id: string
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_email: string
+          viewer_name: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          link_id?: string
+          recording_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_email?: string
+          viewer_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_share_views_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "video_share_links"
             referencedColumns: ["id"]
           },
         ]
