@@ -341,17 +341,26 @@ async function openSessionCore(
 
   if (!resolved.profile.email) throw new SigningRefusal("not_a_required_signer");
 
-  const { getSignRequestDetail, createMultiSignerRequest } = await import("@/lib/box.server");
+  const { getSignRequestDetail, createMultiSignerRequest, mapSignStatus } = await import("@/lib/box.server");
 
   // Reuse the live Box request rather than sending a duplicate. The version it
   // was locked to stays exactly as it was, whatever happened to the source.
   const agreementId = resolved.signature?.provider_agreement_id as string | undefined;
-  if (agreementId && resolved.signature?.provider_status === "out_for_signature") {
+  // Requests sent before guided signing, or blank subscription copies, are replaced (same rule as the portal path).
+  const { openRequestReusable } = await import("@/lib/signing-source-pin");
+  const { data: docMeta } = await admin.from("offering_documents").select("document_category").eq("id", resolved.document.id).maybeSingle();
+  const reusable = openRequestReusable({ sentAt: resolved.signature?.provider_sent_at, documentCategory: docMeta?.document_category ?? null });
+  if (agreementId && resolved.signature?.provider_status === "out_for_signature" && !reusable && !resolved.signers.some((s) => s.status === "signed")) {
+    const { cancelSignRequest } = await import("@/lib/box.server");
+    await cancelSignRequest(agreementId).catch(() => null);
+  }
+  if (agreementId && resolved.signature?.provider_status === "out_for_signature" && reusable) {
     const live = await getSignRequestDetail(agreementId).catch(() => null);
     const liveSigner = live?.signers.find(
       (s) => s.email === String(resolved.profile.email).toLowerCase(),
     );
-    if (liveSigner?.embedUrl) {
+    // A request cancelled, declined or expired in Box is never reopened; a fresh one is built below.
+    if (liveSigner?.embedUrl && mapSignStatus(String(live?.status ?? "")) === "out_for_signature") {
       await syncSignersFromBox(admin, agreementId);
       await markWindowOpened(admin, resolved.signature.id, userId, resolved.profile.email);
       return { signingUrl: liveSigner.embedUrl, signRequestId: agreementId, reused: true };

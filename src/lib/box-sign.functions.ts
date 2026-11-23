@@ -157,7 +157,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       .eq("offering_document_id", doc.id)
       .maybeSingle();
 
-    const { createSignRequest, getSignRequest, uploadFile } = await import("@/lib/box.server");
+    const { createSignRequest, getSignRequest, uploadFile, mapSignStatus } = await import("@/lib/box.server");
 
     // Reuse a live request instead of sending a duplicate.
     if (
@@ -173,7 +173,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       if (namedSigner) {
         return { url: null, agreementId: existing.provider_agreement_id, reused: true, sentTo: namedSigner.name };
       }
-      if (live?.signingUrl) {
+      if (live?.signingUrl && mapSignStatus(String(live.status ?? "")) === "out_for_signature") {
         await supabaseAdmin
           .from("document_signatures")
           .update({ provider_signing_url: live.signingUrl })

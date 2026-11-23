@@ -180,7 +180,7 @@ export const startNdaSigning = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { createSignRequest, getSignRequest } = await import("@/lib/box.server");
+    const { createSignRequest, getSignRequest, mapSignStatus } = await import("@/lib/box.server");
 
     const { data: existing } = await supabaseAdmin
       .from("diligence_nda_signatures")
@@ -195,7 +195,7 @@ export const startNdaSigning = createServerFn({ method: "POST" })
     // Reuse a live request instead of sending a duplicate.
     if (existing?.sign_request_id && existing.status === "out_for_signature") {
       const live = await getSignRequest(existing.sign_request_id).catch(() => null);
-      if (live?.signingUrl) {
+      if (live?.signingUrl && mapSignStatus(String(live.status ?? "")) === "out_for_signature") {
         await supabaseAdmin
           .from("diligence_nda_signatures")
           .update({ signing_url: live.signingUrl })
