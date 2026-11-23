@@ -163,6 +163,7 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
   const remove = useServerFn(removeTeamMemberFn);
   const loadPeople = useServerFn(listFundPeopleFn);
   const invite = useServerFn(inviteFundPersonFn);
+  const resendTeam = useServerFn(resendTeamInviteFn);
   const pq = useQuery({ queryKey: ["fund-people", fundId], queryFn: () => loadPeople({ data: { offeringId: fundId } }), enabled: !member.id });
   const [pick, setPick] = useState("");
   const [sendInvite, setSendInvite] = useState(false);
@@ -181,7 +182,17 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
       } else if (res?.teamInvite?.status === "invited") toast.success("Saved and sign-up invitation sent");
       else if (res?.teamInvite?.status === "failed") toast.error(`Saved, but the invitation wasn't sent: ${res.teamInvite.note}`);
       else if (sendInvite) {
-        try { await invite({ data: { offeringId: fundId, contactKey: pick.startsWith("contact:") ? pick : null, fullName: f.fullName, email: f.email } }); toast.success("Saved and invitation sent"); }
+        // Someone already a company contact keeps that invite; anyone else gets a fund-only invite
+        // so adding them to this fund's team never opens the company's other funds.
+        try {
+          if (pick.startsWith("contact:")) await invite({ data: { offeringId: fundId, contactKey: pick, fullName: f.fullName, email: f.email } });
+          else {
+            const r: any = await resendTeam({ data: { fundId, id: res.memberId } });
+            if (r?.status === "failed") throw new Error(r.note);
+            if (r?.status === "skipped") { toast.success("Saved"); done(); return; }
+          }
+          toast.success("Saved and invitation sent");
+        }
         catch (e: any) { toast.error(`Saved, but the invitation wasn't sent: ${e.message}`); }
       } else if (!mi?.note) toast.success("Saved");
       done();

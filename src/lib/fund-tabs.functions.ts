@@ -81,7 +81,7 @@ export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([r
     const teamInvite = managerInvite.status === "invited" || managerInvite.status === "access_given"
       ? null
       : await (await import("@/lib/fund-signatories.server")).inviteTeamMember(context.userId, data.fundId, memberId!).catch((e: Error) => ({ status: "failed" as const, note: e.message }));
-    return { ok: true, signerNote: sync.note, managerInvite: { status: managerInvite.status, note: managerInvite.note }, teamInvite };
+    return { ok: true, memberId: memberId!, signerNote: sync.note, managerInvite: { status: managerInvite.status, note: managerInvite.note }, teamInvite };
   });
 
 export const resendTeamInviteFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: uuid }).parse)

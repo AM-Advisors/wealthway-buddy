@@ -1,7 +1,7 @@
 /**
  * Fund team sign-up invitations: pure rules. Anyone added to a fund team with an email
- * gets one sign-up invitation for that fund (view access as recorded, via the existing
- * client contact invite). Manager/GP rows use fund-manager-auto-invite instead.
+ * gets one sign-up invitation for that fund only (view access as recorded); it never
+ * creates a company contact, which would open the company's other funds. Manager/GP rows use fund-manager-auto-invite instead.
  */
 import { isHarmoniousStaffEmail } from "@/lib/harmonious-staff";
 import { AUTO_INVITE_TEAM_ROLES } from "@/lib/fund-manager-auto-invite";
