@@ -47429,6 +47429,54 @@ export type Database = {
           },
         ]
       }
+      signing_access_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          open_count: number
+          opened_at: string | null
+          revoked_at: string | null
+          signer_email: string
+          token_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          open_count?: number
+          opened_at?: string | null
+          revoked_at?: string | null
+          signer_email: string
+          token_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          offering_document_id?: string
+          offering_id?: string
+          onboarding_id?: string
+          open_count?: number
+          opened_at?: string | null
+          revoked_at?: string | null
+          signer_email?: string
+          token_hash?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       signing_template_versions: {
         Row: {
           created_at: string

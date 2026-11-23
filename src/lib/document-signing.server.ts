@@ -151,7 +151,7 @@ export async function resolveSigning(
 
 /** The signer row belonging to this exact person, matched on identity first. */
 export function signerRowFor(signers: any[], userId: string, email: string | null) {
-  const byUser = signers.find((s) => s.signer_user_id === userId);
+  const byUser = userId ? signers.find((s) => s.signer_user_id === userId) : undefined;
   if (byUser) return byUser;
   if (!email) return null;
   return (
@@ -254,13 +254,77 @@ export async function openSigningSession(
   input: { applicationId: string; offeringDocumentId: string },
 ): Promise<OpenSessionResult> {
   const resolved = await resolveSigning(supabase, admin, userId, input);
-  const mine = signerRowFor(resolved.signers, userId, resolved.profile.email);
+  return openSessionCore(admin, resolved, userId, async () => {
+    const { assertApplicationSigningVerification } = await import("@/lib/investor-onboarding.server");
+    await assertApplicationSigningVerification(userId, resolved.application.id);
+  });
+}
+
+/**
+ * Sign-without-sign-in: the server has already verified the access link. The
+ * signer is the investment's recorded investor email; verification still runs.
+ */
+export async function openSigningSessionForLink(
+  admin: any,
+  input: { onboardingId: string; offeringDocumentId: string; signerEmail: string; redirectUrl: string },
+): Promise<OpenSessionResult> {
+  const resolved = await resolveSigningForLink(admin, input);
+  return openSessionCore(admin, resolved, resolved.application.user_id || null, async () => {
+    const { assertOnboardingSigningVerification } = await import("@/lib/investor-onboarding.server");
+    await assertOnboardingSigningVerification(input.onboardingId);
+  }, input.redirectUrl);
+}
+
+export async function resolveSigningForLink(
+  admin: any,
+  input: { onboardingId: string; offeringDocumentId: string; signerEmail: string },
+): Promise<ResolvedSigning> {
+  const { data: ob } = await admin.from("investor_onboardings")
+    .select("id, application_id, offering_id, investor_user_id, person_id, investment_profile_id, removed_at, investment_profiles(profile_type, legal_name), persons(legal_first_name, legal_last_name)")
+    .eq("id", input.onboardingId).maybeSingle();
+  if (!ob || ob.removed_at || !ob.application_id) throw new SigningRefusal("not_your_document");
+  const { data: application } = await admin.from("investor_applications").select("id, offering_id, user_id").eq("id", ob.application_id).maybeSingle();
+  if (!application || application.offering_id !== ob.offering_id) throw new SigningRefusal("not_your_document");
+  const { data: document } = await admin.from("offering_documents")
+    .select("id, title, body, doc_type, requires_signature, file_path, offering_id").eq("id", input.offeringDocumentId).maybeSingle();
+  if (!document || document.offering_id !== application.offering_id) throw new SigningRefusal("document_not_in_offering");
+  const [{ data: offering }, subscription] = await Promise.all([
+    admin.from("offerings").select("id, name, reg_type").eq("id", application.offering_id).maybeSingle(),
+    import("@/lib/signing-commitment.server").then(({ ensureSigningCommitment }) => ensureSigningCommitment(admin, application.id)),
+  ]);
+  const { data: signature } = await admin.from("document_signatures").select("*").eq("application_id", application.id).eq("offering_document_id", document.id).maybeSingle();
+  const signers = signature
+    ? ((await admin.from("document_signature_signers").select("*").eq("signature_id", signature.id).order("signing_order", { ascending: true })).data ?? [])
+    : [];
+  const p = (ob as any).persons;
+  const personName = p ? [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") || null : null;
+  return {
+    application: { ...application, user_id: application.user_id ?? "" },
+    document,
+    offering: offering ?? null,
+    subscription: subscription ?? null,
+    profile: { legal_name: personName, email: input.signerEmail.trim().toLowerCase() },
+    investmentProfileId: ob.investment_profile_id ?? null,
+    investmentProfileType: (ob as any).investment_profiles?.profile_type ?? null,
+    signature: signature ?? null,
+    signers,
+  };
+}
+
+async function openSessionCore(
+  admin: any,
+  resolved: ResolvedSigning,
+  userId: string | null,
+  verify: () => Promise<void>,
+  redirectUrl = "https://app.harmonious.co/portal",
+): Promise<OpenSessionResult> {
+  const mine = signerRowFor(resolved.signers, userId ?? "", resolved.profile.email);
 
   // No request yet: the investor is the required signer on their own agreement.
   const isRequiredSigner = resolved.signers.length === 0 ? true : Boolean(mine);
 
   const refusal = refuseSession({
-    applicationBelongsToUser: resolved.application.user_id === userId,
+    applicationBelongsToUser: userId === null || resolved.application.user_id === userId,
     documentInOffering: resolved.document.offering_id === resolved.application.offering_id,
     hasSubscription: Boolean(resolved.subscription?.commitment_cents),
     requiresSignature: Boolean(resolved.document.requires_signature),
@@ -271,8 +335,7 @@ export async function openSigningSession(
   });
   if (refusal) throw new SigningRefusal(refusal);
 
-  const { assertApplicationSigningVerification } = await import("@/lib/investor-onboarding.server");
-  await assertApplicationSigningVerification(userId, resolved.application.id);
+  await verify();
 
   // Investors always sign first; the fund manager approves or declines after they finish.
 
@@ -323,7 +386,7 @@ export async function openSigningSession(
     documentName: `${resolved.offering?.name ?? "Harmonious"} · ${resolved.document.title}`,
     message: `Please review and sign ${resolved.document.title} for ${resolved.offering?.name ?? "the fund"}.`,
     externalId: `${resolved.application.id}:${resolved.document.id}`,
-    redirectUrl: "https://app.harmonious.co/portal",
+    redirectUrl,
     signers: [
       {
         email: resolved.profile.email,
@@ -447,15 +510,18 @@ export async function openSigningSession(
  * never changes signing status, and the stuck lists compare it with the signing
  * service's own "loaded" record.
  */
-async function markWindowOpened(admin: any, signatureId: string, userId: string, email: string | null) {
+async function markWindowOpened(admin: any, signatureId: string, userId: string | null, email: string | null) {
   const now = new Date().toISOString();
-  const byUser = await admin
-    .from("document_signature_signers")
-    .update({ window_opened_at: now })
-    .eq("signature_id", signatureId)
-    .eq("signer_user_id", userId)
-    .select("id");
-  if ((byUser.data ?? []).length || !email) return;
+  if (userId) {
+    const byUser = await admin
+      .from("document_signature_signers")
+      .update({ window_opened_at: now })
+      .eq("signature_id", signatureId)
+      .eq("signer_user_id", userId)
+      .select("id");
+    if ((byUser.data ?? []).length) return;
+  }
+  if (!email) return;
   await admin
     .from("document_signature_signers")
     .update({ window_opened_at: now })

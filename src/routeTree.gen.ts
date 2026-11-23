@@ -475,6 +475,8 @@ import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/pa
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicProposalViewRouteImport } from './routes/api/public/proposal/view'
 import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
+import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign/$token'
+import { Route as ApiPublicSignDoneRouteImport } from './routes/api/public/sign/done'
 import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
@@ -3165,6 +3167,16 @@ const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
   path: '/api/public/security/revoke',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSignTokenRoute = ApiPublicSignTokenRouteImport.update({
+  id: '/api/public/sign/$token',
+  path: '/api/public/sign/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSignDoneRoute = ApiPublicSignDoneRouteImport.update({
+  id: '/api/public/sign/done',
+  path: '/api/public/sign/done',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSlackEventsRoute = ApiPublicSlackEventsRouteImport.update({
   id: '/api/public/slack/events',
   path: '/api/public/slack/events',
@@ -3814,6 +3826,8 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
+  '/api/public/sign/done': typeof ApiPublicSignDoneRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -4306,6 +4320,8 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
+  '/api/public/sign/done': typeof ApiPublicSignDoneRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -4808,6 +4824,8 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
+  '/api/public/sign/done': typeof ApiPublicSignDoneRoute
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -5310,6 +5328,8 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/sign/$token'
+    | '/api/public/sign/done'
     | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -5802,6 +5822,8 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/sign/$token'
+    | '/api/public/sign/done'
     | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -6303,6 +6325,8 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/sign/$token'
+    | '/api/public/sign/done'
     | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -6432,6 +6456,8 @@ export interface RootRouteChildren {
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicProposalViewRoute: typeof ApiPublicProposalViewRoute
   ApiPublicSecurityRevokeRoute: typeof ApiPublicSecurityRevokeRoute
+  ApiPublicSignTokenRoute: typeof ApiPublicSignTokenRoute
+  ApiPublicSignDoneRoute: typeof ApiPublicSignDoneRoute
   ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
@@ -9704,6 +9730,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSecurityRevokeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sign/$token': {
+      id: '/api/public/sign/$token'
+      path: '/api/public/sign/$token'
+      fullPath: '/api/public/sign/$token'
+      preLoaderRoute: typeof ApiPublicSignTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sign/done': {
+      id: '/api/public/sign/done'
+      path: '/api/public/sign/done'
+      fullPath: '/api/public/sign/done'
+      preLoaderRoute: typeof ApiPublicSignDoneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/slack/events': {
       id: '/api/public/slack/events'
       path: '/api/public/slack/events'
@@ -11075,6 +11115,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicProposalViewRoute: ApiPublicProposalViewRoute,
   ApiPublicSecurityRevokeRoute: ApiPublicSecurityRevokeRoute,
+  ApiPublicSignTokenRoute: ApiPublicSignTokenRoute,
+  ApiPublicSignDoneRoute: ApiPublicSignDoneRoute,
   ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,

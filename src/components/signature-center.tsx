@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { sendSignLinkFn, signLinkFn } from "@/lib/sign-link.functions";
+import { revokeSignLinkFn, sendSignLinkFn, signLinkFn } from "@/lib/sign-link.functions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -164,6 +164,7 @@ export function SignatureCenter({ surface, offeringId, everything, title = "Sign
 function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string; onboardingId: string; documentId: string }) {
   const getLink = useServerFn(signLinkFn);
   const sendLink = useServerFn(sendSignLinkFn);
+  const revoke = useServerFn(revokeSignLinkFn);
   const args = { fundId, onboardingId, documentId };
   const ready = useQuery({ queryKey: ["sign-link", onboardingId, documentId], queryFn: () => getLink({ data: args }), retry: false, staleTime: 60_000 });
   const [busy, setBusy] = useState(false);
@@ -180,7 +181,8 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
         if (!reason?.trim()) return;
         r = await sendLink({ data: { ...args, overrideReason: reason.trim() } });
       }
-      toast.success(`Sign link emailed to ${r?.recipientEmail ?? "the investor"}${r?.firstTime ? ", with their personal invitation" : ""}.`);
+      toast.success(`Sign link emailed to ${r?.recipientEmail ?? "the investor"}. They can sign without signing in.`);
+      void ready.refetch();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't send the link."); }
     finally { setBusy(false); }
   };
@@ -188,13 +190,25 @@ function SignLinkButtons({ fundId, onboardingId, documentId }: { fundId: string;
     const res = await getLink({ data: { ...args, withLink: true } }).catch((e) => { toast.error(e instanceof Error ? e.message : "Couldn't make the link."); return null; });
     const url = res?.url;
     if (!url) return;
-    try { await navigator.clipboard.writeText(url); toast.success("Sign link copied. It only works for the investor after they sign in."); }
+    try { await navigator.clipboard.writeText(url); toast.success("Sign link copied. It replaces any earlier link and works for 14 days."); void ready.refetch(); }
     catch { window.prompt("Copy this sign link:", url); }
   };
   return (
     <>
       <Button variant="outline" onClick={email} disabled={busy || !ready.data?.ready}>Email sign link</Button>
       <Button variant="ghost" onClick={copy} disabled={!ready.data?.ready}>Copy sign link</Button>
+      {ready.data?.active && (
+        <>
+          <Button variant="ghost" onClick={async () => {
+            if (!window.confirm("Cancel the current signing link? It stops working right away.")) return;
+            try { await revoke({ data: args }); toast.success("Signing link cancelled."); void ready.refetch(); }
+            catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't cancel the link."); }
+          }}>Cancel link</Button>
+          <span className="text-sm text-muted-foreground">
+            Link sent {day(ready.data.active.sentAt)}{ready.data.active.openedAt ? ` · opened ${day(ready.data.active.openedAt)}` : " · not opened yet"}
+          </span>
+        </>
+      )}
       {blocked && <span className="text-sm text-muted-foreground">{blocked}</span>}
     </>
   );

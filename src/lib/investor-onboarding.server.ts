@@ -1171,6 +1171,18 @@ export async function assertApplicationSigningVerification(userId: string, appli
   }
 }
 
+/** Same signing gate for sign-without-sign-in links: the recorded investment, not an account. */
+export async function assertOnboardingSigningVerification(onboardingId: string) {
+  const { data: row, error } = await db().from("investor_onboardings").select("*").eq("id", onboardingId).is("removed_at", null).maybeSingle();
+  if (error) fail("We couldn't check verification. Please try again.");
+  if (!row) fail("This investment is not ready for signing.");
+  const facts = await gatherFacts(row);
+  if (!verificationAllowsSigning(facts.requirements)) fail("Identity and required verification must be approved before signing. Only pending compliance screening may continue.");
+  if ((await openExceptions(row.id)).some((e: any) => e.severity === "blocking")) {
+    fail("This investment is under review. Harmonious will follow up about next steps.");
+  }
+}
+
 export async function prepareSubscriptionDocuments(userId: string, onboardingId: string) {
   // Preparation only snapshots the documents for signing; the investor, staff or this fund's managers may trigger it. Signing stays investor-only.
   const access = await assertOnboardingAccess(userId, onboardingId);

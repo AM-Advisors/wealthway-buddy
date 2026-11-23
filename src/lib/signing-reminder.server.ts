@@ -13,6 +13,8 @@ export async function sendSigningReminder(actorId: string, input: {
   offeringId?: string | null; clientId?: string | null; contextName?: string | null; reminderKey: string; documentTitle: string; recipientEmail: string; recipientName: string;
   recipientUserId?: string | null; path: string; steps: string[]; override?: { reason: string } | null;
   nativeSend?: () => Promise<void>;
+  /** A complete link that needs no sign-in (sign-without-sign-in links); skips the invite wrapper. */
+  ctaUrl?: string;
 }) {
   const d = supabaseAdmin as any;
   const since = new Date(Date.now() - DAY).toISOString();
@@ -28,8 +30,8 @@ export async function sendSigningReminder(actorId: string, input: {
   let userId = input.recipientUserId ?? null;
   if (!userId) { const { data: p } = await d.from("profiles").select("user_id").ilike("email", input.recipientEmail).maybeSingle(); userId = p?.user_id ?? null; }
   let firstTime = false;
-  let ctaUrl = `${PORTAL_ORIGIN}${input.path}`;
-  if (userId && !input.nativeSend) {
+  let ctaUrl = input.ctaUrl ?? `${PORTAL_ORIGIN}${input.path}`;
+  if (userId && !input.nativeSend && !input.ctaUrl) {
     const { data: u } = await d.auth.admin.getUserById(userId);
     if (!u?.user?.last_sign_in_at) {
       const { setPasswordLink } = await import("@/lib/account-invite.server");
@@ -54,7 +56,7 @@ export async function sendSigningReminder(actorId: string, input: {
   if (input.offeringId) await logFundAudit(actorId, {
     offeringId: input.offeringId, eventType: "signing_reminder_sent",
     summary: `${sent ? "Signing reminder sent" : "Signing reminder could not be delivered"} to ${input.recipientName} (${input.recipientEmail}) for ${input.documentTitle}${hit ? " — Super Admin override" : ""}`,
-    values: { reminderKey: input.reminderKey, document: input.documentTitle, recipient: input.recipientEmail, link: firstTime ? "Personal set-password link" : "Direct link", ...(hit ? { overrideReason: input.override?.reason } : {}) },
+    values: { reminderKey: input.reminderKey, document: input.documentTitle, recipient: input.recipientEmail, link: input.ctaUrl ? "No-sign-in signing link" : firstTime ? "Personal set-password link" : "Direct link", ...(hit ? { overrideReason: input.override?.reason } : {}) },
   });
   if (!sent) throw new Error("The reminder couldn't be delivered to that email address.");
   return { sent: true, firstTime, recipientEmail: input.recipientEmail };
