@@ -17,3 +17,14 @@ describe("portal hold screen", () => {
     expect(portalAllowed({ ...none, sharedFundGrants: 1 })).toBe(true);
   });
 });
+
+import { emptyFacts, resolveDestination } from "./session-resolution";
+
+describe("sign-in landing for fund team members", () => {
+  it("someone only on a fund's team lands on My Funds, not investor onboarding", () => {
+    expect(resolveDestination({ ...emptyFacts(), sharedFundCount: 1 }).path).toBe("/my-funds");
+  });
+  it("someone with no relationship still starts onboarding", () => {
+    expect(resolveDestination(emptyFacts()).path).toBe("/onboarding/kyc");
+  });
+});

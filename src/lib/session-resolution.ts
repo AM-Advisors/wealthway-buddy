@@ -36,6 +36,8 @@ export type RelationshipFacts = {
   pendingInvitationCount: number;
   /** Outstanding onboarding requirements, in the order they must be met. */
   outstandingRequirements: string[];
+  /** Funds shared with this exact login: linked Team page entries or team-access grants. */
+  sharedFundCount?: number;
 };
 
 export type WorkspaceKind = "investor" | "fund_manager" | "company" | "professional" | "operations";
@@ -211,6 +213,8 @@ export function resolveDestination(
   if (requirement) return { path: requirement, reason: "requirement" };
   const workspace = defaultWorkspace(facts);
   if (workspace) return { path: workspace.path, reason: "workspace" };
+  // Someone only on a fund's team lands on their funds, not investor onboarding.
+  if ((facts.sharedFundCount ?? 0) > 0) return { path: "/my-funds", reason: "workspace" };
   return { path: "/onboarding/kyc", reason: "onboarding" };
 }
 

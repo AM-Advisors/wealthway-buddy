@@ -219,6 +219,16 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
           .limit(50)
       : Promise.resolve({ data: [] }),
   ]);
+  // Shared funds count only matters when nothing else gives this person a home.
+  if (!facts.clientIds.length && !facts.managedFundIds.length && !facts.investmentProfileIds.length && !facts.investmentCount) {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { liveGrants } = await import("@/lib/fund-team-access.functions");
+      facts.sharedFundCount = (await liveGrants(supabaseAdmin as any, userId)).length;
+    } catch {
+      /* no shared funds known */
+    }
+  }
   facts.pendingInvitationCount = rows(invites).filter(
     (i) => i.status !== "revoked" && i.status !== "expired",
   ).length;

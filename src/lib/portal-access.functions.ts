@@ -32,7 +32,7 @@ export const checkInviteEligibility = createServerFn({ method: "POST" })
     );
     if (hasInvite) return { eligible: true };
 
-    // Listed on a fund team, as a client contact, or invited to a client: a login with this
+    // Listed on a fund team, given fund team access, as a client contact, or invited to a client: a login with this
     // email connects to those entries automatically (connect_listed_entries), so no separate
     // fund invitation is needed. Exact match only; ilike alone treats "_" as a wildcard.
     const exact = (rows: any[] | null, col = "email") => (rows ?? []).some((r) => String(r[col] ?? "").trim().toLowerCase() === email);
@@ -46,12 +46,13 @@ export const checkInviteEligibility = createServerFn({ method: "POST" })
       const { data: logins } = await supabaseAdmin.from("profiles").select("email").in("user_id", linkedIds);
       if ((logins ?? []).some((l: any) => String(l.email ?? "").trim().toLowerCase() !== email)) return { eligible: false, reason: "different_login" as const };
     }
-    const [team, contacts, clientInv] = await Promise.all([
+    const [team, contacts, clientInv, grants] = await Promise.all([
       supabaseAdmin.from("fund_team_members").select("email").ilike("email", pattern).is("removed_at", null).limit(5),
       supabaseAdmin.from("client_contacts").select("email").ilike("email", pattern).eq("status", "active").is("invite_cancelled_at", null).limit(5),
       supabaseAdmin.from("client_invitations").select("email, expires_at").ilike("email", pattern).eq("status", "pending").limit(5),
+      (supabaseAdmin as any).from("fund_team_grants").select("grantee_email").ilike("grantee_email", pattern).eq("status", "active").limit(5),
     ]);
-    if (exact(team.data as any[]) || exact(contacts.data as any[])) return { eligible: true };
+    if (exact(team.data as any[]) || exact(contacts.data as any[]) || exact(grants.data as any[], "grantee_email")) return { eligible: true };
     if ((clientInv.data ?? []).some((r: any) => String(r.email).toLowerCase() === email && (!r.expires_at || new Date(r.expires_at) > new Date()))) return { eligible: true };
 
     // Someone who already has a profile with access (added manually by an admin).
