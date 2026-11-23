@@ -23,6 +23,7 @@ import {
   type TemplateRole,
 } from "@/lib/agreement-prep";
 import { executionState } from "@/lib/document-signing";
+import { fundSignerReturnUrl } from "@/lib/sign-window-url";
 
 export class PrepRefusal extends Error {}
 
@@ -435,6 +436,7 @@ export async function sendPreparedAgreement(
       name: s.name,
       order: index + 1,
       externalUserId: `${application.id}:${doc.id}:${s.roleKey}`,
+      ...(s.roleKey === "fund_manager" ? { redirectUrl: fundSignerReturnUrl(String(doc.offering_id)) } : {}),
       inputs: (inputsByRole[s.roleKey] ?? []) as unknown as Record<string, unknown>[],
     })),
   });

@@ -10,6 +10,7 @@
  */
 
 import { capacityForProfileType } from "@/lib/signing-commitment";
+import { fundSignerReturnUrl } from "@/lib/sign-window-url";
 import {
   executionState,
   publicSigner,
@@ -442,6 +443,7 @@ async function openSessionCore(
         name: dualSigner.legal_name ?? dualSigner.email,
         order: 2,
         externalUserId: `${resolved.application.id}:${resolved.document.id}:fund_manager`,
+        redirectUrl: fundSignerReturnUrl(String(resolved.application.offering_id)),
       }] : []),
     ],
   });

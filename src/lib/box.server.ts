@@ -435,6 +435,8 @@ export interface MultiSignerInput {
     externalUserId: string;
     /** Box emails this signer instead of issuing an embedded link (named signers such as a GP). */
     emailOnly?: boolean;
+    /** Where this signer lands after signing; overrides the request-wide redirect (fund countersigners). */
+    redirectUrl?: string;
     /**
      * Native Box Sign fields placed for this signer during preparation.
      * Box renders and enforces them; we never draw fields ourselves.
@@ -454,6 +456,7 @@ export async function createMultiSignerRequest(input: MultiSignerInput): Promise
       order: s.order ?? 1,
       ...(s.emailOnly ? {} : { embed_url_external_user_id: s.externalUserId }),
       ...(s.name ? { name: s.name } : {}),
+      ...(s.redirectUrl ? { redirect_url: s.redirectUrl } : {}),
       ...(s.inputs && s.inputs.length ? { inputs: s.inputs } : {}),
     })),
     name: input.documentName,

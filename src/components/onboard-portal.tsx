@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Circle, Loader2, Lock } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { Logo } from "@/components/Logo";
@@ -16,6 +17,7 @@ import {
   eligibleProfilesFn,
   onboardingDetailFn,
   onboardPortalDetailFn,
+  onboardingViewerHomeFn,
   startPortalVerificationFn,
   investorReportsFundsSentFn,
 } from "@/lib/investor-onboarding.functions";
@@ -78,6 +80,36 @@ export function OnboardMessage({ title, body }: { title: string; body: string })
   );
 }
 
+/**
+ * The investor's own page opened by someone else, usually a fund countersigner the signing
+ * service sent back here. Point them to their own view instead of a dead end; never claim a
+ * signature was saved, the fund's Documents page shows the recorded status.
+ */
+function NotAvailable({ onboardingId, error }: { onboardingId: string; error: unknown }) {
+  const homeFn = useServerFn(onboardingViewerHomeFn);
+  const home = useQuery({ queryKey: ["onboard-viewer-home", onboardingId], queryFn: () => homeFn({ data: { onboardingId } }), retry: false, enabled: Boolean(error) });
+  if (home.isLoading) return <p className="text-base text-muted-foreground">Loading…</p>;
+  const h = home.data;
+  if (!h) return <OnboardMessage title="This investment isn't available" body={error ? errText(error) : "Please check your link."} />;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">This page is for the investor</CardTitle>
+        <CardDescription className="text-base">
+          You're signed in as {h.role === "manager" ? "the fund" : "Harmonious"}, so this investor's steps don't open for you. If you just signed as the fund, the fund's Documents page shows whether your signature was recorded.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {h.role === "manager" ? (
+          <Button asChild size="lg"><Link to="/manager/fund/$fundId/documents" params={{ fundId: h.offeringId }}>Go to the fund's documents</Link></Button>
+        ) : (
+          <Button asChild size="lg"><Link to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: h.offeringId, onboardingId }}>Open this investor</Link></Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
   const qc = useQueryClient();
   const detailFn = useServerFn(onboardPortalDetailFn);
@@ -93,7 +125,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
 
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading your investment…</p>;
   if (q.error || !q.data) {
-    return <OnboardMessage title="This investment isn't available" body={q.error ? errText(q.error) : "Please check your link."} />;
+    return <NotAvailable onboardingId={onboardingId} error={q.error} />;
   }
   const d: any = q.data;
   const steps: PortalStepView[] = d.steps;

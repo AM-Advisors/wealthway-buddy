@@ -8,3 +8,11 @@ export function newTabSigningUrl(embedUrl: string | null | undefined): string | 
     return u.toString();
   } catch { return null; }
 }
+
+/**
+ * Where a fund countersigner lands after signing inside an investor's request: the fund's
+ * Documents page, never the investor's own investment page (which only the investor can open).
+ */
+export function fundSignerReturnUrl(offeringId: string, origin = "https://app.harmonious.co"): string {
+  return `${origin.replace(/\/+$/, "")}/manager/fund/${encodeURIComponent(offeringId)}/documents`;
+}

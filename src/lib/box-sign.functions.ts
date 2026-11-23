@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
+import { fundSignerReturnUrl } from "@/lib/sign-window-url";
 
 import { openRequestReusable } from "@/lib/signing-source-pin";
 
@@ -259,7 +260,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
             signers: [
               // Order 1: the named signer (emailed by Box) or the investor; order 2: the fund's countersigner.
               { email: signerEmail, name: signerName, order: 1, externalUserId: `${application.id}:${doc.id}:${namedSigner ? "named_signer" : "investor"}`, emailOnly: Boolean(namedSigner) },
-              { email: countersigner.email, name: countersigner.name, order: 2, externalUserId: `${application.id}:${doc.id}:fund_manager` },
+              { email: countersigner.email, name: countersigner.name, order: 2, externalUserId: `${application.id}:${doc.id}:fund_manager`, redirectUrl: fundSignerReturnUrl(String(doc.offering_id)) },
             ],
           });
           const inv = namedSigner ? null : detail.signers.find((x) => x.email === String(profile.email).toLowerCase());

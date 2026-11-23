@@ -46,8 +46,8 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
         }
 
         const trigger = String(body?.trigger ?? "");
-        const signRequestId: string | undefined =
-          body?.source?.id ?? body?.additional_info?.sign_request?.id;
+        const { signRequestIdFromWebhook } = await import("@/lib/box-sign-webhook");
+        const signRequestId = signRequestIdFromWebhook(body) ?? undefined;
         if (!signRequestId) {
           console.error("[box-sign] webhook without sign request id", trigger);
           return new Response("ok");
@@ -68,7 +68,7 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
             sign_request_id: signRequestId,
             delivered_at: body?.created_at ? new Date(body.created_at).toISOString() : null,
             // Minimal, non-personal payload so failures are inspectable in Ops → Webhook log.
-            payload: { trigger, source_type: body?.source?.type ?? null, source_status: body?.source?.status ?? null },
+            payload: { trigger, source_type: body?.source?.type ?? null, source_status: body?.source?.status ?? null, source_id: body?.source?.id ?? null },
           });
         if (dedupeError) {
           console.log("[box-sign] duplicate webhook ignored", trigger, signRequestId);

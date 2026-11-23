@@ -352,6 +352,12 @@ export const onboardPortalDetailFn = createServerFn({ method: "POST" })
   .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).onboardPortalDetail(context.userId, data.onboardingId));
 
+/** For a non-investor who opened the investor's page: where their own view of it lives. */
+export const onboardingViewerHomeFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(onboardingInput.parse)
+  .handler(async ({ data, context }) => (await engine()).onboardingViewerHome(context.userId, data.onboardingId));
+
 export const resendOnboardInvitationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ invitationId: z.string().uuid() }).parse)

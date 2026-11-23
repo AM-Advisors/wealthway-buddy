@@ -2738,6 +2738,17 @@ function accreditationNeedsVerification(req: OfferingRequirements): boolean {
 }
 
 /** Presentation for one investment, derived only from authoritative records. */
+/**
+ * Who is looking at an investor's own investment page when they are not the investor
+ * (a fund countersigner returning from signing, or staff). Returns only where their own
+ * view of this investment lives; it grants nothing and reveals nothing else.
+ */
+export async function onboardingViewerHome(userId: string, onboardingId: string): Promise<{ role: "staff" | "manager"; offeringId: string } | null> {
+  const access = await assertOnboardingAccess(userId, onboardingId).catch(() => null);
+  if (!access || access.role === "investor" || access.row.investor_user_id === userId) return null;
+  return { role: access.role, offeringId: String(access.row.offering_id) };
+}
+
 export async function onboardPortalDetail(userId: string, onboardingId: string) {
   const { row } = await assertInvestorOwns(userId, onboardingId);
   const detail: any = await onboardingDetail(userId, onboardingId);
