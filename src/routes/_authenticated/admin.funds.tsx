@@ -482,11 +482,11 @@ function FundsPage() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     Minimum {money(o.min_investment_cents)}
                     {o.target_raise_cents ? ` · target ${money(o.target_raise_cents)}` : ""} ·{" "}
-                    {o.applicationCount} application{o.applicationCount === 1 ? "" : "s"}
+                    {o.investorCount ?? o.applicationCount} investor{(o.investorCount ?? o.applicationCount) === 1 ? "" : "s"}
                   </p>
                   {o.applicationCount > 0 ? (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Where they applied:{" "}
+                      Older applications by where they applied:{" "}
                       {(["portal", "fund_page", "referral", "admin"] as const)
                         .filter((s) => (o.sourceCounts?.[s] ?? 0) > 0)
                         .map(

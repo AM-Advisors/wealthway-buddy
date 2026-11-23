@@ -143,7 +143,14 @@ export const listOfferings = createServerFn({ method: "GET" })
 
     const { data: applications } = await context.supabase
       .from("investor_applications")
-      .select("offering_id, source");
+      .select("id, user_id, offering_id, source, funding_status, commitment_cents");
+    // Current investment records, so funds onboarded only on the current
+    // pipeline show their investors (same join as the manager panel).
+    const { data: investments } = await context.supabase
+      .from("investor_onboardings")
+      .select("id, offering_id, investor_user_id, application_id, stage, is_test_investor, removed_at, merged_into_onboarding_id")
+      .limit(10000);
+    const { reviewerFundLine } = await import("@/lib/manager-panel-model");
 
     const { data: wireRows } = await context.supabase.rpc("list_wire_instructions");
 
@@ -167,6 +174,7 @@ export const listOfferings = createServerFn({ method: "GET" })
         wire_instructions: wireByOffering.get(o.id) ?? {},
         documents: (documents ?? []).filter((d: any) => d.offering_id === o.id),
         applicationCount: counts[o.id] ?? 0,
+        investorCount: reviewerFundLine(o.id, ((investments ?? []) as any[]).filter((i) => i.offering_id === o.id), ((applications ?? []) as any[]).filter((a) => a.offering_id === o.id)).investors,
         sourceCounts: sourceCounts[o.id] ?? {},
       })),
     };

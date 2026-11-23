@@ -147,7 +147,7 @@ export const getFundPerformance = createServerFn({ method: "GET" })
           .in("id", ids),
         supabaseAdmin
           .from("investor_applications")
-          .select("id, offering_id, status, funding_status, commitment_cents")
+          .select("id, offering_id, user_id, status, funding_status, commitment_cents")
           .in("offering_id", ids),
         supabaseAdmin
           .from("fund_valuations")
@@ -172,10 +172,23 @@ export const getFundPerformance = createServerFn({ method: "GET" })
           .in("application_id", appIds)
       : { data: [] as any[] };
 
+    // Committed reads current investment records joined with older
+    // applications (manager panel rule); contributions stay on settled payments.
+    const { data: investments } = await supabaseAdmin
+      .from("investor_onboardings")
+      .select("id, offering_id, investor_user_id, application_id, stage, funding_status, is_test_investor, accepted_amount_cents, commitment_amount_cents, requested_amount_cents, funded_amount_cents, removed_at, merged_into_onboarding_id")
+      .in("offering_id", ids)
+      .limit(10000);
+    const { reviewerFundLine } = await import("@/lib/manager-panel-model");
+
     const funds: FundPerformance[] = ((offerings ?? []) as any[])
       .map((offering) => {
         const fundApps = apps.filter((a) => a.offering_id === offering.id);
-        const committed = fundApps.reduce((s, a) => s + Number(a.commitment_cents ?? 0), 0);
+        const committed = reviewerFundLine(
+          offering.id as string,
+          ((investments ?? []) as any[]).filter((i) => i.offering_id === offering.id),
+          fundApps,
+        ).committedCents;
 
         const settled = ((pays ?? []) as any[]).filter(
           (p) => p.status === "settled" && appFund.get(p.application_id) === offering.id,
