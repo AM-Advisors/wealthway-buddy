@@ -302,41 +302,48 @@ export const REQUEST_GROUPS = [
 
 /* ============================================================ My Funds */
 
-export type FundRelationship = "fund_manager" | "investor";
+export type FundRelationship = "fund_manager" | "investor" | "fund_team";
 
 export type MyFundsFacts = {
   managedFundIds: readonly string[];
   investorFundIds: readonly string[];
+  /** Exact funds where this login is a listed Team member with view access. */
+  teamFundIds?: readonly string[];
 };
 
 export type FundRow = { id: string; name: string; fund_type: string | null; entity_type: string | null; is_open: boolean | null; client_name?: string | null };
 
 /**
  * Only Funds the person is related to: exact fund-manager rows or their own
- * investments. Client membership alone never grants Fund access.
+ * investments, or a listed Team entry on that exact fund. Client membership alone never grants Fund access.
  */
 export function buildMyFunds(facts: MyFundsFacts, funds: readonly FundRow[], outstanding: Record<string, number> = {}) {
   const managed = new Set(facts.managedFundIds);
   const invested = new Set(facts.investorFundIds);
+  const team = new Set(facts.teamFundIds ?? []);
+  const label: Record<FundRelationship, string> = { fund_manager: "Fund Manager", investor: "Investor", fund_team: "Fund team (view only)" };
   return funds
-    .filter((f) => managed.has(f.id) || invested.has(f.id))
+    .filter((f) => managed.has(f.id) || invested.has(f.id) || team.has(f.id))
     .map((f) => {
       const relationships: FundRelationship[] = [];
       if (managed.has(f.id)) relationships.push("fund_manager");
       if (invested.has(f.id)) relationships.push("investor");
+      if (team.has(f.id) && !managed.has(f.id)) relationships.push("fund_team");
       const isManager = managed.has(f.id);
+      const teamOnly = !isManager && !invested.has(f.id);
       return {
         id: f.id,
         name: f.name,
         typeLabel: fundTypeLabel(f.fund_type, f.entity_type),
         filter: fundFilterKey(f.fund_type, f.entity_type),
         relationships,
-        relationshipLabel: relationships.map((r) => (r === "fund_manager" ? "Fund Manager" : "Investor")).join(" · "),
+        relationshipLabel: relationships.map((r) => label[r]).join(" · "),
         status: f.is_open ? "Open" : "In setup",
-        client: isManager ? f.client_name ?? null : null,
+        client: isManager || teamOnly ? f.client_name ?? null : null,
         setupStatus: isManager ? (f.is_open ? "Live" : "Setup in progress") : null,
         outstandingActions: isManager ? outstanding[f.id] ?? 0 : null,
-        path: isManager ? `/manager/fund/${f.id}` : `/my-funds/${f.id}`,
+        path: isManager ? `/manager/fund/${f.id}` : teamOnly ? "/shared-funds" : `/my-funds/${f.id}`,
+        search: teamOnly ? { fund: f.id } : undefined,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { grantRefusal, isGrantLive, isFundTeamRole, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
+import { grantRefusal, isGrantLive, isFundTeamRole, listedTeamViewerRole, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
 
 /**
  * Fund Team Access server functions. Every call re-checks, on the server, that
@@ -283,6 +283,14 @@ async function liveGrants(db: any, userId: string) {
       seen.add(fid);
       out.push({ ...g, offering_id: fid });
     }
+  }
+  // Listed fund team entries linked to this exact login see that fund as a Viewer.
+  const { data: listed } = await db.from("fund_team_members").select("offering_id, user_id, removed_at, permissions").eq("user_id", userId).is("removed_at", null);
+  for (const t of (listed ?? []) as any[]) {
+    const role = listedTeamViewerRole(t, userId);
+    if (!role || seen.has(t.offering_id)) continue;
+    seen.add(t.offering_id);
+    out.push({ offering_id: t.offering_id, role, status: "active", expires_at: null, granted_by: null, scope: "fund", source: "team_list" });
   }
   return out;
 }

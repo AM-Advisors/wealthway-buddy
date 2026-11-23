@@ -1,24 +1,29 @@
 /**
  * My Funds, investor-safe Fund view and Platform Agreements.
  * Every Fund is authorized from the caller's own relationship rows
- * (exact fund_managers rows, own positions/applications) - never email,
+ * (exact fund_managers rows, own positions/applications, own linked Team
+ * entries for view-only access) - never email,
  * a broad role or Client membership.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { listedTeamViewerRole } from "@/lib/fund-team-access";
 import { buildMyFunds, investorFundView, platformAgreementHistory, workspaceCategories } from "@/lib/client-portal-model";
 
 async function relationshipFundIds(context: any) {
   const s = context.supabase;
-  const [{ data: fm }, { data: pos }, { data: apps }] = await Promise.all([
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const [{ data: fm }, { data: pos }, { data: apps }, { data: team }] = await Promise.all([
     s.from("fund_managers").select("offering_id").eq("user_id", context.userId),
     s.from("investor_positions").select("offering_id").eq("investor_user_id", context.userId),
     s.from("investor_applications").select("offering_id").eq("user_id", context.userId),
+    (supabaseAdmin as any).from("fund_team_members").select("offering_id, user_id, removed_at, permissions").eq("user_id", context.userId).is("removed_at", null),
   ]);
   const ids = (rows: any) => [...new Set(((rows ?? []) as any[]).map((r) => String(r.offering_id)).filter(Boolean))];
-  return { managedFundIds: ids(fm), investorFundIds: [...new Set([...ids(pos), ...ids(apps)])] };
+  const teamFundIds = ids(((team ?? []) as any[]).filter((t) => listedTeamViewerRole(t, context.userId)));
+  return { managedFundIds: ids(fm), investorFundIds: [...new Set([...ids(pos), ...ids(apps)])], teamFundIds };
 }
 
 export const getMyFunds = createServerFn({ method: "GET" })
@@ -26,7 +31,7 @@ export const getMyFunds = createServerFn({ method: "GET" })
   .validator((d: unknown) => z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const facts = await relationshipFundIds(context);
-    const all = [...new Set([...facts.managedFundIds, ...facts.investorFundIds])];
+    const all = [...new Set([...facts.managedFundIds, ...facts.investorFundIds, ...facts.teamFundIds])];
     if (!all.length) return { funds: [] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
@@ -42,7 +47,7 @@ export const getMyFunds = createServerFn({ method: "GET" })
         facts.managedFundIds = facts.managedFundIds.filter((id) => (funds ?? []).some((f) => f.id === id));
       }
     }
-    const clientIds = [...new Set(((funds ?? []) as any[]).filter((f) => facts.managedFundIds.includes(f.id)).map((f) => f.client_id).filter(Boolean))];
+    const clientIds = [...new Set(((funds ?? []) as any[]).filter((f) => facts.managedFundIds.includes(f.id) || facts.teamFundIds.includes(f.id)).map((f) => f.client_id).filter(Boolean))];
     const { data: clients } = clientIds.length ? await db.from("clients").select("id, name").in("id", clientIds) : { data: [] };
     const cname = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name]));
     const outstanding: Record<string, number> = {};

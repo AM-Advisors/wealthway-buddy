@@ -38,7 +38,7 @@ function MyFundsPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
         <h1 className="text-2xl font-semibold tracking-tight">My Funds</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Funds and SPVs you manage or invest in.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Funds and SPVs you manage, invest in or are on the team of.</p>
         </div>
         <Button asChild>
           <Link to="/manager/request-fund"><Plus className="size-4" aria-hidden="true" />Add Fund or SPV</Link>
@@ -68,7 +68,7 @@ function MyFundsPage() {
             <Card key={f.id} className="relative transition-colors hover:bg-muted/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">
-                  <Link to={f.path as any} className="after:absolute after:inset-0 hover:underline">{f.name}</Link>
+                  <Link to={f.path as any} search={f.search as any} className="after:absolute after:inset-0 hover:underline">{f.name}</Link>
                 </CardTitle>
                 <CardDescription>
                   {f.typeLabel}

@@ -103,3 +103,16 @@ export function isGrantLive(g: { status: string; expires_at: string | null }, no
   if (g.expires_at && new Date(g.expires_at) <= now) return false;
   return true;
 }
+
+/**
+ * A person listed on a fund's Team page, whose entry is linked to their own
+ * confirmed login, sees that exact fund as a Viewer (overview, roster, approved
+ * documents). Never banking, tax IDs, identity evidence or any authority.
+ */
+export function listedTeamViewerRole(
+  row: { user_id?: string | null; removed_at?: string | null; permissions?: readonly string[] | null },
+  userId: string,
+): FundTeamRole | null {
+  if (!userId || row.user_id !== userId || row.removed_at) return null;
+  return (row.permissions ?? []).includes("view") ? "fund_viewer" : null;
+}
