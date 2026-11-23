@@ -22,3 +22,15 @@ describe("listed fund team members see their fund", () => {
     expect(row?.outstandingActions).toBeNull();
   });
 });
+
+import { fundScopedContactFund } from "./fund-team-access";
+describe("contacts added from one fund see only that fund", () => {
+  it("a linked fund-only contact sees its fund", () => {
+    expect(fundScopedContactFund({ user_id: me, status: "active", deactivated_at: null, added_for_offering_id: "laasy" }, me)).toBe("laasy");
+  });
+  it("company-wide, inactive or someone else's contacts give no fund", () => {
+    expect(fundScopedContactFund({ user_id: me, status: "active", deactivated_at: null, added_for_offering_id: null }, me)).toBeNull();
+    expect(fundScopedContactFund({ user_id: me, status: "inactive", deactivated_at: "2026-11-23", added_for_offering_id: "laasy" }, me)).toBeNull();
+    expect(fundScopedContactFund({ user_id: "other", status: "active", deactivated_at: null, added_for_offering_id: "laasy" }, me)).toBeNull();
+  });
+});

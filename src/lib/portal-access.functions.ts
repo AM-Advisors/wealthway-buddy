@@ -125,17 +125,18 @@ export const getPortalAccess = createServerFn({ method: "GET" })
     // an active client membership, a linked fund Team entry or a live team-access grant.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const [{ data: access }, { data: apps }, { data: members }, { data: team }, { data: grants }] = await Promise.all([
+    const [{ data: access }, { data: apps }, { data: members }, { data: team }, { data: grants }, { data: fundContacts }] = await Promise.all([
       supabase.from("investor_fund_access").select("id").eq("user_id", userId).limit(1),
       supabase.from("investor_applications").select("id").eq("user_id", userId).limit(1),
       db.from("client_users").select("id").eq("user_id", userId).is("revoked_at", null).limit(1),
       db.from("fund_team_members").select("id").eq("user_id", userId).is("removed_at", null).limit(1),
       db.from("fund_team_grants").select("id").eq("grantee_user_id", userId).eq("status", "active").limit(1),
+      db.from("client_contacts").select("id").eq("user_id", userId).eq("status", "active").is("deactivated_at", null).not("added_for_offering_id", "is", null).limit(1),
     ]);
     const { portalAllowed } = await import("@/lib/portal-access-model");
     const allowed = portalAllowed({
       roles, fundAccessRows: (access ?? []).length, applications: (apps ?? []).length,
-      clientMemberships: (members ?? []).length, fundTeamEntries: (team ?? []).length, sharedFundGrants: (grants ?? []).length,
+      clientMemberships: (members ?? []).length, fundTeamEntries: (team ?? []).length + (fundContacts ?? []).length, sharedFundGrants: (grants ?? []).length,
     });
 
     return { allowed, email, roles, pending_invite: false };

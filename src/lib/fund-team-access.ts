@@ -109,6 +109,18 @@ export function isGrantLive(g: { status: string; expires_at: string | null }, no
  * confirmed login, sees that exact fund as a Viewer (overview, roster, approved
  * documents). Never banking, tax IDs, identity evidence or any authority.
  */
+/**
+ * A company contact created from one fund's screen (initial contact, signer, fund invite)
+ * sees only that fund, as a Viewer. Company-wide contacts give nothing here.
+ */
+export function fundScopedContactFund(
+  row: { user_id?: string | null; status?: string | null; deactivated_at?: string | null; added_for_offering_id?: string | null },
+  userId: string,
+): string | null {
+  if (!userId || row.user_id !== userId || row.deactivated_at || row.status !== "active") return null;
+  return row.added_for_offering_id ?? null;
+}
+
 export function listedTeamViewerRole(
   row: { user_id?: string | null; removed_at?: string | null; permissions?: readonly string[] | null },
   userId: string,

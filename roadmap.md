@@ -1245,3 +1245,6 @@
 ## Fund files from storage folders + Adobe Sign (2026-11-20)
 - [ ] File storage-folder papers under matching funds and save investors directly (earlier investments, no emails): waiting on storage admin to enable reading every person's folders (checked Nov 20: still blocked)
 - [ ] Connect Adobe Sign and bring in signed agreements the same way: waiting on account address + admin key
+
+- [x] Brittany: "Forbidden: you do not manage that fund" opening LaaSy (fund team viewer)
+- [x] Initial contacts added from a fund see only that fund

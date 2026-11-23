@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ClientNotificationBell } from "@/components/client-notification-bell";
 import { AttentionPopup } from "@/components/attention-popup";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Banknote,
@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAdminAccess } from "@/lib/admin.functions";
+import { listMySharedFunds } from "@/lib/fund-team-access.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/client")({
@@ -100,6 +101,10 @@ function ClientShell() {
     (m) => !m.read_at,
   ).length;
   const brand = useClientBrand(Boolean(data?.client));
+  // Someone on one fund only (team list, fund contact or shared access) has no company here:
+  // send them to that fund's view instead of a dead end or manager-only fund pages.
+  const sharedFn = useServerFn(listMySharedFunds);
+  const shared = useQuery({ queryKey: ["my-shared-funds"], queryFn: () => sharedFn(), enabled: !isLoading && !data?.client, retry: false });
 
   if (isLoading) {
     return (
@@ -107,6 +112,20 @@ function ClientShell() {
         <p className="text-sm text-muted-foreground">Loading your engagement…</p>
       </main>
     );
+  }
+
+  if (!data?.client && shared.isLoading) {
+    return (
+      <main className="mx-auto w-full max-w-6xl px-4 py-10">
+        <p className="text-sm text-muted-foreground">Loading your funds…</p>
+      </main>
+    );
+  }
+
+  if (!data?.client && (shared.data?.funds.length ?? 0) > 0) {
+    const wanted = pathname.match(/^\/client\/funds\/([0-9a-f-]{36})/)?.[1];
+    const fund = shared.data!.funds.find((f) => f.fundId === wanted)?.fundId ?? shared.data!.funds[0]!.fundId;
+    return <Navigate to="/shared-funds" search={{ fund }} replace />;
   }
 
   if (!data?.client) {

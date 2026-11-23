@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { grantRefusal, isGrantLive, isFundTeamRole, listedTeamViewerRole, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
+import { grantRefusal, isGrantLive, isFundTeamRole, listedTeamViewerRole, fundScopedContactFund, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
 
 /**
  * Fund Team Access server functions. Every call re-checks, on the server, that
@@ -292,6 +292,14 @@ export async function liveGrants(db: any, userId: string) {
     if (!role || seen.has(t.offering_id)) continue;
     seen.add(t.offering_id);
     out.push({ offering_id: t.offering_id, role, status: "active", expires_at: null, granted_by: null, scope: "fund", source: "team_list" });
+  }
+  // Contacts created from one fund's screen (initial contact, signer, fund invite) see that fund only.
+  const { data: scoped } = await db.from("client_contacts").select("user_id, status, deactivated_at, added_for_offering_id").eq("user_id", userId).not("added_for_offering_id", "is", null);
+  for (const c of (scoped ?? []) as any[]) {
+    const fid = fundScopedContactFund(c, userId);
+    if (!fid || seen.has(fid)) continue;
+    seen.add(fid);
+    out.push({ offering_id: fid, role: "fund_viewer", status: "active", expires_at: null, granted_by: null, scope: "fund", source: "fund_contact" });
   }
   return out;
 }

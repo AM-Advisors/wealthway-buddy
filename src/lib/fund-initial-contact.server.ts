@@ -66,7 +66,7 @@ export async function setInitialContact(userId: string, input: { offeringId: str
         designations: matched.designations, phone: before?.phone || row.phone, title: before?.title || row.title, updated_at: new Date().toISOString(),
       }).eq("id", contactId);
     } else {
-      const { data: c, error } = await db().from("client_contacts").insert({ client_id: clientId, ...row, status: "active", created_by: userId }).select("id").single();
+      const { data: c, error } = await db().from("client_contacts").insert({ client_id: clientId, ...row, status: "active", created_by: userId, added_for_offering_id: input.offeringId }).select("id").single();
       if (error || !c) throw new Error(error?.message ?? "Could not add that contact.");
       contactId = c.id;
     }

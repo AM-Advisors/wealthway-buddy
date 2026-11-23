@@ -25,3 +25,12 @@ describe("contacts created from a fund screen stay on that fund", () => {
     for (const i of inserts) expect(i).toContain("added_for_offering_id");
   });
 });
+
+describe("new initial contacts stay on their fund", () => {
+  it("marks a newly added initial contact with that fund", () => {
+    const src = readFileSync("src/lib/fund-initial-contact.server.ts", "utf8");
+    const ins = src.split('from("client_contacts").insert(').slice(1);
+    expect(ins.length).toBe(1);
+    expect(ins[0]!.slice(0, 200)).toContain("added_for_offering_id");
+  });
+});
