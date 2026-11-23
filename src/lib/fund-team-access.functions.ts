@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { grantRefusal, isGrantLive, isFundTeamRole, listedTeamViewerRole, fundScopedContactFund, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
+import { grantRefusal, isGrantLive, isFundTeamRole, listedTeamViewerRole, fundScopedContactFund, companyViewerFunds, fundOpenMode, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
 
 /**
  * Fund Team Access server functions. Every call re-checks, on the server, that
@@ -301,8 +301,43 @@ export async function liveGrants(db: any, userId: string) {
     seen.add(fid);
     out.push({ offering_id: fid, role: "fund_viewer", status: "active", expires_at: null, granted_by: null, scope: "fund", source: "fund_contact" });
   }
+  // View-only company members see that company's funds as a Viewer.
+  const { data: memberships } = await db.from("client_users").select("client_id, client_role, revoked_at").eq("user_id", userId).is("revoked_at", null).eq("client_role", "client_readonly");
+  const viewerClientIds = [...new Set(((memberships ?? []) as any[]).map((m) => m.client_id).filter(Boolean))];
+  if (viewerClientIds.length) {
+    const { data: companyFunds } = await db.from("offerings").select("id, client_id").in("client_id", viewerClientIds).limit(2000);
+    for (const fid of companyViewerFunds((memberships ?? []) as any[], (companyFunds ?? []) as any[])) {
+      if (seen.has(fid)) continue;
+      seen.add(fid);
+      out.push({ offering_id: fid, role: "fund_viewer", status: "active", expires_at: null, granted_by: null, scope: "fund", source: "company_viewer" });
+    }
+  }
   return out;
 }
+
+/** Whether this login opens a fund on the full fund page or the simple viewer page. Display routing only. */
+export const getFundOpenMode = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await admin();
+    const manager = await isManagerOf(db, context.userId, data.fundId);
+    const staff = !manager && (await isStaff(context.supabase, context.userId));
+    if (manager || staff) return { mode: "workspace" as const };
+    const { data: off } = await db.from("offerings").select("client_id").eq("id", data.fundId).maybeSingle();
+    const { data: rows } = off?.client_id
+      ? await db.from("client_users").select("client_role").eq("user_id", context.userId).eq("client_id", off.client_id).is("revoked_at", null)
+      : { data: [] };
+    const shared = (await liveGrants(db, context.userId)).find((g) => g.offering_id === data.fundId);
+    return {
+      mode: fundOpenMode({
+        isManager: false,
+        isStaff: false,
+        companyRolesForFund: ((rows ?? []) as any[]).map((r) => String(r.client_role)),
+        sharedRole: (shared?.role as FundTeamRole | undefined) ?? null,
+      }),
+    };
+  });
 
 /** Overview + roster for a granted Fund. No banking, tax IDs, KYC or contact details. */
 export const getSharedFund = createServerFn({ method: "GET" })

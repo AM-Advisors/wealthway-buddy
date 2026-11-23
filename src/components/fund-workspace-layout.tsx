@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
-import { listMySharedFunds } from "@/lib/fund-team-access.functions";
+import { getFundOpenMode, listMySharedFunds } from "@/lib/fund-team-access.functions";
 import { FundAddMenu } from "@/components/fund-add-menu";
 import { ViewAsBanner, useActiveViewAs } from "@/components/view-as";
 import { regTypeLabel } from "@/lib/reg-types";
@@ -109,7 +109,14 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
   const sharedFn = useServerFn(listMySharedFunds);
   const shared = useQuery({ queryKey: ["my-shared-funds"], queryFn: () => sharedFn(), enabled: query.isError, retry: false });
 
-  if (query.isLoading || (query.isError && shared.isLoading)) {
+  const modeFn = useServerFn(getFundOpenMode);
+  const mode = useQuery({ queryKey: ["fund-open-mode", fundId], queryFn: () => modeFn({ data: { fundId } }), retry: false, enabled: !clientView });
+
+  if (!clientView && mode.data?.mode === "viewer") {
+    return <Navigate to="/shared-funds" search={{ fund: fundId }} replace />;
+  }
+
+  if (query.isLoading || (!clientView && mode.isLoading) || (query.isError && shared.isLoading)) {
     return <main className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Loading fund…</main>;
   }
 

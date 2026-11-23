@@ -34,3 +34,28 @@ describe("contacts added from one fund see only that fund", () => {
     expect(fundScopedContactFund({ user_id: "other", status: "active", deactivated_at: null, added_for_offering_id: "laasy" }, me)).toBeNull();
   });
 });
+
+import { companyViewerFunds, fundOpenMode } from "./fund-team-access";
+
+describe("view-only company members open the viewer page", () => {
+  it("a view-only company member sees each of that company's funds", () => {
+    const funds = [{ id: "laasy", client_id: "corps" }, { id: "erebor", client_id: "corps" }, { id: "other", client_id: "4d" }];
+    expect(companyViewerFunds([{ client_id: "corps", client_role: "client_readonly", revoked_at: null }], funds)).toEqual(["laasy", "erebor"]);
+  });
+  it("revoked or broader company roles add no viewer funds", () => {
+    const funds = [{ id: "laasy", client_id: "corps" }];
+    expect(companyViewerFunds([{ client_id: "corps", client_role: "client_readonly", revoked_at: "2026-11-01" }], funds)).toEqual([]);
+    expect(companyViewerFunds([{ client_id: "corps", client_role: "client_gp", revoked_at: null }], funds)).toEqual([]);
+  });
+  it("view-only access opens the viewer page", () => {
+    expect(fundOpenMode({ isManager: false, isStaff: false, companyRolesForFund: ["client_readonly"], sharedRole: "fund_viewer" })).toBe("viewer");
+    expect(fundOpenMode({ isManager: false, isStaff: false, companyRolesForFund: [], sharedRole: "fund_viewer" })).toBe("viewer");
+  });
+  it("managers, staff, broader company roles, assistants and reviewers keep the full fund page", () => {
+    expect(fundOpenMode({ isManager: true, isStaff: false, companyRolesForFund: ["client_readonly"], sharedRole: "fund_viewer" })).toBe("workspace");
+    expect(fundOpenMode({ isManager: false, isStaff: true, companyRolesForFund: [], sharedRole: "fund_viewer" })).toBe("workspace");
+    expect(fundOpenMode({ isManager: false, isStaff: false, companyRolesForFund: ["client_gp"], sharedRole: "fund_viewer" })).toBe("workspace");
+    expect(fundOpenMode({ isManager: false, isStaff: false, companyRolesForFund: [], sharedRole: "fund_reviewer" })).toBe("workspace");
+    expect(fundOpenMode({ isManager: false, isStaff: false, companyRolesForFund: ["client_readonly"], sharedRole: null })).toBe("workspace");
+  });
+});

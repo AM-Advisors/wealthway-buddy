@@ -128,3 +128,35 @@ export function listedTeamViewerRole(
   if (!userId || row.user_id !== userId || row.removed_at) return null;
   return (row.permissions ?? []).includes("view") ? "fund_viewer" : null;
 }
+
+/**
+ * View-only company members (client_readonly, not revoked) see each of that company's funds as a Viewer.
+ * Pure: memberships of this login and the funds with their owning company.
+ */
+export function companyViewerFunds(
+  memberships: readonly { client_id?: string | null; client_role?: string | null; revoked_at?: string | null }[],
+  funds: readonly { id: string; client_id?: string | null }[],
+): string[] {
+  const viewerClients = new Set(
+    memberships.filter((m) => m.client_id && !m.revoked_at && m.client_role === "client_readonly").map((m) => m.client_id as string),
+  );
+  return funds.filter((f) => f.client_id && viewerClients.has(f.client_id)).map((f) => f.id);
+}
+
+export type FundOpenMode = "workspace" | "viewer";
+
+/**
+ * Which page opens a fund. Managers, staff and anyone with a broader company role keep the full fund page;
+ * someone whose only access to this fund is view-only opens the simple viewer page.
+ * Assistants and routine reviewers keep their existing paths.
+ */
+export function fundOpenMode(f: {
+  isManager: boolean;
+  isStaff: boolean;
+  companyRolesForFund: readonly string[];
+  sharedRole: FundTeamRole | null;
+}): FundOpenMode {
+  if (f.isManager || f.isStaff) return "workspace";
+  if (f.companyRolesForFund.some((r) => r !== "client_readonly")) return "workspace";
+  return f.sharedRole === "fund_viewer" ? "viewer" : "workspace";
+}
