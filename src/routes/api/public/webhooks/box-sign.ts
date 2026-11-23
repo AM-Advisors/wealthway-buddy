@@ -87,7 +87,7 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
             console.error("[box-sign] signer sync failed", e),
           );
           const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
-          const result = await syncBoxSignRequest(signRequestId, opts);
+          const result = await syncBoxSignRequest(signRequestId, { ...opts, trigger: "box_sign_webhook" });
           const { data: csSigner } = result.status === "unknown_sign_request"
             ? await supabaseAdmin.from("document_signature_signers").select("id").eq("provider_signer_id", `cs:${signRequestId}`).maybeSingle()
             : { data: null };
@@ -95,6 +95,11 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
             // Fund countersign-only request: save the fully executed copy and release funding when clear.
             const { completeFundCountersign } = await import("@/lib/fund-countersign-complete.server");
             const cs = await completeFundCountersign(supabaseAdmin, { signerRowId: csSigner.id, requestId: signRequestId });
+            if (cs.completed) {
+              const { data: row } = await supabaseAdmin.from("document_signature_signers").select("application_id").eq("id", csSigner.id).maybeSingle();
+              const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+              await reconcileReadinessForSubjects({ applicationId: (row as any)?.application_id ?? null }, "fund_countersign").catch((e) => console.error("[box-sign] countersign recheck failed", e));
+            }
             await supabaseAdmin.from("box_sign_webhook_events").update({ outcome: cs.completed ? "countersigned" : "countersign_pending", processed_at: new Date().toISOString() }).eq("provider_event_id", deliveryId);
           } else if (result.status === "unknown_sign_request") {
             // Not a fund document - it may be a diligence-room NDA.
@@ -104,11 +109,7 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
           } else {
             console.log("[box-sign] webhook", trigger, signRequestId, result.status);
             await supabaseAdmin.from("box_sign_webhook_events").update({ outcome: String(body?.source?.status ?? result.status), processed_at: new Date().toISOString() }).eq("provider_event_id", deliveryId);
-            if (result.signatureId) {
-              const { data: sig } = await supabaseAdmin.from("document_signatures").select("application_id, investment_profile_id").eq("id", result.signatureId).maybeSingle();
-              const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
-              await reconcileReadinessForSubjects({ applicationId: (sig as any)?.application_id ?? null, investmentProfileId: (sig as any)?.investment_profile_id ?? null }, "box_sign_webhook");
-            }
+            // syncBoxSignRequest already rechecked the investment.
           }
         } catch (e) {
           console.error("[box-sign] webhook processing failed", e);

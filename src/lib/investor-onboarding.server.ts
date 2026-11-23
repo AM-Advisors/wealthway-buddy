@@ -1944,9 +1944,14 @@ async function advanceSubscriptionToReview(row: any, requirements: RequirementRe
  *  Same executed record as the investor's Submit click (written once, never rewritten), marked automatic. */
 async function autoSubmitSignedSubscription(row: any, facts: any, blocking: number, ctx: { actorUserId: string | null; trigger: string }) {
   const { shouldAutoSubmitSubscription, autoSubmitSigner, lastSignedAt } = await import("./subscription-auto-submit");
-  if (!shouldAutoSubmitSubscription({ stage: String(row.stage), removed: Boolean(row.removed_at), executed: Boolean(row.executed_snapshot), blockingExceptions: blocking, requirements: facts.requirements, confirmedSignatures: (facts.completedSignatures ?? []).length })) return false;
+  // The investor's own confirmed signatures (from the signing service's per-signer record), also before the fund countersigns.
+  const { data: mine } = row.application_id
+    ? await db().from("document_signature_signers").select("signer_name, signed_at, role_key, status").eq("application_id", row.application_id).in("role_key", ["investor", "named_signer"]).eq("status", "signed")
+    : { data: [] };
+  const investorSigs = [...((mine ?? []) as any[]).map((r) => ({ signer_name: r.signer_name, signed_at: r.signed_at })), ...(facts.completedSignatures ?? [])];
+  if (!shouldAutoSubmitSubscription({ stage: String(row.stage), removed: Boolean(row.removed_at), executed: Boolean(row.executed_snapshot), blockingExceptions: blocking, requirements: facts.requirements, confirmedSignatures: investorSigs.length })) return false;
   const signer = autoSubmitSigner({
-    signatures: facts.completedSignatures ?? [], isEntity: Boolean(facts.isEntity),
+    signatures: investorSigs, isEntity: Boolean(facts.isEntity),
     profileLegalName: facts.profile?.legal_name ?? null, personName: [facts.person?.legal_first_name, facts.person?.legal_middle_name, facts.person?.legal_last_name].filter(Boolean).join(" ") || null,
   });
   if (!signer) return false;
@@ -1960,7 +1965,7 @@ async function autoSubmitSignedSubscription(row: any, facts: any, blocking: numb
   if (!version) return false;
   const entityName = facts.isEntity ? (facts.profile?.legal_name ?? facts.profile?.display_label ?? null) : null;
   const snapshot = {
-    signedAt: lastSignedAt(facts.completedSignatures ?? []) ?? nowIso(), signerName: signer.signerName, capacity: signer.capacity,
+    signedAt: lastSignedAt(((mine ?? []) as any[]).length ? (mine as any[]) : (facts.completedSignatures ?? [])) ?? nowIso(), signerName: signer.signerName, capacity: signer.capacity,
     attribution: signatureAttribution({ signerName: signer.signerName, capacity: signer.capacity, entityName }),
     investmentProfileId: row.investment_profile_id, profileType: facts.profile?.profile_type ?? null, profileLegalName: facts.profile?.legal_name ?? null,
     offeringId: row.offering_id, requestedAmountCents: row.requested_amount_cents, documentTemplateVersion: version,

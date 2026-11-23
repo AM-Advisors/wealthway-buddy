@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSignTasks, taskForError } from "./sign-step-tasks";
+import { buildSignTasks, docComplete, taskForError } from "./sign-step-tasks";
 
 const base = {
   hasQuestionnaire: true,
@@ -73,5 +73,9 @@ describe("sign step tasks", () => {
     expect(tasks.find(t => t.key === "subscription_questionnaire")?.state).toBe("review");
     expect(tasks.find(t => t.key === "tax_documentation")?.state).toBe("todo");
     expect(tasks.find(t => t.key === "submit")?.state).toBe("locked");
+  });
+  it("a paper the investor signed counts as done for them while the fund countersigns", () => {
+    expect(docComplete({ requiresSignature: true, signed: false, investorSigned: true })).toBe(true);
+    expect(docComplete({ requiresSignature: true, signed: false, investorSigned: false })).toBe(false);
   });
 });

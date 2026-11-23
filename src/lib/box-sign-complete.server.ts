@@ -20,7 +20,7 @@ export interface SyncResult {
 
 export async function syncBoxSignRequest(
   signRequestId: string,
-  opts: { status?: string; completedAt?: string } = {},
+  opts: { status?: string; completedAt?: string; trigger?: string } = {},
 ): Promise<SyncResult> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -121,6 +121,13 @@ export async function syncBoxSignRequest(
     const { fileExecutedSignature } = await import("@/lib/drive.server");
     await fileExecutedSignature(signature.id);
   }
+
+  // Recheck the investment after every status check (return from signing, staff sync, reopen, webhook) so
+  // steps such as Submit subscription complete on their own. Never blocks the signature update.
+  const { data: subj } = await supabaseAdmin.from("document_signatures").select("application_id, investment_profile_id").eq("id", signature.id).maybeSingle();
+  const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+  await reconcileReadinessForSubjects({ applicationId: (subj as any)?.application_id ?? null, investmentProfileId: (subj as any)?.investment_profile_id ?? null }, opts.trigger ?? "signing_status_check")
+    .catch((e) => console.error("[box-sign] readiness recheck failed", e));
 
   return { status: mapped, completed: mapped === "completed", signatureId: signature.id };
 }

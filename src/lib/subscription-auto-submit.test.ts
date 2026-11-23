@@ -17,6 +17,10 @@ describe("automatic Submit subscription", () => {
   it("records when the investor actually signed", () => {
     expect(lastSignedAt([{ signed_at: "2026-11-23T21:21:00Z" }, { provider_completed_at: "2026-11-23T21:22:00Z" }])).toBe("2026-11-23T21:22:00.000Z");
   });
+  it("submits when the investor signed everything and only the fund's countersignature is left", () => {
+    const waitingFund = [{ key: "signature", state: "missing", awaitingCountersign: true }] as any;
+    expect(shouldAutoSubmitSubscription({ ...base, stage: "signature", requirements: waitingFund })).toBe(true);
+  });
   it("never submits before signatures are confirmed", () => {
     expect(shouldAutoSubmitSubscription({ ...base, stage: "signature", requirements: unsigned })).toBe(false);
   });

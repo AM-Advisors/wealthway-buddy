@@ -11,12 +11,13 @@ const AUTO_SUBMIT_STAGES = new Set(["signature", "harmonious_review", "accepted"
  */
 export function shouldAutoSubmitSubscription(input: {
   stage: string; removed: boolean; executed: boolean; blockingExceptions: number; requirements: RequirementResult[];
-  /** Signatures the signing service confirmed for this investment. */
+  /** Signatures the signing service confirmed for this investment (whole papers, or the investor's part of them). */
   confirmedSignatures: number;
 }): boolean {
   if (input.removed || input.executed || input.blockingExceptions > 0 || input.confirmedSignatures < 1) return false;
   if (!AUTO_SUBMIT_STAGES.has(input.stage)) return false;
-  return input.requirements.some((r) => r.key === "signature" && r.state === "valid");
+  // Fully signed, or the investor signed everything and only the fund's countersignature is left.
+  return input.requirements.some((r) => r.key === "signature" && (r.state === "valid" || r.awaitingCountersign === true));
 }
 
 type Sig = { signer_name?: string | null; signer_capacity?: string | null; signed_at?: string | null; provider_completed_at?: string | null };

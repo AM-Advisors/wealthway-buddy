@@ -6,7 +6,7 @@ export type SignTaskState = "complete" | "todo" | "review" | "locked";
 export type SignTask = { key: SignTaskKey; label: string; state: SignTaskState; detail?: string | undefined };
 
 type Req = { key: string; state: string };
-type Doc = { signed?: boolean; requiresSignature?: boolean; requiresAcknowledgment?: boolean; acknowledged?: boolean };
+type Doc = { signed?: boolean; investorSigned?: boolean; requiresSignature?: boolean; requiresAcknowledgment?: boolean; acknowledged?: boolean };
 
 const LABELS: Record<SignTaskKey, string> = {
   subscription_questionnaire: "Investor questionnaire",
@@ -26,8 +26,9 @@ function fromReq(state: string | undefined): SignTaskState | null {
   return "todo";
 }
 
+/** Done for the investor once they signed, even while the fund's countersignature is still to come. */
 export function docComplete(d: Doc) {
-  return !!d.signed || (!!d.requiresAcknowledgment && !!d.acknowledged) || (!d.requiresSignature && !d.requiresAcknowledgment);
+  return !!d.signed || !!d.investorSigned || (!!d.requiresAcknowledgment && !!d.acknowledged) || (!d.requiresSignature && !d.requiresAcknowledgment);
 }
 
 export function buildSignTasks(input: {
