@@ -1,4 +1,4 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Navigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
+import { listMySharedFunds } from "@/lib/fund-team-access.functions";
 import { FundAddMenu } from "@/components/fund-add-menu";
 import { ViewAsBanner, useActiveViewAs } from "@/components/view-as";
 import { regTypeLabel } from "@/lib/reg-types";
@@ -103,8 +104,17 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
   const viewAs = useActiveViewAs();
   const clientView = (viewAs.data as any)?.perspective === "fund_manager" && (viewAs.data as any)?.offeringId === fundId ? viewAs.data : null;
 
-  if (query.isLoading) {
+  // Someone with view-only access to this fund (team list, fund contact or shared access)
+  // goes to that fund's viewer page instead of the manager page's "isn't available".
+  const sharedFn = useServerFn(listMySharedFunds);
+  const shared = useQuery({ queryKey: ["my-shared-funds"], queryFn: () => sharedFn(), enabled: query.isError, retry: false });
+
+  if (query.isLoading || (query.isError && shared.isLoading)) {
     return <main className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Loading fund…</main>;
+  }
+
+  if (query.isError && shared.data?.funds.some((f) => f.fundId === fundId)) {
+    return <Navigate to="/shared-funds" search={{ fund: fundId }} replace />;
   }
 
   if (query.isError || !query.data) {
