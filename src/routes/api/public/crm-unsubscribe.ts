@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import logoNavy from "@/assets/logo-navy.png.asset.json";
 
 // Campaign unsubscribe. The opaque 256-bit token is the only credential.
 // GET shows a confirm button (so link scanners don't unsubscribe people);
@@ -6,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 const page = (title: string, body: string) =>
   new Response(
     `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title>
-<style>body{font-family:Poppins,Helvetica,Arial,sans-serif;color:#221F20;background:#fff;display:flex;justify-content:center;padding:64px 16px}main{max-width:460px;border-top:4px solid #5DC6D1;border:1px solid #e6ecf3;padding:32px}button{background:#142647;color:#fff;border:0;padding:10px 18px;font:inherit;cursor:pointer}</style></head><body><main><h1 style="font-size:20px">${title}</h1>${body}</main></body></html>`,
+<style>body{font-family:Poppins,Helvetica,Arial,sans-serif;color:#221F20;background:#fff;display:flex;justify-content:center;padding:64px 16px}main{max-width:460px;border-top:4px solid #5DC6D1;border:1px solid #e6ecf3;padding:32px}button{background:#142647;color:#fff;border:0;padding:10px 18px;font:inherit;cursor:pointer}</style></head><body><main><img src="${logoNavy.url}" alt="Harmonious" style="display:block;height:32px;width:auto;margin-bottom:20px"><h1 style="font-size:20px">${title}</h1>${body}</main></body></html>`,
     { headers: { "content-type": "text/html; charset=utf-8" } },
   );
 

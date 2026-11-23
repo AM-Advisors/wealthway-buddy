@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { previewInviteLinkFn, redeemInviteLinkFn } from "@/lib/invite-link.functions";
 
 export const Route = createFileRoute("/invite/$token")({
@@ -46,7 +47,7 @@ function InvitePage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6 rounded-xl border bg-card p-8 text-center">
-        <p className="font-heading text-sm font-semibold uppercase tracking-widest text-muted-foreground">Harmonious</p>
+        <Logo variant="navy" className="h-8 w-auto" />
         {q.isPending ? <p className="text-sm text-muted-foreground">Checking your invitation…</p> : invalid ? (
           <div className="space-y-3">
             <h1 className="font-heading text-xl font-semibold">This link has expired or was already used</h1>

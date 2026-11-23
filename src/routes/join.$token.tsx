@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { resolveFundLinkFn, startFromFundLinkFn } from "@/lib/fund-onboarding-link.functions";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { PENDING_MATCH_MESSAGE } from "@/lib/investor-record-model";
 import { InvestorOnboardingGuide } from "@/components/investor-onboarding-guide";
 
@@ -50,7 +51,7 @@ function JoinPage() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 py-10">
       <div className="w-full max-w-xl"><InvestorOnboardingGuide /></div>
       <div className="w-full max-w-md space-y-6 rounded-xl border bg-card p-8 text-center">
-        <p className="font-heading text-sm font-semibold uppercase tracking-widest text-muted-foreground">Harmonious</p>
+        <Logo variant="navy" className="h-8 w-auto" />
         {q.isPending ? <p className="text-sm text-muted-foreground">Checking your link…</p> : q.isError ? (
           <div className="space-y-2"><h1 className="font-heading text-xl font-semibold">Link not available</h1><p className="text-sm text-muted-foreground">{(q.error as Error).message}</p></div>
         ) : pending ? (

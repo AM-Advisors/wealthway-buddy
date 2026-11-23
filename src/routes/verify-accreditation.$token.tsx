@@ -6,6 +6,7 @@ import { resolveProfessionalLinkFn } from "@/lib/accreditation-professional.func
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/verify-accreditation/$token")({
   ssr: false,
@@ -50,7 +51,7 @@ function Page() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-lg space-y-6 rounded-xl border bg-card p-8">
-        <p className="font-heading text-sm font-semibold uppercase tracking-widest text-muted-foreground">Harmonious</p>
+        <Logo variant="navy" className="h-8 w-auto" />
         {q.isPending ? <p className="text-sm text-muted-foreground">Checking your link…</p>
           : !d || !d.ok ? <div className="space-y-2"><h1 className="font-heading text-xl font-semibold">Link not available</h1><p className="text-sm text-muted-foreground">{d && !d.ok ? d.reason : "This link is not valid."}</p></div>
           : done ? <div className="space-y-2" role="status"><h1 className="font-heading text-xl font-semibold">Thank you</h1><p className="text-sm text-muted-foreground">Your letter was received. {d.investorName} will be notified once it's reviewed. You can close this page.</p></div>

@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { readSharedReportCard } from '@/lib/portfolio-report-cards.functions';
 import { Card, CardContent } from '@/components/ui/card';
+import { Logo } from '@/components/Logo';
 
 export const Route = createFileRoute('/report-card-share/$token')({
   ssr: false,
@@ -22,7 +23,7 @@ function SharedCard() {
   const r: any = q.data;
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-12">
-      <p className="text-sm font-medium text-primary">Harmonious</p>
+      <Logo variant="navy" className="h-7 w-auto" />
       {!valid || q.isError || (r && r.state !== 'active') ? (
         <p className="text-muted-foreground">{r?.state === 'expired' ? 'This link has expired.' : 'This link is no longer available.'} Ask the person who shared it for a new one.</p>
       ) : !r ? <p className="text-muted-foreground">Loading…</p> : (

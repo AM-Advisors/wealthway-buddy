@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import logoNavy from "@/assets/logo-navy.png.asset.json";
 
 // "This wasn't me" link from the new sign-in alert email. The opaque token is
 // the only credential; it is single use and expires after 7 days.
@@ -7,7 +8,7 @@ import { createFileRoute } from "@tanstack/react-router";
 // out seconds after they set it. Only the button press (POST) signs out.
 const page = (msg: string, status = 200, form = "") =>
   new Response(
-    `<!doctype html><meta name="viewport" content="width=device-width"><title>Harmonious security</title><body style="font-family:Poppins,sans-serif;max-width:520px;margin:64px auto;padding:0 24px;color:#221F20;font-size:18px;line-height:1.5"><h1 style="color:#142647;font-family:Rubik,sans-serif">Account security</h1><p>${msg}</p>${form}<p><a href="/auth/forgot">Reset your password</a></p></body>`,
+    `<!doctype html><meta name="viewport" content="width=device-width"><title>Harmonious security</title><body style="font-family:Poppins,sans-serif;max-width:520px;margin:64px auto;padding:0 24px;color:#221F20;font-size:18px;line-height:1.5"><img src="${logoNavy.url}" alt="Harmonious" style="display:block;height:32px;width:auto;margin-bottom:8px"><h1 style="color:#142647;font-family:Rubik,sans-serif">Account security</h1><p>${msg}</p>${form}<p><a href="/auth/forgot">Reset your password</a></p></body>`,
     { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } },
   );
 

@@ -69,7 +69,7 @@ export function renderEmailHtml(e: { subject: string; preheader?: string | null;
 <span style="display:none;max-height:0;overflow:hidden">${esc(e.preheader ?? "")}</span>
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
-<tr><td style="background:${navy};padding:20px 28px;border-bottom:4px solid ${teal}"><span style="font-family:Rubik,Arial,sans-serif;color:#ffffff;font-size:20px;font-weight:600">Harmonious</span></td></tr>
+<tr><td style="background:${navy};padding:20px 28px;border-bottom:4px solid ${teal}"><img src="https://onboard.harmonious.co/__l5e/assets-v1/4dbed97f-1ad0-4d1b-8f30-232845a97303/logo-white.png" alt="Harmonious" width="150" style="display:block;height:auto;border:0"/></td></tr>
 <tr><td style="padding:24px 28px">${body}</td></tr>
 <tr><td style="padding:20px 28px;border-top:1px solid #e5e7eb;font-family:Poppins,Arial,sans-serif;font-size:12px;color:#6b7280">Harmonious · harmonious.co<br/>You're receiving this because you're connected with Harmonious. <a href="${esc(unsubscribeUrl)}" style="color:${navy}">Unsubscribe</a></td></tr>
 </table></td></tr></table></body></html>`;
