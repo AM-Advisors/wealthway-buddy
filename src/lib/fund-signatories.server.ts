@@ -531,11 +531,28 @@ export async function addRequestedSignatory(userId: string, offeringId: string, 
  * company contacts auto-link to view the whole company, while a team entry links to this
  * fund only (connect_listed_entries + liveGrants). Logged on the fund.
  */
-async function sendFundTeamInvite(userId: string, offeringId: string, m: { id: string; fullName: string | null; email: string }) {
+async function sendFundTeamInvite(userId: string, offeringId: string, m: { id: string; fullName: string | null; email: string; teamRole?: string | null }, kind: "signup" | "access_notice" = "signup") {
   const { data: o } = await db().from("offerings").select("name").eq("id", offeringId).maybeSingle();
   const fundName = String(o?.name ?? "a fund").split(", a series of")[0]!.split(", A series of")[0]!.trim();
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const day = new Date().toISOString().slice(0, 10);
+  if (kind === "access_notice") {
+    const { TEAM_ROLES } = await import("@/lib/fund-doc-templates");
+    const role = TEAM_ROLES.find((r) => r.value === m.teamRole)?.label ?? "Team member";
+    await sendTemplateEmail("client-admin-alert", m.email, {
+      templateData: {
+        contactName: m.fullName ?? m.email,
+        headline: `You were added to ${fundName} on Harmonious`,
+        intro: `You were added to the ${fundName} team on Harmonious as ${role}. Sign in with your existing account to see this fund.`,
+        actionLabel: "Open Harmonious",
+        actionUrl: "https://app.harmonious.co/auth",
+        footnote: "Use the email address and password you already have.",
+      },
+      idempotencyKey: `fund-team-added-${m.id}`,
+    });
+    await audit(offeringId, userId, "fund_team_member_notified", "Fund team access email sent to an existing account", { memberId: m.id });
+    return;
+  }
   await sendTemplateEmail("client-admin-alert", m.email, {
     templateData: {
       contactName: m.fullName ?? m.email,
@@ -555,15 +572,15 @@ async function sendFundTeamInvite(userId: string, offeringId: string, m: { id: s
  * invited_at atomically before sending so repeats never double-send; releases the claim
  * if the email fails. Fund-only invite (sendFundTeamInvite): never a company contact or manager rights.
  */
-export async function inviteTeamMember(userId: string, offeringId: string, memberId: string, resend = false) {
+export async function inviteTeamMember(userId: string, offeringId: string, memberId: string, resend = false, newlyAdded = false) {
   await staffFor(userId, offeringId);
   const { teamInviteDecision } = await import("@/lib/fund-team-invite");
   const { data: m } = await db().from("fund_team_members").select("id, full_name, email, team_role, user_id, invited_at, removed_at").eq("id", memberId).eq("offering_id", offeringId).maybeSingle();
   if (!m) throw new Error("That team member is not on this fund.");
-  const decision = teamInviteDecision({ teamRole: m.team_role, email: m.email, userId: m.user_id, invitedAt: m.invited_at, removedAt: m.removed_at, resend });
+  const decision = teamInviteDecision({ teamRole: m.team_role, email: m.email, userId: m.user_id, invitedAt: m.invited_at, removedAt: m.removed_at, resend, newlyAdded, actorId: userId });
   if (!decision.invite) return { status: "skipped" as const, reason: decision.reason };
   // Already invited as this fund's client contact (e.g. the form's invite box): record it, never send twice.
-  if (!resend) {
+  if (!resend && decision.kind === "signup") {
     const { data: o } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
     const { data: c } = o?.client_id
       ? await db().from("client_contacts").select("invited_at").eq("client_id", o.client_id).ilike("email", decision.email).not("invited_at", "is", null).limit(1).maybeSingle()
@@ -579,8 +596,8 @@ export async function inviteTeamMember(userId: string, offeringId: string, membe
   const { data: claimed } = await claim.select("id");
   if (!claimed?.length) return { status: "skipped" as const, reason: "already_invited" as const };
   try {
-    await sendFundTeamInvite(userId, offeringId, { id: m.id, fullName: m.full_name, email: decision.email });
-    return { status: "invited" as const };
+    await sendFundTeamInvite(userId, offeringId, { id: m.id, fullName: m.full_name, email: decision.email, teamRole: m.team_role }, decision.kind);
+    return { status: "invited" as const, kind: decision.kind };
   } catch (e) {
     await db().from("fund_team_members").update({ invited_at: m.invited_at ?? null }).eq("id", memberId).eq("invited_at", now);
     return { status: "failed" as const, note: (e as Error).message };

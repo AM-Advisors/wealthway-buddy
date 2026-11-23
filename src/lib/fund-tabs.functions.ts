@@ -80,7 +80,7 @@ export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([r
     // Everyone else on the team with an email gets one sign-up invitation (view access as recorded).
     const teamInvite = managerInvite.status === "invited" || managerInvite.status === "access_given"
       ? null
-      : await (await import("@/lib/fund-signatories.server")).inviteTeamMember(context.userId, data.fundId, memberId!).catch((e: Error) => ({ status: "failed" as const, note: e.message }));
+      : await (await import("@/lib/fund-signatories.server")).inviteTeamMember(context.userId, data.fundId, memberId!, false, !data.id).catch((e: Error) => ({ status: "failed" as const, note: e.message }));
     return { ok: true, memberId: memberId!, signerNote: sync.note, managerInvite: { status: managerInvite.status, note: managerInvite.note }, teamInvite };
   });
 

@@ -179,7 +179,7 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
       else if (mi?.note) toast.warning(mi.note);
       if (mi?.status === "invited" || mi?.status === "access_given") {
         // The fund manager invitation already covers signing in; no second email.
-      } else if (res?.teamInvite?.status === "invited") toast.success("Saved and sign-up invitation sent");
+      } else if (res?.teamInvite?.status === "invited") toast.success(res.teamInvite.kind === "access_notice" ? "Saved. They already have an account, so we emailed them that they were added." : "Saved and sign-up invitation sent");
       else if (res?.teamInvite?.status === "failed") toast.error(`Saved, but the invitation wasn't sent: ${res.teamInvite.note}`);
       else if (sendInvite) {
         // Someone already a company contact keeps that invite; anyone else gets a fund-only invite
@@ -198,6 +198,8 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
       done();
     }, onError: (e: Error) => toast.error(e.message),
   });
+  // Saving emails the person when they're new to the team, or haven't been invited yet and have no account.
+  const invites = !!f.email.trim() && (!member.id || (!member.user_id && !member.invited_at));
   const r = useMutation({ mutationFn: () => remove({ data: { fundId, id: member.id } }), onSuccess: () => { toast.success("Removed"); done(); }, onError: (e: Error) => toast.error(e.message) });
   return (
     <Card className="border-primary/40">
@@ -244,7 +246,7 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
           </label>
         )}
         <div className="flex flex-wrap gap-2">
-          <Button disabled={m.isPending || f.fullName.trim().length < 2} onClick={() => m.mutate()}>Save</Button>
+          <Button disabled={m.isPending || f.fullName.trim().length < 2} onClick={() => m.mutate()}>{m.isPending ? "Saving…" : invites ? "Save & invite" : "Save"}</Button>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           {member.id && <Button variant="destructive" className="ml-auto" disabled={r.isPending} onClick={() => r.mutate()}>Remove</Button>}
         </div>
