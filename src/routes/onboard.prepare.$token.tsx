@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AssistedIdentityCheck } from "@/components/assisted-identity-check";
 import { preparerAddPartyFn, preparerSaveFn, preparerWorkspaceFn } from "@/lib/investor-helpers.functions";
 
 export const Route = createFileRoute("/onboard/prepare/$token")({
@@ -71,7 +72,7 @@ function PreparePage() {
       ) : w && (
         <>
           <div><h1 className="text-2xl font-semibold">Investor details for {w.fundName}</h1>
-            <p className="text-sm text-muted-foreground">You're preparing these details for the investor. Identity checks, signing and funding stay with the investor and their signer. Every change is recorded.</p></div>
+            <p className="text-sm text-muted-foreground">You're preparing these details for the investor. You can also run their identity check with a photo of their ID. Signing and funding stay with the investor and their signer. Every change is recorded.</p></div>
           {!w.editable ? <Card><CardContent className="p-6 text-sm">Signing or funding has started, so details can no longer be changed here.</CardContent></Card> : (
             <>
               <Card><CardHeader><CardTitle className="text-base">Investor</CardTitle></CardHeader>
@@ -88,6 +89,7 @@ function PreparePage() {
                   <div className="space-y-1"><Label htmlFor="p-tin">{w.profile && w.profile.type !== "individual" ? "EIN" : "SSN / Tax ID"}{w.profile?.taxIdLast4 ? ` (on file ••• ${w.profile.taxIdLast4})` : ""}</Label><Input id="p-tin" type="password" inputMode="numeric" autoComplete="off" placeholder="9 digits" value={f['taxId'] ?? ""} onChange={(e) => setF({ ...f, taxId: e.target.value })} /></div>
                   <div className="sm:col-span-2"><Button disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "Saving…" : "Save details"}</Button></div>
                 </CardContent></Card>
+              <AssistedIdentityCheck onboardingId={w.onboardingId} preparerId={w.participantId} />
               <Card><CardHeader><CardTitle className="text-base">Owners and signers</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                   {w.related.length ? <ul className="space-y-1 text-sm">{w.related.map((r: any) => <li key={r.id}>{r.name} · {String(r.role).replace(/_/g, " ")}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.isSigner ? " · signer" : ""}</li>)}</ul> : <p className="text-sm text-muted-foreground">None added yet.</p>}

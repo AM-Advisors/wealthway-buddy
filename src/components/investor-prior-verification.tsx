@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AssistedIdentityCheck } from "@/components/assisted-identity-check";
 import { investorMissingInfoFn, loadPriorVerificationFn, syncProviderSessionFn } from "@/lib/prior-verification.functions";
 
 const PERSON: [string, string][] = [
@@ -63,6 +64,8 @@ export function InvestorPriorVerification({ onboardingId, onSaved }: { onboardin
   const missing = [...(d?.person ?? []), ...(d?.entity ?? [])];
 
   return (
+    <>
+    <AssistedIdentityCheck onboardingId={onboardingId} onDone={() => { qc.invalidateQueries({ queryKey: key }); onSaved?.(); }} />
     <section className="rounded-lg border p-3 space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-medium">Missing information & earlier verification</h4>
@@ -82,7 +85,7 @@ export function InvestorPriorVerification({ onboardingId, onSaved }: { onboardin
       )}
       {open && (
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">Fill in only what you have; blank boxes stay as they are. If this person or business was verified before on another platform, enter where and when and copy the details here. Loaded details never approve anything on their own: screening is rerun, identity needs the person's own ID and selfie through a new link, and business details go to Harmonious review.</p>
+          <p className="text-xs text-muted-foreground">Fill in only what you have; blank boxes stay as they are. If this person or business was verified before on another platform, enter where and when and copy the details here. Loaded details never approve anything on their own: screening is rerun, identity clears through Run identity check above (ID photo, no selfie) or the person's own link, and business details go to Harmonious review.</p>
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="space-y-1"><Label htmlFor="pv-provider">Earlier check done by</Label><Input id="pv-provider" placeholder="e.g. prior administrator" value={meta.provider} onChange={(x) => setMeta({ ...meta, provider: x.target.value })} /></div>
             <div className="space-y-1"><Label htmlFor="pv-date">Check date</Label><Input id="pv-date" type="date" value={meta.checkedOn} onChange={(x) => setMeta({ ...meta, checkedOn: x.target.value })} /></div>
@@ -114,5 +117,6 @@ export function InvestorPriorVerification({ onboardingId, onSaved }: { onboardin
         </div>
       )}
     </section>
+    </>
   );
 }

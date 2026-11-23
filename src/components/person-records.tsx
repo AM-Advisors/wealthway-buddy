@@ -51,7 +51,7 @@ export function PersonRecords() {
                 <div className="flex flex-wrap gap-1">{badge("KYC", p.kyc_status)}{badge("AML", p.aml_status)}</div>
                 {p.checks.map((c: any) => (
                   <p key={c.id} className="text-xs text-muted-foreground">
-                    {new Date(c.created_at).toLocaleDateString()} · {c.mode === "link" ? "Identity-check link" : "Document only"} · {c.mode === "document" ? `ID ${c.id_status ?? "?"}, AML ${STATUS[c.aml_status] ?? c.aml_status ?? "not run"}` : STATUS[c.status] ?? c.status}
+                    {new Date(c.created_at).toLocaleDateString()} · {c.mode === "link" ? "Identity-check link" : c.mode === "assisted" ? "Helper-run ID check" : "Document only"} · {c.mode === "document" ? `ID ${c.id_status ?? "?"}, AML ${STATUS[c.aml_status] ?? c.aml_status ?? "not run"}` : STATUS[c.status] ?? c.status}
                     {c.mode === "link" && c.session_url && <> · <button type="button" className="underline" onClick={() => { void navigator.clipboard.writeText(c.session_url); toast.success("Link copied."); }}>Copy link</button></>}
                     {c.mode === "link" && <> · <button type="button" className="underline" disabled={pull.isPending} onClick={() => pull.mutate(c.id)}>Check result</button></>}
                   </p>

@@ -3053,6 +3053,13 @@
       "when": 1795464472369,
       "tag": "0435_signing_access_links",
       "breakpoints": true
+    },
+    {
+      "idx": 436,
+      "version": "7",
+      "when": 1795465077796,
+      "tag": "0436_assisted_identity_check_mode",
+      "breakpoints": true
     }
   ]
 }

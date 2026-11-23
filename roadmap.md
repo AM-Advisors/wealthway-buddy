@@ -1,5 +1,11 @@
 # Roadmap
 
+## Helper-run identity check (2026-11-23)
+- [x] Helpers (investor's helper, fund managers/team, Harmonious) can run the investor's identity check with an ID photo, no selfie
+- [x] Clears only when the ID is genuine, current, and name and birthday match the record; watchlist screening runs too
+- [x] Card on the investor record and on the helper's details page; three tries a day; every try recorded
+- [x] Investor's own sign-in still asks for the selfie (user choice)
+
 ## ROAS billing in the Operations menu (2026-11-20)
 - [x] "ROAS billing update" and "ROAS payments" no longer hide as a sub-list under Clients
 - [x] Both sit under their own "ROAS client billing" menu section, always visible

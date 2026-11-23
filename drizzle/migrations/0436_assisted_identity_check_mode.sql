@@ -1,0 +1,3 @@
+ALTER TABLE public.person_kyc_requests DROP CONSTRAINT IF EXISTS person_kyc_requests_mode_check;
+ALTER TABLE public.person_kyc_requests ADD CONSTRAINT person_kyc_requests_mode_check CHECK (mode = ANY (ARRAY['link'::text, 'document'::text, 'prior'::text, 'assisted'::text]));
+CREATE INDEX IF NOT EXISTS person_kyc_requests_person_mode_created_idx ON public.person_kyc_requests (person_id, mode, created_at DESC);
