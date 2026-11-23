@@ -1,5 +1,6 @@
 import { safeInternalPath } from "@/lib/app-origins";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -10,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRecoveryCode } from "@/lib/account-security.functions";
+import { cleanAuthenticatorCode, isSecondStepRequiredError, resetSecondStep } from "@/lib/reset-password-mfa";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -38,10 +41,30 @@ function ResetPasswordPage() {
   // so company email scanners that open links on arrival can't use it up first.
   const [pending, setPending] = useState<string | null>(null);
   const [linkFailed, setLinkFailed] = useState(false);
+  // Accounts with an authenticator app must enter its code before the password can change.
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState("");
+  const [showBackup, setShowBackup] = useState(false);
+  const [backup, setBackup] = useState("");
+  const useBackup = useServerFn(useRecoveryCode);
+
+  async function checkSecondStep() {
+    try {
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: f, error } = await supabase.auth.mfa.listFactors();
+      const verified = error || !f ? null : f.all.filter((x) => x.status === "verified").length;
+      // If factors can't be read, the code box still appears if the save is refused (see submit).
+      setNeedsCode(resetSecondStep({ currentLevel: aal?.currentLevel, verifiedFactorCount: verified }) === "needed");
+    } catch {
+      setNeedsCode(false);
+    }
+  }
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const hash = params.get("token_hash");
-    if (hash && params.get("type") === "recovery") setPending(hash);
+    if (hash && params.get("type") === "recovery") { setPending(hash); return; }
+    void supabase.auth.getSession().then(({ data }) => { if (data.session) void checkSecondStep(); });
   }, []);
 
   async function continueLink() {
@@ -51,6 +74,7 @@ function ResetPasswordPage() {
       const { error } = await supabase.auth.verifyOtp({ token_hash: pending, type: "recovery" });
       if (error) throw error;
       window.history.replaceState(null, "", "/reset-password");
+      await checkSecondStep().catch(() => undefined);
       setPending(null);
     } catch {
       setLinkFailed(true);
@@ -93,10 +117,41 @@ function ResetPasswordPage() {
       toast.error("Those passwords don't match.");
       return;
     }
+    let cleanCode: string | null = null;
+    if (needsCode) {
+      cleanCode = cleanAuthenticatorCode(code);
+      if (!cleanCode) {
+        toast.error("Enter the 6-digit code from your authenticator app.");
+        return;
+      }
+    }
     setBusy(true);
     try {
+      if (needsCode && cleanCode) {
+        const { data: f } = await supabase.auth.mfa.listFactors();
+        const totp = f?.totp?.find((x) => x.status === "verified");
+        if (!totp) {
+          toast.error("We couldn't find your authenticator app. Use a backup code instead.");
+          setShowBackup(true);
+          return;
+        }
+        const { error: codeError } = await supabase.auth.mfa.challengeAndVerify({ factorId: totp.id, code: cleanCode });
+        if (codeError) {
+          toast.error("That code didn't match. Check your authenticator app and try again.");
+          return;
+        }
+        setNeedsCode(false);
+        setCode("");
+      }
       const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      if (error) {
+        if (isSecondStepRequiredError(error)) {
+          setNeedsCode(true);
+          toast.error("Your account uses an authenticator app. Enter its 6-digit code, then save again.");
+          return;
+        }
+        throw error;
+      }
       toast.success("Your password is updated.");
       const next = safeInternalPath(sessionStorage.getItem("harmonious_next"), "");
       sessionStorage.removeItem("harmonious_next");
@@ -111,6 +166,21 @@ function ResetPasswordPage() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function submitBackup() {
+    setBusy(true);
+    const r = await useBackup({ data: { code: backup.trim() } }).catch(() => ({ ok: false }));
+    setBusy(false);
+    if (!r.ok) {
+      toast.error("That backup code isn't valid.");
+      return;
+    }
+    await supabase.auth.refreshSession().catch(() => undefined);
+    setNeedsCode(false);
+    setShowBackup(false);
+    setBackup("");
+    toast.success("Backup code accepted. Save your new password, then set up your authenticator app again.");
   }
 
   return (
@@ -151,10 +221,52 @@ function ResetPasswordPage() {
                 onChange={(e) => setConfirm(e.target.value)}
               />
             </div>
+            {needsCode && (
+              <div className="space-y-2 rounded-md border border-border bg-muted/40 p-3">
+                <Label htmlFor="auth-code" className="text-base">Authenticator code</Label>
+                <p className="text-sm text-muted-foreground">
+                  Your account uses an authenticator app. Open it and enter the 6-digit code for Harmonious.
+                </p>
+                <Input
+                  id="auth-code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  maxLength={9}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="text-lg tracking-widest"
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={busy}>
               {busy ? "Saving…" : "Save new password"}
             </Button>
           </form>
+          {needsCode && (
+            !showBackup ? (
+              <Button variant="link" className="mt-2 w-full" onClick={() => setShowBackup(true)}>
+                Lost your authenticator app? Use a backup code
+              </Button>
+            ) : (
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="backup-code">Backup code</Label>
+                <Input
+                  id="backup-code"
+                  autoComplete="one-time-code"
+                  placeholder="XXXXX-XXXXX"
+                  value={backup}
+                  onChange={(e) => setBackup(e.target.value)}
+                />
+                <Button variant="outline" className="w-full" disabled={busy || backup.trim().length < 6} onClick={submitBackup}>
+                  Use backup code
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Using a backup code removes your current authenticator app. You'll set up a new one after saving your password.
+                </p>
+              </div>
+            )
+          )}
           <p className="mt-6 text-sm text-muted-foreground">
             <Link to="/auth" className="hover:underline">
               Back to sign in

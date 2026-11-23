@@ -522,16 +522,46 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
 
   const fundName = (id: string | null) => (id ? (n.funds.get(id) ?? null) : null);
 
-  const onboardings = await safely(async () =>
-    rows(
-      await s
-        .from("investor_onboardings")
-        .select("id, offering_id, stage, funding_status, last_activity_at, updated_at")
-        .in("offering_id", fundIds)
-        .is("closed_at", null)
-        .limit(LIMIT),
-    ),
+  const { CLOSED_ONBOARDING_STAGES, isOpenOnboardingStage, onboardingInvestorName, onboardingWaitingStatus } = await import(
+    "@/lib/manager-onboarding-attention"
   );
+  const onboardings = (
+    await safely(async () =>
+      rows(
+        await s
+          .from("investor_onboardings")
+          .select("id, offering_id, stage, funding_status, person_id, investment_profile_id, last_activity_at, updated_at")
+          .in("offering_id", fundIds)
+          .is("closed_at", null)
+          .is("removed_at", null)
+          .is("merged_into_onboarding_id", null)
+          .not("stage", "in", `(${CLOSED_ONBOARDING_STAGES.join(",")})`)
+          .limit(LIMIT),
+      ),
+    )
+  ).filter((o: any) => isOpenOnboardingStage(o.stage));
+  // Names for investors in funds this reader manages (rows above are already
+  // limited to those funds); managers have no direct read on person records.
+  const personIds = [...new Set((onboardings as any[]).map((o) => o.person_id).filter(Boolean))];
+  const profileIds = [...new Set((onboardings as any[]).map((o) => o.investment_profile_id).filter(Boolean))];
+  const people = new Map<string, any>();
+  const profiles = new Map<string, any>();
+  if (personIds.length || profileIds.length) {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const d = supabaseAdmin as any;
+      const [pp, pr] = await Promise.all([
+        personIds.length
+          ? d.from("persons").select("id, preferred_name, legal_first_name, legal_last_name, email").in("id", personIds)
+          : { data: [] },
+        profileIds.length ? d.from("investment_profiles").select("id, legal_name, display_label").in("id", profileIds) : { data: [] },
+      ]);
+      for (const p of (pp.data ?? []) as any[]) people.set(p.id, p);
+      for (const p of (pr.data ?? []) as any[]) profiles.set(p.id, p);
+    } catch {
+      /* names are display-only; fall back below */
+    }
+  }
   for (const o of onboardings as any[]) {
     const stage = String(o.stage ?? "");
     const withHarmonious = stage === "harmonious_review";
@@ -542,14 +572,12 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "fund_manager",
         group: withHarmonious ? "harmonious_working" : "waiting_third_party",
         severity: "info",
-        title: "Investor onboarding in progress",
+        title: onboardingInvestorName(profiles.get(o.investment_profile_id), people.get(o.person_id)),
         workflowState: stage,
-        status: withHarmonious
-          ? "Harmonious is reviewing this investor"
-          : `Waiting on the investor at the ${stage.replace(/_/g, " ")} step`,
+        status: onboardingWaitingStatus(stage),
         sourceTable: "investor_onboardings",
         sourceId: o.id,
-        href: "/manager/investor-onboarding",
+        href: `/manager/fund/${o.offering_id}/investor/${o.id}`,
         at: o.last_activity_at ?? o.updated_at ?? null,
         fundName: fundName(o.offering_id),
       }),
