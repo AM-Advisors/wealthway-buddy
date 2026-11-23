@@ -201,3 +201,14 @@ export const fundAccountFn = createServerFn({ method: "POST" }).middleware([requ
 
 export const investorLevelsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorLevels(data.fundId); });
+
+/** Subscription packet PDF (subscription-packet.server.ts): staff or this fund's managers; read-only, logged, no wire details. */
+export const downloadSubscriptionPacketFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
+  .handler(async ({ data, context }) => {
+    const s = await srv(); await s.assertFund(context.userId, data.fundId);
+    const d = await s.db();
+    const { buildSubscriptionPacket } = await import("@/lib/subscription-packet.server");
+    const r = await buildSubscriptionPacket(d, { fundId: data.fundId });
+    await d.from("offering_audit_events").insert({ offering_id: data.fundId, actor_id: context.userId, event_type: "subscription_packet_downloaded", summary: "Subscription packet downloaded", changes: { included: r.included, missing: r.missing } }).then(() => null, () => null);
+    return { fileName: r.fileName, base64: Buffer.from(r.bytes).toString("base64"), missing: r.missing, pages: null };
+  });

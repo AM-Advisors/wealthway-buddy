@@ -43,12 +43,6 @@ export const Route = createFileRoute("/api/public/packet/$token")({
           .maybeSingle();
         if (!offering) return new Response("Fund not found.", { status: 404 });
 
-        const { data: docs } = await supabaseAdmin
-          .from("offering_documents")
-          .select("title, doc_type, body, requires_signature, sort_order")
-          .eq("offering_id", offering.id)
-          .order("sort_order", { ascending: true });
-
         let wireInstructions: Record<string, string> = {};
         if (link.include_wire) {
           const { data: wire } = await supabaseAdmin.rpc("get_wire_instructions_for_packet", {
@@ -57,22 +51,9 @@ export const Route = createFileRoute("/api/public/packet/$token")({
           wireInstructions = ((wire as any) ?? {}) as Record<string, string>;
         }
 
-        const { buildOfferingPacketPdf } = await import("@/lib/offering-pdf.server");
-        const bytes = await buildOfferingPacketPdf({
-          offeringName: offering.name,
-          regType: offering.reg_type,
-          summary: offering.summary,
-          minInvestmentCents: offering.min_investment_cents,
-          targetRaiseCents: offering.target_raise_cents,
-          isOpen: Boolean(offering.is_open),
-          wireInstructions,
-          documents: (docs ?? []).map((d: any) => ({
-            title: d.title,
-            docType: d.doc_type,
-            body: d.body,
-            requiresSignature: Boolean(d.requires_signature),
-          })),
-        });
+        // Same subscription packet as the fund Documents tab; wire details only when this link allows them.
+        const { buildSubscriptionPacket } = await import("@/lib/subscription-packet.server");
+        const { bytes } = await buildSubscriptionPacket(supabaseAdmin, { fundId: offering.id, wire: wireInstructions });
 
         await supabaseAdmin
           .from("offering_packet_links")
