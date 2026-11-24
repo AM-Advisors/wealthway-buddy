@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { remindFileSignerFn } from "@/lib/fund-file-signing.functions";
 import { emailFundSignatoryFn } from "@/lib/investor-document-review.functions";
 import { sendSubscriptionSignNoticeFn } from "@/lib/fund-tabs.functions";
-import { listSignatureCenterFn } from "@/lib/signature-center.functions";
+import { catchUpSignedInvestmentsFn, listSignatureCenterFn } from "@/lib/signature-center.functions";
 import {
   KIND_LABELS,
   ROLE_LABELS,
@@ -94,6 +94,7 @@ export function SignatureCenter({ surface, offeringId, everything, title = "Sign
           <div>
             <h2 className="text-xl font-semibold">{offeringId ? "Agreements to sign on this fund" : everything ? "Every fund" : "Your funds"}</h2>
             <p className="text-base text-muted-foreground">Side letters, subscription agreements and every other agreement sent for signature, who it&apos;s waiting on, and a Resend button.</p>
+            {surface === "ops" && !offeringId && <RecheckSigned onDone={() => q.refetch()} />}
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -390,5 +391,21 @@ function RemindDialog({ item, onClose, queryKey }: { item: any | null; onClose: 
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Staff: update investments that were signed but whose checklist was never rechecked. Marks nothing signed. */
+function RecheckSigned({ onDone }: { onDone: () => void }) {
+  const run = useServerFn(catchUpSignedInvestmentsFn);
+  const m = useMutation({
+    mutationFn: () => run(),
+    onSuccess: (r: any) => { toast.success(r.rechecked ? `Updated ${r.rechecked} signed investment${r.rechecked === 1 ? "" : "s"}.` : "Every signed investment is already up to date."); onDone(); },
+    onError: (e: Error) => toast.error(e.message || "The recheck couldn't run."),
+  });
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-3">
+      <Button variant="outline" disabled={m.isPending} onClick={() => m.mutate()}>{m.isPending ? "Checking..." : "Update signed investments"}</Button>
+      <span className="text-sm text-muted-foreground">Updates checklists for investors whose signatures were recorded but never counted.</span>
+    </div>
   );
 }

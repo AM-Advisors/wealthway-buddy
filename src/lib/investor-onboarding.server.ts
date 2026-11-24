@@ -3445,3 +3445,51 @@ export async function requestCountersignIfDue(onboardingId: string, moment: "on_
   await notifyFundManagers(row.offering_id, "approval_required", "Investor agreement countersignature", `/manager/fund/${row.offering_id}/investors`);
   return { sent: true };
 }
+
+/** Staff catch-up: recheck investments whose same-fund investor signatures were recorded after their last check.
+ *  Runs the canonical reconciliation only (never marks anything signed); logged per investment. */
+export async function staffCatchUpSignedInvestments(userId: string) {
+  await assertStaff(userId);
+  const { pickSignedRechecks } = await import("./signed-catch-up");
+  const { data: onbs } = await db().from("investor_onboardings")
+    .select("id, offering_id, stage, removed_at, executed_snapshot, application_id, investment_profile_id")
+    .is("removed_at", null).is("executed_snapshot", null).is("merged_into_onboarding_id", null).not("stage", "in", "(declined,cancelled,closed,funded)");
+  const rows = (onbs ?? []) as any[];
+  if (!rows.length) return { checked: 0, rechecked: 0 };
+  const appIds = rows.map((r) => r.application_id).filter(Boolean);
+  const profIds = rows.map((r) => r.investment_profile_id).filter(Boolean);
+  const sigs: any[] = [];
+  for (const [col, ids] of [["application_id", appIds], ["investment_profile_id", profIds]] as const) {
+    for (let i = 0; i < ids.length; i += 200) {
+      const { data } = await db().from("document_signatures").select("application_id, investment_profile_id, offering_document_id, signed_at, provider_completed_at")
+        .in(col, ids.slice(i, i + 200)).is("cancelled_at", null).not("signed_at", "is", null);
+      sigs.push(...((data ?? []) as any[]));
+    }
+  }
+  const docIds = [...new Set(sigs.map((s) => s.offering_document_id).filter(Boolean))];
+  const docFund = new Map<string, string>();
+  for (let i = 0; i < docIds.length; i += 200) {
+    const { data } = await db().from("offering_documents").select("id, offering_id").in("id", docIds.slice(i, i + 200));
+    for (const d of (data ?? []) as any[]) docFund.set(d.id, d.offering_id);
+  }
+  const candidates = rows.map((r) => {
+    const mine = sigs.filter((s) => docFund.get(s.offering_document_id) === r.offering_id && ((r.application_id && s.application_id === r.application_id) || (r.investment_profile_id && s.investment_profile_id === r.investment_profile_id)));
+    const latest = mine.map((s) => s.provider_completed_at ?? s.signed_at).sort().pop() ?? null;
+    return { r, latest };
+  }).filter((c) => c.latest);
+  const checkedAt = new Map<string, string>();
+  const ids = candidates.map((c) => c.r.id);
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data } = await db().from("onboarding_readiness_summaries").select("onboarding_id, computed_at").in("onboarding_id", ids.slice(i, i + 200));
+    for (const s of (data ?? []) as any[]) checkedAt.set(s.onboarding_id, s.computed_at);
+  }
+  // Readiness summaries refresh on page loads too, so also compare with the last recorded readiness change.
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data } = await db().from("investment_readiness_events").select("onboarding_id, created_at").in("onboarding_id", ids.slice(i, i + 200)).order("created_at", { ascending: false });
+    const seen = new Set<string>();
+    for (const e of (data ?? []) as any[]) if (!seen.has(e.onboarding_id)) { seen.add(e.onboarding_id); checkedAt.set(e.onboarding_id, e.created_at); }
+  }
+  const pick = pickSignedRechecks(candidates.map(({ r, latest }) => ({ id: r.id, stage: String(r.stage), removed: false, executed: false, latestSignedAt: latest, lastRecheckAt: checkedAt.get(r.id) ?? null })));
+  await reconcileAfter(pick, { actorUserId: userId, trigger: "staff_signed_catch_up" });
+  return { checked: candidates.length, rechecked: pick.length };
+}

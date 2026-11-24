@@ -10,3 +10,10 @@ export const listSignatureCenterFn = createServerFn({ method: "POST" }).middlewa
     const { loadSignatureCenter } = await import("@/lib/signature-center.server");
     return loadSignatureCenter({ userId: context.userId, email: ((context.claims as any)?.email as string | undefined) ?? null }, data);
   });
+
+/** Staff only (checked on the server): recheck investments signed after their last status check. */
+export const catchUpSignedInvestmentsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { staffCatchUpSignedInvestments } = await import("@/lib/investor-onboarding.server");
+    return staffCatchUpSignedInvestments(context.userId);
+  });
