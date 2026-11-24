@@ -142,6 +142,30 @@ describe("buildInvestorDirectory", () => {
     expect(rows).toEqual([]);
   });
 
+  it("groups investors by fund, then by name, with fundless investors last", async () => {
+    const { buildInvestorDirectory } = await import("@/lib/ops-records");
+    const rows = buildInvestorDirectory({
+      ...base,
+      persons: [
+        { id: "pa", user_id: null, legal_first_name: "Zoe", legal_last_name: "Adler", preferred_name: null, email: null },
+        { id: "pb", user_id: null, legal_first_name: "Amy", legal_last_name: "Baker", preferred_name: null, email: null },
+        { id: "pc", user_id: null, legal_first_name: "Bob", legal_last_name: "Clark", preferred_name: null, email: null },
+        { id: "pd", user_id: "u5", legal_first_name: "Ann", legal_last_name: "Dunn", preferred_name: null, email: "ann@example.com" },
+      ],
+      logins: [{ user_id: "u5", legal_name: "Ann Dunn", email: "ann@example.com", investor_type: null }],
+      onboardings: [
+        { id: "oa", person_id: "pa", investor_user_id: null, offering_id: "f2", investment_profile_id: null, stage: "funded" },
+        { id: "ob", person_id: "pb", investor_user_id: null, offering_id: "f1", investment_profile_id: null, stage: "funded" },
+        { id: "oc", person_id: "pc", investor_user_id: null, offering_id: "f1", investment_profile_id: null, stage: "funded" },
+      ],
+      profiles: [{ id: "ip5", person_id: "pd", owner_user_id: "u5", legal_name: "Ann Dunn", display_label: null, profile_type: "individual" }],
+    });
+    // Beta SPV investors before Alpha Fund I would be alphabetical by person;
+    // fund grouping puts Alpha Fund I (Amy, Bob) first, then Beta SPV (Zoe),
+    // then the fundless investor (Ann).
+    expect(rows.map((r) => r.title)).toEqual(["Amy Baker", "Bob Clark", "Zoe Adler", "Ann Dunn"]);
+  });
+
   it("search matches the investing party name", async () => {
     const { buildInvestorDirectory } = await import("@/lib/ops-records");
     const [row] = buildInvestorDirectory({

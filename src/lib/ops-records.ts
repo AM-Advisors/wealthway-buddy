@@ -467,7 +467,20 @@ export function buildInvestorDirectory(input: {
       isTestDemo: !!(a.person?.is_test_demo || login?.is_test_demo),
     });
   }
-  return out.sort((x, y) => x.title.localeCompare(y.title));
+  // Group by fund so every investor in a fund sits together: sort by the
+  // investor's first (alphabetical) fund, investors with no fund last, then
+  // by name within each fund.
+  return out.sort((x, y) => {
+    const xf = x.funds[0]?.fundName;
+    const yf = y.funds[0]?.fundName;
+    if (xf && yf) {
+      const byFund = xf.localeCompare(yf);
+      if (byFund !== 0) return byFund;
+    } else if (xf || yf) {
+      return xf ? -1 : 1;
+    }
+    return x.title.localeCompare(y.title);
+  });
 }
 
 /** Search matches the investor's name, email, client names and fund names. */
