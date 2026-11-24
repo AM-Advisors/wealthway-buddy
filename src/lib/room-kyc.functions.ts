@@ -72,6 +72,17 @@ export const getRoomApplication = createServerFn({ method: "GET" })
         .single();
       profile = inserted.data;
     }
+    // Blank login fields show what the person already gave us elsewhere (never tax IDs); they still save the form.
+    if (profile) {
+      const { ownKnownFacts } = await import("@/lib/known-person-facts.server");
+      const known = await ownKnownFacts(userId).catch(() => null);
+      if (known) {
+        const fill: Record<string, string> = { legal_name: known.full_name, phone: known.phone, date_of_birth: known.date_of_birth, address_line1: known.address_line1, city: known.city, region: known.region, postal_code: known.postal_code, country: known.country };
+        const merged: any = { ...profile };
+        for (const [k, v] of Object.entries(fill)) if (v && !String(merged[k] ?? "").trim()) merged[k] = v;
+        profile = merged;
+      }
+    }
 
     const application = await applicationForOffering(supabase, userId, data.offering_id);
     if (!application) {
