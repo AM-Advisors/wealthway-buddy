@@ -34,7 +34,7 @@ export const getStepRail = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<{ steps: RailStep[] }> => {
     const { supabase, userId } = context;
 
-    const [{ data: profile }, { data: application }] = await Promise.all([
+    const [{ data: profile }, { data: storedApplication }] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase
         .from("investor_applications")
@@ -43,6 +43,10 @@ export const getStepRail = createServerFn({ method: "GET" })
         .eq("id", await activeApplicationId(supabase, userId))
         .maybeSingle(),
     ]);
+
+    const { syncInvestorApplications } = await import("@/lib/investor-status-sync");
+    // The person's one identity result wins over a stale copy on the application.
+    const [application] = storedApplication ? await syncInvestorApplications(supabase, [storedApplication as any], userId) : [null as any];
 
     const blank = (): RailStep[] => [
       { key: "kyc", label: "Identity", status: "not_started", facts: [], capturedAt: null },

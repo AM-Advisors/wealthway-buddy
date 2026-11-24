@@ -15,7 +15,7 @@ export const getNavState = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [{ data: profile }, { data: application }] = await Promise.all([
+    const [{ data: profile }, { data: storedApplication }] = await Promise.all([
       import("@/lib/session-facts.server").then((m) => m.gatherPersonFacts(context)).then((data) => ({ data })),
       supabase
         .from("investor_applications")
@@ -26,6 +26,10 @@ export const getNavState = createServerFn({ method: "GET" })
         .eq("id", await activeApplicationId(supabase, userId))
         .maybeSingle(),
     ]);
+
+    const { syncInvestorApplications } = await import("@/lib/investor-status-sync");
+    // The person's one identity result wins over a stale copy on the application.
+    const [application] = storedApplication ? await syncInvestorApplications(supabase, [storedApplication as any], userId) : [null as any];
 
     if (!application) {
       return { profile, hasApplication: false, complete: false, steps: [] as NavStep[] };

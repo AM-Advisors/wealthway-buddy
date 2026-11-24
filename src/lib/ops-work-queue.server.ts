@@ -327,6 +327,9 @@ async function identityItems(s: any, lookup: Lookup, now: Date) {
   for (const k of kyc as any[]) {
     const app = byApp.get(k.application_id);
     if (!app) continue;
+    // One identity check per person: once the person's result is approved, an older or
+    // duplicate investment-level check is not a second decision to make (it stays on file).
+    if (String(app.kyc_status) === "approved") continue;
     const waiting = verificationNeedsConfirmation(String(k.status));
     if (!waiting) continue;
     out.push(

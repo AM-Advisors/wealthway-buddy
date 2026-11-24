@@ -114,7 +114,9 @@ export const getStepEngagement = createServerFn({ method: "GET" })
 
     const { data: appRows, error: appError } = await appQuery;
     if (appError) throw new Error(appError.message);
-    const applications = (appRows ?? []) as any[];
+    // Same identity/screening result as every other screen, not the stored copy.
+    const { canonicalizeApplications } = await import("@/lib/verification-status");
+    const applications = (await canonicalizeApplications(supabase, (appRows ?? []) as any[])) as any[];
     const appIds = applications.map((a) => a.id as string);
 
     const [{ data: viewRows }, { data: profileRows }] = await Promise.all([
