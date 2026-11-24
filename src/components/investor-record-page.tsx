@@ -12,7 +12,7 @@ import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
 import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
 import { useEffect, useRef, useState } from "react";
-import { Pencil } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { openTargetFor } from "@/lib/readiness-open-target";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -125,11 +125,12 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   );
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>{onOps ? <Link to="/ops/fund/$fundId" params={{ fundId }} className="text-sm text-muted-foreground hover:underline">← {data.fund?.name ?? "Fund"}</Link> : <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="text-sm text-muted-foreground hover:underline">← {data.fund?.name ?? "Fund"} investors</Link>}
-          <h2 className="mt-1 text-xl">{data.overview.name}</h2>
-          <p className="text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {entrySourceLabel(data.overview.enteredBy)}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
+    <section className="mx-auto w-full max-w-7xl space-y-6 px-4 pb-12 pt-8 sm:px-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          {onOps ? <Link to="/ops/fund/$fundId" params={{ fundId }} className="-ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><ArrowLeft className="h-4 w-4 shrink-0" />{data.fund?.name ?? "Fund"}</Link> : <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="-ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><ArrowLeft className="h-4 w-4 shrink-0" />{data.fund?.name ?? "Fund"} investors</Link>}
+          <h2 className="mt-3 text-2xl">{data.overview.name}</h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {entrySourceLabel(data.overview.enteredBy)}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
           {!data.overview.removed ? <Button size="sm" variant="outline" onClick={correctDetails}><Pencil className="mr-2 h-4 w-4" />Correct investor details</Button> : null}
           {data.overview.removed ? <Badge variant="destructive">Removed from Fund</Badge> : null}
@@ -137,12 +138,12 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           {data.pendingReviewCount ? <Badge variant="secondary">{data.pendingReviewCount} awaiting Harmonious review</Badge> : null}
         </div>
       </div>
-      <nav aria-label="Jump to section" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b bg-background px-1 py-1">{([...VISIBLE_TABS, ...(staff ? ["investor360" as const, "bsa" as const] : [])] as VisibleTab[]).map((t) => <Button key={t} size="sm" variant="ghost" className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</nav>
+      <nav aria-label="Jump to section" className="sticky top-[60px] z-20 flex gap-1 overflow-x-auto rounded-lg border bg-background/95 p-1 backdrop-blur">{([...VISIBLE_TABS, ...(staff ? ["investor360" as const, "bsa" as const] : [])] as VisibleTab[]).map((t) => <Button key={t} size="sm" variant="ghost" className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</nav>
 
-      {tab === "investor360" && staff ? <section aria-labelledby="ir-sec-360"><h3 id="ir-sec-360" className="scroll-mt-14 pt-2 text-lg font-semibold">Investor 360</h3>{data.overview.investorUserId ? <OpsRecordPage type="investor" id={data.overview.investorUserId} embedded /> : <p className="text-sm text-muted-foreground">No investor account linked yet.</p>}</section> : null}
+      {tab === "investor360" && staff ? <section aria-labelledby="ir-sec-360"><h3 id="ir-sec-360" className="scroll-mt-28 pt-2 text-lg font-semibold">Investor 360</h3>{data.overview.investorUserId ? <OpsRecordPage type="investor" id={data.overview.investorUserId} embedded /> : <p className="text-sm text-muted-foreground">No investor account linked yet.</p>}</section> : null}
 
       {tab === "overview" ? <>
-      <h3 id="ir-sec-overview" className="scroll-mt-14 pt-2 text-lg font-semibold">Overview</h3>
+      <h3 id="ir-sec-overview" className="scroll-mt-28 pt-2 text-lg font-semibold">Overview</h3>
       <div className="grid gap-4 md:grid-cols-2">
         {!data.overview.removed && <PersonalInvestmentLinkCard onboardingId={onboardingId} email={p?.email ?? undefined} />}
         {!data.overview.removed && !data.investorHasAccount ? <Card className="md:col-span-2"><CardContent className="pt-6 text-sm text-muted-foreground">Investor has not created an account yet. Send the invite above so they can sign in and complete their steps.</CardContent></Card> : null}
@@ -159,7 +160,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </> : null}
 
       {tab === "details" ? <>
-      <h3 id="ir-sec-details" className="scroll-mt-14 pt-2 text-lg font-semibold">Details</h3>
+      <h3 id="ir-sec-details" className="scroll-mt-28 pt-2 text-lg font-semibold">Details</h3>
       <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
         {field("amount", "Investment amount (USD)", inv.amountCents ? inv.amountCents / 100 : "")}
         {field("commitment", "Commitment amount (USD)", inv.commitmentCents ? inv.commitmentCents / 100 : "")}
@@ -204,7 +205,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </> : null}
 
       {tab === "actions" ? <>
-      <h3 id="ir-sec-actions" className="scroll-mt-14 pt-2 text-lg font-semibold">Verification &amp; actions</h3>
+      <h3 id="ir-sec-actions" className="scroll-mt-28 pt-2 text-lg font-semibold">Verification &amp; actions</h3>
       <div className="space-y-4">
       {staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} investorName={[p?.firstName, p?.middleName, p?.lastName].filter(Boolean).join(" ")} investorEmail={p?.email ?? undefined} /> : null}
       {staff && !data.overview.investorUserId ? <Card><CardHeader><CardTitle className="text-base">Identity & compliance screening</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
@@ -231,19 +232,19 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       </> : null}
 
       {tab === "documents" ? <>
-      <h3 id="ir-sec-documents" className="scroll-mt-14 pt-2 text-lg font-semibold">Documents</h3>
+      <h3 id="ir-sec-documents" className="scroll-mt-28 pt-2 text-lg font-semibold">Documents</h3>
       <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} fundId={fundId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
         <div className="mt-2"><Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/documents"} params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div>
       </> : null}
 
       {tab === "activity" ? <>
-      <h3 id="ir-sec-activity" className="scroll-mt-14 pt-2 text-lg font-semibold">Activity</h3>
+      <h3 id="ir-sec-activity" className="scroll-mt-28 pt-2 text-lg font-semibold">Activity</h3>
       <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} />
       {staff ? <InvestorSessionActivity onboardingId={onboardingId} /> : null}
       <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card>
       </> : null}
       {staff && tab === "bsa" ? <>
-      <h3 id="ir-sec-bsa" className="scroll-mt-14 pt-2 text-lg font-semibold">BSA (staff only)</h3>
+      <h3 id="ir-sec-bsa" className="scroll-mt-28 pt-2 text-lg font-semibold">BSA (staff only)</h3>
       <BsaProfilePanel onboardingId={onboardingId} />
       </> : null}
       {staff ? <ResolveExceptionsDialog onboardingId={onboardingId} open={resolvingIssues} onOpenChange={setResolvingIssues} onResolved={refresh} /> : null}
