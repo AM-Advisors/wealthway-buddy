@@ -816,7 +816,10 @@ export async function eligibleProfiles(userId: string) {
     .select("id, display_label, profile_type, legal_name, status")
     .eq("owner_user_id", actor.userId)
     .order("created_at", { ascending: true });
-  return { profiles: (data ?? []) as any[] };
+  // Facts already on file start a new personal profile; the investor confirms them. Never tax ID numbers.
+  const { ownKnownFacts } = await import("@/lib/known-person-facts.server");
+  const known = await ownKnownFacts(actor.userId).catch(() => null);
+  return { profiles: (data ?? []) as any[], known };
 }
 
 export async function chooseProfile(
@@ -865,6 +868,18 @@ export async function chooseProfile(
       .single();
     if (error) fail(error.message);
     profileId = created.id as string;
+    // Keep the full tax ID only in the encrypted vault, so the W-9 later reuses it instead of asking again.
+    const rawTin = String(input.create.kyc?.["tax_id"] ?? "").replace(/\D/g, "");
+    if (rawTin.length === 9) {
+      try {
+        const { encryptTin } = await import("@/lib/irs-forms.server");
+        const enc = await encryptTin(rawTin);
+        const { error: vaultErr } = await db().rpc("store_profile_tax_id", { _profile: profileId, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId });
+        if (!vaultErr) await (await import("@/lib/account-connect.server")).recordProfileTin(profileId, rawTin).catch(() => null);
+      } catch (e) {
+        console.error("[onboarding] tax ID not secured; the W-9 will ask for it", (e as Error).message);
+      }
+    }
   } else {
     fail("Tell us who is making this investment.");
   }

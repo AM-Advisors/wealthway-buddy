@@ -326,6 +326,40 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
 
 type ChecklistStateT = "valid" | "refresh_required" | "missing" | "review_required" | "not_applicable";
 
+/**
+ * The full tax ID already secured for this investing profile: the profile's own
+ * secure copy first, then the latest signed tax form that retained one.
+ * Server-only. Only the last four digits ever leave the server.
+ */
+async function tinOnFile(d: any, profileId: string): Promise<{ tin: string; last4: string } | null> {
+  try {
+    const { decryptTin } = await import("@/lib/irs-forms.server");
+    const { data: own } = await d.rpc("read_profile_tax_id", { _profile: profileId });
+    let row = ((own ?? []) as any[])[0] ?? null;
+    if (!row) {
+      const { data: forms } = await d.from("investor_tax_forms").select("id").eq("investment_profile_id", profileId).eq("tin_retained", true).order("certified_at", { ascending: false }).limit(1);
+      const formId = ((forms ?? []) as any[])[0]?.id;
+      if (formId) {
+        const { data: v } = await d.rpc("read_tax_identifier", { _form: formId });
+        row = ((v ?? []) as any[])[0] ?? null;
+      }
+    }
+    if (!row) return null;
+    const tin = (await decryptTin(row.ciphertext, row.iv)).replace(/\D/g, "");
+    return validTin(tin) ? { tin, last4: tin.slice(-4) } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Use the secured tax ID instead of asking again, only when the investor chose it and typed none. */
+async function withTinOnFile<T extends { tin?: string | null | undefined; useTinOnFile?: boolean | undefined }>(d: any, ob: any, formType: string, input: T): Promise<T> {
+  if (!input.useTinOnFile || input.tin || formType !== "w9") return input;
+  const onFile = await tinOnFile(d, ob.investment_profile_id);
+  if (!onFile) fail("We couldn't find a tax ID on file for this investing profile. Please enter it.");
+  return { ...input, tin: onFile.tin };
+}
+
 async function loadOwnOnboarding(userId: string, onboardingId: string) {
   const d = await db();
   const { data: ob } = await d
@@ -487,6 +521,8 @@ export async function investorComplianceView(userId: string, onboardingId: strin
       reason: r.taxState.reason ?? null,
       form: r.routing.status === "determined" ? IRS_FORM_REVISIONS[r.routing.formType] : null,
       needsTin: r.routing.status === "determined" && r.routing.formType === "w9",
+      // Last four digits of a tax ID already secured for this investing profile, so the W-9 need not ask again.
+      tinOnFileLast4: r.routing.status === "determined" && r.routing.formType === "w9" ? (await tinOnFile(d, ob.investment_profile_id))?.last4 ?? null : null,
       tinKind: isIndividualProfile(profile.profile_type) || profile.profile_type === "ira" ? "ssn" : "ein",
       uploadedCopy: r.uploadedTaxForm ? { id: r.uploadedTaxForm.id, fileName: r.uploadedTaxForm.file_name } : null,
       current: current?.[0]
@@ -609,11 +645,12 @@ async function requireDeterminedRouting(userId: string, ob: any, profile: any) {
 /** Populate the official form for review. Returned only to the investor it belongs to. */
 export async function previewTaxForm(
   userId: string,
-  input: { onboardingId: string; formType: TaxFormType; legalName: string; tin?: string | null | undefined; foreignTin?: string | null | undefined; origin?: string | null },
+  rawInput: { onboardingId: string; formType: TaxFormType; legalName: string; tin?: string | null | undefined; foreignTin?: string | null | undefined; useTinOnFile?: boolean | undefined; origin?: string | null },
 ) {
-  const { d, ob, profile } = await loadOwnOnboarding(userId, input.onboardingId);
+  const { d, ob, profile } = await loadOwnOnboarding(userId, rawInput.onboardingId);
   const { routing } = await requireDeterminedRouting(userId, ob, profile);
-  if (routing.formType !== input.formType) fail("That tax form does not apply to this investing profile.");
+  if (routing.formType !== rawInput.formType) fail("That tax form does not apply to this investing profile.");
+  const input = await withTinOnFile(d, ob, routing.formType, rawInput);
   const { person } = await loadFacts(d, ob, userId);
   const { loadOfficialTemplate, renderOfficialTaxForm } = await import("@/lib/irs-forms.server");
   const tpl = await loadOfficialTemplate(routing.formType, input.origin);
@@ -626,12 +663,17 @@ export async function previewTaxForm(
 /** Certify & sign the populated official form. Previous forms are superseded, never overwritten. */
 export async function certifyTaxForm(
   userId: string,
-  input: { onboardingId: string; formType: TaxFormType; legalName: string; tin?: string | null | undefined; foreignTin?: string | null | undefined; certifiedName: string; acknowledgedRevision: string; userAgent?: string | null; origin?: string | null },
+  rawInput: { onboardingId: string; formType: TaxFormType; legalName: string; tin?: string | null | undefined; foreignTin?: string | null | undefined; useTinOnFile?: boolean | undefined; certifiedName: string; acknowledgedRevision: string; userAgent?: string | null; origin?: string | null },
 ) {
-  const { d, ob, profile } = await loadOwnOnboarding(userId, input.onboardingId);
+  const { d, ob, profile } = await loadOwnOnboarding(userId, rawInput.onboardingId);
   const { routing, factsId } = await requireDeterminedRouting(userId, ob, profile);
   // The server decides the form; a browser asking for another form is refused.
-  if (routing.formType !== input.formType) fail("That tax form does not apply to this investing profile.");
+  if (routing.formType !== rawInput.formType) fail("That tax form does not apply to this investing profile.");
+  const input = await withTinOnFile(d, ob, routing.formType, rawInput);
+  if (input.useTinOnFile && !rawInput.tin && input.tin) {
+    // Record the reuse (never the number) so the signed form's source is traceable.
+    await d.from("investor_onboarding_events").insert({ onboarding_id: ob.id, offering_id: ob.offering_id, event: "tax_id_on_file_reused", actor_user_id: userId, actor_role: "investor", detail: { form_type: routing.formType } }).then(() => null, () => null);
+  }
   const rev = IRS_FORM_REVISIONS[routing.formType];
   if (input.acknowledgedRevision !== rev.revision) fail("The form revision changed. Reload and review the current form.");
   if (routing.formType === "w9" && (!input.tin || !validTin(input.tin))) fail("Enter a valid 9-digit taxpayer identification number.");

@@ -1,5 +1,13 @@
 # Roadmap
 
+## No repeat questions (2026-11-24)
+- [x] Complete your profile and new personal investing profiles start with details already on file; investor still confirms
+- [x] W-9 uses the tax ID already secured for that investing profile (only last four shown); new profiles now secure the full number
+- [x] Sign-off name/title, older document screen ownership/tax type and older funding screen sending bank start filled in
+- [x] Fund minimum: clearing or changing it updates both setup copies
+- [ ] 13 investments with two different amounts listed for review — waiting on Alyssa to pick the right amounts
+- [ ] Trusts/companies: new ones have no recorded owners yet, so nothing to reuse; no current cases
+
 ## Submit subscription happens on its own (2026-11-23)
 - [x] Once all investor signatures are confirmed, the subscription submits with no extra click
 - [x] Chris Par's Erebor subscription submitted; no other in-progress investment had the same gap

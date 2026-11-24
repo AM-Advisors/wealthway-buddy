@@ -285,7 +285,8 @@ export async function updateFundInformation(
   const mirror: Record<string, unknown> = {};
   if ("domicile" in update) mirror["state_formed"] = update["domicile"] || null;
   if ("target_size_cents" in update) mirror["target_raise_cents"] = update["target_size_cents"] ?? null;
-  if ("min_investment_cents" in update && update["min_investment_cents"] != null) mirror["min_investment_cents"] = update["min_investment_cents"];
+  // Clearing the minimum clears it on the Fund too, so investors never meet a stale minimum.
+  if ("min_investment_cents" in update) mirror["min_investment_cents"] = update["min_investment_cents"] ?? null;
   if ("formation_date" in update) mirror["date_formed"] = update["formation_date"] || null;
   if ("entity_type" in update && update["entity_type"]) mirror["entity_type"] = normalizeEntityType(String(update["entity_type"]));
   if (Object.keys(mirror).length && (data as any)?.offering_id) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { newProfilePrefill } from "@/lib/known-person-facts";
 import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
 import { SignDocumentButton } from "@/components/sign-document-button";
 import { AcknowledgeDocumentDialog } from "@/components/acknowledge-document-dialog";
@@ -238,6 +239,18 @@ export function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: stri
   const setAmt = useAction(amountFn, "Amount saved.", done);
   const list: any[] = (profiles.data as any)?.profiles ?? [];
   const [showNew, setShowNew] = useState(false);
+  // Investing as yourself: details already on file start filled in; the investor checks them.
+  const known = (profiles.data as any)?.known ?? null;
+  const applyKnown = (type: string) => {
+    const pre = newProfilePrefill(type, known);
+    setKyc(pre.kyc);
+    setNewName(pre.name);
+  };
+  useEffect(() => {
+    if (known) applyKnown(newType);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [known]);
+  const prefilled = Object.keys(newProfilePrefill(newType, known).kyc).length > 0;
   useEffect(() => {
     if (!profileId && list.length > 0) setProfileId(list[0].id);
   }, [profileId, list]);
@@ -280,10 +293,11 @@ export function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: stri
         ) : (
         <div className="space-y-3 rounded-md border p-4">
           <p className="text-sm font-medium">Add new investment profile</p>
+          {prefilled ? <p className="text-sm text-muted-foreground">We filled in the details you've already given us. Check them and add your tax ID.</p> : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label>Type</Label>
-              <Select value={newType} onValueChange={(v) => { setNewType(v); setKyc({}); }}>
+              <Select value={newType} onValueChange={(v) => { setNewType(v); applyKnown(v); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{PROFILE_TYPES.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
               </Select>
@@ -305,7 +319,7 @@ export function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: stri
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">We use these details to verify this profile once. We keep only the last four digits of ID numbers, and you won't be asked again for other funds.</p>
+          <p className="text-xs text-muted-foreground">We use these details to verify this profile once. Your tax ID is stored encrypted and only the last four digits are ever shown, so your tax form won't ask for it again.</p>
           <Button
             variant="outline"
             disabled={newName.trim().length < 2 || missing}

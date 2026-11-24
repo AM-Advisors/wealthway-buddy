@@ -97,6 +97,11 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
   const [accountType, setAccountType] = useState<"checking" | "savings">("checking");
   const [authorize, setAuthorize] = useState(false);
 
+  // The bank they wired from before starts filled in.
+  const savedSendingBank = (data as any)?.savedSendingBank as string | null | undefined;
+  useEffect(() => {
+    if (savedSendingBank) setSendingBank((b) => b || savedSendingBank);
+  }, [savedSendingBank]);
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["funding", offeringId ?? "active"] });
   const onError = (e: Error) => toast.error(e.message);
 

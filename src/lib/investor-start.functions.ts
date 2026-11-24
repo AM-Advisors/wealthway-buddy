@@ -22,7 +22,14 @@ export const getOwnProfileGap = createServerFn({ method: "GET" })
     const d = await admin();
     const { data: person } = await d.from("persons").select(`id, ${PROFILE_FIELDS.join(", ")}`).eq("user_id", context.userId).is("merged_into_person_id", null).limit(1).maybeSingle();
     const missing = missingProfileFields(person ?? null, { isStaff: await isStaff(context.supabase, context.userId) });
-    return { missing, values: person ? Object.fromEntries(PROFILE_FIELDS.map((f) => [f, (person as any)[f] ?? ""])) : {} };
+    // Details already given elsewhere (own investing profile, login account) start filled in; the person still confirms.
+    let suggested: Record<string, string> = {};
+    if (missing.length) {
+      const { ownKnownFacts } = await import("@/lib/known-person-facts.server");
+      const { profileStepPrefill } = await import("@/lib/known-person-facts");
+      suggested = profileStepPrefill(missing, await ownKnownFacts(context.userId));
+    }
+    return { missing, suggested, values: person ? Object.fromEntries(PROFILE_FIELDS.map((f) => [f, (person as any)[f] ?? ""])) : {} };
   });
 
 export const saveOwnProfile = createServerFn({ method: "POST" })

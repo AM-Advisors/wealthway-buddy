@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -23,6 +23,11 @@ export function ProfileStep({ children, showLogo = true }: { children: ReactNode
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Start with what we already have; the person checks it before saving.
+  const suggested = (q.data as any)?.suggested as Record<string, string> | undefined;
+  useEffect(() => {
+    if (suggested && Object.keys(suggested).length) setValues((v) => ({ ...suggested, ...v }));
+  }, [suggested]);
 
   // Never block the portal on this step's own load failure.
   if (q.isPending || q.isError || !q.data?.missing.length) return <>{children}</>;
@@ -48,7 +53,7 @@ export function ProfileStep({ children, showLogo = true }: { children: ReactNode
         <div>
           <h1 className="text-2xl">Complete your profile</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            These are your own contact details. You'll add the details of who is investing (you, a trust or a business) in your investment steps.
+            {suggested && Object.keys(suggested).length ? "We filled in what you've already given us. Check it and add anything missing. " : null}These are your own contact details. You'll add the details of who is investing (you, a trust or a business) in your investment steps.
           </p>
         </div>
         {missing.map((f) => (

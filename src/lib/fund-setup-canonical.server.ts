@@ -265,6 +265,10 @@ export async function saveFundSetupFields(
     update.updated_at = new Date().toISOString();
     const { error } = await db().from("offerings").update(update).eq("id", input.offeringId);
     if (error) throw new Error(error.message);
+    // Keep the setup copy of the minimum in step, so its fallback can never revive an old amount.
+    if ("min_investment_cents" in update) {
+      await db().from("fund_setups").update({ min_investment_cents: update.min_investment_cents ?? null, updated_at: update.updated_at }).eq("offering_id", input.offeringId);
+    }
   }
   if (input.setupFields && Object.keys(input.setupFields).length) {
     const { data: o } = await db().from("offerings").select("fund_type").eq("id", input.offeringId).maybeSingle();

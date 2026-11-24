@@ -1,7 +1,8 @@
 /**
  * Details collected when an investor adds a new investment profile, so the
  * identity provider has what it needs for KYC (people) or KYB (entities).
- * Full tax ID numbers are never stored: only the last four digits are kept.
+ * Full tax ID numbers are never kept on the profile row: only the last four digits; the full
+ * number goes only to the encrypted tax ID vault (see chooseProfile) for later W-9 reuse.
  */
 export type KycField = { key: string; label: string; required: boolean; kind?: "date" | "taxid" | "text" };
 

@@ -250,7 +250,19 @@ export const getFunding = createServerFn({ method: "GET" })
       .eq("application_id", application.id)
       .order("created_at", { ascending: false });
 
+    // The bank this investor wired from last time (any of their own investments) starts the form; they still confirm it.
+    let savedSendingBank: string | null = ((wireConfirmations ?? [])[0] as any)?.sending_bank_name ?? null;
+    if (!savedSendingBank) {
+      const { data: ownApps } = await supabase.from("investor_applications").select("id").eq("user_id", userId);
+      const ids = ((ownApps ?? []) as any[]).map((a) => a.id as string);
+      if (ids.length) {
+        const { data: lastWire } = await supabase.from("wire_confirmations").select("sending_bank_name").in("application_id", ids).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        savedSendingBank = ((lastWire as any)?.sending_bank_name as string | null | undefined) ?? null;
+      }
+    }
+
     return {
+      savedSendingBank,
       application,
       offering,
       payment,

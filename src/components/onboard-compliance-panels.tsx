@@ -362,13 +362,17 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
   useEffect(() => { if (!nameEdited && defaultName) setLegalName(defaultName); }, [defaultName, nameEdited]);
   const [tin, setTin] = useState("");
   const [foreignTin, setForeignTin] = useState("");
+  // A tax ID already secured for this investing profile is used unless the investor chooses to enter a different one.
+  const [enterNewTin, setEnterNewTin] = useState(false);
+  const tinOnFileLast4 = (q.data?.tax as any)?.tinOnFileLast4 as string | null | undefined;
+  const useTinOnFile = Boolean(q.data?.tax.needsTin && tinOnFileLast4 && !enterNewTin);
   const [sig, setSig] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [reviewedKey, setReviewedKey] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   const form = q.data?.tax.form;
-  const currentKey = JSON.stringify([onboardingId, form?.formType, form?.revision, legalName, tin, foreignTin]);
+  const currentKey = JSON.stringify([onboardingId, form?.formType, form?.revision, legalName, tin, foreignTin, useTinOnFile]);
   const currentKeyRef = useRef(currentKey);
   currentKeyRef.current = currentKey;
   const previewCurrent = taxPreviewMatches(reviewedKey, currentKey);
@@ -376,7 +380,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
     mutationFn: async () => {
       if (!form) throw new Error("Complete your tax information first.");
       const key = currentKey;
-      const result = await previewFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null } });
+      const result = await previewFn({ data: { onboardingId, formType: form.formType, legalName, tin: useTinOnFile ? null : tin || null, foreignTin: foreignTin || null, useTinOnFile } });
       return { ...result, key };
     },
     onSuccess: (r) => {
@@ -392,7 +396,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
     mutationFn: () => {
       if (!form) throw new Error("Complete your tax information first.");
       if (!previewCurrent) throw new Error("Review the updated tax form before signing.");
-      return taxFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null, certifiedName: sig, acknowledgedRevision: form.revision } });
+      return taxFn({ data: { onboardingId, formType: form.formType, legalName, tin: useTinOnFile ? null : tin || null, foreignTin: foreignTin || null, useTinOnFile, certifiedName: sig, acknowledgedRevision: form.revision } });
     },
     onSuccess: () => { toast.success(`${form?.title ?? "Tax form"} signed`); setTin(""); setForeignTin(""); setPreviewUrl(null); setUpdating(false); qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
     onError: (e: Error) => toast.error(e.message),
@@ -425,12 +429,18 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
       </CardHeader>
       <CardContent className="space-y-3">
         <div><Label>Name as shown on your tax return</Label><Input value={legalName} onChange={(e) => { setNameEdited(true); setLegalName(e.target.value); }} maxLength={200} /></div>
-        {d.tax.needsTin ? (
+        {d.tax.needsTin && useTinOnFile ? (
+          <div className="space-y-1">
+            <Label>{d.tax.tinKind === "ssn" ? "Social Security number" : "Employer identification number (EIN)"}</Label>
+            <p className="text-base">Using the number you already gave us, ending in {tinOnFileLast4}.</p>
+            <Button variant="link" className="h-auto p-0" onClick={() => setEnterNewTin(true)}>Use a different number</Button>
+          </div>
+        ) : d.tax.needsTin ? (
           <div><Label>{d.tax.tinKind === "ssn" ? "Social Security number" : "Employer identification number (EIN)"}</Label><Input value={tin} onChange={(e) => setTin(e.target.value)} inputMode="numeric" autoComplete="off" maxLength={11} type="password" /></div>
         ) : form.formType === "w8ben" ? (
           <div><Label>Foreign tax identifying number (if any)</Label><Input value={foreignTin} onChange={(e) => setForeignTin(e.target.value)} autoComplete="off" maxLength={40} /></div>
         ) : null}
-        <Button variant="outline" disabled={preview.isPending || legalName.trim().length < 2 || (d.tax.needsTin && tin.replace(/\D/g, "").length !== 9)} onClick={() => preview.mutate()}>
+        <Button variant="outline" disabled={preview.isPending || legalName.trim().length < 2 || (d.tax.needsTin && !useTinOnFile && tin.replace(/\D/g, "").length !== 9)} onClick={() => preview.mutate()}>
           {preview.isPending ? "Preparing…" : `Review ${form.title}`}
         </Button>
         {previewUrl && previewCurrent ? (

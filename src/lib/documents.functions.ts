@@ -100,6 +100,22 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
     const { outsideSignedOn } = await import("@/lib/outside-subscription-document");
     const investment = await closedInvestmentFor(supabaseAdmin, userId, { offeringId: application.offering_id, applicationId: application.id });
     const publication = await documentPublicationFor(supabaseAdmin, documents ?? [], investment.onboardingId, signatures ?? [], application.offering_id);
+    // Details already recorded for this investment's investing party start the form; the investor still saves them.
+    let prefill: { ownershipTitle: string | null; taxClassification: string | null } = { ownershipTitle: null, taxClassification: null };
+    if (investment.onboardingId && !(subscription?.ownership_title && subscription?.tax_classification)) {
+      const { data: ob } = await supabaseAdmin.from("investor_onboardings").select("investment_profile_id").eq("id", investment.onboardingId).maybeSingle();
+      const pid = (ob as any)?.investment_profile_id as string | null | undefined;
+      if (pid) {
+        const [{ data: ip }, { data: tax }] = await Promise.all([
+          supabaseAdmin.from("investment_profiles").select("legal_name, display_label, owner_user_id").eq("id", pid).maybeSingle(),
+          supabaseAdmin.from("investor_tax_profiles").select("classification").eq("investment_profile_id", pid).maybeSingle(),
+        ]);
+        prefill = {
+          ownershipTitle: ((ip as any)?.legal_name || (ip as any)?.display_label || null) as string | null,
+          taxClassification: ((tax as any)?.classification ?? null) as string | null,
+        };
+      }
+    }
     return {
       application,
       offering,
@@ -113,6 +129,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
       signatures: ((signatures ?? []) as any[]).filter((x) => signatureConfirmed(x)).map(({ provider: _p, provider_status: _ps, provider_completed_at: done, cancelled_at: _c, ...rest }) => ({ ...rest, signed_at: done ?? rest.signed_at })) as typeof signatures & any[],
       subscription,
       profile,
+      prefill,
     };
   });
 

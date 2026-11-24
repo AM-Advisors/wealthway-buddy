@@ -27,6 +27,7 @@ export const certifyTaxFormFn = createServerFn({ method: "POST" })
       legalName: z.string().trim().min(2).max(200),
       tin: z.string().trim().max(20).nullable().optional(),
       foreignTin: z.string().trim().max(40).nullable().optional(),
+      useTinOnFile: z.boolean().optional(),
       certifiedName: z.string().trim().min(2).max(200),
       acknowledgedRevision: z.string().trim().max(60),
     }).parse,
@@ -85,6 +86,7 @@ export const previewTaxFormFn = createServerFn({ method: "POST" })
       legalName: z.string().trim().min(2).max(200),
       tin: z.string().trim().max(20).nullable().optional(),
       foreignTin: z.string().trim().max(40).nullable().optional(),
+      useTinOnFile: z.boolean().optional(),
     }).parse,
   )
   .handler(async ({ data, context }) => (await engine()).previewTaxForm(context.userId, { ...data, origin: originOf() }));

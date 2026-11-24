@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { newProfilePrefill } from "@/lib/known-person-facts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Circle, Loader2, Lock } from "lucide-react";
@@ -286,6 +287,14 @@ function ProfileChooser({ onboardingId, done }: { onboardingId: string; done: ()
   const [type, setType] = useState("individual");
   const [name, setName] = useState("");
   const [kyc, setKyc] = useState<Record<string, string>>({});
+  const known = (profiles.data as any)?.known ?? null;
+  // Investing as yourself: details already on file start filled in; the investor checks them.
+  const applyKnown = (t: string) => { const pre = newProfilePrefill(t, known); setKyc(pre.kyc); setName(pre.name); };
+  useEffect(() => {
+    if (known) applyKnown(type);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [known]);
+  const prefilled = Object.keys(newProfilePrefill(type, known).kyc).length > 0;
   const fields = kycFieldsFor(type as any, false);
   const kycMissing = fields.some((f) => f.required && !(kyc[f.key] ?? "").trim());
   const choose = useMutation({
@@ -312,9 +321,10 @@ function ProfileChooser({ onboardingId, done }: { onboardingId: string; done: ()
         ) : null}
         <div className="space-y-3 rounded-md border p-4">
           <p className="text-sm font-medium">{list.length ? "Or add a new one" : "Tell us who is investing"}</p>
+          {prefilled ? <p className="text-sm text-muted-foreground">We filled in the details you've already given us. Check them and add your tax ID.</p> : null}
           <div>
             <Label>Investing as</Label>
-            <Select value={type} onValueChange={setType}>
+            <Select value={type} onValueChange={(v) => { setType(v); applyKnown(v); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{PROFILE_TYPES.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
             </Select>
@@ -335,7 +345,7 @@ function ProfileChooser({ onboardingId, done }: { onboardingId: string; done: ()
               />
             </div>
           ))}
-          <p className="text-xs text-muted-foreground">We use these details to verify this profile once. We keep only the last four digits of ID numbers.</p>
+          <p className="text-xs text-muted-foreground">We use these details to verify this profile once. Your tax ID is stored encrypted and only the last four digits are ever shown, so your tax form won't ask for it again.</p>
           <Button
             className="w-full sm:w-auto"
             disabled={name.trim().length < 2 || kycMissing || choose.isPending}

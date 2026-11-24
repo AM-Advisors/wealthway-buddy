@@ -36,6 +36,14 @@ export function InvestorSignoffCard() {
   const [title, setTitle] = useState("");
   const [agreed, setAgreed] = useState<boolean[]>([]);
 
+  // A changed commitment needs a fresh sign-off; the name and title given last time start filled in.
+  useEffect(() => {
+    if (data?.latest) {
+      setName((n) => n || data.latest!.signerName || "");
+      setTitle((t) => t || data.latest!.signerTitle || "");
+    }
+  }, [data?.latest?.id]);
+
   useEffect(() => {
     if (data?.acknowledgements) setAgreed(data.acknowledgements.map(() => false));
   }, [data?.acknowledgements?.length, data?.status]);

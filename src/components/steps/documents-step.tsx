@@ -114,8 +114,11 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
     if (data.subscription?.commitment_cents) {
       setAmount(String(data.subscription.commitment_cents / 100));
     }
-    if (data.subscription?.ownership_title) setTitle(data.subscription.ownership_title);
-    if (data.subscription?.tax_classification) setTaxClass(data.subscription.tax_classification);
+    const pre = (data as any).prefill as { ownershipTitle: string | null; taxClassification: string | null } | undefined;
+    const ownershipTitle = data.subscription?.ownership_title || pre?.ownershipTitle;
+    if (ownershipTitle) setTitle((t) => t || ownershipTitle);
+    const taxClassification = data.subscription?.tax_classification || pre?.taxClassification;
+    if (taxClassification && TAX_CLASSES.some(([v]) => v === taxClassification)) setTaxClass(taxClassification);
     const legalName = data.profile?.legal_name;
     if (legalName) {
       setSignerName((n) => n || legalName);
