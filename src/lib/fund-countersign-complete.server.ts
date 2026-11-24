@@ -27,6 +27,11 @@ export async function completeFundCountersign(db: any, input: { signerRowId: str
     await db.from("document_signature_signers").update({ status: "signed", signed_at: signedAt, last_event_at: signedAt }).eq("id", me.id).neq("status", "signed");
   }
   if (sig?.application_id && me.signer_user_id) await releaseFundingAfterCountersign(db, sig.application_id, me.signer_user_id);
+  // Every path that records a signature rechecks the investment so its checklist counts it.
+  if (sig?.application_id) {
+    const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+    await reconcileReadinessForSubjects({ applicationId: sig.application_id }, "fund_countersign").catch((e) => console.error("[countersign] readiness recheck failed", e));
+  }
   return { completed: true };
 }
 

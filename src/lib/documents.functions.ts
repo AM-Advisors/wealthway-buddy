@@ -367,6 +367,9 @@ export const signDocument = createServerFn({ method: "POST" })
       }
     }
 
+    // Recheck the investment so its checklist counts this signature right away.
+    const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+    await reconcileReadinessForSubjects({ applicationId: application.id }, "in_platform_signature").catch((e) => console.error("[sign] readiness recheck failed", e));
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, allSigned, documentHash };
   });
