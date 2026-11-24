@@ -25,3 +25,17 @@ describe("investor progress dashboard", () => {
     expect(r.nextStep).toBe("Investor submits the questionnaire (draft saved)");
   });
 });
+
+import { checkState as _cs, signingProgressRow as _row } from "./investor-signing-progress-model";
+describe("KYC and AML columns", () => {
+  const base = { onboardingId: "o", fundId: "f", fundName: null, investorName: null, stage: "sign", questionnaireSubmitted: false, questionnaireAnswered: 0, taxFormType: null, taxFormSigned: false, documentsPrepared: false, signaturesCompleted: 0, fundingStatus: null, blocked: false, nextOwner: null, updatedAt: null };
+  it("maps complete to done and review to in progress", () => {
+    expect(_cs("complete")).toBe("done");
+    expect(_cs("under_review")).toBe("in_progress");
+    expect(_cs("needs_harmonious")).toBe("not_started");
+  });
+  it("hides entity check when not applicable", () => {
+    const r = _row({ ...base, checks: { kyc: "complete", kyb: "not_applicable", aml: "under_review" } });
+    expect([r.kyc, r.kyb, r.aml]).toEqual(["done", null, "in_progress"]);
+  });
+});

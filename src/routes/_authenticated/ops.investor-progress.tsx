@@ -46,7 +46,7 @@ function InvestorProgressPage() {
     <div className="mx-auto max-w-6xl space-y-4 p-4">
       <div>
         <h1 className="text-2xl">Investor progress</h1>
-        <p className="text-base text-muted-foreground">Questionnaire, tax form and signatures for every open investment, with what each one is waiting on. Nothing here changes a record.</p>
+        <p className="text-base text-muted-foreground">KYC, AML, questionnaire, tax form and signatures for every open investment, with what each one is waiting on. Nothing here changes a record.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <Input aria-label="Search investors" placeholder="Search by investor or fund" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
@@ -60,11 +60,13 @@ function InvestorProgressPage() {
         : <div className="overflow-x-auto rounded-md border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left"><tr>
-                <th className="p-3">Investor</th><th className="p-3">Questionnaire</th><th className="p-3">Tax form</th><th className="p-3">Signatures</th><th className="p-3">Next step</th>
+                <th className="p-3">Investor</th><th className="p-3">KYC</th><th className="p-3">AML</th><th className="p-3">Questionnaire</th><th className="p-3">Tax form</th><th className="p-3">Signatures</th><th className="p-3">Next step</th>
               </tr></thead>
               <tbody>{shown.map((r) => (
                 <tr key={r.onboardingId} className="border-t align-top">
                   <td className="p-3"><Link to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: r.fundId, onboardingId: r.onboardingId }} className="font-medium hover:underline">{r.investorName ?? "Unnamed investor"}</Link><div className="text-muted-foreground">{r.fundName ?? "Fund"}</div></td>
+                  <td className="p-3"><div className="flex flex-col items-start gap-1"><Step s={r.kyc} label="ID" />{r.kyb ? <Step s={r.kyb} label="Entity" /> : null}</div></td>
+                  <td className="p-3"><Step s={r.aml} /></td>
                   <td className="p-3"><Step s={r.questionnaire} /></td>
                   <td className="p-3"><Step s={r.taxForm} label={taxFormLabel(r.taxFormType)} /></td>
                   <td className="p-3"><Step s={r.signature} />{r.signaturesCompleted ? <div className="mt-1 text-muted-foreground">{r.signaturesCompleted} signed</div> : null}</td>

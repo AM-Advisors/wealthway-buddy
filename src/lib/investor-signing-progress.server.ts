@@ -39,14 +39,29 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
     }
     return out;
   };
-  const [offerings, persons, taxForms, sigs, profiles, readiness] = await Promise.all([
+  const [offerings, persons, taxForms, sigs, profiles, readiness, checkEvents] = await Promise.all([
     read("offerings", "id, name", "id", ids("offering_id")),
     read("persons", "id, legal_first_name, legal_last_name, preferred_name, email", "id", ids("person_id")),
     read("investor_tax_forms", "investment_profile_id, form_type, status, certified_at", "investment_profile_id", ids("investment_profile_id")),
     read("document_signatures", "investment_profile_id, signed_at, provider, provider_status, provider_completed_at, cancelled_at", "investment_profile_id", ids("investment_profile_id")),
     read("investment_profiles", "id, profile_type", "id", ids("investment_profile_id")),
     read("onboarding_readiness_summaries", "onboarding_id, blocked, next_owner", "onboarding_id", rows.map((r) => r.id)),
+    (async () => {
+      const out: any[] = [];
+      for (const c of chunks(rows.map((r) => r.id))) {
+        const { data } = await (d as any).from("investment_readiness_events").select("onboarding_id, requirement_key, new_status, created_at")
+          .in("onboarding_id", c).in("requirement_key", ["identity_verification", "entity_verification", "aml"]).order("created_at", { ascending: true });
+        out.push(...((data ?? []) as any[]));
+      }
+      return out;
+    })(),
   ]);
+  const latest = new Map<string, Record<string, string>>();
+  for (const e of checkEvents) {
+    const m = latest.get(e.onboarding_id) ?? {};
+    m[e.requirement_key] = e.new_status;
+    latest.set(e.onboarding_id, m);
+  }
   const profileType = new Map(profiles.map((p) => [p.id, p.profile_type as string | null]));
   const { loadCompletionQuestions } = await import("@/lib/questionnaire-completion.server");
   const { questionnaireCompletion } = await import("@/lib/questionnaire-completion");
@@ -77,6 +92,7 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
         fundingStatus: r.funding_status ?? null,
         blocked: Boolean(ready.get(r.id)?.blocked),
         nextOwner: ready.get(r.id)?.next_owner ?? null,
+        checks: { kyc: latest.get(r.id)?.["identity_verification"] ?? null, kyb: latest.get(r.id)?.["entity_verification"] ?? null, aml: latest.get(r.id)?.["aml"] ?? null },
         updatedAt: r.updated_at ?? null,
       };
       return signingProgressRow(facts);
