@@ -197,19 +197,20 @@ export async function changeInvestingAs(userId: string, input: { onboardingId: s
 }
 
 /** Add another person to the investment: run their identity check and optionally name them signer. */
-export async function addPersonForKyc(userId: string, input: { onboardingId: string; firstName: string; lastName: string; email: string; role: string; title?: string | null; ownershipPercent?: number | null; sendKyc: boolean; sendSignature: boolean }) {
+export async function addPersonForKyc(userId: string, input: { onboardingId: string; firstName: string; lastName: string; email?: string | null; role: string; title?: string | null; ownershipPercent?: number | null; sendKyc: boolean; sendSignature: boolean }) {
   const row = await onboarding(input.onboardingId);
   const { role } = await access(userId, row);
   if (role === "investor") forbid("ask Harmonious or the fund manager to add people.");
-  const email = input.email.trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) fail("Enter a valid email.");
+  const email = (input.email ?? "").trim().toLowerCase() || null;
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) fail("Enter a valid email.");
   const { editRelatedParty } = await import("@/lib/investor-record.server");
   const r: any = await editRelatedParty(userId, { onboardingId: row.id, add: { firstName: input.firstName, lastName: input.lastName, email, role: input.role, ownershipPercent: input.ownershipPercent ?? null, isSigner: input.sendSignature } as any });
   const out: { added: boolean; underReview: boolean; kyc?: "emailed" | "created"; signer?: boolean; warnings: string[] } = { added: true, underReview: !!r?.underReview, warnings: [] };
   if (input.sendKyc && r?.relationshipId) {
     const { data: rel } = await db().from("investment_profile_relationships").select("person_id").eq("id", r.relationshipId).maybeSingle();
     const { data: person } = rel?.person_id ? await db().from("persons").select("*").eq("id", rel.person_id).maybeSingle() : { data: null };
-    if (!person) out.warnings.push("The person is waiting on Harmonious review, so the identity check wasn't sent yet.");
+    if (!email) out.warnings.push("No email was given, so the identity check wasn't sent. Add an email to send it.");
+    else if (!person) out.warnings.push("The person is waiting on Harmonious review, so the identity check wasn't sent yet.");
     else if (person.kyc_status === "approved") out.warnings.push("This person's identity is already verified, so no new check was sent.");
     else {
       const p2 = person.email ? person : { ...person, email };
@@ -219,7 +220,8 @@ export async function addPersonForKyc(userId: string, input: { onboardingId: str
     }
   }
   if (input.sendSignature) {
-    try { await assignParticipant(userId, { onboardingId: row.id, role: "signer", fullName: `${input.firstName} ${input.lastName}`.trim(), email, title: input.title ?? null }); out.signer = true; }
+    if (!email) out.warnings.push("No email was given, so no signature request was sent. Add an email to send it.");
+    else try { await assignParticipant(userId, { onboardingId: row.id, role: "signer", fullName: `${input.firstName} ${input.lastName}`.trim(), email, title: input.title ?? null }); out.signer = true; }
     catch (e) { out.warnings.push(`Not named signer: ${(e as Error).message}`); }
   }
   await event(row, "person_added_for_kyc", userId, role, { role: input.role, email, sendKyc: input.sendKyc, sendSignature: input.sendSignature });

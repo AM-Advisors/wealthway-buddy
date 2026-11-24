@@ -42,7 +42,7 @@ export const changeInvestingAsFn = createServerFn({ method: "POST" }).middleware
   .handler(async ({ data, context }) => (await pp()).changeInvestingAs(context.userId, data as any));
 export const addPersonForKycFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(onb.extend({
-    firstName: z.string().trim().min(1).max(120), lastName: z.string().trim().min(1).max(120), email: z.string().trim().email().max(254),
+    firstName: z.string().trim().min(1).max(120), lastName: z.string().trim().min(1).max(120), email: z.string().trim().email().max(254).optional().or(z.literal("")),
     role: z.enum(["joint_owner", "authorized_signer", "beneficial_owner", "control_person", "trustee", "officer", "manager", "member"]),
     title: str, ownershipPercent: z.number().min(0).max(100).nullable().optional(), sendKyc: z.boolean(), sendSignature: z.boolean(),
   }).parse)

@@ -86,7 +86,7 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
         <div className="grid gap-2 sm:grid-cols-2">
           <div className="space-y-1"><Label htmlFor="ap-first">First name</Label><Input id="ap-first" value={add.firstName} onChange={(e) => setAdd({ ...add, firstName: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="ap-last">Last name</Label><Input id="ap-last" value={add.lastName} onChange={(e) => setAdd({ ...add, lastName: e.target.value })} /></div>
-          <div className="space-y-1"><Label htmlFor="ap-email">Email</Label><Input id="ap-email" type="email" value={add.email} onChange={(e) => setAdd({ ...add, email: e.target.value })} /></div>
+          <div className="space-y-1"><Label htmlFor="ap-email">Email (optional)</Label><Input id="ap-email" type="email" value={add.email} onChange={(e) => setAdd({ ...add, email: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="ap-role">Role</Label>
             <select id="ap-role" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={add.role} onChange={(e) => setAdd({ ...add, role: e.target.value })}>
               {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -95,7 +95,7 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
           <div className="space-y-1"><Label htmlFor="ap-own">Ownership % (optional)</Label><Input id="ap-own" inputMode="decimal" value={add.ownership} onChange={(e) => setAdd({ ...add, ownership: e.target.value })} /></div>
           <label className="flex items-center gap-2 text-sm sm:col-span-2"><Checkbox checked={add.sendKyc} onCheckedChange={(v) => setAdd({ ...add, sendKyc: !!v })} />Email them an identity check (ID + selfie)</label>
           <label className="flex items-center gap-2 text-sm sm:col-span-2"><Checkbox checked={add.sendSignature} onCheckedChange={(v) => setAdd({ ...add, sendSignature: !!v })} />Make them the signer and send them the signature page</label>
-          <div className="flex gap-2 sm:col-span-2"><Button size="sm" disabled={doAdd.isPending || !add.firstName || !add.lastName || !add.email} onClick={() => doAdd.mutate()}>{doAdd.isPending ? "Adding…" : "Add person"}</Button><Button size="sm" variant="ghost" onClick={() => setAdd(null)}>Cancel</Button></div>
+          <div className="flex gap-2 sm:col-span-2"><Button size="sm" disabled={doAdd.isPending || !add.firstName || !add.lastName} onClick={() => doAdd.mutate()}>{doAdd.isPending ? "Adding…" : "Add person"}</Button><Button size="sm" variant="ghost" onClick={() => setAdd(null)}>Cancel</Button></div>
         </div>
       ) : (
         <Button size="sm" variant="outline" onClick={() => setAdd({ firstName: "", lastName: "", email: "", role: individual ? "joint_owner" : "authorized_signer", title: "", ownership: "", sendKyc: true, sendSignature: false })}>Add another person (identity check & signature)</Button>
