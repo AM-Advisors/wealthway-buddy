@@ -48,6 +48,6 @@ export const listPricingCatalogue = createServerFn({ method: "GET" })
         category: (i.category as string) ?? null,
         amountLabel: i.pass_through
           ? "Billed at cost"
-          : `${money(Number(i.amount_cents ?? 0))} ${MODEL_LABEL[String(i.pricing_model)] ?? ""}`.trim(),
+          : i.amount_cents == null ? "Not quoted yet" : `${money(Number(i.amount_cents))} ${MODEL_LABEL[String(i.pricing_model)] ?? ""}`.trim(),
       }));
   });

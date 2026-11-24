@@ -222,7 +222,7 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
         {shown.map((l) => (
           <label key={l.serviceKey} className="flex cursor-pointer items-center justify-between gap-3 border-b px-3 py-2 last:border-0 hover:bg-muted/40">
             <span className="flex items-center gap-2"><input type="checkbox" checked={has(l.serviceKey)} onChange={() => toggle(l)} />{l.label}</span>
-            <span className="text-muted-foreground">{l.baselineCents ? money(l.baselineCents) : "Included"}</span>
+            <span className="text-muted-foreground">{l.baselineCents ? money(l.baselineCents) : (l as any).priceMissing ? "Not quoted yet" : "Included"}</span>
           </label>
         ))}
         {shownCustom.length > 0 && <p className="border-b bg-muted/40 px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Custom services</p>}

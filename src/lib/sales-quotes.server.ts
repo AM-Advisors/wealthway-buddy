@@ -82,8 +82,9 @@ async function adminCatalog() {
   return [...txn, ...((data ?? []) as any[]).filter((p) => isLadderProduct(p.service_product)).flatMap((p) => {
     const lv = SERVICE_LADDERS[p.service_product as "SPV_ADMINISTRATION"].levels.find((l) => l.level === p.service_level);
     if (!lv) return [];
+    const priceMissing = p.annual_price == null && p.starting_price == null;
     const cents = Math.round(Number(p.annual_price ?? p.starting_price ?? 0) * 100);
-    return [{ serviceKey: adminQuoteKey(p.service_product, p.service_level), label: lv.name, baselineCents: cents, quarterlyCents: p.quarterly_price == null ? null : Math.round(Number(p.quarterly_price) * 100), baselineSource: "service_pricing", pricingModel: "annual", product: p.service_product, level: p.service_level }];
+    return [{ serviceKey: adminQuoteKey(p.service_product, p.service_level), label: lv.name, baselineCents: cents, priceMissing, quarterlyCents: p.quarterly_price == null ? null : Math.round(Number(p.quarterly_price) * 100), baselineSource: "service_pricing", pricingModel: "annual", product: p.service_product, level: p.service_level }];
   })];
 }
 

@@ -139,7 +139,7 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
         <SelectTrigger className="w-72"><SelectValue placeholder="Service level" /></SelectTrigger>
         <SelectContent>{product ? SERVICE_LADDERS[product].levels.map((l) => {
           const line = lines.find((x) => x.serviceKey === adminQuoteKey(product, l.level));
-          return line ? <SelectItem key={l.level} value={line.serviceKey}>{l.name} · {line.baselineCents ? `$${(line.baselineCents / 100).toLocaleString("en-US")}` : "Included"}</SelectItem> : null;
+          return line ? <SelectItem key={l.level} value={line.serviceKey}>{l.name} · {line.baselineCents ? `$${(line.baselineCents / 100).toLocaleString("en-US")}` : (line as any).priceMissing ? "Not quoted yet" : "Included"}</SelectItem> : null;
         }) : null}</SelectContent>
       </Select>
     </div>

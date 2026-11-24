@@ -596,6 +596,8 @@ export const requestNewFund = createServerFn({ method: "POST" })
           standard_cents: Number(i.amount_cents ?? 0),
           final_cents: Number(i.amount_cents ?? 0),
           pass_through: Boolean(i.pass_through),
+          // No recorded price means "not quoted yet", never a $0 fee: leave it out of SOW pricing.
+          included: i.amount_cents != null || Boolean(i.pass_through),
           unit: i.unit ?? null,
           sort_order: index,
         })),
