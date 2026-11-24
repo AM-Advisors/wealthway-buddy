@@ -48,7 +48,11 @@ async function addRelatedPersonLocked(input: RelatedPersonInput): Promise<{ rela
     is_authorized_signer: Boolean(input.isSigner) || input.role === "authorized_signer", status: "active",
     verification_status: input.verificationStatus ?? "not_started", added_by: input.actorUserId,
   }).select("id").single();
-  if (rErr || !rel) throw new Error(rErr?.message ?? "Could not save that relationship.");
+  if (rErr || !rel) {
+    // Don't leave a stray person behind; a retry would otherwise look like a duplicate.
+    await db().from("persons").delete().eq("id", person.id);
+    throw new Error("Could not save that person. Please try again.");
+  }
   if (kind !== "none") {
     await db().from("related_person_reviews").insert({
       profile_id: input.profileId, relationship_id: rel.id, provisional_person_id: person.id, offering_id: input.offeringId ?? null,
