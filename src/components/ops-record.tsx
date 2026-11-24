@@ -402,7 +402,6 @@ export function OpsRecordPage({ type, id, embedded = false }: { type: OpsRecordT
         ) : null}
         {type === "client" && active === "overview" ? <ClientRelationshipMap record={record} goTo={(tab) => navigate({ to: ".", search: (prev) => ({ ...(prev as any), tab }), replace: true, resetScroll: false })} /> : null}
         {type === "client" && active === "overview" ? <HarmoniousTeamCard clientId={id} /> : null}
-        {type === "fund" && record.clientId ? <HarmoniousTeamCard clientId={record.clientId} /> : null}
         {type === "client" && active === "overview" ? <CommercialAgreementCard clientId={id} /> : null}
         {type === "client" && active === "overview" ? <PowerOfAttorneyCard subject={{ kind: "client", id }} /> : null}
         {type === "investor" && !embedded && /^[0-9a-f-]{36}$/i.test(id) ? <InvestorPowersOfAttorney investorUserId={id} /> : null}

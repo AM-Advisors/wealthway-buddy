@@ -43,8 +43,6 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
   const d = q.data;
   if (!d) return <p role="alert">Fund progress could not be loaded.</p>;
   const lvl = d.engagement ? serviceLevelLabel(d.engagement.level, d.engagement.product) : null;
-  const admin = d.team.find((t) => t.role === "Primary Administrator")?.name;
-  const lead = d.team.find((t) => t.role === "Relationship Lead")?.name;
   const nextDeadline = d.deadlines.find((x) => x.due >= d.today);
   const overdue = d.deadlines.filter((x) => x.due < d.today);
   const soon = (days: number) => new Date(Date.parse(d.today) + days * 864e5).toISOString().slice(0, 10);
@@ -78,8 +76,6 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
           </div>
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-7">
-          <div><dt className="text-xs text-muted-foreground">Primary Administrator</dt><dd>{admin ?? (isCore ? "Harmonious Support Team" : "To be assigned")}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Relationship Lead</dt><dd>{lead ?? (isCore ? "Harmonious Support Team" : "To be assigned")}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Next report</dt><dd>{d.nextReport ? `${d.nextReport.title} · ${fmtDate(d.nextReport.due)}` : "None scheduled"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Next major deadline</dt><dd>{nextDeadline ? `${nextDeadline.title} · ${fmtDate(nextDeadline.due)}` : "None scheduled"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Open fund tasks</dt><dd>{d.openCount}</dd></div>
@@ -224,12 +220,6 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
           ) : <Empty title="No report scheduled" body="Reporting dates appear here once your operating calendar is set." />}
         </Card>
 
-        {/* 8. Team */}
-        <Card title="Your Harmonious team">
-          {d.team.length ? <ul className="space-y-1 text-sm">{d.team.map((t) => <li key={t.role}><span className="text-xs text-muted-foreground">{t.role}</span><br />{t.name}</li>)}</ul>
-            : <Empty title="Harmonious Support Team" body="Our support team handles your fund. A named team appears here once assigned." />}
-          {onNavigate && <Button size="sm" variant="outline" className="mt-3" onClick={() => onNavigate("investors")}>View investors</Button>}
-        </Card>
         {d.activity.length > 0 && (
           <Card title="Recent activity" className="lg:col-span-3">
             <ul className="space-y-1 text-sm">{d.activity.map((a, i) => <li key={i} className="flex flex-wrap justify-between gap-2">{onNavigate ? <button className="text-left hover:underline" onClick={() => onNavigate(a.target)}>{a.text}</button> : <span>{a.text}</span>}<span className="text-xs text-muted-foreground">{fmtDate(a.at)}</span></li>)}</ul>
