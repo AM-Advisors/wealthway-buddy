@@ -31,12 +31,18 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
   const [controlPick, setControlPick] = useState("");
   const blankNew = { firstName: "", lastName: "", email: "", role: "beneficial_owner", pct: "", dob: "", ssn: "", signer: false };
   const [nw, setNw] = useState(blankNew);
+  const [linkId, setLinkId] = useState<string | null>(null);
 
   const owners = related.filter((r) => !isPaperworkContactRole(r.role));
   const people = owners.map((r) => ({ id: r.id, name: r.name, role: r.role, ownershipPercent: r.ownershipPercent, signer: r.signer, email: r.email ?? null, dobOnFile: Boolean(r.dobOnFile), ssnOnFile: Boolean(r.ssnOnFile), taxFormSigner: Boolean(r.taxFormSigner) }));
   const items = entityRequirements({ legalName, einOnFile, responsiblePartyId: owners.find((r) => r.responsibleParty)?.id ?? null, people });
   const open = items.filter((i) => !i.done);
   const signers = owners.filter((r) => r.signer);
+  const listedIds = new Set(owners.map((r) => r.personId).filter(Boolean));
+  const typed = `${nw.firstName} ${nw.lastName}`.trim().toLowerCase();
+  const pickable = ((parties.data?.parties ?? []) as any[])
+    .filter((p) => p.personId && !listedIds.has(p.personId) && (p.roles ?? []).some((x: string) => x === "account holder" || x === "investor"))
+    .filter((p) => !typed || String(p.name).toLowerCase().includes(typed.split(" ")[0] ?? ""));
 
   const run = async (payload: any, ok: string) => {
     setBusy(true);
@@ -129,6 +135,17 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
         {editable ? (
           <div className="grid gap-2 rounded-md border border-dashed bg-background p-3 sm:grid-cols-4 sm:items-end">
             <p className="text-sm font-medium sm:col-span-4">Add an owner or signer</p>
+            {pickable.length && !linkId ? (
+              <div className="flex flex-wrap items-center gap-2 sm:col-span-4 text-sm">
+                <span className="text-muted-foreground">Already on this investment:</span>
+                {pickable.map((p: any) => (
+                  <Button key={p.personId} size="sm" variant="outline" onClick={() => { const [f, ...rest] = String(p.name).split(" "); setLinkId(p.personId); setNw({ ...nw, firstName: f ?? "", lastName: rest.join(" "), email: p.email ?? "" }); }}>Use {p.name}</Button>
+                ))}
+              </div>
+            ) : null}
+            {linkId ? (
+              <p className="text-sm sm:col-span-4">Adding <span className="font-medium">{nw.firstName} {nw.lastName}</span> from their existing record. Pick a role below. <button type="button" className="underline" onClick={() => { setLinkId(null); setNw(blankNew); }}>Use someone else</button></p>
+            ) : null}
             <label className="space-y-1 text-xs">First name *<Input id="en-add-first" className="h-9" value={nw.firstName} onChange={(e) => setNw({ ...nw, firstName: e.target.value })} /></label>
             <label className="space-y-1 text-xs">Last name *<Input className="h-9" value={nw.lastName} onChange={(e) => setNw({ ...nw, lastName: e.target.value })} /></label>
             <label className="space-y-1 text-xs">Email<Input type="email" className="h-9" value={nw.email} onChange={(e) => setNw({ ...nw, email: e.target.value })} /></label>
@@ -140,6 +157,10 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
             <label className="space-y-1 text-xs">SSN<Input inputMode="numeric" autoComplete="off" data-private placeholder="9 digits" className="h-9" value={nw.ssn} onChange={(e) => setNw({ ...nw, ssn: digits(e.target.value) })} /></label>
             <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" checked={nw.signer} onChange={(e) => setNw({ ...nw, signer: e.target.checked })} />Signer</label>
             <Button size="sm" className="sm:col-span-4 sm:w-fit" disabled={busy || !nw.firstName.trim() || !nw.lastName.trim() || (nw.ssn !== "" && nw.ssn.length !== 9)} onClick={async () => {
+              if (linkId) {
+                if (await run({ link: { personId: linkId, role: nw.role, ownershipPercent: nw.pct.trim() === "" ? null : Number(nw.pct), isSigner: nw.signer } }, `${nw.firstName.trim()} added`)) { setNw(blankNew); setLinkId(null); }
+                return;
+              }
               if (await run({ add: { firstName: nw.firstName.trim(), lastName: nw.lastName.trim(), email: nw.email.trim() || null, role: nw.role, ownershipPercent: nw.pct.trim() === "" ? null : Number(nw.pct), isSigner: nw.signer, phone: null, dateOfBirth: nw.dob || null, ssn: nw.ssn || null } }, `${nw.firstName.trim()} added`)) setNw(blankNew);
             }}>Add person</Button>
           </div>

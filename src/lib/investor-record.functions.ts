@@ -142,6 +142,7 @@ export const editRelatedPartyFn = createServerFn({ method: "POST" }).middleware(
   .validator(z.object({
     onboardingId: uuid,
     add: relatedInput.optional(),
+    link: z.object({ personId: uuid, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() }).optional(),
     update: z.object({ relationshipId: uuid, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() }).optional(),
     details: z.object({ relationshipId: uuid, email: z.string().max(200).nullable().optional(), phone: z.string().max(40).nullable().optional(), dateOfBirth: z.string().max(10).nullable().optional(), ssn: z.string().max(20).nullable().optional() }).optional(),
     taxFormSignerId: uuid.optional(),

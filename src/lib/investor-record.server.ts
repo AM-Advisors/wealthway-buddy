@@ -638,6 +638,7 @@ export async function updateInvestorRecord(userId: string, input: {
 export async function editRelatedParty(userId: string, input: {
   onboardingId: string;
   add?: RelatedInput;
+  link?: { personId: string; role: string; ownershipPercent?: number | null; isSigner?: boolean };
   update?: { relationshipId: string; role: string; ownershipPercent?: number | null; isSigner?: boolean };
   details?: { relationshipId: string } & RelatedPersonDetails;
   taxFormSignerId?: string;
@@ -663,6 +664,26 @@ export async function editRelatedParty(userId: string, input: {
     if (!(v >= 0 && v <= 100)) fail("Ownership must be between 0 and 100%.");
     return v;
   };
+  if (input.link) {
+    const l = input.link;
+    if (!RELATED_ROLES.has(l.role)) fail("Choose a valid role.");
+    // Only people already connected to this investment: the account holder or the investor login.
+    const { data: prof } = await db().from("investment_profiles").select("person_id").eq("id", row.investment_profile_id).maybeSingle();
+    const { data: per } = await db().from("persons").select("id, user_id, legal_first_name, legal_last_name").eq("id", l.personId).maybeSingle();
+    const connected = per && (per.id === prof?.person_id || (per.user_id && per.user_id === (row as any).investor_user_id));
+    if (!connected) forbid("only people already on this investment can be picked. Add anyone else as a new person.");
+    const { data: dup } = await db().from("investment_profile_relationships").select("id").eq("profile_id", row.investment_profile_id).eq("person_id", l.personId).neq("status", "removed").maybeSingle();
+    if (dup) fail("That person is already listed. Change their role in their row.");
+    const { data: rel, error } = await db().from("investment_profile_relationships").insert({
+      profile_id: row.investment_profile_id, person_id: l.personId, role: l.role, ownership_percent: pct(l.ownershipPercent),
+      is_authorized_signer: Boolean(l.isSigner) || l.role === "authorized_signer", status: "active", verification_status: "not_started", added_by: actor.userId,
+    } as any).select("id").single();
+    if (error || !rel) fail("Could not add that person. Please try again.");
+    const nm = `${per!.legal_first_name ?? ""} ${per!.legal_last_name ?? ""}`.trim();
+    await logChanges([{ ...base, id: rel!.id, field: `related:${l.role}`, from: null, to: nm }]);
+    await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "investor_record_updated" });
+    return { ok: true, underReview: false, relationshipId: rel!.id as string };
+  }
   if (input.add) {
     const r = input.add;
     if (!RELATED_ROLES.has(r.role) || !r.firstName?.trim() || !r.lastName?.trim()) fail("Enter a first name, last name and role.");
