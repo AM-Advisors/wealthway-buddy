@@ -19,7 +19,7 @@ export async function forecastGate(db:any,s:ForecastSubject){
 }
 async function authorize(db:any,uid:string,s:ForecastSubject){
  const roles=checked(await db.from('user_roles').select('role').eq('user_id',uid));if(roles.some((r:any)=>(STAFF_ROLES as readonly string[]).includes(r.role)))return;
- const q=s.subjectType==='cap_table'?db.from('client_users').select('client_role').eq('client_id',s.subjectId).eq('user_id',uid):db.from('fund_managers').select('id').eq('offering_id',s.subjectId).eq('user_id',uid);
+ const q=s.subjectType==='cap_table'?db.from('client_users').select('client_role').is('revoked_at',null).eq('client_id',s.subjectId).eq('user_id',uid):db.from('fund_managers').select('id').eq('offering_id',s.subjectId).eq('user_id',uid);
  const rows=checked(await q);if(!rows.some((r:any)=>s.subjectType!=='cap_table'||['client_gp','client_signatory','client_legal','client_finance'].includes(r.client_role)))throw new Error('Only Harmonious staff or this subject’s managers may manage forecasts.');
 }
 async function baseline(db:any,s:ForecastSubject){

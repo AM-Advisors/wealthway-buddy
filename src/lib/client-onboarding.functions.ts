@@ -368,6 +368,8 @@ export const inviteClientContact = createServerFn({ method: "POST" })
           user_id: targetUserId,
           client_role: data.role,
           can_approve: data.canApprove,
+          revoked_at: null,
+          revoked_by: null,
         },
         { onConflict: "client_id,user_id" },
       );

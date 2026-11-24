@@ -403,7 +403,7 @@ async function grantPortalAccess(db: any, clientId: string | null, rawEmail: str
     const { data: prof } = await db.from("profiles").select("user_id").ilike("email", email).maybeSingle();
     if (prof?.user_id) {
       const { data: m } = await db.from("client_users").select("id").eq("client_id", clientId).eq("user_id", prof.user_id).is("revoked_at", null).maybeSingle();
-      if (!m) await db.from("client_users").insert({ client_id: clientId, user_id: prof.user_id });
+      if (!m) await db.from("client_users").upsert({ client_id: clientId, user_id: prof.user_id, revoked_at: null, revoked_by: null }, { onConflict: "client_id,user_id" });
       return;
     }
     const { data: inv } = await db.from("client_invitations").select("id").eq("client_id", clientId).ilike("email", email).eq("status", "pending").maybeSingle();

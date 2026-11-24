@@ -223,6 +223,7 @@ export async function restore(viewer: string, d: { userId?: string | null | unde
     } else if (s.scope === "client") {
       for (const m of (s.membership_snapshot ?? []) as any[]) {
         await db.from("client_users").upsert({ client_id: m.client_id, user_id: m.user_id, client_role: m.client_role, can_approve: m.can_approve }, { onConflict: "client_id,user_id", ignoreDuplicates: true });
+        await db.from("client_users").update({ revoked_at: null, revoked_by: null }).eq("client_id", m.client_id).eq("user_id", m.user_id).not("revoked_at", "is", null);
       }
       await db.from("client_contacts").update({ status: "active", deactivated_at: null, deactivated_by: null }).eq("user_id", uid).eq("client_id", s.scope_id);
     } else if (s.scope === "offering") {
