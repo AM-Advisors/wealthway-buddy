@@ -108,10 +108,23 @@ export function toStored(s: CanonicalStatus): StoredStatus {
 /** Load canonical person results for the given login accounts. Unreadable rows fall back safely. */
 export async function loadPersonStatuses(supabase: any, userIds: string[]) {
   if (!userIds.length) return personStatusByUser([]);
-  const { data } = await supabase
-    .from("persons")
-    .select("user_id, kyc_status, aml_status, merged_into_person_id")
-    .in("user_id", userIds);
+  // Callers pass only accounts they already reached through RLS (e.g. their
+  // own fund's applications). Fund managers cannot read persons directly, so
+  // on the server read just these status columns with the admin client.
+  let data: any[] | null = null;
+  if (typeof window === "undefined") {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const res = await (supabaseAdmin as any).from("persons")
+        .select("user_id, kyc_status, aml_status, merged_into_person_id").in("user_id", userIds);
+      if (!res.error) data = res.data;
+    } catch { data = null; }
+  }
+  if (!data) {
+    const res = await supabase.from("persons")
+      .select("user_id, kyc_status, aml_status, merged_into_person_id").in("user_id", userIds);
+    data = res.data;
+  }
   const map = personStatusByUser(data ?? []);
   return applyLoginChecks(map, await loadLoginChecks(userIds));
 }
