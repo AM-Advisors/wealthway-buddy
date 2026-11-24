@@ -14,7 +14,7 @@ function diditKey(): string {
 
 const nm = (p: any) => p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") || "there";
 
-export async function sendPersonKycLink(person: any, createdBy: string): Promise<{ id: string; emailed: boolean; url: string | null }> {
+export async function sendPersonKycLink(person: any, createdBy: string, opts: { helperCc?: string | null } = {}): Promise<{ id: string; emailed: boolean; url: string | null }> {
   if (!person?.email) throw new Error("Add an email address first so we can send the link.");
   const workflow = process.env["DIDIT_WORKFLOW_ID"]?.trim();
   if (!workflow) throw new Error("Identity checks aren't configured yet.");
@@ -44,8 +44,9 @@ export async function sendPersonKycLink(person: any, createdBy: string): Promise
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       const { secondaryCcFor } = await import("@/lib/person-emails.server");
       const secondary = await secondaryCcFor(person.email);
+      const ccList = [secondary, opts.helperCc].flat().filter((x): x is string => typeof x === "string" && !!x);
       await sendTemplateEmail("manager-alert", person.email, {
-        ...(secondary ? { cc: secondary } : {}),
+        ...(ccList.length ? { cc: ccList.length === 1 ? ccList[0] : ccList } : {}),
         idempotencyKey: `person-kyc:${row.id}`,
         templateData: {
           managerName: nm(person),
