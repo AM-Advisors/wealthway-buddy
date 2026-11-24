@@ -180,7 +180,8 @@ export async function decideOnboardingProof(userId: string, input: { documentId:
   const doc = await onboardingProofDoc(d, userId, input.documentId);
   const { data: ob } = await d.from("investor_onboardings").select("id, investor_user_id, investment_profile_id, questionnaire_responses").eq("id", doc.onboarding_id).maybeSingle();
   if (!ob) throw new Error("Investment not found.");
-  if (ob.investor_user_id === userId || doc.user_id === userId) throw new Error("You can't verify your own accreditation.");
+  // Only the investor themself is blocked; staff or managers who uploaded on an investor's behalf are recorded as the uploader but are not the investor.
+  if (ob.investor_user_id && ob.investor_user_id === userId) throw new Error("You can't verify your own accreditation.");
   if (doc.review_status !== "new") throw new Error("This proof has already been reviewed.");
   if (input.decision === "more_needed" && input.notes.length < 3) throw new Error("Say what's missing so the investor knows what to send.");
   const now = new Date().toISOString();
