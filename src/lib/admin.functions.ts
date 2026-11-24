@@ -75,6 +75,38 @@ export const listApplications = createServerFn({ method: "GET" })
     ]);
 
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
+    // Fill blank list names/types from the canonical investing profile.
+    try {
+      const appIds = rows.map((r: any) => r.id);
+      const missing = rows.filter((r: any) => {
+        const p: any = profileMap.get(r.user_id);
+        return !p?.legal_name || !p?.investor_type;
+      });
+      if (missing.length && appIds.length) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: onbs } = await supabaseAdmin
+          .from("investor_onboardings")
+          .select("application_id, investment_profile_id")
+          .in("application_id", missing.map((r: any) => r.id))
+          .is("removed_at", null);
+        const ipIds = [...new Set((onbs ?? []).map((o: any) => o.investment_profile_id).filter(Boolean))];
+        const { data: ips } = ipIds.length
+          ? await supabaseAdmin.from("investment_profiles").select("id, legal_name, profile_type").in("id", ipIds)
+          : { data: [] as any[] };
+        const ipMap = new Map((ips ?? []).map((x: any) => [x.id, x]));
+        const byApp = new Map((onbs ?? []).map((o: any) => [o.application_id, ipMap.get(o.investment_profile_id)]));
+        for (const r of missing) {
+          const ip: any = byApp.get(r.id);
+          if (!ip) continue;
+          const p: any = { ...(profileMap.get(r.user_id) ?? { user_id: r.user_id }) };
+          p.legal_name = p.legal_name || ip.legal_name;
+          p.investor_type = p.investor_type || ip.profile_type;
+          profileMap.set(r.user_id, p);
+        }
+      }
+    } catch (e) {
+      console.error("[listApplications] canonical profile fill failed", e);
+    }
     const offeringMap = new Map((offerings ?? []).map((o: any) => [o.id, o]));
 
     return {
@@ -101,6 +133,10 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!application) throw new Error("Application not found.");
+    // Same canonical verification statuses the review list shows, so a check
+    // approved on the person record never reads as still open here.
+    const detailStatuses = await loadPersonStatuses(supabase, [application.user_id as string]);
+    Object.assign(application, withCanonicalVerification(application as any, detailStatuses));
 
     const [profile, offering, accreditation, evidence, kyc, aml, subscription, signatures, audit, payments, notes, emails] =
       await Promise.all([
