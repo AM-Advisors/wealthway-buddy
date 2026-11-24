@@ -19,7 +19,7 @@ async function canEdit(context: any, clientId: string): Promise<boolean> {
   if (roles.some((r) => STAFF.includes(r))) return true;
   const { data } = await context.supabase
     .from("client_users")
-    .select("client_role")
+    .select("client_role").is("revoked_at", null)
     .eq("client_id", clientId)
     .eq("user_id", context.userId)
     .maybeSingle();
@@ -41,7 +41,7 @@ export const getMyClientBranding = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data: link } = await context.supabase
       .from("client_users")
-      .select("client_id, client_role, clients(name)")
+      .select("client_id, client_role, clients(name)").is("revoked_at", null)
       .eq("user_id", context.userId)
       .limit(1)
       .maybeSingle();

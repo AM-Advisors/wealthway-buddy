@@ -155,7 +155,7 @@ export const getClientOnboarding = createServerFn({ method: "POST" })
       ]);
 
     const [{ data: contacts }, { data: invites }, { data: requests }, { data: steps }] = await Promise.all([
-      context.supabase.from("client_users").select("*"),
+      context.supabase.from("client_users").select("*").is("revoked_at", null),
       context.supabase
         .from("client_invitations")
         .select("*")
@@ -558,7 +558,7 @@ export const setContactAccess = createServerFn({ method: "POST" })
     const who = await requireManage(context);
     const { data: row } = await context.supabase
       .from("client_users")
-      .select("*")
+      .select("*").is("revoked_at", null)
       .eq("id", data.id)
       .maybeSingle();
     if (!row) throw new Error("That contact is no longer attached to this client.");

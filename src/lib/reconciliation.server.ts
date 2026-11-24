@@ -629,7 +629,7 @@ export async function externalApproveReconciliation(
     const { data: membership } = clientId
       ? await db()
           .from("client_users")
-          .select("id")
+          .select("id").is("revoked_at", null)
           .eq("client_id", clientId)
           .eq("user_id", userId)
           .maybeSingle()

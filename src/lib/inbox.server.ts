@@ -15,7 +15,7 @@ export async function inboxActor(userId: string) {
   const d = await db();
   const [{ data: roles }, { data: cu }, { data: fm }, { data: prof }] = await Promise.all([
     d.from("user_roles").select("role").eq("user_id", userId),
-    d.from("client_users").select("client_id").eq("user_id", userId),
+    d.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", userId),
     d.from("fund_managers").select("offering_id").eq("user_id", userId),
     d.from("profiles").select("email").eq("user_id", userId).maybeSingle(),
   ]);

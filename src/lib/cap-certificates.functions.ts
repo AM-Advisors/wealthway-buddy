@@ -16,7 +16,7 @@ type Who = { clientId: string; role: string; canEdit: boolean; canSign: boolean 
 async function who(context: any, clientId: string): Promise<Who> {
   const { data } = await context.supabase
     .from("client_users")
-    .select("client_id, client_role")
+    .select("client_id, client_role").is("revoked_at", null)
     .eq("user_id", context.userId)
     .eq("client_id", clientId)
     .maybeSingle();

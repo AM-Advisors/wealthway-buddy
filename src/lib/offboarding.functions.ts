@@ -279,7 +279,7 @@ export const getOffboardingCase = createServerFn({ method: "GET" })
         .eq("client_id", row.client_id),
       context.supabase
         .from("client_users")
-        .select("id, user_id, client_role, can_approve, created_at")
+        .select("id, user_id, client_role, can_approve, created_at").is("revoked_at", null)
         .eq("client_id", row.client_id),
     ]);
 
@@ -747,7 +747,7 @@ export const removeClientAccess = createServerFn({ method: "POST" })
 
     const { data: left } = await context.supabase
       .from("client_users")
-      .select("id")
+      .select("id").is("revoked_at", null)
       .eq("client_id", row.client_id);
     const remaining = ((left ?? []) as any[]).length;
 

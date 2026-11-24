@@ -21,7 +21,7 @@ export const getClientRecords = createServerFn({ method: "GET" })
 
     const { data: memberships } = await context.supabase
       .from("client_users")
-      .select("client_id")
+      .select("client_id").is("revoked_at", null)
       .eq("user_id", context.userId);
     const clientIds = [...new Set(((memberships ?? []) as any[]).map((m) => String(m.client_id)))];
     if (clientIds.length === 0) return empty;

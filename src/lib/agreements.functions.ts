@@ -59,7 +59,7 @@ type Who = {
 async function whoIs(context: any): Promise<Who> {
   const [{ data: roleRows }, { data: memberships }] = await Promise.all([
     context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
-    context.supabase.from("client_users").select("client_id").eq("user_id", context.userId),
+    context.supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", context.userId),
   ]);
   const roles = ((roleRows ?? []) as any[]).map((r) => String(r.role));
   return {

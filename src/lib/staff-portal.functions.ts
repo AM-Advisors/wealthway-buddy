@@ -158,7 +158,7 @@ export const getMyDesk = createServerFn({ method: "GET" })
         .in("client_id", ids),
       context.supabase
         .from("client_users")
-        .select("id, client_id, user_id, client_role, created_at")
+        .select("id, client_id, user_id, client_role, created_at").is("revoked_at", null)
         .in("client_id", ids),
       context.supabase
         .from("policy_documents")

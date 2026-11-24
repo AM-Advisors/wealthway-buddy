@@ -16,7 +16,7 @@ async function admin() {
 async function who(context: any) {
   const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
   const staff = ((roles ?? []) as any[]).some((r) => STAFF.includes(String(r.role)));
-  const { data: link } = await context.supabase.from("client_users").select("client_id, client_role").eq("user_id", context.userId).limit(1).maybeSingle();
+  const { data: link } = await context.supabase.from("client_users").select("client_id, client_role").is("revoked_at", null).eq("user_id", context.userId).limit(1).maybeSingle();
   return { clientId: (link?.client_id ?? null) as string | null, canManage: staff || link?.client_role === "client_gp" };
 }
 

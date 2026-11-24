@@ -466,7 +466,7 @@ export const createCapCompany = createServerFn({ method: "POST" })
     const [{ data: member }, { data: staff }] = await Promise.all([
       context.supabase
         .from("client_users")
-        .select("client_role")
+        .select("client_role").is("revoked_at", null)
         .eq("client_id", data.clientId)
         .eq("user_id", context.userId)
         .maybeSingle(),

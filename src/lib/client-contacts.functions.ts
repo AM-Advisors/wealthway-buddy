@@ -16,7 +16,7 @@ async function admin() {
 async function access(context: any, clientId?: string | null) {
   const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
   const staff = ((roles ?? []) as any[]).some((r) => STAFF.includes(String(r.role)));
-  let q = context.supabase.from("client_users").select("client_id, client_role").eq("user_id", context.userId);
+  let q = context.supabase.from("client_users").select("client_id, client_role").is("revoked_at", null).eq("user_id", context.userId);
   if (clientId) q = q.eq("client_id", clientId);
   const { data: link } = await q.limit(1).maybeSingle();
   const id = clientId ?? link?.client_id ?? null;

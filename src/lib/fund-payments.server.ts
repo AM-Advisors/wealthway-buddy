@@ -72,7 +72,7 @@ export function setupFeeItem(waived: boolean): PayItem {
 export async function firstFundCovered(db: any, clientId: string, userId: string): Promise<boolean> {
   const MAIN = ["client_gp", "client_signatory", "client_finance", "client_legal", "client_compliance"];
   const [{ data: cu }, { count: funds }, { data: intakes }, { data: client }] = await Promise.all([
-    db.from("client_users").select("client_role").eq("client_id", clientId).eq("user_id", userId),
+    db.from("client_users").select("client_role").is("revoked_at", null).eq("client_id", clientId).eq("user_id", userId),
     db.from("offerings").select("id", { count: "exact", head: true }).eq("client_id", clientId),
     db.from("client_fund_intakes").select("status").eq("client_id", clientId),
     db.from("clients").select("created_by").eq("id", clientId).maybeSingle(),

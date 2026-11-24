@@ -137,7 +137,7 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
       supabase.from("fund_managers").select("offering_id, offerings(client_id)").eq("user_id", userId),
       supabase.from("investment_profiles").select("id").eq("owner_user_id", userId),
       supabase.from("investor_positions").select("id").eq("investor_user_id", userId),
-      supabase.from("client_users").select("client_id").eq("user_id", userId),
+      supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", userId),
       supabase.from("cap_holder_access").select("client_id, revoked_at").eq("user_id", userId),
       supabase
         .from("delegations")

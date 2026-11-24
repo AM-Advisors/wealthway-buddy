@@ -49,7 +49,7 @@ export const getMyVault = createServerFn({ method: "GET" })
           .select("id, file_name, doc_kind, note, uploaded_at, offering_id")
           .eq("user_id", userId)
           .order("uploaded_at", { ascending: false }),
-        supabase.from("client_users").select("client_id").eq("user_id", userId),
+        supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", userId),
         supabase
           .from("policy_acceptances")
           .select("id, kind, version, signer_name, accepted_at")

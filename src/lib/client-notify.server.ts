@@ -32,7 +32,7 @@ async function clientAdmins(clientId: string | null): Promise<Recipient[]> {
 
   let query = supabaseAdmin
     .from("client_users")
-    .select("user_id, client_id, client_role, can_approve");
+    .select("user_id, client_id, client_role, can_approve").is("revoked_at", null);
   if (clientId) query = query.eq("client_id", clientId);
   const { data: members } = await query;
 

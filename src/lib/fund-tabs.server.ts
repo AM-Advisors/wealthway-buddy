@@ -24,13 +24,9 @@ export async function isStaff(uid: string) {
 }
 
 export async function assertFund(uid: string, fundId: string) {
-  const d = await db();
-  if (await isStaff(uid)) return { staff: true };
-  const { data: mgr } = await d.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", fundId).maybeSingle();
-  if (mgr) return { staff: false };
-  const { isClientMemberOfFund } = await import("@/lib/fund-cap-table.functions");
-  if (await isClientMemberOfFund(d, uid, fundId)) return { staff: false };
-  throw new Error("You don't have access to this Fund.");
+  const { requireFundAccess } = await import("@/lib/fund-access.server");
+  const a = await requireFundAccess(await db(), uid, fundId, "manage");
+  return { staff: a.staff };
 }
 
 const personName = (p: any) => (p ? p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") : "") || "Unnamed investor";

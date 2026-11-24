@@ -14,7 +14,7 @@ import { FUND_REQUEST_KINDS, milestones, requestLifecycle } from "@/lib/self-ser
 async function requestableClients(context: any): Promise<{ id: string; name: string }[]> {
   const s = context.supabase;
   const [{ data: members }, { data: managed }] = await Promise.all([
-    s.from("client_users").select("client_id, client_role").eq("user_id", context.userId),
+    s.from("client_users").select("client_id, client_role").is("revoked_at", null).eq("user_id", context.userId),
     s.from("fund_managers").select("offering_id").eq("user_id", context.userId),
   ]);
   const ids = new Set<string>(

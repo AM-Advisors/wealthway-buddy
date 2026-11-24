@@ -90,7 +90,7 @@ export const getClientPortalActivity = createServerFn({ method: "GET" })
       context.supabase.from("clients").select("id, name, legal_name").order("name"),
       context.supabase.from("offerings").select("id, name, client_id"),
       context.supabase.from("profiles").select("user_id, legal_name, email"),
-      context.supabase.from("client_users").select("client_id, user_id, client_role"),
+      context.supabase.from("client_users").select("client_id, user_id, client_role").is("revoked_at", null),
       context.supabase
         .from("client_fund_intakes")
         .select("id, client_id, offering_id, status, created_at, submitted_at, submitted_by"),

@@ -47,7 +47,7 @@ export async function managedScope(userId: string): Promise<{ staff: boolean; fu
   if (await isStaff(userId)) return { staff: true, fundIds: null, directFundIds: [] };
   const [{ data: fm }, { data: cu }] = await Promise.all([
     d().from("fund_managers").select("offering_id, offerings(client_id)").eq("user_id", userId),
-    d().from("client_users").select("client_id").eq("user_id", userId),
+    d().from("client_users").select("client_id").is("revoked_at", null).eq("user_id", userId),
   ]);
   const direct = uniq(((fm ?? []) as any[]).map((r) => r.offering_id));
   const clients = uniq([...((fm ?? []) as any[]).map((r) => r.offerings?.client_id), ...((cu ?? []) as any[]).map((r) => r.client_id)]);

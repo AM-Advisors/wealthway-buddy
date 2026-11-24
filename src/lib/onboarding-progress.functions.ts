@@ -92,7 +92,7 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("client_invitations")
         .select("id, client_id, email, invited_name, status, invite_status, invite_sent_at, accepted_at, created_at"),
-      supabaseAdmin.from("client_users").select("id, client_id, user_id, created_at"),
+      supabaseAdmin.from("client_users").select("id, client_id, user_id, created_at").is("revoked_at", null),
       supabaseAdmin.from("policy_acceptances").select("user_id, kind, version, accepted_at"),
       supabaseAdmin.from("policy_documents").select("kind, title, version, published").eq("published", true),
       supabaseAdmin.from("client_fund_intakes").select("id, client_id, status, submitted_at, created_at, updated_at"),

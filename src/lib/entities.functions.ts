@@ -111,7 +111,7 @@ export const listClientEntities = createServerFn({ method: "GET" })
     if (!who.isStaff) {
       const { data: member } = await context.supabase
         .from("client_users")
-        .select("client_id")
+        .select("client_id").is("revoked_at", null)
         .eq("user_id", context.userId)
         .eq("client_id", data.clientId)
         .maybeSingle();
@@ -277,7 +277,7 @@ export const getEntity = createServerFn({ method: "GET" })
     if (!who.isStaff) {
       const { data: member } = await context.supabase
         .from("client_users")
-        .select("client_id")
+        .select("client_id").is("revoked_at", null)
         .eq("user_id", context.userId)
         .eq("client_id", e.client_id)
         .maybeSingle();

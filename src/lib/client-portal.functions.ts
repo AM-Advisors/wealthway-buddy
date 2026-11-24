@@ -18,7 +18,7 @@ export const getClientPortal = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: memberships } = await context.supabase
       .from("client_users")
-      .select("client_id, client_role")
+      .select("client_id, client_role").is("revoked_at", null)
       .eq("user_id", context.userId);
 
     // Fund managers belong here too: a fund they manage ties them to its
@@ -274,7 +274,7 @@ export const maybeSendClientWelcome = createServerFn({ method: "POST" })
     try {
       const { data: memberships } = await context.supabase
         .from("client_users")
-        .select("client_id")
+        .select("client_id").is("revoked_at", null)
         .eq("user_id", context.userId);
       const ids = (memberships ?? []).map((m: any) => String(m.client_id));
       const clientId = data.clientId && ids.includes(data.clientId) ? data.clientId : ids[0];

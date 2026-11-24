@@ -19,7 +19,7 @@ export const queueMigrationRequest = createServerFn({ method: "POST" }).middlewa
 export const requestClientMigration = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ clientId: z.string().uuid(), fundName: z.string().min(1).max(200), notes: z.string().max(4000).nullish(), recordsLink: z.string().max(500).nullish(), investorCount: z.number().int().min(0).max(100000).nullish() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: m } = await (context as any).supabase.from("client_users").select("client_id").eq("user_id", context.userId).eq("client_id", data.clientId).maybeSingle();
+    const { data: m } = await (context as any).supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", context.userId).eq("client_id", data.clientId).maybeSingle();
     if (!m) throw new Error("You aren't a member of this organization.");
     return (await S()).queueRequest(context.userId, { source: "client", sourceRef: null, fundName: data.fundName, clientId: data.clientId, notes: data.notes ?? null, details: { recordsLink: data.recordsLink ?? null, investorCount: data.investorCount ?? null } });
   });

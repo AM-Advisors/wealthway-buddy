@@ -20,7 +20,7 @@ async function admin() {
 async function memberships(context: any) {
   const { data, error } = await context.supabase
     .from("client_users")
-    .select("client_id, client_role, can_approve")
+    .select("client_id, client_role, can_approve").is("revoked_at", null)
     .eq("user_id", context.userId);
   if (error) throw new Error("We couldn't check your organization access. Keep this page open and try again.");
   return (data ?? []) as { client_id: string; client_role: string | null; can_approve: boolean | null }[];

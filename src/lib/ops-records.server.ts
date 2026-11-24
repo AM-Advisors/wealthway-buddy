@@ -228,7 +228,7 @@ export async function clientTab(context: any, data: { id: string; tab: string })
     if (data.tab === "overview" || data.tab === "relationships") {
       const [entities, people, funds, companies, engagements] = await Promise.all([
         s.from("client_entities").select("id, legal_name, entity_type, status, jurisdiction").eq("client_id", data.id),
-        s.from("client_users").select("user_id, client_role, can_approve").eq("client_id", data.id),
+        s.from("client_users").select("user_id, client_role, can_approve").is("revoked_at", null).eq("client_id", data.id),
         s.from("offerings").select("id, name, reg_type, is_open").eq("client_id", data.id),
         s.from("ct_companies").select("id, name, entity_type").eq("client_id", data.id),
         s.from("client_engagements").select("id, title, delivery_status, effective_date").eq("client_id", data.id),

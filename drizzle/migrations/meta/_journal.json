@@ -3088,6 +3088,13 @@
       "when": 1795477057247,
       "tag": "0440_video_share_links",
       "breakpoints": true
+    },
+    {
+      "idx": 441,
+      "version": "7",
+      "when": 1795486036088,
+      "tag": "0441_removed_client_members_lose_access",
+      "breakpoints": true
     }
   ]
 }

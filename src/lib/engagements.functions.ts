@@ -78,7 +78,7 @@ export const getEngagement = createServerFn({ method: "GET" })
     if (!who.isStaff) {
       const { data: member } = await context.supabase
         .from("client_users")
-        .select("client_id")
+        .select("client_id").is("revoked_at", null)
         .eq("user_id", context.userId)
         .eq("client_id", g.client_id)
         .maybeSingle();

@@ -40,7 +40,7 @@ export const getMyFunds = createServerFn({ method: "GET" })
     // when the caller really manages a fund there (or is a member of it).
     let funds = allFunds as any[] | null;
     if (data.clientId) {
-      const { data: member } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId).eq("client_id", data.clientId).maybeSingle();
+      const { data: member } = await context.supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", context.userId).eq("client_id", data.clientId).maybeSingle();
       const managesThere = ((allFunds ?? []) as any[]).some((f) => f.client_id === data.clientId && facts.managedFundIds.includes(f.id));
       if (member || managesThere) {
         funds = ((allFunds ?? []) as any[]).filter((f) => !facts.managedFundIds.includes(f.id) || f.client_id === data.clientId);

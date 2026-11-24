@@ -100,7 +100,7 @@ export async function clientTimeline(clientId: string, before?: string | null): 
   const { data: offs } = await d.from("offerings").select("id, name").eq("client_id", clientId);
   const offIds = ((offs ?? []) as any[]).map((o) => o.id);
   const fname = new Map(((offs ?? []) as any[]).map((o) => [o.id, o.name]));
-  const { data: members } = await d.from("client_users").select("user_id").eq("client_id", clientId);
+  const { data: members } = await d.from("client_users").select("user_id").is("revoked_at", null).eq("client_id", clientId);
   const memberIds = ((members ?? []) as any[]).map((m) => m.user_id);
   const lim = 100;
   const safe = (p: any) => p.then((r: any) => (r.data ?? []) as any[], () => []);

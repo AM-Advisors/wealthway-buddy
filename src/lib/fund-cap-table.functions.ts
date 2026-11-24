@@ -106,7 +106,7 @@ export async function isClientMemberOfFund(db: any, uid: string, fundId: string)
     .limit(1)
     .maybeSingle();
   if (fm) return true;
-  const { data: cu } = await db.from("client_users").select("id").eq("user_id", uid).eq("client_id", off.client_id).maybeSingle();
+  const { data: cu } = await db.from("client_users").select("id").is("revoked_at", null).eq("user_id", uid).eq("client_id", off.client_id).maybeSingle();
   return !!cu;
 }
 

@@ -40,7 +40,7 @@ async function assertClientAccess(context: any, clientId: string) {
   if (who.isStaff) return who;
   const { data: member } = await context.supabase
     .from("client_users")
-    .select("client_id")
+    .select("client_id").is("revoked_at", null)
     .eq("user_id", context.userId)
     .eq("client_id", clientId)
     .maybeSingle();

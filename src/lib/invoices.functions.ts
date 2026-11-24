@@ -378,7 +378,7 @@ export const startInvoiceCardPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(2000).refine((v) => isAllowedReturnUrl(v), "That return address isn't part of Harmonious.") }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: links } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId);
+    const { data: links } = await context.supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", context.userId);
     const mine = new Set(((links ?? []) as any[]).map((l) => l.client_id));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;

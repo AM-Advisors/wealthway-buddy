@@ -17,7 +17,7 @@ async function isStaff(context: any) {
   return ((data ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role));
 }
 async function requireMember(context: any, clientId: string) {
-  const { data } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId).eq("client_id", clientId).maybeSingle();
+  const { data } = await context.supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", context.userId).eq("client_id", clientId).maybeSingle();
   if (!data && !(await isStaff(context))) throw new Error("You aren't a member of this organization.");
 }
 

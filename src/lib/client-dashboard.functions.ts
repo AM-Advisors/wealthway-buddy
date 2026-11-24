@@ -17,7 +17,7 @@ export const getClientCapDashboard = createServerFn({ method: "GET" })
     const { data: roles } = await db.from("user_roles").select("role").eq("user_id", uid);
     let allowed = ((roles ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role));
     if (!allowed) {
-      const { data: cu } = await db.from("client_users").select("id").eq("user_id", uid).eq("client_id", data.clientId).maybeSingle();
+      const { data: cu } = await db.from("client_users").select("id").is("revoked_at", null).eq("user_id", uid).eq("client_id", data.clientId).maybeSingle();
       allowed = !!cu;
     }
     if (!allowed) {

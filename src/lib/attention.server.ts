@@ -816,7 +816,7 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   const out: AttentionItem[] = [];
 
   const [memberships, capAccess] = await Promise.all([
-    safely(async () => rows(await s.from("client_users").select("client_id").eq("user_id", ctx.userId))),
+    safely(async () => rows(await s.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", ctx.userId))),
     safely(async () =>
       rows(
         await s

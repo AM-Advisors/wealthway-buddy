@@ -6,7 +6,7 @@
  */
 export async function clientAccessIds(supabase: any, userId: string): Promise<string[]> {
   const [{ data: links, error: linksError }, { data: managed, error: managedError }] = await Promise.all([
-    supabase.from("client_users").select("client_id").eq("user_id", userId),
+    supabase.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", userId),
     supabase.from("fund_managers").select("offerings(client_id)").eq("user_id", userId),
   ]);
   if (linksError || managedError) throw new Error("We couldn't check your organization access. Keep this page open and try again.");

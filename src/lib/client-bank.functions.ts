@@ -8,7 +8,7 @@ import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-a
 async function assertClientFund(supabase: any, userId: string, fundId: string) {
   const { data: memberships } = await supabase
     .from("client_users")
-    .select("client_id")
+    .select("client_id").is("revoked_at", null)
     .eq("user_id", userId);
   const clientIds = ((memberships ?? []) as any[]).map((m) => String(m.client_id));
   if (!clientIds.length) throw new Error("Your sign-in isn't linked to a client engagement yet.");
@@ -57,7 +57,7 @@ export const getClientBankLinking = createServerFn({ method: "GET" })
 
     const { data: memberships } = await supabase
       .from("client_users")
-      .select("client_id")
+      .select("client_id").is("revoked_at", null)
       .eq("user_id", userId);
     const clientIds = ((memberships ?? []) as any[]).map((m) => String(m.client_id));
     if (!clientIds.length) return { configured: false, funds: [] };

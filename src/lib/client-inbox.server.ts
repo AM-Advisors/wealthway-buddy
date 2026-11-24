@@ -30,7 +30,7 @@ export async function recordClientInboxCopy(input: {
 
     const { data: membership } = await supabaseAdmin
       .from("client_users")
-      .select("client_id")
+      .select("client_id").is("revoked_at", null)
       .eq("user_id", profile.id)
       .limit(1)
       .maybeSingle();

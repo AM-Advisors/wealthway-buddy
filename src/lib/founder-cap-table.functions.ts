@@ -48,7 +48,7 @@ type Access = {
 async function access(context: any, wanted?: string | null): Promise<Access> {
   const { data } = await context.supabase
     .from("client_users")
-    .select("client_id, client_role")
+    .select("client_id, client_role").is("revoked_at", null)
     .eq("user_id", context.userId);
   const rows = ((data ?? []) as any[]).map((r) => ({
     clientId: String(r.client_id),
