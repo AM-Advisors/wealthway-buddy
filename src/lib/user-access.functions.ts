@@ -72,3 +72,7 @@ export const getInvitationInsight = createServerFn({ method: "POST" }).middlewar
     if (error || !row) throw new Error("Invitation not found.");
     return { email: String(row.email), name: "" };
   });
+
+export const getPersonAccessSummary = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).personAccessSummary(context.userId, data.userId));

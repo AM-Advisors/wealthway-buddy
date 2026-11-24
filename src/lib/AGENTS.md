@@ -469,3 +469,4 @@
 - One source per question: staff roles = user_roles; client staff = client_team_assignments via changeClientTeamMember (client_assignments, access_role_assignments retired, write-blocked); person ID = person-verification.server.ts; accreditation = accreditation-rule.ts; activity reads = activity_timeline view (server-only, allowlisted). Fund team list never grants access. Why: no overlapping lists or duplicate checks.
 
 - Database fund rules and helpers ask private.fund_list_allows(uid, fund, level) (levels match fund-access.ts) instead of reading fund_managers directly; each rule keeps its own staff check — why: database and screens block a fund the same way.
+- Every login with fund manager, client member or fund team access has a person record (DB trigger private.person_for_access_row; inserts only, never merges); the person page Access section reads personAccessSummary — why: access and person records stay together.

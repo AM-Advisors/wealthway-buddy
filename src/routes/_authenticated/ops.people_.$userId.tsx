@@ -15,6 +15,7 @@ import { RefreshCw } from "lucide-react";
 import { MfaResetPanel } from "@/components/mfa-reset-panel";
 import { EmailCorrectionCard } from "@/components/email-correction-card";
 import { PersonAccessManager } from "@/components/person-access-manager";
+import { PersonAccessSummary } from "@/components/person-access-summary";
 
 export const Route = createFileRoute("/_authenticated/ops/people_/$userId")({
   head: () => ({
@@ -98,6 +99,7 @@ function AccountActivity({ userId }: { userId: string }) {
         {d.email && <MfaResetPanel email={d.email} userId={userId} />}
         <EmailCorrectionCard userId={userId} personId={null} />
         <AccountOverview d={d} />
+        <PersonAccessSummary userId={userId} />
         <PersonAccessManager userId={userId} />
         {d.roles.length > 0 && <SidebarAccessCard userId={userId} />}
         <KycReport d={d} userId={userId} />

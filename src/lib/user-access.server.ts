@@ -542,3 +542,29 @@ export async function personActivity(viewer: string, subjectId: string, options:
     events: located, lastSignInPlace, nextCursor: timeline.length > 100 ? timeline[99]?.when ?? null : null,
   };
 }
+
+/** Read-only list of every fund and client this login can open, and why. Staff-only; names and access source only. */
+export async function personAccessSummary(viewer: string, subjectId: string) {
+  const db = await requireAccessViewer(viewer);
+  const { FUND_OPERATIONS_ROLES } = await import("@/lib/staff-roles");
+  const { liveGrants } = await import("@/lib/fund-team-access.functions");
+  const [{ data: roles }, { data: fm }, { data: cu }, { data: inv }, grants, { data: person }] = await Promise.all([
+    db.from("user_roles").select("role").eq("user_id", subjectId),
+    db.from("fund_managers").select("offering_id, offerings(name)").eq("user_id", subjectId),
+    db.from("client_users").select("client_id, role, clients(name)").eq("user_id", subjectId).is("revoked_at", null),
+    db.from("investor_fund_access").select("offering_id, offerings(name)").eq("user_id", subjectId),
+    liveGrants(db, subjectId).catch(() => [] as any[]),
+    db.from("persons").select("id").eq("user_id", subjectId).maybeSingle(),
+  ]);
+  const grantIds = [...new Set((grants as any[]).map((g) => g.offering_id).filter(Boolean))];
+  const { data: grantFunds } = grantIds.length ? await db.from("offerings").select("id, name").in("id", grantIds) : { data: [] as any[] };
+  const fundName = new Map(((grantFunds ?? []) as any[]).map((o) => [o.id, o.name]));
+  const roleList = ((roles ?? []) as any[]).map((r) => String(r.role));
+  const lines: { kind: "staff" | "fund_manager" | "client_member" | "fund_team" | "investor"; label: string; fundId?: string; clientId?: string }[] = [];
+  if (roleList.some((r) => FUND_OPERATIONS_ROLES.includes(r as any))) lines.push({ kind: "staff", label: "Every fund (Operations role)" });
+  for (const r of (fm ?? []) as any[]) lines.push({ kind: "fund_manager", label: r.offerings?.name ?? "Fund", fundId: r.offering_id });
+  for (const r of (cu ?? []) as any[]) lines.push({ kind: "client_member", label: `${r.clients?.name ?? "Client"} · ${String(r.role ?? "member").replace(/^client_/, "").replace(/_/g, " ")}`, clientId: r.client_id });
+  for (const g of grants as any[]) lines.push({ kind: "fund_team", label: `${fundName.get(g.offering_id) ?? "Fund"} · ${String(g.role ?? "viewer").replace(/_/g, " ")}`, fundId: g.offering_id });
+  for (const r of (inv ?? []) as any[]) lines.push({ kind: "investor", label: r.offerings?.name ?? "Fund", fundId: r.offering_id });
+  return { hasPerson: !!person, lines };
+}

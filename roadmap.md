@@ -1295,4 +1295,4 @@
 - [x] Accreditation: one rule (investing party first, then investment record), used by the investor progress tracker
 - [x] One read-only activity timeline on View account and People & Access
 - [x] Before/after access snapshot compared: no differences
-- [ ] Access lists and person records: decide on linking access to the person (awaiting answer)
+- [x] Access lists tied to person records; person page shows all access
