@@ -29,6 +29,8 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
   const [busy, setBusy] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, { email: string; dob: string; ssn: string }>>({});
   const [controlPick, setControlPick] = useState("");
+  const blankNew = { firstName: "", lastName: "", email: "", role: "beneficial_owner", pct: "", dob: "", ssn: "", signer: false };
+  const [nw, setNw] = useState(blankNew);
 
   const owners = related.filter((r) => !isPaperworkContactRole(r.role));
   const people = owners.map((r) => ({ id: r.id, name: r.name, role: r.role, ownershipPercent: r.ownershipPercent, signer: r.signer, email: r.email ?? null, dobOnFile: Boolean(r.dobOnFile), ssnOnFile: Boolean(r.ssnOnFile), taxFormSigner: Boolean(r.taxFormSigner) }));
@@ -70,7 +72,7 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
             if (await run({ update: { relationshipId: r.id, role: "trustee", ownershipPercent: r.ownershipPercent, isSigner: r.signer } }, `${r.name} saved as trustee`)) setControlPick("");
           }}>Save</Button>
         </> : null}
-        <Button size="sm" variant="outline" onClick={() => scrollTo("ra-first")}>Add someone new</Button>
+        <Button size="sm" variant="outline" onClick={() => scrollTo("en-add-first")}>Add someone new</Button>
       </div>);
     if (key === "ein") return <Button size="sm" variant="outline" onClick={() => scrollTo("ir-tin")}>Enter EIN</Button>;
     if (key === "signer") return <Button size="sm" variant="outline" onClick={() => scrollTo("rp-resp")}>Choose signer below</Button>;
@@ -97,7 +99,7 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
     <div className="space-y-3 rounded-md border bg-muted/40 p-3 sm:col-span-2">
       <p className="text-sm font-medium">{open.length ? `${open.length} required item${open.length === 1 ? "" : "s"} left` : "All required entity details are on file"}</p>
       <ul className="space-y-2 text-sm">
-        {items.map((i) => (
+        {items.filter((i) => !i.personId).map((i) => (
           <li key={i.key} className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span aria-hidden className={i.done ? "text-primary" : "text-destructive"}>{i.done ? "✓" : "○"}</span>
             <span className={`min-w-[14rem] ${i.done ? "text-muted-foreground" : ""}`}>{i.label}</span>
@@ -105,6 +107,44 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
           </li>
         ))}
       </ul>
+      <div className="space-y-2 border-t pt-3">
+        <p className="text-sm font-medium">Owners and signers</p>
+        {owners.map((r) => {
+          const pid = r.id;
+          const d = drafts[pid] ?? { email: "", dob: "", ssn: "" };
+          const set = (patch: Partial<typeof d>) => setDrafts((st) => ({ ...st, [pid]: { ...d, ...patch } }));
+          const ready = (d.email.trim() || d.dob || d.ssn.length === 9) && (d.ssn === "" || d.ssn.length === 9);
+          return (
+            <div key={pid} className="grid gap-2 rounded-md border bg-background p-3 sm:grid-cols-4 sm:items-end">
+              <div className="sm:col-span-4 text-sm"><span className="font-medium">{r.name}</span><span className="text-muted-foreground"> · {r.role.replace(/_/g, " ")}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}</span></div>
+              <label className="space-y-1 text-xs">Email{r.email ? <p className="h-9 py-2 text-sm">{r.email}</p> : <Input type="email" disabled={!editable} className="h-9" value={d.email} onChange={(e) => set({ email: e.target.value })} />}</label>
+              <label className="space-y-1 text-xs">Date of birth{r.dobOnFile ? <p className="h-9 py-2 text-sm text-muted-foreground">On file</p> : <Input type="date" disabled={!editable} className="h-9" value={d.dob} onChange={(e) => set({ dob: e.target.value })} />}</label>
+              <label className="space-y-1 text-xs">SSN{r.ssnOnFile ? <p className="h-9 py-2 text-sm text-muted-foreground">On file, encrypted</p> : <Input inputMode="numeric" autoComplete="off" data-private placeholder="9 digits" disabled={!editable} className="h-9" value={d.ssn} onChange={(e) => set({ ssn: digits(e.target.value) })} />}</label>
+              {editable ? <Button size="sm" disabled={busy || !ready} onClick={async () => {
+                if (await run({ details: { relationshipId: pid, email: d.email.trim() || null, phone: null, dateOfBirth: d.dob || null, ssn: d.ssn || null } }, `${r.name} details saved`)) setDrafts((st) => ({ ...st, [pid]: { email: "", dob: "", ssn: "" } }));
+              }}>Save</Button> : null}
+            </div>
+          );
+        })}
+        {editable ? (
+          <div className="grid gap-2 rounded-md border border-dashed bg-background p-3 sm:grid-cols-4 sm:items-end">
+            <p className="text-sm font-medium sm:col-span-4">Add an owner or signer</p>
+            <label className="space-y-1 text-xs">First name *<Input id="en-add-first" className="h-9" value={nw.firstName} onChange={(e) => setNw({ ...nw, firstName: e.target.value })} /></label>
+            <label className="space-y-1 text-xs">Last name *<Input className="h-9" value={nw.lastName} onChange={(e) => setNw({ ...nw, lastName: e.target.value })} /></label>
+            <label className="space-y-1 text-xs">Email<Input type="email" className="h-9" value={nw.email} onChange={(e) => setNw({ ...nw, email: e.target.value })} /></label>
+            <label className="space-y-1 text-xs">Role<select className={`${selectCls} w-full`} value={nw.role} onChange={(e) => setNw({ ...nw, role: e.target.value })}>
+              {["beneficial_owner", "trustee", "control_person", "authorized_signer", "officer", "manager", "member"].map((v) => <option key={v} value={v}>{v.replace(/_/g, " ")}</option>)}
+            </select></label>
+            <label className="space-y-1 text-xs">Ownership %<Input inputMode="decimal" className="h-9" value={nw.pct} onChange={(e) => setNw({ ...nw, pct: e.target.value })} /></label>
+            <label className="space-y-1 text-xs">Date of birth<Input type="date" className="h-9" value={nw.dob} onChange={(e) => setNw({ ...nw, dob: e.target.value })} /></label>
+            <label className="space-y-1 text-xs">SSN<Input inputMode="numeric" autoComplete="off" data-private placeholder="9 digits" className="h-9" value={nw.ssn} onChange={(e) => setNw({ ...nw, ssn: digits(e.target.value) })} /></label>
+            <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" checked={nw.signer} onChange={(e) => setNw({ ...nw, signer: e.target.checked })} />Signer</label>
+            <Button size="sm" className="sm:col-span-4 sm:w-fit" disabled={busy || !nw.firstName.trim() || !nw.lastName.trim() || (nw.ssn !== "" && nw.ssn.length !== 9)} onClick={async () => {
+              if (await run({ add: { firstName: nw.firstName.trim(), lastName: nw.lastName.trim(), email: nw.email.trim() || null, role: nw.role, ownershipPercent: nw.pct.trim() === "" ? null : Number(nw.pct), isSigner: nw.signer, phone: null, dateOfBirth: nw.dob || null, ssn: nw.ssn || null } }, `${nw.firstName.trim()} added`)) setNw(blankNew);
+            }}>Add person</Button>
+          </div>
+        ) : null}
+      </div>
       <p className="text-xs text-muted-foreground">Owners with 25% or more, control persons, trustees and signers need name, email, date of birth and SSN. SSNs are stored encrypted. Every save is recorded.</p>
 
       {owners.length ? (
