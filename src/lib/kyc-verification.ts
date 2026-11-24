@@ -863,3 +863,29 @@ export function investorProgress(input: {
 
   return { steps, summary };
 }
+
+/**
+ * Create a verification session; if the provider rejects it (4xx) while
+ * prefill was attached, retry once with no prefill so pre-filled details
+ * can never stop an investor from verifying.
+ */
+export async function createSessionWithPrefillFallback(
+  url: string,
+  key: string,
+  base: Record<string, unknown>,
+  prefill: Record<string, unknown>,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: boolean; status: number; text: string; prefillDropped: boolean }> {
+  const send = (body: Record<string, unknown>) =>
+    fetchImpl(url, { method: "POST", headers: { "content-type": "application/json", "x-api-key": key }, body: JSON.stringify(body) });
+  const hasPrefill = Object.keys(prefill).length > 0;
+  let res = await send(hasPrefill ? { ...base, contact_details: prefill, expected_details: prefill } : base);
+  let text = await res.text();
+  if (!res.ok && hasPrefill && res.status >= 400 && res.status < 500) {
+    console.warn("[kyc] prefill rejected, retrying without prefill", res.status, text.slice(0, 300));
+    res = await send(base);
+    text = await res.text();
+    return { ok: res.ok, status: res.status, text, prefillDropped: true };
+  }
+  return { ok: res.ok, status: res.status, text, prefillDropped: false };
+}

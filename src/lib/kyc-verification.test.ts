@@ -343,3 +343,25 @@ describe("investor-facing progression", () => {
     expect(JSON.stringify(progress)).not.toMatch(/risk|investigation|warning/i);
   });
 });
+
+import { createSessionWithPrefillFallback as _fb } from "./kyc-verification";
+describe("prefill never blocks verification", () => {
+  it("retries without prefill when provider rejects it", async () => {
+    const bodies: any[] = [];
+    const f = (async (_u: any, init: any) => {
+      bodies.push(JSON.parse(init.body));
+      return bodies.length === 1 ? new Response("bad", { status: 400 }) : new Response("{}", { status: 201 });
+    }) as any;
+    const r = await _fb("u", "k", { workflow_id: "w" }, { address: "x" }, f);
+    expect(r.ok).toBe(true);
+    expect(r.prefillDropped).toBe(true);
+    expect(bodies[1].contact_details).toBeUndefined();
+  });
+  it("does not retry on server errors", async () => {
+    let n = 0;
+    const f = (async () => { n++; return new Response("x", { status: 500 }); }) as any;
+    const r = await _fb("u", "k", {}, { address: "x" }, f);
+    expect(r.ok).toBe(false);
+    expect(n).toBe(1);
+  });
+});

@@ -72,11 +72,9 @@ export async function startAccountCheck(uid: string, origin: string) {
   c = ins.data;
   const { buildDiditPrefill } = await import("@/lib/kyc-verification");
   const prefill = buildDiditPrefill(person as any);
-  const res = await fetch(DIDIT_SESSION_URL, {
-    method: "POST", headers: { "content-type": "application/json", "x-api-key": key },
-    body: JSON.stringify({ workflow_id: workflowId, vendor_data: vendor, metadata: { account_check: c.id }, callback: `${origin}/verify-identity`, ...(Object.keys(prefill).length ? { contact_details: prefill, expected_details: prefill } : {}) }),
-  });
-  const text = await res.text();
+  const { createSessionWithPrefillFallback } = await import("@/lib/kyc-verification");
+  const res = await createSessionWithPrefillFallback(DIDIT_SESSION_URL, key, { workflow_id: workflowId, vendor_data: vendor, metadata: { account_check: c.id }, callback: `${origin}/verify-identity` }, prefill);
+  const text = res.text;
   if (!res.ok) { console.error("[account-kyc] session failed", res.status, text.slice(0, 300)); throw new Error("Couldn't start identity verification. Please try again shortly."); }
   const p = JSON.parse(text);
   const url = p.url ?? p.session_url ?? p.verification_url;

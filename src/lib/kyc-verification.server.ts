@@ -230,20 +230,15 @@ export async function startVerificationSession(input: {
 
   const prefill = buildDiditPrefill(person as any);
 
-  const response = await fetch(DIDIT_SESSION_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-api-key": key },
-    body: JSON.stringify({
-      workflow_id: workflowId,
-      // Opaque Harmonious correlation id - never the email address.
-      vendor_data: verification.verification_ref,
-      metadata: { verification_ref: verification.verification_ref },
-      callback: `${input.origin}${input.returnPath ?? "/home"}`,
-      ...(Object.keys(prefill).length ? { contact_details: prefill, expected_details: prefill } : {}),
-    }),
-  });
-
-  const text = await response.text();
+  const { createSessionWithPrefillFallback } = await import("@/lib/kyc-verification");
+  const response = await createSessionWithPrefillFallback(DIDIT_SESSION_URL, key, {
+    workflow_id: workflowId,
+    // Opaque Harmonious correlation id - never the email address.
+    vendor_data: verification.verification_ref,
+    metadata: { verification_ref: verification.verification_ref },
+    callback: `${input.origin}${input.returnPath ?? "/home"}`,
+  }, prefill);
+  const text = response.text;
   if (!response.ok) {
     console.error("[kyc] session create failed", response.status, text.slice(0, 500));
     throw new Error("Could not start identity verification. Please try again shortly.");
