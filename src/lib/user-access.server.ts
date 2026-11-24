@@ -560,11 +560,12 @@ export async function personAccessSummary(viewer: string, subjectId: string) {
   const { data: grantFunds } = grantIds.length ? await db.from("offerings").select("id, name").in("id", grantIds) : { data: [] as any[] };
   const fundName = new Map(((grantFunds ?? []) as any[]).map((o) => [o.id, o.name]));
   const roleList = ((roles ?? []) as any[]).map((r) => String(r.role));
-  const lines: { kind: "staff" | "fund_manager" | "client_member" | "fund_team" | "investor"; label: string; fundId?: string; clientId?: string }[] = [];
+  const lines: { kind: "staff" | "fund_manager" | "client_member" | "fund_team" | "investor"; label: string; fundId?: string; clientId?: string; grantId?: string }[] = [];
   if (roleList.some((r) => FUND_OPERATIONS_ROLES.includes(r as any))) lines.push({ kind: "staff", label: "Every fund (Operations role)" });
   for (const r of (fm ?? []) as any[]) lines.push({ kind: "fund_manager", label: r.offerings?.name ?? "Fund", fundId: r.offering_id });
   for (const r of (cu ?? []) as any[]) lines.push({ kind: "client_member", label: `${r.clients?.name ?? "Client"} · ${String(r.role ?? "member").replace(/^client_/, "").replace(/_/g, " ")}`, clientId: r.client_id });
-  for (const g of grants as any[]) lines.push({ kind: "fund_team", label: `${fundName.get(g.offering_id) ?? "Fund"} · ${String(g.role ?? "viewer").replace(/_/g, " ")}`, fundId: g.offering_id });
+  for (const g of grants as any[]) lines.push({ kind: "fund_team", label: `${fundName.get(g.offering_id) ?? "Fund"} · ${String(g.role ?? "viewer").replace(/^fund_/, "").replace(/_/g, " ")}`, fundId: g.offering_id, ...(g.id ? { grantId: g.id } : {}) });
   for (const r of (inv ?? []) as any[]) lines.push({ kind: "investor", label: r.offerings?.name ?? "Fund", fundId: r.offering_id });
-  return { hasPerson: !!person, lines };
+  const { data: auth } = await db.auth.admin.getUserById(subjectId);
+  return { hasPerson: !!person, email: (auth as any)?.user?.email ?? null, lines };
 }
