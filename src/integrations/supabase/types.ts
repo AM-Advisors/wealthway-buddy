@@ -27789,6 +27789,7 @@ export type Database = {
           created_at: string
           id: string
           is_authorized_signer: boolean
+          is_tax_form_signer: boolean
           ownership_percent: number | null
           person_id: string
           profile_id: string
@@ -27803,6 +27804,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_authorized_signer?: boolean
+          is_tax_form_signer?: boolean
           ownership_percent?: number | null
           person_id: string
           profile_id: string
@@ -27817,6 +27819,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_authorized_signer?: boolean
+          is_tax_form_signer?: boolean
           ownership_percent?: number | null
           person_id?: string
           profile_id?: string
@@ -53640,6 +53643,13 @@ export type Database = {
           key_version: number
         }[]
       }
+      read_person_tax_id: {
+        Args: { _person: string }
+        Returns: {
+          ciphertext: string
+          iv: string
+        }[]
+      }
       read_profile_tax_id: {
         Args: { _profile: string }
         Returns: {
@@ -53840,6 +53850,16 @@ export type Database = {
           _last4: string
           _offering: string
           _type: string
+        }
+        Returns: undefined
+      }
+      store_person_tax_id: {
+        Args: {
+          _actor: string
+          _ciphertext: string
+          _iv: string
+          _key_version: number
+          _person: string
         }
         Returns: undefined
       }

@@ -108,7 +108,53 @@ export type InvestmentInput = {
   amountCents?: number | null; commitmentCents?: number | null; acceptedCents?: number | null; investmentDate?: string | null;
   unitCount?: number | null; sourceReferral?: string | null; managerNotes?: string | null; internalNotes?: string | null;
 };
-export type RelatedInput = { firstName: string; lastName: string; email?: string | null; role: string; ownershipPercent?: number | null; isSigner?: boolean };
+export type RelatedInput = { firstName: string; lastName: string; email?: string | null; role: string; ownershipPercent?: number | null; isSigner?: boolean; phone?: string | null; dateOfBirth?: string | null; ssn?: string | null };
+export type RelatedPersonDetails = { email?: string | null; phone?: string | null; dateOfBirth?: string | null; ssn?: string | null };
+
+/**
+ * Fills a related person's contact, birth date and SSN. The SSN is encrypted
+ * through the canonical store (only last four readable). Non-staff fill blanks
+ * only and never change a signed-in person's email; staff may correct.
+ */
+async function writeRelatedPersonDetails(personId: string, d: RelatedPersonDetails, actor: OnboardingActor, base: { offeringId: string; onboardingId: string; source: EntrySource }) {
+  const { data: cur } = await db().from("persons").select("id, user_id, email, phone, date_of_birth, tax_id_last4").eq("id", personId).maybeSingle();
+  if (!cur) fail("That person couldn't be found.");
+  const changes: Change[] = []; const apply: Record<string, unknown> = {};
+  const canSet = (current: unknown) => actor.isStaff || current == null || String(current).trim() === "";
+  const email = d.email?.trim().toLowerCase();
+  if (email && email !== cur.email) {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) fail("Enter a valid email.");
+    if (cur.user_id && !actor.isStaff) forbid("this person signs in with their own email; ask Harmonious to change it.");
+    if (!canSet(cur.email)) forbid("an email is already on file; ask Harmonious to change it.");
+    apply["email"] = email;
+  }
+  const phone = d.phone?.trim();
+  if (phone && phone !== cur.phone && canSet(cur.phone)) apply["phone"] = phone;
+  const dob = d.dateOfBirth?.trim();
+  if (dob && dob !== cur.date_of_birth) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob) || new Date(dob) > new Date()) fail("Enter a valid date of birth.");
+    if (!canSet(cur.date_of_birth)) forbid("a date of birth is already on file; ask Harmonious to change it.");
+    apply["date_of_birth"] = dob;
+  }
+  for (const [f, v] of Object.entries(apply)) changes.push({ ...base, table: "persons", id: personId, field: f, from: f === "date_of_birth" ? (cur.date_of_birth ? "on file" : null) : (cur as any)[f] ?? null, to: f === "date_of_birth" ? "on file" : v, actor: actor.userId });
+  const ssn = String(d.ssn ?? "").replace(/\D/g, "");
+  if (ssn) {
+    if (ssn.length !== 9) fail("The SSN must be 9 digits.");
+    if (!actor.isStaff && cur.tax_id_last4) forbid("an SSN is already on file; ask Harmonious to change it.");
+    const { encryptTin } = await import("@/lib/irs-forms.server");
+    const enc = await encryptTin(ssn);
+    const { error } = await db().rpc("store_person_tax_id" as any, { _person: personId, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId } as any);
+    if (error) fail("The SSN couldn't be stored securely.");
+    apply["tax_id_last4"] = ssn.slice(-4);
+    changes.push({ ...base, table: "persons", id: personId, field: "tax_id", from: cur.tax_id_last4 ? `•••${cur.tax_id_last4}` : null, to: `•••${ssn.slice(-4)}`, actor: actor.userId });
+  }
+  if (Object.keys(apply).length) {
+    const { error } = await db().from("persons").update({ ...apply, updated_at: nowIso() } as any).eq("id", personId);
+    if (error) fail(error.message);
+  }
+  await logChanges(changes);
+  return changes.length;
+}
 const RELATED_ROLES = new Set(["beneficial_owner", "control_person", "authorized_signer", "joint_owner", "trustee", "owner", "officer", "manager", "member"]);
 
 function personRow(p: PersonInput, actor: OnboardingActor) {
@@ -592,6 +638,9 @@ export async function editRelatedParty(userId: string, input: {
   onboardingId: string;
   add?: RelatedInput;
   update?: { relationshipId: string; role: string; ownershipPercent?: number | null; isSigner?: boolean };
+  details?: { relationshipId: string } & RelatedPersonDetails;
+  taxFormSignerId?: string;
+  responsiblePartyId?: string;
   removeId?: string;
   preparerId?: string | null;
 }) {
@@ -619,13 +668,44 @@ export async function editRelatedParty(userId: string, input: {
     const { addRelatedPerson } = await import("@/lib/related-person.server");
     const res = await addRelatedPerson({ profileId: row.investment_profile_id, offeringId: row.offering_id, firstName: r.firstName, lastName: r.lastName, email: r.email ?? null, role: r.role, ownershipPercent: pct(r.ownershipPercent), isSigner: r.isSigner, actorUserId: actor.userId, entrySource: source });
     await logChanges([{ ...base, id: res.relationshipId, field: `related:${r.role}`, from: null, to: `${r.firstName} ${r.lastName}` }]);
+    if (r.phone || r.dateOfBirth || r.ssn) {
+      const { data: rel } = await db().from("investment_profile_relationships").select("person_id").eq("id", res.relationshipId).maybeSingle();
+      if (rel?.person_id) await writeRelatedPersonDetails(rel.person_id, { phone: r.phone ?? null, dateOfBirth: r.dateOfBirth ?? null, ssn: r.ssn ?? null }, actor, { offeringId: row.offering_id, onboardingId: row.id, source });
+    }
     return { ok: true, underReview: res.underReview, relationshipId: res.relationshipId };
+  }
+  if (input.details) {
+    const cur = await owned(input.details.relationshipId);
+    const { data: rel } = await db().from("investment_profile_relationships").select("person_id").eq("id", cur.id).maybeSingle();
+    if (!rel?.person_id) fail("That person couldn't be found.");
+    const n = await writeRelatedPersonDetails(rel.person_id, input.details, actor, { offeringId: row.offering_id, onboardingId: row.id, source });
+    if (n) await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "investor_record_updated" });
+    return { ok: true };
+  }
+  if (input.taxFormSignerId) {
+    const cur = await owned(input.taxFormSignerId);
+    if (!cur.is_authorized_signer) fail("Only a signer can sign the W-9. Mark them as a signer first.");
+    await db().from("investment_profile_relationships").update({ is_tax_form_signer: false } as any).eq("profile_id", row.investment_profile_id).neq("id", cur.id);
+    const { error } = await db().from("investment_profile_relationships").update({ is_tax_form_signer: true } as any).eq("id", cur.id);
+    if (error) fail(error.message);
+    await logChanges([{ ...base, id: cur.id, field: "is_tax_form_signer", from: null, to: true }]);
+    return { ok: true };
+  }
+  if (input.responsiblePartyId) {
+    const cur = await owned(input.responsiblePartyId);
+    const { data: pr } = await db().from("investment_profiles").select("details").eq("id", row.investment_profile_id).maybeSingle();
+    const prev = (pr?.details as any)?.responsiblePartyRelationshipId ?? null;
+    const { error } = await db().from("investment_profiles").update({ details: { ...((pr?.details as any) ?? {}), responsiblePartyRelationshipId: cur.id }, updated_at: nowIso() } as any).eq("id", row.investment_profile_id);
+    if (error) fail(error.message);
+    await logChanges([{ ...base, table: "investment_profiles", id: row.investment_profile_id, field: "responsible_party", from: prev, to: cur.id }]);
+    return { ok: true };
   }
   if (input.update) {
     const u = input.update;
     if (!RELATED_ROLES.has(u.role)) fail("Choose a valid role.");
     const cur = await owned(u.relationshipId);
-    const next = { role: u.role, ownership_percent: pct(u.ownershipPercent), is_authorized_signer: Boolean(u.isSigner) || u.role === "authorized_signer" };
+    const next: Record<string, unknown> = { role: u.role, ownership_percent: pct(u.ownershipPercent), is_authorized_signer: Boolean(u.isSigner) || u.role === "authorized_signer" };
+    if (!next["is_authorized_signer"]) next["is_tax_form_signer"] = false;
     const { error } = await db().from("investment_profile_relationships").update(next).eq("id", cur.id);
     if (error) fail(error.message);
     await logChanges(Object.entries(next).filter(([f, v]) => !sameValue(cur[f], v)).map(([f, v]) => ({ ...base, id: cur.id, field: f, from: cur[f] ?? null, to: v })));
@@ -767,7 +847,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   const [{ data: person }, { data: profile }, { data: rel }, { data: changes }, { data: sugg }, { data: offering }] = await Promise.all([
     row.person_id ? db().from("persons").select("*").eq("id", row.person_id).maybeSingle() : db().from("persons").select("*").eq("user_id", row.investor_user_id).maybeSingle(),
     row.investment_profile_id ? db().from("investment_profiles").select("id, profile_type, display_label, legal_name, details, entry_source, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle() : { data: null },
-    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, status, persons:person_id(legal_first_name, legal_last_name)").eq("profile_id", row.investment_profile_id).neq("status", "removed") : { data: [] },
+    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, is_tax_form_signer, status, persons:person_id(legal_first_name, legal_last_name, email, phone, date_of_birth, tax_id_last4, user_id)").eq("profile_id", row.investment_profile_id).neq("status", "removed") : { data: [] },
     db().from("investor_record_changes").select("field, source, subject_table, created_at, manager_visible, old_value, new_value").eq("onboarding_id", row.id).order("created_at", { ascending: false }).limit(100),
     db().from("investor_record_suggestions").select("*").eq("onboarding_id", row.id).in("status", ["open", "review_later"]).order("created_at", { ascending: false }),
     db().from("offerings").select("id, name").eq("id", row.offering_id).maybeSingle(),
@@ -807,7 +887,11 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     overview: { name: personName(person) ?? profile?.display_label ?? profile?.legal_name ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at), investorUserId: actor.isStaff ? row.investor_user_id ?? null : null },
     person: safePerson,
     profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null } : null,
-    related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status })),
+    related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status,
+      // Managers see whether DOB/SSN are on file, never the values; Harmonious also sees the last four.
+      email: r.persons?.email ?? null, phone: r.persons?.phone ?? null, hasAccount: Boolean(r.persons?.user_id),
+      dobOnFile: Boolean(r.persons?.date_of_birth), ssnOnFile: Boolean(r.persons?.tax_id_last4), ...(staff ? { dateOfBirth: r.persons?.date_of_birth ?? null, ssnLast4: r.persons?.tax_id_last4 ?? null } : {}),
+      taxFormSigner: Boolean(r.is_tax_form_signer), responsibleParty: (profile?.details as any)?.responsiblePartyRelationshipId === r.id })),
     investment: {
       amountCents: row.requested_amount_cents, commitmentCents: row.commitment_amount_cents, investmentDate: row.investment_date, unitCount: row.unit_count,
       sourceReferral: row.source_referral, managerNotes: row.manager_notes, fundedCents: row.funded_amount_cents,

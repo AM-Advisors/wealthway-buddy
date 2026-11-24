@@ -448,6 +448,7 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
             <iframe title={`${form.title} preview`} src={previewUrl} className="h-[70vh] w-full rounded-md border" />
             <a className="text-sm underline" href={previewUrl} target="_blank" rel="noreferrer">Open the form in a new tab</a>
             <p className="text-sm text-muted-foreground">By typing your name you sign the certification printed on the form above, exactly as issued by the IRS, under penalties of perjury.</p>
+            {(d as any).taxFormSigner ? <p className="text-sm">Assigned W-9 signer: <span className="font-medium">{(d as any).taxFormSigner}</span></p> : null}
             <div><Label>Type your full name to sign</Label><Input value={sig} onChange={(e) => setSig(e.target.value)} maxLength={200} /></div>
             <Button className="w-full sm:w-auto" disabled={sign.isPending || sig.trim().length < 2} onClick={() => sign.mutate()}>Certify & Sign</Button>
           </>

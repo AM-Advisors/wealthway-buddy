@@ -136,13 +136,16 @@ export const fetchGoogleSheetCsvFn = createServerFn({ method: "POST" }).middlewa
     return { csv: text.slice(0, 500_000) };
   });
 
-const relatedInput = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80), email: z.string().trim().email().max(255).nullable().optional(), role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() });
+const relatedInput = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80), email: z.string().trim().email().max(255).nullable().optional(), role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional(), phone: z.string().max(40).nullable().optional(), dateOfBirth: z.string().max(10).nullable().optional(), ssn: z.string().max(20).nullable().optional() });
 
 export const editRelatedPartyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({
     onboardingId: uuid,
     add: relatedInput.optional(),
     update: z.object({ relationshipId: uuid, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() }).optional(),
+    details: z.object({ relationshipId: uuid, email: z.string().max(200).nullable().optional(), phone: z.string().max(40).nullable().optional(), dateOfBirth: z.string().max(10).nullable().optional(), ssn: z.string().max(20).nullable().optional() }).optional(),
+    taxFormSignerId: uuid.optional(),
+    responsiblePartyId: uuid.optional(),
     removeId: uuid.optional(),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).editRelatedParty(context.userId, data as any));

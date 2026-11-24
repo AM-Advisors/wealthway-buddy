@@ -10,7 +10,7 @@ import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
-import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
+import { DistributionBankCard, EntityRequirementsList, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -191,15 +191,26 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
             citizenship: edit['citizenship'], dateOfBirth: edit["dob"] || undefined, addressLine1: edit['address1'], addressLine2: edit['address2'], city: edit['city'], region: edit['region'], postalCode: edit['postal'], country: edit['country'],
           } })}>{data.contactEditMode === "suggest" ? "Submit correction for review" : "Save investor details"}</Button>
         </CardContent></Card>
-        {data.profile ? <Card><CardHeader><CardTitle className="text-base">Investment Profile · {data.profile.typeLabel}</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
-          {field("legalName", "Legal investor name", data.profile.legalName)}
-          {data.profile.type === "entity" || data.profile.type === "trust" ? field("jurisdiction", "Jurisdiction", (data.profile.details as any).jurisdiction) : null}
-          {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
-          <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]])) } })}>Save profile</Button>
-          <RelatedPartiesEditor onboardingId={onboardingId} related={data.related as any} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} />
-          <p className="text-xs text-muted-foreground sm:col-span-2">Tax forms, ID images and verification evidence are never shown here.</p>
-        </CardContent></Card> : null}
-        {data.profile ? <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} /> : null}
+        {data.profile ? (() => {
+          const isEntity = data.profile.type === "entity" || data.profile.type === "trust";
+          const editableProfile = !data.overview.removed && (data as any).profileEditMode === "direct";
+          return <>
+            <Card><CardHeader><CardTitle className="text-base">{isEntity ? `${data.profile.typeLabel} details` : `Investment Profile · ${data.profile.typeLabel}`}</CardTitle>
+              {isEntity ? <p className="text-sm text-muted-foreground">The {data.profile.typeLabel.toLowerCase()} is the investor. Fields marked <span className="text-destructive">*</span> are required.</p> : null}
+            </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
+              {isEntity ? <EntityRequirementsList legalName={data.profile.legalName} einOnFile={Boolean((data.profile as any).taxIdLast4)} related={data.related as any} /> : null}
+              {field("legalName", isEntity ? "Legal name *" : "Legal investor name", data.profile.legalName)}
+              {isEntity ? field("jurisdiction", "State or country of formation", (data.profile.details as any).jurisdiction) : null}
+              {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
+              <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]])) } })}>Save {isEntity ? "entity details" : "profile"}</Button>
+            </CardContent></Card>
+            <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={editableProfile} onChanged={refresh} entity={isEntity} />
+            <Card><CardHeader><CardTitle className="text-base">{isEntity ? "Owners, control persons & signers" : "Other people on this investment"}</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
+              <RelatedPartiesEditor onboardingId={onboardingId} related={data.related as any} editable={editableProfile} onChanged={refresh} entity={isEntity} />
+              <p className="text-xs text-muted-foreground sm:col-span-2">ID images and verification evidence are never shown here.</p>
+            </CardContent></Card>
+          </>;
+        })() : null}
         {!data.overview.removed ? <DistributionBankCard onboardingId={onboardingId} hasAccount={Boolean((data as any).investorHasAccount)} /> : null}
       </div>
       </> : null}

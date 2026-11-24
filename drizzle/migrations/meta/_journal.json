@@ -3130,6 +3130,13 @@
       "when": 1795531628732,
       "tag": "0446_person_for_every_access_login",
       "breakpoints": true
+    },
+    {
+      "idx": 447,
+      "version": "7",
+      "when": 1795555196990,
+      "tag": "0447_entity_people_tax_signer",
+      "breakpoints": true
     }
   ]
 }

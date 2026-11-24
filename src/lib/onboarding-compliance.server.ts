@@ -506,7 +506,12 @@ export async function investorComplianceView(userId: string, onboardingId: strin
     .from("compliance_questionnaire_responses")
     .select("id").eq("onboarding_id", ob.id).eq("kind", "demographics").is("superseded_by", null).limit(1);
   const answers = taxIntakeDefaults(r.taxFactsAnswers, r.routing.status === "determined" ? r.routing.formType : null);
+  const { data: w9Signer } = ob.investment_profile_id ? await d.from("investment_profile_relationships")
+    .select("persons:person_id(legal_first_name, legal_last_name)").eq("profile_id", ob.investment_profile_id)
+    .eq("is_tax_form_signer" as any, true).neq("status", "removed").maybeSingle() : { data: null };
+  const taxFormSigner = w9Signer ? `${(w9Signer as any).persons?.legal_first_name ?? ""} ${(w9Signer as any).persons?.legal_last_name ?? ""}`.trim() || null : null;
   return {
+    taxFormSigner,
     profileName: profile.legal_name ?? profile.display_label ?? "",
     profileType: profile.profile_type as string,
     taxIntake: {
