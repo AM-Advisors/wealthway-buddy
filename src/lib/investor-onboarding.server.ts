@@ -3461,9 +3461,10 @@ export async function staffCatchUpSignedInvestments(userId: string) {
   const sigs: any[] = [];
   for (const [col, ids] of [["application_id", appIds], ["investment_profile_id", profIds]] as const) {
     for (let i = 0; i < ids.length; i += 200) {
-      const { data } = await db().from("document_signatures").select("application_id, investment_profile_id, offering_document_id, signed_at, provider_completed_at")
+      const { data } = await db().from("document_signatures").select("application_id, investment_profile_id, offering_document_id, signed_at, provider, provider_completed_at")
         .in(col, ids.slice(i, i + 200)).is("cancelled_at", null).not("signed_at", "is", null);
-      sigs.push(...((data ?? []) as any[]));
+      // Sent-for-signature rows also carry a send time in signed_at; only a confirmed completion counts.
+      sigs.push(...((data ?? []) as any[]).filter((s) => s.provider_completed_at || !s.provider));
     }
   }
   const docIds = [...new Set(sigs.map((s) => s.offering_document_id).filter(Boolean))];
