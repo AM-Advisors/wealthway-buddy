@@ -804,12 +804,24 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
   const [{ data: people }, { data: byUser }, { data: profiles }, { data: sugg }] = await Promise.all([
     personIds.length ? db().from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, address_line1, user_id").in("id", personIds) : { data: [] },
     userIds.length ? db().from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, address_line1, user_id").in("user_id", userIds) : { data: [] },
-    profileIds.length ? db().from("investment_profiles").select("id, display_label, profile_type").in("id", profileIds) : { data: [] },
+    profileIds.length ? db().from("investment_profiles").select("id, display_label, profile_type, legal_name").in("id", profileIds) : { data: [] },
     ids.length ? db().from("investor_record_suggestions").select("onboarding_id, source").in("onboarding_id", ids).eq("status", "open") : { data: [] },
   ]);
   const pMap = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
   const uMap = new Map(((byUser ?? []) as any[]).map((p) => [p.user_id, p]));
   const prMap = new Map(((profiles ?? []) as any[]).map((p) => [p.id, p]));
+  const entityIds = ((profiles ?? []) as any[]).filter((p) => p.profile_type && p.profile_type !== "individual").map((p) => p.id);
+  const { data: rels } = entityIds.length
+    ? await db().from("investment_profile_relationships").select("profile_id, role, is_authorized_signer, persons:person_id(legal_first_name, legal_last_name, preferred_name, email, phone)").in("profile_id", entityIds).neq("status", "removed")
+    : { data: [] };
+  const hideContact = readOnly && !canAddInvestors;
+  const contactsBy = new Map<string, { name: string; role: string; email: string | null; phone: string | null }[]>();
+  for (const c of (rels ?? []) as any[]) {
+    const n = personName(c.persons); if (!n) continue;
+    const list = contactsBy.get(c.profile_id) ?? [];
+    if (!list.some((x) => x.name === n)) list.push({ name: n, role: c.is_authorized_signer ? "Signer" : String(c.role ?? "Contact").replace(/_/g, " "), email: hideContact ? null : (c.persons?.email ?? null), phone: hideContact ? null : (c.persons?.phone ?? null) });
+    contactsBy.set(c.profile_id, list);
+  }
   return {
     isStaff: actor.isStaff,
     readOnly,
@@ -827,6 +839,9 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
       return {
         onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? pr?.display_label ?? (readOnly && !canAddInvestors ? null : p?.email) ?? "Investor", nameMissing: !personName(p), email: readOnly && !canAddInvestors ? null : (p?.email ?? null),
         profileLabel: pr?.display_label ?? null, profileType: pr ? PROFILE_TYPE_LABELS[formProfileType(pr.profile_type)] : null,
+        entityName: pr && pr.profile_type !== "individual" ? (pr.legal_name || pr.display_label || null) : null,
+        contacts: pr ? (contactsBy.get(pr.id) ?? []) : [],
+        contactName: personName(p) ?? null, contactEmail: hideContact ? null : (p?.email ?? null),
         amountCents: r.requested_amount_cents, commitmentCents: r.commitment_amount_cents,
         ...(actor.isStaff ? { acceptedCents: r.accepted_amount_cents } : {}),
         stage: r.stage, hasAccount: Boolean(r.investor_user_id), invited: Boolean(r.invitation_id),

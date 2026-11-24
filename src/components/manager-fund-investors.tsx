@@ -129,7 +129,7 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
     const fact = { onboardingId, offeringId: fundId, fundingStatus: null, intendedCents: null, readiness: rr.readiness };
     return (!drill.stage || funnelStageOf(fact) === drill.stage) && (!drill.bucket || managerBucketOf(fact) === drill.bucket);
   };
-  const shown = items.filter((r) => drillMatch(r.onboardingId)).filter((r) => rosterFilterMatches(filter, readinessById.get(r.onboardingId))).filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
+  const shown = items.filter((r) => drillMatch(r.onboardingId)).filter((r) => rosterFilterMatches(filter, readinessById.get(r.onboardingId))).filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term) || (r.entityName ?? "").toLowerCase().includes(term) || (r.contacts ?? []).some((c) => c.name.toLowerCase().includes(term)));
   const shownLegacy = legacy.filter(() => !drill.stage && !drill.bucket && filter === "all").filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
 
   if (records.isLoading) return <p className="text-sm text-muted-foreground">Loading investors…</p>;
@@ -245,8 +245,8 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
           {shown.length === 0 && shownLegacy.length === 0 && shownInvites === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{term ? "No investors match your search." : canAdd ? "No investors yet. Use Add investor to begin." : "No investors yet."}</p> :
             <ul className="divide-y rounded-md border">
               {shown.map((r) => { const s = oneStatus(r); const body = (<>
-                    <div className="min-w-0"><p className="truncate font-medium">{r.name}{readinessById.get(r.onboardingId)?.isTestInvestor && <TestInvestorBadge className="ml-2 border-accent text-foreground" />}</p>
-                      <p className="truncate text-xs text-muted-foreground">{r.nameMissing && r.profileLabel && r.profileLabel === r.name ? "Contact name needed" : (r.profileLabel ?? r.profileType ?? "Profile needed")}{r.claimState === "prepared" ? (r.invited ? " · Invited, not signed in yet" : " · Not signed in yet") : ""}</p></div>
+                    <div className="min-w-0"><p className="truncate font-medium">{r.entityName ?? r.name}{readinessById.get(r.onboardingId)?.isTestInvestor && <TestInvestorBadge className="ml-2 border-accent text-foreground" />}</p>
+                      {r.entityName ? <EntityContacts r={r} /> : <p className="truncate text-xs text-muted-foreground">{r.nameMissing && r.profileLabel && r.profileLabel === r.name ? "Contact name needed" : (r.profileLabel ?? r.profileType ?? "Profile needed")}{r.claimState === "prepared" ? (r.invited ? " · Invited, not signed in yet" : " · Not signed in yet") : ""}</p>}</div>
                     <p className="text-sm">{money(r.amountCents)}</p>
                     <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p>{stageChips(r.onboardingId)}</div>
                   </>); const rowClass = "grid min-w-0 basis-full flex-1 gap-1 sm:basis-auto sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4"; return (
@@ -286,4 +286,12 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
       </Collapsible>}
     </section>
   );
+}
+
+function EntityContacts({ r }: { r: { contacts?: { name: string; role: string; email: string | null; phone: string | null }[]; contactName?: string | null; contactEmail?: string | null; profileType?: string | null; claimState?: string; invited?: boolean } }) {
+  const people = r.contacts?.length ? r.contacts : r.contactName ? [{ name: r.contactName, role: "Contact", email: r.contactEmail ?? null, phone: null }] : [];
+  return <div className="text-xs text-muted-foreground">
+    <p>{r.profileType ?? "Entity"}{r.claimState === "prepared" ? (r.invited ? " · Invited, not signed in yet" : " · Not signed in yet") : ""}</p>
+    {people.length ? <ul className="mt-1 space-y-0.5">{people.map((c) => <li key={c.name} className="break-words"><span className="font-medium text-foreground">{c.name}</span> <span className="capitalize">({c.role})</span>{c.email ? ` · ${c.email}` : ""}{c.phone ? ` · ${c.phone}` : ""}</li>)}</ul> : <p>Contact name needed</p>}
+  </div>;
 }
