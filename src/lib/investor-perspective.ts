@@ -68,7 +68,7 @@ export function perspectiveEditor(access: FundAccess, teamManagesInvestors: bool
 export const INVESTOR_ONLY_KEYS = new Set(["bsa_aml", "subscription_questionnaire", "financial_background", "certifications", "review_certify", "signatures", "identity_verification"]);
 
 /** Personal accounts (individual, joint, IRA) use SSNs and personal names; everything else is an entity. */
-export const PERSONAL_PROFILE_TYPES = new Set(["individual", "joint", "ira"]);
+export const PERSONAL_PROFILE_TYPES = new Set(["individual", "joint", "ira", "retirement_plan"]);
 export const isEntityProfile = (t: unknown) => typeof t === "string" && t !== "" && !PERSONAL_PROFILE_TYPES.has(t);
 
 const blank = (v: unknown) => v == null || String(v).trim() === "";
