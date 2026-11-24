@@ -77,6 +77,18 @@ export async function fanOutPersonIdentity(personId: string | null, sessionId: s
         .eq("id", personId).in("aml_status", ["not_started", "pending"]);
     }
   } catch (e) { console.error("[person-identity] screening carry-over", (e as Error).message); }
+  // Runs before the per-investment loop so a slow or failing investment step can never leave the person unverified.
+  // The person record follows an approved check whatever stage their investments are in
+  // (fill-blank; typed answers stay), so staff and investor screens show the same status.
+  if (checkApproved) {
+    try {
+      const { applyApprovedAccountCheck } = await import("@/lib/didit-auto-apply.server");
+      await applyApprovedAccountCheck(personId, sessionId, actorUserId, {
+        loginUserId: checkRow?.user_id ?? null,
+        fallbackDateOfBirth: checkRow?.review_details?.idDocument?.dateOfBirth ?? null,
+      });
+    } catch (e) { console.error("[person-identity] person write-back", (e as Error).message); }
+  }
   const { data: obs } = await db().from("investor_onboardings")
     .select("id, application_id, questionnaire_didit_session_id, stage")
     .eq("person_id", personId).in("stage", ["profile_selected", "verification"]);
@@ -102,17 +114,6 @@ export async function fanOutPersonIdentity(personId: string | null, sessionId: s
       await (await import("./investor-onboarding.server")).reconcileAfter([ob.id], { actorUserId, trigger: "person_identity_applied" });
       applied++;
     } catch (e) { console.error("[person-identity] fan-out", (e as Error).message); }
-  }
-  // The person record follows an approved check whatever stage their investments are in
-  // (fill-blank; typed answers stay), so staff and investor screens show the same status.
-  if (checkApproved) {
-    try {
-      const { applyApprovedAccountCheck } = await import("@/lib/didit-auto-apply.server");
-      await applyApprovedAccountCheck(personId, sessionId, actorUserId, {
-        loginUserId: checkRow?.user_id ?? null,
-        fallbackDateOfBirth: checkRow?.review_details?.idDocument?.dateOfBirth ?? null,
-      });
-    } catch (e) { console.error("[person-identity] person write-back", (e as Error).message); }
   }
   return { applied };
 }
