@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -351,7 +352,7 @@ function NewInvestorForm({ draft, busy, onChange, onCancel, onSave }: { draft: N
           <option value="individual">An individual</option><option value="entity">A company</option><option value="trust">A trust</option>
         </select></label>
       <div className="grid gap-2 sm:grid-cols-3">
-        {draft.type !== "individual" && f("legalName", "Entity or trust legal name")}
+        {isEntityProfile(draft.type) && f("legalName", "Entity or trust legal name")}
         {f("firstName", draft.type === "individual" ? "First name" : "Signer first name")}
         {f("middleName", "Middle name")}
         {f("lastName", draft.type === "individual" ? "Last name" : "Signer last name")}

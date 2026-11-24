@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 /**
  * Fund page tabs (To dos, Team, Documents, Banking, Investors, close details).
  * Server-only. Every call re-checks fund access; fee changes after any investor
@@ -85,7 +86,7 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
   const human = (s: string | null | undefined) => s ? s.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null;
   return ((data ?? []) as any[]).map((o) => {
     const p = byId.get(o.person_id) ?? {};
-    const entity = !!o.investment_profiles?.profile_type && o.investment_profiles.profile_type !== "individual";
+    const entity = isEntityProfile(o.investment_profiles?.profile_type);
     const verified = verifiedByPerson.get(o.person_id);
     const identity = verified?.decision?.id_verification ?? verified?.decision?.id_verifications?.[0];
     const dateOfBirth = verified?.verified_date_of_birth || p.date_of_birth || null;

@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -212,7 +213,7 @@ export function CreateInvestor({ fundId, isStaff, onDone, teamMember = false }: 
         {type === "entity" ? <p className="text-xs text-muted-foreground">For another fund, LLC, corporation, partnership or family office. Enter the contact person below; the invitation is addressed to the business, which completes business verification (entity documents, owners and signers, entity W-9).</p> : null}
         <div className="grid gap-3 sm:grid-cols-2">
           {field("firstName", type === "entity" ? "Contact first name" : "Legal first name")}{field("lastName", type === "entity" ? "Contact last name" : "Last name")}
-          {field("email", type === "entity" ? "Contact email" : canSaveWithoutEmail(isStaff, type) ? "Email (leave blank if you don't have it yet)" : "Email", { type: "email" })}{type !== "individual" ? field("entityName", type === "trust" ? "Trust name" : "Legal business / entity name") : null}
+          {field("email", type === "entity" ? "Contact email" : canSaveWithoutEmail(isStaff, type) ? "Email (leave blank if you don't have it yet)" : "Email", { type: "email" })}{isEntityProfile(type) ? field("entityName", type === "trust" ? "Trust name" : "Legal business / entity name") : null}
         </div>
         {type !== "entity" ? (
           <div className="space-y-3 rounded-md border p-3">

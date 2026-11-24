@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 /**
  * Operations-only "Intake & match from Drive": scans the fund's Drive Investors folder and lets
  * Operations Approve, Review later or Reject each file on this screen. Approving saves through the
@@ -279,7 +280,7 @@ function IntakeQueue({ fundId, onApplied }: { fundId: string; onApplied?: (() =>
                 <option value="entity">Business / organization</option>
               </select>
             </label>
-            {d0.type !== "individual" && <label className="block">{d0.type === "trust" ? "Trust legal name" : "Legal name"}<Input className="mt-1" value={d0.legalName} onChange={(ev) => setDraft({ legalName: ev.target.value })} /></label>}
+            {isEntityProfile(d0.type) && <label className="block">{d0.type === "trust" ? "Trust legal name" : "Legal name"}<Input className="mt-1" value={d0.legalName} onChange={(ev) => setDraft({ legalName: ev.target.value })} /></label>}
             <div className="grid grid-cols-2 gap-2">
               <label className="block">{d0.type === "individual" ? "First name" : "Signer first name"}<Input className="mt-1" value={d0.firstName} onChange={(ev) => setDraft({ firstName: ev.target.value })} /></label>
               <label className="block">{d0.type === "individual" ? "Last name" : "Signer last name"}<Input className="mt-1" value={d0.lastName} onChange={(ev) => setDraft({ lastName: ev.target.value })} /></label>

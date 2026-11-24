@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { fillSummary } from "@/lib/investor-profile-fill-model";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -208,7 +209,7 @@ function InvestorRow({ g, runId, existing, onDone }: { g: any; runId: string; ex
             <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="individual">As an individual</SelectItem><SelectItem value="trust">Through a trust</SelectItem><SelectItem value="entity">Through a company</SelectItem></SelectContent>
           </Select>
-          {type !== "individual" && <Input className="h-9 w-56" placeholder="Legal name" value={legalName} onChange={(e) => setLegalName(e.target.value)} />}
+          {isEntityProfile(type) && <Input className="h-9 w-56" placeholder="Legal name" value={legalName} onChange={(e) => setLegalName(e.target.value)} />}
           <Button size="sm" disabled={busy} onClick={() => run("add")}>Add to fund</Button>
           {needsConfirm && <Button size="sm" variant="outline" disabled={busy} onClick={() => run("add", true)}>This is a new person, add anyway</Button>}
           {existing.length > 0 && (

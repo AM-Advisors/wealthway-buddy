@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { blankOnlyFills } from "@/lib/person-id-cards";
 
@@ -63,7 +64,7 @@ export async function extractPaperworkDetails(onboardingId: string, actorUserId:
       if (merged[k] == null && f[k] != null) (merged as any)[k] = f[k];
     }
   }
-  const isEntity = ip && ip.profile_type !== "individual";
+  const isEntity = Boolean(ip) && isEntityProfile(ip?.profile_type);
   const filled: string[] = [];
   const now = new Date().toISOString();
   const log = (table: string, id: string, field: string, to: string, managerVisible = true) =>

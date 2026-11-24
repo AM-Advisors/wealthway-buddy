@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 /**
  * Fund verification link: staff-only view of identity-check sessions started
  * from a fund's own verification link (offerings.didit_workflow_id), compared
@@ -126,7 +127,7 @@ export async function addLinkSessionInvestor(userId: string, input: { offeringId
   const { linked } = await loadSessions(input.offeringId, f.workflowId);
   if (linked.has(input.sessionId)) throw new Error("This person is already on the fund.");
   if (!det.firstName || !det.lastName) throw new Error("The check has no first and last name, so add this person with Add investor instead.");
-  if (input.profileType !== "individual" && !s(input.legalName)) throw new Error("Enter the trust or company's legal name.");
+  if (isEntityProfile(input.profileType) && !s(input.legalName)) throw new Error("Enter the trust or company's legal name.");
   const d = await db();
   if (input.personId) {
     const { data: p } = await d.from("persons").select("id, legal_first_name, legal_last_name").eq("id", input.personId).maybeSingle();

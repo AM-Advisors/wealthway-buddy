@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -200,7 +201,7 @@ async function buildCapTable(
       const person = personById.get(o.person_id);
       const prof = invProfileById.get(o.investment_profile_id);
       const personName = person ? person.preferred_name || [person.legal_first_name, person.legal_last_name].filter(Boolean).join(" ") : "";
-      const entity = prof?.profile_type && prof.profile_type !== "individual" ? (prof.legal_name as string | null) ?? null : null;
+      const entity = isEntityProfile(prof?.profile_type) ? (prof.legal_name as string | null) ?? null : null;
       return {
         app: {
           id: o.id as string,

@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 // Display-only merge: signup profile values win; blanks fall back to the
 // canonical person / investment profile saved during verification.
 type Rec = Record<string, any> | null | undefined;
@@ -5,7 +6,7 @@ type Rec = Record<string, any> | null | undefined;
 export function mergeInvestorDisplayProfile(profile: Rec, person: Rec, invProfile: Rec) {
   const pick = (...v: any[]) => v.find((x) => x !== null && x !== undefined && String(x).trim() !== "") ?? null;
   const base = { ...(profile ?? {}) } as Record<string, any>;
-  const entity = invProfile && invProfile["profile_type"] && invProfile["profile_type"] !== "individual";
+  const entity = Boolean(invProfile) && isEntityProfile(invProfile?.["profile_type"]);
   base["investor_type"] = pick(base["investor_type"], invProfile?.["profile_type"]);
   base["entity_name"] = pick(base["entity_name"], entity ? invProfile?.["legal_name"] : null);
   base["phone"] = pick(base["phone"], person?.["phone"], invProfile?.["phone"]);

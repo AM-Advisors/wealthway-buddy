@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -119,7 +120,7 @@ function AddDialog({ fundId, r, onClose, onDone }: { fundId: string; r: any; onC
               </SelectContent>
             </Select>
           </div>
-          {type !== "individual" && (
+          {isEntityProfile(type) && (
             <div className="space-y-1">
               <Label htmlFor="link-legal-name">{type === "trust" ? "Trust" : "Company"} legal name</Label>
               <Input id="link-legal-name" value={legalName} onChange={(e) => setLegalName(e.target.value)} />
@@ -127,7 +128,7 @@ function AddDialog({ fundId, r, onClose, onDone }: { fundId: string; r: any; onC
           )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button disabled={busy || (type !== "individual" && !legalName.trim())} onClick={save}>{busy ? "Adding…" : "Add to fund"}</Button>
+            <Button disabled={busy || (isEntityProfile(type) && !legalName.trim())} onClick={save}>{busy ? "Adding…" : "Add to fund"}</Button>
           </div>
         </div>
       </DialogContent>

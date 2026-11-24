@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 /** Pure: turn AI-read document values into a new-investor draft. Never carries tax/account numbers. */
 export type DocValues = Record<string, string | null | undefined>;
 export type DocName = { name: string; role: string };
@@ -36,7 +37,7 @@ export function partyKey(d: Pick<NewInvestorDraft, "email" | "firstName" | "last
 export function draftProblems(d: NewInvestorDraft): string[] {
   const out: string[] = [];
   if (!d.firstName || !d.lastName) out.push("Enter the investor's first and last name (or the signer's, for an entity or trust).");
-  if (d.type !== "individual" && !d.legalName) out.push("Enter the entity or trust legal name.");
+  if (isEntityProfile(d.type) && !d.legalName) out.push("Enter the entity or trust legal name.");
   if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) out.push("Enter a valid email address.");
   return out;
 }

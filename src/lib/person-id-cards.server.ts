@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { canOpenIdentity, ID_KIND_LABELS, type IdKind } from "@/lib/person-id-cards";
 import { extensionFor, isAllowedIdFile } from "@/lib/government-id";
@@ -46,7 +47,7 @@ export async function listInvestmentIdentity(userId: string, onboardingId: strin
     ids.length ? db().from("person_id_documents").select("id, person_id, document_type, side, status, file_name, read_name, read_birth_date, id_number_last4, expires_on, issuing_region, confirmed_at").in("person_id", ids).eq("status", "active") : { data: [] },
   ]);
   const pm = new Map(((persons ?? []) as any[]).map((p) => [p.id, p]));
-  const entity = s.ip && s.ip.profile_type !== "individual";
+  const entity = Boolean(s.ip) && isEntityProfile(s.ip?.profile_type);
   return {
     entity: entity ? { name: String(s.ip.legal_name ?? ""), einLast4: (s.ip.tax_id_last4 as string) ?? null } : null,
     people: s.people.map((p) => ({

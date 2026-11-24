@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 /**
  * Plain names for the Harmonious investor onboarding review queue.
  * Investors added before signing in have no login account, so the name comes
@@ -28,7 +29,7 @@ export function queueInvestorLabel(input: { person?: PersonLike; profile?: Profi
     clean(`${person?.legal_first_name ?? ""} ${person?.legal_last_name ?? ""}`) ?? clean(account?.legal_name);
   const partyName = clean(profile?.legal_name) ?? clean(profile?.display_label);
   const email = clean(person?.email) ?? clean(account?.email);
-  const isEntity = Boolean(profile?.profile_type && profile.profile_type !== "individual");
+  const isEntity = isEntityProfile(profile?.profile_type);
 
   if (isEntity && partyName) {
     return {

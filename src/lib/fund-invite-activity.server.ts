@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 /**
  * Invited-investor activity for one fund: every investor on the fund with when they
  * were invited and whether they clicked, signed in, started or finished their identity
@@ -93,7 +94,7 @@ export async function fundInviteActivity(userId: string, offeringId: string) {
     const verifiedAt = linkFinished.get(o.id) ?? (String(p.kyc_status ?? "").toLowerCase() === "approved" ? checkAt.get(o.person_id) ?? null : null);
     const a = inviteActivity({ hasEmail: Boolean(String(p.email ?? "").trim()), hasAccount: Boolean(o.investor_user_id), invitedAt: b.invited, openedAt: b.opened, startedAt: b.started, verificationFinishedAt: verifiedAt });
     const name = [p.preferred_name || p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") || p.email || "Investor";
-    return { onboardingId: o.id, name, investingAs: pr && pr.profile_type !== "individual" ? pr.legal_name ?? null : null, email: p.email ?? null, ...a };
+    return { onboardingId: o.id, name, investingAs: pr && isEntityProfile(pr.profile_type) ? pr.legal_name ?? null : null, email: p.email ?? null, ...a };
   });
   const order: InviteLevel[] = ["not_invited", "invited", "opened", "started", "verified"];
   rows.sort((x, y) => Number(y.followUp) - Number(x.followUp) || order.indexOf(x.level) - order.indexOf(y.level) || x.name.localeCompare(y.name));

@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 /**
  * Fund intake from a shared folder (server, staff only). Lists the files behind Google
  * Drive and Box folder links, reads them in small batches with the existing AI readers,
@@ -177,9 +178,9 @@ async function fundInvestors(offeringId: string) {
   return O.map((o) => {
     const p: any = P.get(o.person_id) ?? {}; const r: any = R.get(o.investment_profile_id);
     const name = [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ");
-    return { onboardingId: o.id, name: r && r.profile_type !== "individual" && r.legal_name ? `${r.legal_name} (${name})` : name || p.email || "Investor",
+    return { onboardingId: o.id, name: r && isEntityProfile(r.profile_type) && r.legal_name ? `${r.legal_name} (${name})` : name || p.email || "Investor",
       keys: [investorKey({ email: p.email ?? null, entityName: null, firstName: p.legal_first_name ?? null, lastName: p.legal_last_name ?? null }),
-        p.email ? `m:${String(p.email).toLowerCase()}` : null, r?.legal_name && r.profile_type !== "individual" ? investorKey({ entityName: r.legal_name, email: null, firstName: null, lastName: null }) : null].filter(Boolean) as string[] };
+        p.email ? `m:${String(p.email).toLowerCase()}` : null, r?.legal_name && isEntityProfile(r.profile_type) ? investorKey({ entityName: r.legal_name, email: null, firstName: null, lastName: null }) : null].filter(Boolean) as string[] };
   });
 }
 
@@ -262,11 +263,11 @@ export async function applyFundIntakeInvestor(userId: string, input: { runId: st
     if (!inv.firstName || !inv.lastName) throw new Error("A first and last name are needed. Use Add investor for this person instead.");
     const type = input.profileType ?? (inv.profileType === "trust" ? "trust" : inv.profileType === "entity" ? "entity" : "individual");
     const legalName = type === "individual" ? null : (input.legalName?.trim() || inv.entityName || null);
-    if (type !== "individual" && !legalName) throw new Error("Enter the trust or company's legal name.");
+    if (isEntityProfile(type) && !legalName) throw new Error("Enter the trust or company's legal name.");
     const { createInvestor } = await import("@/lib/investor-record.server");
     // Everything the documents showed goes onto the new record at once (no invitation).
     const details: Record<string, string> = {};
-    if (type !== "individual" && inv.jurisdiction) details["jurisdiction"] = inv.jurisdiction;
+    if (isEntityProfile(type) && inv.jurisdiction) details["jurisdiction"] = inv.jurisdiction;
     if (type === "trust" && inv.trustType) details["trustType"] = inv.trustType;
     if (type === "entity" && inv.entityType) details["entityType"] = inv.entityType;
     const created = await createInvestor(userId, {

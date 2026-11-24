@@ -1,3 +1,4 @@
+import { isEntityProfile } from "@/lib/profile-kind";
 import { useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -77,7 +78,7 @@ function PreparePage() {
             <>
               <Card><CardHeader><CardTitle className="text-base">Investor</CardTitle></CardHeader>
                 <CardContent className="grid gap-3 sm:grid-cols-2">
-                  {w.profile && w.profile.type !== "individual" ? <div className="space-y-1 sm:col-span-2"><Label htmlFor="p-legal">Entity / business legal name</Label><Input id="p-legal" value={f['legalName'] ?? w.profile.legalName ?? ""} onChange={(e) => setF({ ...f, legalName: e.target.value })} /></div> : null}
+                  {w.profile && isEntityProfile(w.profile.type) ? <div className="space-y-1 sm:col-span-2"><Label htmlFor="p-legal">Entity / business legal name</Label><Input id="p-legal" value={f['legalName'] ?? w.profile.legalName ?? ""} onChange={(e) => setF({ ...f, legalName: e.target.value })} /></div> : null}
                   {w.investorEmailNeeded ? (
                     <div className="space-y-1 sm:col-span-2 rounded-md border border-primary/30 bg-primary/5 p-3">
                       <Label htmlFor="p-investor-email">Investor's own email</Label>
@@ -86,7 +87,7 @@ function PreparePage() {
                     </div>
                   ) : null}
                   {PERSON.map(([k, label]) => <div key={k} className="space-y-1"><Label htmlFor={`p-${k}`}>{label}</Label><Input id={`p-${k}`} value={val(k)} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></div>)}
-                  <div className="space-y-1"><Label htmlFor="p-tin">{w.profile && w.profile.type !== "individual" ? "EIN" : "SSN / Tax ID"}{w.profile?.taxIdLast4 ? ` (on file ••• ${w.profile.taxIdLast4})` : ""}</Label><Input id="p-tin" type="password" inputMode="numeric" autoComplete="off" placeholder="9 digits" value={f['taxId'] ?? ""} onChange={(e) => setF({ ...f, taxId: e.target.value })} /></div>
+                  <div className="space-y-1"><Label htmlFor="p-tin">{w.profile && isEntityProfile(w.profile.type) ? "EIN" : "SSN / Tax ID"}{w.profile?.taxIdLast4 ? ` (on file ••• ${w.profile.taxIdLast4})` : ""}</Label><Input id="p-tin" type="password" inputMode="numeric" autoComplete="off" placeholder="9 digits" value={f['taxId'] ?? ""} onChange={(e) => setF({ ...f, taxId: e.target.value })} /></div>
                   <div className="sm:col-span-2"><Button disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "Saving…" : "Save details"}</Button></div>
                 </CardContent></Card>
               <AssistedIdentityCheck onboardingId={w.onboardingId} preparerId={w.participantId} />
