@@ -16,7 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { InvestorDocumentDrop, type FileReading } from "@/components/investor-document-drop";
 import { uploadOnboardingDocForFn } from "@/lib/investor-extras.functions";
-import { SAVE_TARGETS, guessSaveTarget, namesMatch, type SaveTargetKey } from "@/lib/investor-document-save-model";
+import { recordPriorDocFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { SAVE_TARGETS, guessSaveTarget, namesMatch, saveTarget, type SaveTargetKey } from "@/lib/investor-document-save-model";
 import { FIELD_LABELS, fillBlankFormFields, mergeInvestors, relatedRowsToAdd, type ExtractedInvestor } from "@/lib/investor-doc-extract-model";
 
 const SECTIONS = ["Contact", "Investment Profile", "Entity / Ownership", "Investment", "Eligibility", "Documents", "Review"] as const;
@@ -58,12 +60,14 @@ export function CreateInvestor({ fundId, isStaff, onDone, teamMember = false }: 
     setFilledNote(labels.length ? `Filled from the documents: ${labels.join(", ")}. Check every box before saving.` : "Nothing new to fill: the boxes already have values. Check them against the documents.");
   };
   const uploadDoc = useServerFn(uploadOnboardingDocForFn);
-  const [readFiles, setReadFiles] = useState<Array<{ file: File; kind: SaveTargetKey | ""; names: string[] }>>([]);
-  const uploadKinds = SAVE_TARGETS.filter((t) => t.store === "upload");
+  const startPrior = useServerFn(startPriorUploadFn);
+  const recordPrior = useServerFn(recordPriorDocFn);
+  const [readFiles, setReadFiles] = useState<Array<{ file: File; kind: SaveTargetKey | ""; signedOn: string; names: string[] }>>([]);
   const onRead = (results: FileReading[]) => {
     setReadFiles(results.filter((r) => r.file && r.reading).map((r) => {
       const g = guessSaveTarget(r.reading!.documentKind);
-      return { file: r.file!, kind: g && uploadKinds.some((t) => t.key === g) ? g : "", names: r.reading!.investors.map((i: any) => i.entityName || [i.firstName, i.lastName].filter(Boolean).join(" ")).filter(Boolean) };
+      const signedOn = r.reading!.investors.map((i) => i.investmentDate).find((d) => d && d <= new Date().toISOString().slice(0, 10)) ?? "";
+      return { file: r.file!, kind: g ?? "", signedOn, names: r.reading!.investors.map((i: any) => i.entityName || [i.firstName, i.lastName].filter(Boolean).join(" ")).filter(Boolean) };
     }));
     const all = mergeInvestors(results.flatMap((r) => r.reading?.investors ?? []));
     setFound(all);
@@ -122,12 +126,21 @@ export function CreateInvestor({ fundId, isStaff, onDone, teamMember = false }: 
       else if (withoutEmail) toast.success(`Investor added. Their invitation goes out as soon as their email is added.${helperNote}`);
       else toast.success(`${r.emailSent ? "Investor added and invitation sent." : "Investor added: Incomplete, additional information required."}${helperNote}`);
       const toSave = readFiles.filter((x) => x.kind);
+      const missingDate = toSave.find((x) => saveTarget(x.kind as SaveTargetKey)?.store === "prior" && !x.signedOn);
+      if (missingDate) { toast.error(`Enter the date ${missingDate.file.name} was signed.`); setBusy(false); return; }
       if (toSave.length) {
         let ok = 0;
         for (const x of toSave) {
           try {
-            const b64 = await new Promise<string>((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1] ?? ""); fr.onerror = () => rej(new Error("read")); fr.readAsDataURL(x.file); });
-            await uploadDoc({ data: { onboardingId: r.onboardingId, kind: x.kind as any, fileName: x.file.name, contentType: x.file.type || "application/pdf", base64: b64 } });
+            const t = saveTarget(x.kind as SaveTargetKey);
+            if (t?.store === "prior") {
+              const up = await startPrior({ data: { fundId, onboardingId: r.onboardingId, fileName: x.file.name } });
+              await supabase.storage.from("signed-documents").uploadToSignedUrl(up.path, up.token, x.file, { contentType: x.file.type || "application/pdf" });
+              await recordPrior({ data: { fundId, onboardingId: r.onboardingId, path: up.path, fileName: x.file.name, kind: (t.key === "fund_operating_agreement" ? "operating_agreement" : t.key) as any, title: t.label, signedOn: x.signedOn, note: "Saved from Create New Investor" } });
+            } else {
+              const b64 = await new Promise<string>((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1] ?? ""); fr.onerror = () => rej(new Error("read")); fr.readAsDataURL(x.file); });
+              await uploadDoc({ data: { onboardingId: r.onboardingId, kind: x.kind as any, fileName: x.file.name, contentType: x.file.type || "application/pdf", base64: b64 } });
+            }
             ok++;
           } catch { /* reported below */ }
         }
@@ -161,18 +174,20 @@ export function CreateInvestor({ fundId, isStaff, onDone, teamMember = false }: 
         {readFiles.length > 0 && (
           <div className="space-y-2 rounded-md border p-3 text-sm">
             <p className="font-medium">Save these files to the new investor's record</p>
-            <p className="text-xs text-muted-foreground">Pick what each file is. They're saved when you save the investor, as copies to review. Signed agreements are added from the investor's record with their signed date.</p>
+            <p className="text-xs text-muted-foreground">Pick what each file is. They're saved when you save the investor, as copies to review. For signed agreements, enter the date they were signed.</p>
             {readFiles.map((x, k) => {
               const who = `${f['entityName'] ?? ""} ${f['firstName'] ?? ""} ${f['lastName'] ?? ""}`.trim();
               const differs = !!who && x.names.length > 0 && !x.names.some((n) => namesMatch(n, f['entityName'] || "") || namesMatch(n, `${f['firstName'] ?? ""} ${f['lastName'] ?? ""}`));
+              const isPrior = x.kind ? saveTarget(x.kind)?.store === "prior" : false;
               return (
                 <div key={k} className="flex flex-wrap items-center gap-2">
                   <span className="max-w-[16rem] truncate">{x.file.name}</span>
                   {differs && <Badge variant="destructive">Different name: {x.names.join(", ")}</Badge>}
                   <select aria-label={`What is ${x.file.name}`} className="h-8 rounded-md border bg-background px-2" value={x.kind} onChange={(e) => setReadFiles((l) => l.map((y, j) => (j === k ? { ...y, kind: e.target.value as SaveTargetKey | "" } : y)))}>
                     <option value="">Don't save</option>
-                    {uploadKinds.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+                    {SAVE_TARGETS.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
                   </select>
+                  {isPrior && <Input type="date" aria-label={`Date ${x.file.name} was signed`} className="h-8 w-40" value={x.signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setReadFiles((l) => l.map((y, j) => (j === k ? { ...y, signedOn: e.target.value } : y)))} />}
                 </div>
               );
             })}
