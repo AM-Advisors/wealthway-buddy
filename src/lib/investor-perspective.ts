@@ -67,6 +67,10 @@ export function perspectiveEditor(access: FundAccess, teamManagesInvestors: bool
 /** Investor-only requirements never get inputs: answers, certifications, signatures, consent. */
 export const INVESTOR_ONLY_KEYS = new Set(["bsa_aml", "subscription_questionnaire", "financial_background", "certifications", "review_certify", "signatures", "identity_verification"]);
 
+/** Personal accounts (individual, joint, IRA) use SSNs and personal names; everything else is an entity. */
+export const PERSONAL_PROFILE_TYPES = new Set(["individual", "joint", "ira"]);
+export const isEntityProfile = (t: unknown) => typeof t === "string" && t !== "" && !PERSONAL_PROFILE_TYPES.has(t);
+
 const blank = (v: unknown) => v == null || String(v).trim() === "";
 
 export function perspectiveMissingFields(input: {
@@ -84,7 +88,7 @@ export function perspectiveMissingFields(input: {
   add("region", "State", "person", p["region"]);
   add("postalCode", "ZIP code", "person", p["postal_code"]);
   add("country", "Country", "person", p["country"]);
-  const entity = input.profile && input.profile["profile_type"] !== "individual";
+  const entity = Boolean(input.profile) && isEntityProfile(input.profile?.["profile_type"]);
   if (entity) add("legalName", "Entity legal name", "profile", input.profile?.["legal_name"]);
   add("taxId", entity ? "EIN" : "SSN", "tax", input.profile?.["tax_id_last4"] ?? p["tax_id_last4"]);
   if (input.amountCents == null || input.amountCents <= 0) out.push({ key: "commitmentCents", label: "Commitment amount", group: "investment" });

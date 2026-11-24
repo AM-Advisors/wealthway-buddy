@@ -24,3 +24,13 @@ describe("client perspective editing", () => {
     expect(keys).toContain("legalName"); expect(keys).toContain("taxId"); expect(keys).not.toContain("firstName"); expect(keys).not.toContain("commitmentCents");
   });
 });
+
+import { isEntityProfile } from "./investor-perspective";
+describe("personal vs entity accounts", () => {
+  it("joint and IRA are personal, not entities", () => { expect(isEntityProfile("joint")).toBe(false); expect(isEntityProfile("ira")).toBe(false); expect(isEntityProfile("individual")).toBe(false); });
+  it("trusts and LLCs are entities", () => { expect(isEntityProfile("trust")).toBe(true); expect(isEntityProfile("llc")).toBe(true); });
+  it("an IRA asks for an SSN, not an EIN", () => {
+    const tax = perspectiveMissingFields({ person: {}, profile: { profile_type: "ira" }, amountCents: 1 }).find(f => f.key === "taxId");
+    expect(tax?.label).toBe("SSN");
+  });
+});

@@ -1,3 +1,4 @@
+import { isEntityProfile } from "./investor-perspective";
 /**
  * Canonical investor record entry & sync (server-only).
  * Writes only the canonical Person / Investment Profile / Investment records,
@@ -810,7 +811,7 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
   const pMap = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
   const uMap = new Map(((byUser ?? []) as any[]).map((p) => [p.user_id, p]));
   const prMap = new Map(((profiles ?? []) as any[]).map((p) => [p.id, p]));
-  const entityIds = ((profiles ?? []) as any[]).filter((p) => p.profile_type && p.profile_type !== "individual").map((p) => p.id);
+  const entityIds = ((profiles ?? []) as any[]).filter((p) => isEntityProfile(p.profile_type)).map((p) => p.id);
   const { data: rels } = entityIds.length
     ? await db().from("investment_profile_relationships").select("profile_id, role, is_authorized_signer, persons:person_id(legal_first_name, legal_last_name, preferred_name, email, phone)").in("profile_id", entityIds).neq("status", "removed")
     : { data: [] };
@@ -839,7 +840,7 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
       return {
         onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? pr?.display_label ?? (readOnly && !canAddInvestors ? null : p?.email) ?? "Investor", nameMissing: !personName(p), email: readOnly && !canAddInvestors ? null : (p?.email ?? null),
         profileLabel: pr?.display_label ?? null, profileType: pr ? PROFILE_TYPE_LABELS[formProfileType(pr.profile_type)] : null,
-        entityName: pr && pr.profile_type !== "individual" ? (pr.legal_name || pr.display_label || null) : null,
+        entityName: pr && isEntityProfile(pr.profile_type) ? (pr.legal_name || pr.display_label || null) : null,
         contacts: pr ? (contactsBy.get(pr.id) ?? []) : [],
         contactName: personName(p) ?? null, contactEmail: hideContact ? null : (p?.email ?? null),
         amountCents: r.requested_amount_cents, commitmentCents: r.commitment_amount_cents,
