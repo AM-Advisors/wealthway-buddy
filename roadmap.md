@@ -1,5 +1,10 @@
 # Roadmap
 
+## Trust tax-ID choice (2026-11-24)
+- [x] Add trustee SSN / separate EIN choices to trust details using existing encrypted profile storage and recorded tax-ID type, without changing existing trusts or signed documents
+- [x] 104 regressions passed; both choices saved and read back in a fictional form at 740px with real requests blocked, no overflow or page errors; preview build OK
+- Durable authenticated trust save remains unverified, requiring independently isolated synthetic sessions; not published
+
 ## Clickable investor perspectives for fund teams (2026-11-24)
 - [x] Extend read-only investor perspectives to exact-fund managers and authorized investor team members, without other-fund or account access; view-only team sees progress, not private answers
 - [x] Make all investor steps and completed-by participant views openable; include recorded completion attribution and explicit System/Not recorded labels, keeping certification, signing and money actions protected

@@ -203,13 +203,13 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
             <Card><CardHeader><CardTitle className="text-base">{isEntity ? `${data.profile.typeLabel} details` : `Investment Profile · ${data.profile.typeLabel}`}</CardTitle>
               {isEntity ? <p className="text-sm text-muted-foreground">The {data.profile.typeLabel.toLowerCase()} is the investor. Fields marked <span className="text-destructive">*</span> are required.</p> : null}
             </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
-              {isEntity ? <EntityRequirementsInline onboardingId={onboardingId} legalName={data.profile.legalName} einOnFile={Boolean((data.profile as any).taxIdLast4)} related={data.related as any} editable={editableProfile} onChanged={refresh} /> : null}
+              {isEntity ? <EntityRequirementsInline onboardingId={onboardingId} legalName={data.profile.legalName} einOnFile={Boolean((data.profile as any).taxIdLast4)} trust={data.profile.type === "trust"} taxIdType={data.profile.taxIdType} related={data.related as any} editable={editableProfile} onChanged={refresh} /> : null}
               {field("legalName", isEntity ? "Legal name *" : "Legal investor name", data.profile.legalName)}
               {isEntity ? field("jurisdiction", "State or country of formation", (data.profile.details as any).jurisdiction) : null}
               {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
               <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]])) } })}>Save {isEntity ? "entity details" : "profile"}</Button>
             </CardContent></Card>
-            <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={editableProfile} onChanged={refresh} entity={isEntity} />
+            <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={editableProfile} onChanged={refresh} entity={isEntity} trust={data.profile.type === "trust"} taxIdType={data.profile.taxIdType} />
             <InvestmentPartiesCard onboardingId={onboardingId} />
             <InvestmentIdentityCard onboardingId={onboardingId} />
             <Card><CardHeader><CardTitle className="text-base">{isEntity ? "Owners, control persons & signers" : "Other people on this investment"}</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">

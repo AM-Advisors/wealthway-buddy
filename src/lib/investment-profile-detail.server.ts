@@ -7,6 +7,7 @@
 import { encryptTin } from "@/lib/irs-forms.server";
 import { isEntityProfileType } from "@/lib/identity-model";
 import { currentProfileTaxDetails } from "@/lib/profile-tax-details.server";
+import { profileTaxIdType } from "./trust-tax-id";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const blank = (v?: string | null) => (v && v.trim() ? v.trim() : null);
@@ -83,7 +84,7 @@ export async function saveBasics(userId: string, d: ProfileBasics) {
   const tin = (d.tax_id ?? "").replace(/\D/g, "");
   if (tin) {
     if (tin.length !== 9) throw new Error("The EIN or SSN must be 9 digits.");
-    const type = d.tax_id_type ?? (isEntityProfileType(profile.profile_type) ? "ein" : tin.startsWith("9") ? "itin" : "ssn");
+    const type = profileTaxIdType(profile.profile_type, d.tax_id_type, profile.tax_id_type, tin);
     const enc = await encryptTin(tin);
     const { error } = await db.rpc("store_profile_tax_id", {
       _profile: d.profileId, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: userId,

@@ -10,6 +10,7 @@ export type RequirementPerson = {
 };
 export type EntityRequirementInput = {
   legalName: string | null; einOnFile: boolean; responsiblePartyId: string | null; people: RequirementPerson[];
+  trust?: boolean; taxIdType?: string | null;
 };
 export type RequirementItem = { key: string; label: string; done: boolean; personId?: string };
 
@@ -34,7 +35,7 @@ export function entityRequirements(input: EntityRequirementInput): RequirementIt
   const signers = input.people.filter((p) => p.signer);
   const items: RequirementItem[] = [
     { key: "legal_name", label: "Entity legal name", done: Boolean(input.legalName?.trim()) },
-    { key: "ein", label: "EIN", done: input.einOnFile },
+    { key: "ein", label: input.trust ? input.taxIdType === "ssn" ? "Trustee SSN" : "Trust tax ID: trustee SSN or separate EIN" : "EIN", done: input.einOnFile },
     { key: "responsible_party", label: "Responsible party chosen", done: Boolean(input.responsiblePartyId && input.people.some((p) => p.id === input.responsiblePartyId)) },
     { key: "control_person", label: "At least one control person, trustee or officer", done: input.people.some((p) => ["control_person", "trustee", "officer", "manager"].includes(p.role)) },
     { key: "signer", label: "At least one signer", done: signers.length > 0 },

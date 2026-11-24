@@ -1,4 +1,5 @@
 import { isEntityProfile } from "./investor-perspective";
+import { profileTaxIdType, type ProfileTaxIdType } from "./trust-tax-id";
 /**
  * Canonical investor record entry & sync (server-only).
  * Writes only the canonical Person / Investment Profile / Investment records,
@@ -488,7 +489,7 @@ const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "regio
  * retain review. Later changes become reviewer suggestions.
  */
 export async function updateInvestorRecord(userId: string, input: {
-  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null;
+  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null; taxIdType?: ProfileTaxIdType;
   preparerId?: string | null;
 }) {
   const { actor, row, role, preparer, participant } = await recordAccess(userId, input.onboardingId, input.preparerId);
@@ -577,13 +578,16 @@ export async function updateInvestorRecord(userId: string, input: {
   if (tin && row.investment_profile_id) {
     if (tin.length !== 9) fail("The tax ID must be 9 digits.");
     if (!profileDirect) forbid("this investor has signed or funded; ask Harmonious to update the tax ID.");
-    const { data: pr } = await db().from("investment_profiles").select("profile_type, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle();
+    const { data: pr } = await db().from("investment_profiles").select("profile_type, tax_id_type, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle();
+    if (!pr) fail("The investing profile was not found.");
+    const taxType = profileTaxIdType(pr.profile_type, input.taxIdType, pr.tax_id_type, tin);
     const { encryptTin } = await import("@/lib/irs-forms.server");
     const enc = await encryptTin(tin);
     const { error: te } = await db().rpc("store_profile_tax_id", { _profile: row.investment_profile_id, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId } as any);
     if (te) fail("The tax number couldn't be stored securely.");
-    const entity = /entity|trust|llc|corp|partnership/i.test(String(pr?.profile_type ?? ""));
-    await db().from("investment_profiles").update({ tax_id_type: entity ? "ein" : tin.startsWith("9") ? "itin" : "ssn", tax_id_last4: tin.slice(-4) } as any).eq("id", row.investment_profile_id);
+    const { error: typeError } = await db().from("investment_profiles").update({ tax_id_type: taxType, tax_id_last4: tin.slice(-4) } as any).eq("id", row.investment_profile_id);
+    if (typeError) fail("The tax-ID type couldn't be saved. Please try again.");
+    if (pr.tax_id_type !== taxType) changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id_type", from: pr.tax_id_type ?? null, to: taxType, source, actor: actor.userId });
     changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id", from: pr?.tax_id_last4 ? `•••${pr.tax_id_last4}` : null, to: `•••${tin.slice(-4)}`, source, actor: actor.userId });
     await (await import("@/lib/account-connect.server")).recordProfileTin(row.investment_profile_id, tin, { offeringId: row.offering_id, onboardingId: row.id }).catch((e) => console.error("[investor-record] tax ID match skipped", (e as Error).message));
   }
@@ -923,7 +927,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     viewer: role, fund: offering,
     overview: { name: personName(person) ?? profile?.display_label ?? profile?.legal_name ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at), investorUserId: actor.isStaff ? row.investor_user_id ?? null : null },
     person: safePerson,
-    profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null } : null,
+    profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null, taxIdType: profile.tax_id_type ?? null } : null,
     related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status,
       // Managers see whether DOB/SSN are on file, never the values; Harmonious also sees the last four.
       email: r.persons?.email ?? null, phone: r.persons?.phone ?? null, hasAccount: Boolean(r.persons?.user_id),

@@ -18,8 +18,9 @@ const selectCls = "h-9 rounded-md border border-input bg-background px-2 text-sm
 const digits = (v: string) => v.replace(/\D/g, "").slice(0, 9);
 
 /** Entity checklist with fill-in boxes for each open item and each person's recorded activity. Saves use the existing audited related-party save. */
-export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, related, editable, onChanged }: {
+export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, related, editable, onChanged, trust = false, taxIdType = null }: {
   onboardingId: string; legalName: string | null; einOnFile: boolean; related: Related[]; editable: boolean; onChanged: () => void;
+  trust?: boolean; taxIdType?: string | null;
 }) {
   const edit = useServerFn(editRelatedPartyFn);
   const listParties = useServerFn(investmentPartiesFn);
@@ -35,7 +36,7 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
 
   const owners = related.filter((r) => !isPaperworkContactRole(r.role));
   const people = owners.map((r) => ({ id: r.id, name: r.name, role: r.role, ownershipPercent: r.ownershipPercent, signer: r.signer, email: r.email ?? null, dobOnFile: Boolean(r.dobOnFile), ssnOnFile: Boolean(r.ssnOnFile), taxFormSigner: Boolean(r.taxFormSigner) }));
-  const items = entityRequirements({ legalName, einOnFile, responsiblePartyId: owners.find((r) => r.responsibleParty)?.id ?? null, people });
+  const items = entityRequirements({ legalName, einOnFile, trust, taxIdType, responsiblePartyId: owners.find((r) => r.responsibleParty)?.id ?? null, people });
   const open = items.filter((i) => !i.done);
   const signers = owners.filter((r) => r.signer);
   const listedIds = new Set(owners.map((r) => r.personId).filter(Boolean));
@@ -80,7 +81,7 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
         </> : null}
         <Button size="sm" variant="outline" onClick={() => scrollTo("en-add-first")}>Add someone new</Button>
       </div>);
-    if (key === "ein") return <Button size="sm" variant="outline" onClick={() => scrollTo("ir-tin")}>Enter EIN</Button>;
+    if (key === "ein") return <Button size="sm" variant="outline" onClick={() => scrollTo(trust ? "ir-tax-type" : "ir-tin")}>{trust ? "Choose trust tax ID" : "Enter EIN"}</Button>;
     if (key === "signer") return <Button size="sm" variant="outline" onClick={() => scrollTo("rp-resp")}>Choose signer below</Button>;
     if (personId) {
       const r = owners.find((o) => o.id === personId); if (!r) return null;

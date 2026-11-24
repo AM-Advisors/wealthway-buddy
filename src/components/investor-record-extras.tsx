@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ROLES = ["beneficial_owner", "control_person", "authorized_signer", "joint_owner", "trustee", "owner", "officer", "manager", "member"] as const;
 
@@ -189,24 +190,34 @@ export function RelatedPartiesEditor({ onboardingId, related, editable, onChange
 }
 
 /** Tax ID entry: only the last four digits are ever shown back. */
-export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, entity = false }: { onboardingId: string; last4: string | null; editable: boolean; onChanged: () => void; entity?: boolean }) {
+export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, entity = false, trust = false, taxIdType }: { onboardingId: string; last4: string | null; editable: boolean; onChanged: () => void; entity?: boolean; trust?: boolean; taxIdType?: string | null }) {
   const update = useServerFn(updateInvestorRecordFn);
   const [tin, setTin] = useState("");
+  const [choice, setChoice] = useState<"ssn" | "ein" | null>(null);
+  const selected = choice ?? (taxIdType === "ssn" ? "ssn" : "ein");
   const [busy, setBusy] = useState(false);
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">{entity ? <>EIN <span className="text-destructive">*</span></> : "Tax ID"}</CardTitle>
-        <CardDescription>{last4 ? `On file: ending ${last4}.` : "No tax ID on file."} It's stored encrypted; only the last four digits are shown.</CardDescription>
+        <CardTitle className="text-base">{trust ? "Trust tax ID" : entity ? <>EIN <span className="text-destructive">*</span></> : "Tax ID"}</CardTitle>
+        <CardDescription>{last4 ? `On file${trust ? ` (${taxIdType === "ssn" ? "trustee SSN" : "EIN"})` : ""}: ending ${last4}.` : "No tax ID on file."} It's stored encrypted; only the last four digits are shown.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {editable ? <>
-          <Label htmlFor="ir-tin">{entity ? "Entity EIN (9 digits)" : "SSN, ITIN or EIN (9 digits)"}</Label>
-          <div className="flex gap-2">
-            <Input id="ir-tin" inputMode="numeric" autoComplete="off" value={tin} onChange={(e) => setTin(e.target.value.replace(/\D/g, "").slice(0, 9))} className="max-w-xs" />
+          {trust ? <div className="space-y-2">
+            <Label htmlFor="ir-tax-type">Trust uses</Label>
+            <Select value={selected} disabled={busy} onValueChange={(v) => { if (v === "ssn" || v === "ein") { setChoice(v); setTin(""); } }}>
+              <SelectTrigger id="ir-tax-type" className="max-w-xs"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="ssn">Trustee’s SSN</SelectItem><SelectItem value="ein">Separate trust EIN</SelectItem></SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Use the number appropriate for the trust’s tax treatment. Confirm with your tax adviser if unsure.</p>
+          </div> : null}
+          <Label htmlFor="ir-tin">{trust ? selected === "ssn" ? "Trustee’s SSN (9 digits)" : "Trust EIN (9 digits)" : entity ? "Entity EIN (9 digits)" : "SSN, ITIN or EIN (9 digits)"}</Label>
+          <div className="flex flex-wrap gap-2">
+            <Input id="ir-tin" inputMode="numeric" autoComplete="off" data-private disabled={busy} value={tin} onChange={(e) => setTin(e.target.value.replace(/\D/g, "").slice(0, 9))} className="max-w-xs" />
             <Button disabled={busy || tin.length !== 9} onClick={async () => {
               setBusy(true);
-              try { await update({ data: { onboardingId, taxId: tin } }); toast.success("Tax ID saved"); setTin(""); onChanged(); }
+              try { await update({ data: { onboardingId, taxId: tin, ...(trust ? { taxIdType: selected } : {}) } }); toast.success("Tax ID saved"); setTin(""); setChoice(null); onChanged(); }
               catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
             }}>{last4 ? "Replace" : "Save"}</Button>
           </div>

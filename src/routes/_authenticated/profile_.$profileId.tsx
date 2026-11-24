@@ -95,25 +95,30 @@ function BasicsCard({ data, onSaved }: { data: any; onSaved: () => void }) {
   const p = data.profile;
   const save = useServerFn(saveProfileBasicsFn);
   const [f, setF] = useState<any>({});
+  const trust = p.profile_type === "trust";
   useEffect(() => {
     setF({
       legal_name: p.legal_name ?? "", phone: p.phone ?? "", address_line1: p.address_line1 ?? "", address_line2: p.address_line2 ?? "",
-      city: p.city ?? "", region: p.region ?? "", postal_code: p.postal_code ?? "", country: p.country ?? "United States", tax_id: "",
+      city: p.city ?? "", region: p.region ?? "", postal_code: p.postal_code ?? "", country: p.country ?? "United States", tax_id: "", tax_id_type: p.tax_id_type === "ssn" ? "ssn" : "ein",
     });
   }, [p.id]);
   const set = (k: string) => (v: string) => setF((x: any) => ({ ...x, [k]: v }));
   const m = useMutation({
-    mutationFn: () => save({ data: { profileId: p.id, ...f, tax_id_type: data.isEntity ? "ein" : undefined } }),
+    mutationFn: () => save({ data: { profileId: p.id, ...f, tax_id_type: trust ? f.tax_id_type : data.isEntity ? "ein" : undefined } }),
     onSuccess: () => { toast.success("Saved."); setF((x: any) => ({ ...x, tax_id: "" })); onSaved(); },
     onError: (e: any) => toast.error(e?.message ?? "Couldn't save."),
   });
-  const taxLabel = data.isEntity ? "EIN" : "SSN or ITIN";
+  const taxLabel = trust ? f.tax_id_type === "ssn" ? "Trustee’s SSN" : "Trust EIN" : data.isEntity ? "EIN" : "SSN or ITIN";
   return (
     <Card title="Profile details" desc="Used on subscription documents and tax forms for this profile only.">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Legal name" value={f.legal_name ?? ""} onChange={set("legal_name")} />
         <Field label="Phone number" type="tel" value={f.phone ?? ""} onChange={set("phone")} />
         <div className="sm:col-span-2">
+          {trust ? <div className="mb-3 space-y-1"><Label htmlFor="profile-trust-tax-type">Trust uses</Label>
+            <Select value={f.tax_id_type ?? "ein"} onValueChange={(v) => { setF((x: any) => ({ ...x, tax_id_type: v, tax_id: "" })); }}>
+              <SelectTrigger id="profile-trust-tax-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ssn">Trustee’s SSN</SelectItem><SelectItem value="ein">Separate trust EIN</SelectItem></SelectContent>
+            </Select></div> : null}
           <Field label={`${taxLabel}${p.tax_id_last4 ? ` (on file, ending ${p.tax_id_last4})` : ""}`} value={f.tax_id ?? ""} onChange={set("tax_id")}
             placeholder={p.tax_id_last4 ? "Leave blank to keep the one on file" : "9 digits"} />
           <p className="mt-1 text-xs text-muted-foreground">Stored encrypted. Only the last four digits are ever shown.</p>

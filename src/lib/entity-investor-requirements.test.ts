@@ -4,6 +4,11 @@ import { entityRequirements, missingPersonFields, needsFullDetails } from "./ent
 const person = (o: Partial<Parameters<typeof missingPersonFields>[0]> = {}) => ({ id: "p1", name: "Kim Girardi", role: "beneficial_owner", ownershipPercent: 50, signer: true, email: "k@x.com", dobOnFile: true, ssnOnFile: true, taxFormSigner: true, ...o });
 
 describe("entity investor requirements", () => {
+  it("a trust with an SSN on file does not require a separate EIN", () => {
+    const r = entityRequirements({ legalName: "Family Trust", trust: true, taxIdType: "ssn", einOnFile: true, responsiblePartyId: "p1", people: [person({ role: "trustee" })] });
+    expect(r.find((i) => i.key === "ein")?.done).toBe(true);
+    expect(r.every((i) => i.done)).toBe(true);
+  });
   it("owners under 25% do not need full details", () => {
     expect(needsFullDetails({ role: "beneficial_owner", ownershipPercent: 10, signer: false })).toBe(false);
     expect(needsFullDetails({ role: "beneficial_owner", ownershipPercent: 25, signer: false })).toBe(true);
