@@ -83,6 +83,8 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   const refresh = pick("verify").some((r) => r.state === "refresh_required");
 
   let sign: StepState = "locked";
+  // Investor signed; only the fund's countersignature is left. Nothing for the investor to do.
+  const awaitingFund = pick("sign").some((r) => r.key === "signature" && (r as { awaitingCountersign?: boolean }).awaitingCountersign === true);
   if (hasProfile && verificationAllowsSigning(requirements) && about === "complete") {
     sign = stateFor(pick("sign"));
     // Signed but still with Harmonious: that is review, not investor action.
@@ -90,6 +92,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   } else if (pick("sign").find((r) => r.key === "signature")?.state === "valid") {
     sign = "complete";
   }
+  if (awaitingFund && sign !== "locked") sign = "complete";
   if (verify === "locked" && sign === "complete") verify = "in_progress";
 
   let fund: StepState = "locked";
@@ -146,7 +149,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
       state: sign,
       message:
         sign === "complete"
-          ? "Documents signed."
+          ? (awaitingFund ? "You signed. Waiting on the fund's countersignature." : "Documents signed.")
           : sign === "locked"
             ? (about !== "complete" && hasProfile ? "Available after About You and verification." : "Available after verification.")
             : sign === "in_progress"

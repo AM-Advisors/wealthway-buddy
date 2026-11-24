@@ -75,6 +75,13 @@ describe("investment-specific compliance", () => {
     expect(r.find((x) => x.key === "entity_verification")!.state).toBe("missing");
     expect(verificationSummary(r)).not.toBe("complete");
   });
+  it("investor signed, waiting on fund countersignature: no Review and sign", () => {
+    const r = determineOnboardingRequirements({ offering: req506b, person, profile: { profileId: "x", profileType: "individual" }, subscription: { ...sub, signatureStatus: "sent" }, nowIso: NOW })
+      .map((x) => (x.key === "signature" ? { ...x, state: "missing" as const, awaitingCountersign: true } : x));
+    const sign = journeySteps(r, { stage: "signature", approvedToFund: false, fundingStatus: null, investorReportsSent: false }).find((s) => s.key === "sign")!;
+    expect(sign.state).toBe("complete");
+    expect(sign.message).toBe("You signed. Waiting on the fund's countersignature.");
+  });
   it("expired evidence reopens verification", () => {
     const expired = { ...person, kycExpiresAt: "2026-01-01T00:00:00Z" };
     const r = determineOnboardingRequirements({ offering: req506b, person: expired, profile: { profileId: "x", profileType: "individual" }, subscription: sub, nowIso: NOW });
