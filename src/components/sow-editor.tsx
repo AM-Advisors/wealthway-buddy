@@ -1,3 +1,4 @@
+import { evergreenShort } from "@/lib/contract-renewal-default";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -179,7 +180,7 @@ export function SowEditor({
                     <p className="text-xs text-muted-foreground">
                       {sow.sow_type} · {sow.effective_date ?? "no start date"} ·{" "}
                       {sow.notice_days}-day notice
-                      {sow.termination_date ? ` · ends ${sow.termination_date}` : ""}
+                      {sow.termination_date ? ` · ends ${sow.termination_date}` : ` · ${evergreenShort(sow.effective_date, new Date().toISOString().slice(0, 10))}`}
                     </p>
                     {Object.keys(sow.eligibility ?? {}).length ? (
                       <p className="text-xs text-muted-foreground">

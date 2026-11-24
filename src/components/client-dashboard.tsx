@@ -1,3 +1,4 @@
+import { evergreenShort, nextAnniversary } from "@/lib/contract-renewal-default";
 import { Link } from "@tanstack/react-router";
 
 import { separateSignedRecords } from "@/lib/client-portal-model";
@@ -168,6 +169,15 @@ export function ClientDashboard({
         kind: "agreement",
         label: `${s.title ?? "Statement of work"} starts`,
         detail: null,
+      });
+    }
+    if (!s.termination_date && s.effective_date) {
+      dueItems.push({
+        id: `sow-renew-${s.id}`,
+        date: nextAnniversary(String(s.effective_date), new Date().toISOString().slice(0, 10)),
+        kind: "agreement",
+        label: `${s.title ?? "Statement of work"} renews automatically`,
+        detail: "Ongoing agreement, renews annually",
       });
     }
     if (s.termination_date) {
@@ -397,7 +407,7 @@ export function ClientDashboard({
                     <p className="text-xs text-muted-foreground">
                       Signed {when(s.client_signed_at ?? s.signed_on)}
                       {s.effective_date ? ` · starts ${when(s.effective_date)}` : ""}
-                      {s.termination_date ? ` · ends ${when(s.termination_date)}` : ""}
+                      {s.termination_date ? ` · ends ${when(s.termination_date)}` : ` · ${evergreenShort(s.effective_date, new Date().toISOString().slice(0, 10))}`}
                     </p>
                   </div>
                   <Badge variant={s.approval_status === "approved" ? "default" : "secondary"}>

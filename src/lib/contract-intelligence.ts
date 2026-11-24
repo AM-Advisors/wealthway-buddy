@@ -1,3 +1,4 @@
+import { appliesEvergreenDefault, nextAnniversary } from "./contract-renewal-default";
 import { EXTENDED_RELATIONSHIP_TYPES } from "@/lib/contract-coverage";
 /**
  * Contract intelligence - pure, deterministic rules (browser-safe, no I/O).
@@ -490,6 +491,8 @@ export type Lifecycle = {
   noticePeriodDays: number | null;
   noticeDeadline: string | null;
   unable: string[];
+  /** MSA/SOW with no stated end date: treated as ongoing with annual automatic renewal. */
+  evergreenDefault?: boolean;
 };
 
 export const RENEWAL_WINDOW_DAYS = 60;
@@ -504,9 +507,15 @@ export function computeLifecycle(doc: DocLite, terms: TermLite[], today: string)
   const months = parseTermMonths(reviewedValue(terms, "initial_term"));
   let initialTermEnd = doc.expiration_date ?? null;
   if (!initialTermEnd && effectiveDate && months) initialTermEnd = addDays(addMonths(effectiveDate, months), -1);
+  let autoRenews = parseAutoRenew(reviewedValue(terms, "auto_renewal"));
+  let renewalMonths = parseTermMonths(reviewedValue(terms, "renewal_period"));
+  const evergreenDefault = appliesEvergreenDefault(doc.doc_type, { endDate: initialTermEnd, autoRenews });
+  if (evergreenDefault) {
+    autoRenews = true;
+    renewalMonths = renewalMonths ?? 12;
+    if (effectiveDate) initialTermEnd = addDays(addMonths(effectiveDate, 12), -1);
+  }
   if (!initialTermEnd) unable.push("initial term end");
-  const autoRenews = parseAutoRenew(reviewedValue(terms, "auto_renewal"));
-  const renewalMonths = parseTermMonths(reviewedValue(terms, "renewal_period"));
 
   let renewalDate: string | null = null;
   let currentTermEnd: string | null = initialTermEnd;
@@ -548,7 +557,7 @@ export function computeLifecycle(doc: DocLite, terms: TermLite[], today: string)
   else if (expirationDate && daysUntil(today, expirationDate) <= EXPIRING_DAYS) status = "Expiring";
   else status = "Active";
 
-  return { status, effectiveDate, initialTermEnd, autoRenews, renewalDate, currentTermEnd, expirationDate, noticePeriodDays, noticeDeadline, unable };
+  return { status, effectiveDate, initialTermEnd, autoRenews, renewalDate, currentTermEnd, expirationDate, noticePeriodDays, noticeDeadline, unable, ...(evergreenDefault ? { evergreenDefault: true } : {}) };
 }
 
 /** Configured reminder intervals (days before a renewal date). */

@@ -100,8 +100,8 @@ export function ContractFamilyPanel({ clientId }: { clientId: string }) {
             <CardContent className="grid gap-4 text-sm sm:grid-cols-2">
               <dl className="space-y-1">
                 <Row k="Effective date" v={show(lc.effectiveDate)} />
-                <Row k="Initial term end" v={show(lc.initialTermEnd)} />
-                <Row k="Automatic renewal" v={lc.autoRenews == null ? UNABLE : lc.autoRenews ? "Yes" : "No"} />
+                <Row k="Initial term end" v={lc.evergreenDefault ? "Ongoing, renews annually" : show(lc.initialTermEnd)} />
+                <Row k="Automatic renewal" v={lc.autoRenews == null ? UNABLE : lc.autoRenews ? (lc.evergreenDefault ? "Yes (annual)" : "Yes") : "No"} />
                 <Row k="Renewal date" v={lc.autoRenews === false ? "Does not renew" : show(lc.renewalDate)} />
                 <Row k="Expiration date" v={lc.autoRenews === true ? "Renews: see renewal date" : show(lc.expirationDate)} />
                 <Row k="Notice deadline" v={show(lc.noticeDeadline)} />

@@ -107,14 +107,14 @@ describe("Lifecycle engine", () => {
     expect(lc.renewalDate).toBe("2027-01-01");
   });
   it("never guesses a date when information is missing", () => {
-    const lc = computeLifecycle(doc(), [term("initial_term", "for the duration of the engagement")], "2025-03-01");
+    const lc = computeLifecycle(doc({ doc_type: "side_letter" }), [term("initial_term", "for the duration of the engagement")], "2025-03-01");
     expect(lc.initialTermEnd).toBeNull();
     expect(lc.noticeDeadline).toBeNull();
     expect(lc.unable).toContain("initial term end");
     expect(UNABLE).toMatch(/Unable to calculate/);
   });
   it("ignores unreviewed terms and reports statuses", () => {
-    const lc = computeLifecycle(doc(), [term("initial_term", "12 months", { status: "needs_review" })], "2025-03-01");
+    const lc = computeLifecycle(doc({ doc_type: "side_letter" }), [term("initial_term", "12 months", { status: "needs_review" })], "2025-03-01");
     expect(lc.initialTermEnd).toBeNull();
     expect(computeLifecycle(doc({ review_status: "superseded" }), [], "2025-03-01").status).toBe("Superseded");
     expect(computeLifecycle(doc({ execution_status: "needs_review" }), [], "2025-03-01").status).toBe("Awaiting Signature Confirmation");

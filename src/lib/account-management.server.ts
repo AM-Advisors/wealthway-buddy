@@ -1,3 +1,4 @@
+import { nextAnniversary } from "./contract-renewal-default";
 /**
  * Read-only Account Management projections (dashboard, hand-offs, renewals).
  * Scoped to the caller's assigned clients; leadership sees all. Never writes.
@@ -38,7 +39,7 @@ export async function amDashboard(userId: string) {
     scoped(db.from("service_requests").select("id, client_id, service_key, status, created_at"), clientIds).not("status", "in", "(activated,declined,withdrawn)").limit(2000),
     scoped(db.from("inbox_threads").select("id, client_id, subject, last_message_at"), clientIds).order("last_message_at", { ascending: false }).limit(500),
     scoped(db.from("sales_quotes").select("id, client_id, quote_number, title, sow_id, signed_at, onboarded_at, onboarded_offering_id, onboarding_error, total_cents"), clientIds).eq("status", "signed").order("signed_at", { ascending: false }).limit(500),
-    scoped(db.from("client_sows").select("id, client_id, title, termination_date, status"), clientIds).not("termination_date", "is", null).limit(2000),
+    scoped(db.from("client_sows").select("id, client_id, title, effective_date, termination_date, status"), clientIds).limit(2000),
   ]);
   if ([clients, offers, setups, invoices, requests, threads, quotes, sows].some(result => result.error)) throw new Error("Couldn't load Account Management records. Please retry.");
   const C = (clients.data ?? []) as any[], O = (offers.data ?? []) as any[], S = (setups.data ?? []) as any[];
@@ -80,8 +81,12 @@ export async function amDashboard(userId: string) {
       const st = S.find((s) => s.offering_id === q.onboarded_offering_id);
       return { id: q.id, sowId: q.sow_id, client: name.get(q.client_id) ?? "Client", clientId: q.client_id, quote: `Q-${q.quote_number}`, title: q.title, signedAt: q.signed_at, cents: Number(q.total_cents ?? 0), fundId: q.onboarded_offering_id, handedOff: !!q.onboarded_offering_id && !q.onboarding_error, needsReview: !!q.onboarding_error, setupStarted: !!st && st.launch_state !== "not_ready" };
     }),
-    renewals: ((sows.data ?? []) as any[]).filter((s) => s.termination_date >= today && s.termination_date <= soon)
-      .map((s) => ({ id: s.id, client: name.get(s.client_id) ?? "Client", clientId: s.client_id, title: s.title, ends: s.termination_date, days: Math.ceil((new Date(s.termination_date).getTime() - Date.now()) / DAY) }))
+    renewals: ((sows.data ?? []) as any[]).map((s) => {
+        const evergreen = !s.termination_date && s.effective_date && !["terminated", "superseded", "draft", "cancelled"].includes(String(s.status ?? ""));
+        const ends = s.termination_date ?? (evergreen ? nextAnniversary(String(s.effective_date), today) : null);
+        return { s, ends, evergreen };
+      }).filter((r) => r.ends && r.ends >= today && r.ends <= soon)
+      .map(({ s, ends, evergreen }) => ({ id: s.id, client: name.get(s.client_id) ?? "Client", clientId: s.client_id, title: evergreen ? `${s.title} · Annual renewal` : s.title, ends: ends as string, days: Math.ceil((new Date(ends as string).getTime() - Date.now()) / DAY) }))
       .sort((a, b) => a.ends.localeCompare(b.ends)),
     waiting: [
       ...waiting.slice(0, 15).map((t) => ({ kind: "Message", id: t.id, client: name.get(t.client_id) ?? "Client", title: t.subject, at: t.last_message_at })),
