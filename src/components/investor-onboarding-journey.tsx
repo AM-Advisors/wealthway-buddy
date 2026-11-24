@@ -15,6 +15,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
+import { RecentlyCompleted, useCompletionConfirmations } from "@/components/completion-confirmations";
 import { supabase } from "@/integrations/supabase/client";
 import { recordMyUpload } from "@/lib/investor-uploads.functions";
 import { HIGH_RISK_REVIEW_MESSAGE, highRiskYes, questionVisible } from "@/lib/investor-onboarding-model";
@@ -101,6 +102,7 @@ export function InvestorOnboardingJourney({
   const d: any = detail.data;
   const steps: JourneyStepView[] = d?.journey ?? [];
   const [active, setActive] = useState<JourneyStep | "review" | null>(null);
+  const recentSteps = useCompletionConfirmations(`journey:${onboardingId}`, steps.map((s) => ({ key: s.key, label: s.label, done: s.state === "complete" })));
   useEffect(() => {
     if (!d || active) return;
     const fresh = !requestedStep && d.stage !== undefined && !d.investmentProfileId;
@@ -135,6 +137,8 @@ export function InvestorOnboardingJourney({
           {d.profileLabel ? `Investing as ${d.profileLabel}` : "Investing profile not chosen yet"}{amount ? ` · ${money(amount)}` : ""}
         </p>
       </header>
+
+      <RecentlyCompleted labels={recentSteps} />
 
       <Card>
         <CardContent className="space-y-5 pt-6">

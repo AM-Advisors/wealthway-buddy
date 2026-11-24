@@ -11,6 +11,7 @@ import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
 import { getFundWireInstructions } from "@/lib/wire-instructions.functions";
 import { getFundLaunchSteps } from "@/lib/fund-launch.functions";
 import { fundSetupSummary } from "@/lib/fund-launch-summary";
+import { RecentlyCompleted, useCompletionConfirmations } from "@/components/completion-confirmations";
 import { ViewAsPicker } from "@/components/view-as";
 import { InvestorPerspectiveButton } from "@/components/investor-perspective";
 import { OWNER_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
@@ -199,9 +200,11 @@ function AuditDetails({ r }: { r: any }) {
 }
 
 export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem, onOpenAccreditation, fundingApprovalAction }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string, owner?: string | null) => void) | undefined; onOpenAccreditation?: (() => void) | undefined; fundingApprovalAction?: React.ReactNode }) {
+  const recent = useCompletionConfirmations(`${viewer}:${r?.onboardingId ?? title}`, (r?.items ?? []).filter((i: any) => i.status !== "not_applicable").map((i: any) => ({ key: i.key, label: i.label, done: i.status === "complete" })));
   return (
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
+      <RecentlyCompleted labels={recent} />
       <AttentionNeeded r={r} viewer={viewer} onOpenItem={onOpenItem} onOpenAccreditation={onOpenAccreditation} fundingApprovalAction={fundingApprovalAction} />
       {viewer === "staff" ? <><StageJourney r={r} viewer={viewer} onOpenItem={onOpenItem} /><AuditDetails r={r} /></> : (
         <details className="group">
