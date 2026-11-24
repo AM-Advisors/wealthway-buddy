@@ -2,11 +2,13 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { needsSignatureCheck, waitingLabel, type ExpectedSigner } from "@/lib/prior-doc-signatures";
+import { sendFileForSignatureFn } from "@/lib/fund-file-signing.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listPriorDocsFn, markOutsideSubscriptionFn, openPriorDocFn, outsideSubscriptionFn, recordPriorDocFn, setPriorDocWithdrawnFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
+import { confirmPriorDocSignaturesFn, prepareMissingSignatureFn, recheckPriorDocSignaturesFn, listPriorDocsFn, markOutsideSubscriptionFn, openPriorDocFn, outsideSubscriptionFn, recordPriorDocFn, setPriorDocWithdrawnFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
 
 const refreshFund = (qc: ReturnType<typeof useQueryClient>) => qc.invalidateQueries({ predicate: (q) => ["fund-investor", "fund-investor-grid", "fund-readiness", "investment-readiness", "investor-record", "onboarding", "readiness-queue"].includes(String(q.queryKey[0])) });
 
@@ -100,6 +102,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
               <p className="text-xs text-muted-foreground">{d.kindLabel !== d.title ? `${d.kindLabel} · ` : ""}{INVESTMENT_KINDS.has(d.kind) ? "Dated" : "Signed"} {d.signedOn} · Loaded by {d.uploadedBy}{outsideDone && d.kind === "subscription_agreement" && !d.replaced && !d.withdrawn ? " · Signed outside the platform" : ""}{d.replaced ? " · Replaced, retained copy" : ""}{d.withdrawn ? " · Undone, retained copy" : ""}</p>
               {d.note && <p className="text-xs text-muted-foreground">{d.note}</p>}
               {d.withdrawn && d.withdrawnReason && <p className="text-xs text-muted-foreground">Undo reason: {d.withdrawnReason}</p>}
+              {!d.replaced && !d.withdrawn && <SignatureStatus fundId={fundId} onboardingId={onboardingId} documentId={d.id} kind={d.kind} signature={(d as any).signature} onChanged={() => { void q.refetch(); refreshFund(qc); }} />}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" onClick={async () => {
@@ -245,4 +248,39 @@ export function PlatformSignedEmpty({ fundId, onboardingId }: { fundId: string; 
   const active = (q.data ?? []).filter((d) => !d.replaced && !d.withdrawn).length;
   if (active) return <p className="text-muted-foreground">Nothing has been signed on Harmonious yet. {active === 1 ? "1 document signed elsewhere is" : `${active} documents signed elsewhere are`} on file below under “Signed before joining Harmonious”.</p>;
   return <p className="text-muted-foreground">Nothing has been signed on Harmonious yet, and no documents signed elsewhere have been loaded.</p>;
+}
+
+type Sig = { state: "complete" | "waiting" | "needs_check"; missing: ExpectedSigner[]; signedOn: string | null; signingSent: boolean } | null;
+
+/** Signatures read from the loaded copy: complete, waiting on the missing person only, or needs a check. */
+function SignatureStatus({ fundId, onboardingId, documentId, kind, signature, onChanged }: { fundId: string; onboardingId: string; documentId: string; kind: string; signature: Sig; onChanged: () => void }) {
+  const confirm = useServerFn(confirmPriorDocSignaturesFn);
+  const recheck = useServerFn(recheckPriorDocSignaturesFn);
+  const prepare = useServerFn(prepareMissingSignatureFn);
+  const send = useServerFn(sendFileForSignatureFn);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  if (!needsSignatureCheck(kind)) return null;
+  const run = async (f: () => Promise<unknown>, ok: string) => { setBusy(true); try { await f(); toast.success(ok); setNote(null); onChanged(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
+  if (!signature) return <div className="mt-1 flex flex-wrap items-center gap-2 text-xs"><span className="text-muted-foreground">Signatures not checked yet.</span><Button size="sm" variant="ghost" disabled={busy} onClick={() => run(() => recheck({ data: { fundId, onboardingId, documentId } }), "Signatures checked")}>{busy ? "Checking…" : "Check signatures"}</Button></div>;
+  if (signature.state === "complete") return <p className="mt-1 text-xs font-medium text-primary">Completed · all signatures found{signature.signedOn ? ` · signed ${signature.signedOn}` : ""}</p>;
+  return (
+    <div className="mt-2 space-y-2 rounded-md border border-dashed p-2 text-xs">
+      <p className="font-medium">{signature.state === "needs_check" ? "Check signatures: the copy couldn't be read clearly." : waitingLabel(signature.missing)}</p>
+      {signature.signingSent && signature.state === "waiting" ? <p className="text-muted-foreground">A sign link was sent to the missing person. This completes when they sign.</p> : null}
+      <div className="flex flex-wrap gap-2">
+        {signature.state === "waiting" && !signature.signingSent ? <Button size="sm" disabled={busy} onClick={() => run(async () => {
+          const r = await prepare({ data: { fundId, onboardingId, documentId } });
+          await send({ data: { fundId, fileId: r.fileId, onboardingId, order: r.order as any, mode: "signature_page", ...(r.managerUserId ? { managerUserId: r.managerUserId } : {}) } });
+        }, "Sign link sent to the missing person")}>Add signature box and send</Button> : null}
+        {note === null ? <Button size="sm" variant="outline" disabled={busy} onClick={() => setNote("")}>{signature.state === "needs_check" ? "I checked: all signed" : "It's actually signed"}</Button> : null}
+        <Button size="sm" variant="ghost" disabled={busy} onClick={() => run(() => recheck({ data: { fundId, onboardingId, documentId } }), "Signatures checked again")}>Read again</Button>
+      </div>
+      {note !== null ? <div className="flex flex-wrap gap-2">
+        <Input className="min-w-48 flex-1" aria-label="What you checked" placeholder="What you checked (required), e.g. both signatures on page 14" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
+        <Button size="sm" disabled={busy || note.trim().length < 3} onClick={() => run(() => confirm({ data: { fundId, onboardingId, documentId, complete: true, note } }), "Marked completed")}>Confirm completed</Button>
+        <Button size="sm" variant="ghost" onClick={() => setNote(null)}>Cancel</Button>
+      </div> : null}
+    </div>
+  );
 }

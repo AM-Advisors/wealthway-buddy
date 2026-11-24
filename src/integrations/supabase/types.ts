@@ -41905,6 +41905,68 @@ export type Database = {
         }
         Relationships: []
       }
+      prior_doc_signature_reviews: {
+        Row: {
+          actor_user_id: string | null
+          confidence: string | null
+          created_at: string
+          details: Json
+          document_id: string
+          expected: Json
+          found: Json
+          id: string
+          missing: Json
+          offering_id: string
+          onboarding_id: string
+          signed_on: string | null
+          signing_file_id: string | null
+          source: string
+          state: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          confidence?: string | null
+          created_at?: string
+          details?: Json
+          document_id: string
+          expected?: Json
+          found?: Json
+          id?: string
+          missing?: Json
+          offering_id: string
+          onboarding_id: string
+          signed_on?: string | null
+          signing_file_id?: string | null
+          source?: string
+          state: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          confidence?: string | null
+          created_at?: string
+          details?: Json
+          document_id?: string
+          expected?: Json
+          found?: Json
+          id?: string
+          missing?: Json
+          offering_id?: string
+          onboarding_id?: string
+          signed_on?: string | null
+          signing_file_id?: string | null
+          source?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prior_doc_signature_reviews_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "prior_signed_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prior_signed_document_withdrawals: {
         Row: {
           action: string

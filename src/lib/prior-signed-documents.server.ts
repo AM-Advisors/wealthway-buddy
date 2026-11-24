@@ -27,7 +27,7 @@ export const PRIOR_DOC_KINDS = {
 } as const;
 export type PriorDocKind = keyof typeof PRIOR_DOC_KINDS;
 
-async function access(db: any, userId: string, fundId: string, onboardingId: string) {
+export async function access(db: any, userId: string, fundId: string, onboardingId: string) {
   const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
   const [roles, manager, ob] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", userId),
@@ -60,7 +60,9 @@ export async function listPriorDocs(db: any, userId: string, input: { fundId: st
   if (error) throw new Error("Previously signed documents could not be loaded.");
   const replaced = new Set(((data ?? []) as any[]).map((d) => d.replaces_id).filter(Boolean));
   const withdrawn = await withdrawnPriorDocIds(db, [input.onboardingId]);
+  const sig = await (await import("@/lib/prior-doc-signatures.server")).priorDocSignatureStates([input.onboardingId]);
   return ((data ?? []) as any[]).map((d) => ({
+    signature: sig.get(d.id) ?? null,
     id: d.id as string, kind: d.document_kind as PriorDocKind, kindLabel: PRIOR_DOC_KINDS[d.document_kind as PriorDocKind] ?? "Document",
     title: d.title as string, signedOn: d.signed_on as string, fileName: d.file_name as string, note: d.note as string | null,
     uploadedBy: d.uploaded_by_role === "harmonious" ? "Harmonious" : "Fund manager", uploadedAt: d.created_at as string, replaced: replaced.has(d.id),
@@ -97,6 +99,9 @@ export async function recordPriorDoc(db: any, userId: string, input: { fundId: s
     uploaded_by: userId, uploaded_by_role: role, replaces_id: input.replacesId ?? null,
   }).select("id").single();
   if (error) throw new Error("The document could not be saved.");
+  // Loaded per investor = completed outside the platform: read the signatures now.
+  const { analyzePriorDoc } = await import("@/lib/prior-doc-signatures.server");
+  await analyzePriorDoc(data.id, userId).catch((e) => console.error("signature check skipped", (e as Error).message));
   if (input.kind === "subscription_agreement") await reconcileOutside(input.onboardingId, userId);
   await db.from("investor_onboarding_events").insert({ onboarding_id: input.onboardingId, offering_id: input.fundId, event: "prior_signed_document_loaded", actor_user_id: userId, actor_role: role, detail: { document_id: data.id, kind: input.kind, replaces: input.replacesId ?? null } }).then(() => null, () => null);
   return { id: data.id as string };
@@ -159,12 +164,13 @@ export async function outsideSubscriptionStates(db: any, onboardingIds: string[]
   }
   const replaced = new Set(docs.map((d) => d.replaces_id).filter(Boolean));
   const withdrawn = await withdrawnPriorDocIds(db, ids);
+  const sig = await (await import("@/lib/prior-doc-signatures.server")).priorDocSignatureStates(ids);
   for (const id of ids) {
     const latest = marks.find((m) => m.onboarding_id === id);
     const marked = latest?.action === "marked";
     const copy = docs.find((d) => d.onboarding_id === id && !replaced.has(d.id) && !withdrawn.has(d.id));
     const copyLoaded = Boolean(copy);
-    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, copyLoadedBy: copy ? (copy.uploaded_by_role === "harmonious" ? "Harmonious" : "Fund manager") : null, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: marked && copyLoaded });
+    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, copyLoadedBy: copy ? (copy.uploaded_by_role === "harmonious" ? "Harmonious" : "Fund manager") : null, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: copyLoaded && (marked || sig.get(copy.id)?.state === "complete"), signature: copy ? sig.get(copy.id) ?? null : null } as any);
   }
   return out;
 }

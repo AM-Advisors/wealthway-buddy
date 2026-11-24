@@ -5,6 +5,9 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { LoadError } from "@/components/load-error";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { catchUpPriorDocSignaturesFn, priorDocSignatureSummaryFn } from "@/lib/prior-signed-documents.functions";
 import { getInvestorSigningProgress } from "@/lib/investor-signing-progress.functions";
 import { taxFormLabel, type StepState } from "@/lib/investor-signing-progress-model";
 
@@ -48,6 +51,7 @@ function InvestorProgressPage() {
         <h1 className="text-2xl">Investor progress</h1>
         <p className="text-base text-muted-foreground">KYC, AML, questionnaire, tax form and signatures for every open investment, with what each one is waiting on. Nothing here changes a record.</p>
       </div>
+      <LoadedSignaturesCard />
       <div className="flex flex-wrap gap-2">
         <Input aria-label="Search investors" placeholder="Search by investor or fund" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
         <select aria-label="Fund" className="min-h-10 rounded-md border bg-background px-3 text-base" value={fund} onChange={(e) => setFund(e.target.value)}>
@@ -75,6 +79,33 @@ function InvestorProgressPage() {
               ))}</tbody>
             </table>
           </div>}
+    </div>
+  );
+}
+
+/** Loaded (outside-signed) documents: check remaining ones and download who each is waiting on. No emails. */
+function LoadedSignaturesCard() {
+  const catchUp = useServerFn(catchUpPriorDocSignaturesFn);
+  const summary = useServerFn(priorDocSignatureSummaryFn);
+  const [busy, setBusy] = useState(false);
+  const [left, setLeft] = useState<number | null>(null);
+  const label: Record<string, string> = { complete: "Completed", waiting: "Waiting on signature", needs_check: "Check signatures", not_read: "Not checked yet" };
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-md border p-3 text-sm">
+      <span className="flex-1">Documents loaded per investor are treated as completed outside the platform once their signatures are found.{left !== null ? ` ${left} left to check.` : ""}</span>
+      <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
+        setBusy(true);
+        try { let r = await catchUp({ data: { limit: 10 } }); setLeft(r.remaining); while (r.remaining > 0 && r.processed > 0) { r = await catchUp({ data: { limit: 10 } }); setLeft(r.remaining); } toast.success("All loaded documents checked."); }
+        catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+      }}>{busy ? "Checking…" : "Check remaining"}</Button>
+      <Button size="sm" variant="outline" onClick={async () => {
+        try {
+          const rows = await summary();
+          const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+          const csv = ["Fund,Investor,Document,Status,Waiting on,Signed on", ...rows.map((r) => [r.fund, r.investor, r.document, label[r.state] ?? r.state, r.waitingOn, r.signedOn].map(esc).join(","))].join("\n");
+          const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "loaded-document-signatures.csv"; a.click();
+        } catch (e) { toast.error((e as Error).message); }
+      }}>Download summary</Button>
     </div>
   );
 }
