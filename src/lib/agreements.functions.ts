@@ -1,3 +1,4 @@
+import { isUnpricedSowLine } from "./sow-unpriced-line";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { adoptedSignatureSchema } from "@/lib/adopted-signature";
@@ -761,7 +762,7 @@ export const getSowWorkspace = createServerFn({ method: "GET" })
           standardCents: Number(l.standard_cents ?? 0),
           finalCents: Number(l.final_cents ?? 0),
           adjustmentReason: (l.adjustment_reason as string) ?? null,
-          included: Boolean(l.included),
+          included: Boolean(l.included) && !isUnpricedSowLine(l),
           passThrough: Boolean(l.pass_through),
           unit: (l.unit as string) ?? null,
         })),

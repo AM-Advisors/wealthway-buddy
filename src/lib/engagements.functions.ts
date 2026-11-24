@@ -1,3 +1,4 @@
+import { isUnpricedSowLine } from "./sow-unpriced-line";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -163,7 +164,7 @@ export const getEngagement = createServerFn({ method: "GET" })
     const linesRes = snapshot
       ? await context.supabase
           .from("sow_pricing_lines")
-          .select("id, label, service_key, pricing_model, standard_cents, final_cents, pass_through, included, unit, sort_order")
+          .select("id, label, service_key, pricing_model, standard_cents, final_cents, adjustment_reason, pass_through, included, unit, sort_order")
           .eq("snapshot_id", snapshot.id)
           .order("sort_order")
       : ({ data: [] } as any);
@@ -176,7 +177,7 @@ export const getEngagement = createServerFn({ method: "GET" })
       standardCents: Number(l.standard_cents ?? 0),
       finalCents: Number(l.final_cents ?? 0),
       passThrough: Boolean(l.pass_through),
-      included: l.included !== false,
+      included: l.included !== false && !isUnpricedSowLine(l),
       unit: (l.unit as string) ?? null,
     }));
 
