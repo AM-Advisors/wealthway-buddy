@@ -1306,3 +1306,9 @@
 - [x] One read-only activity timeline on View account and People & Access
 - [x] Before/after access snapshot compared: no differences
 - [x] Access lists tied to person records; person page shows all access
+
+## Questionnaire View details (2026-11-24)
+- [x] Route financial background, subscription information and certifications to the existing questionnaire review, not document uploads
+- [x] Verify all three questionnaire buttons in isolated desktop/mobile QA and regression tests
+- [x] Correct the shared homepage/notifications financial-background task destination to Sign
+- [ ] Verify in Kelby’s live account after publishing: no authorized Kelby session available

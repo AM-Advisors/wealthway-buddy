@@ -1,6 +1,6 @@
 /** Where each readiness item's completing action lives. Presentation routing only; every action keeps its own server-side authorization. */
 export type OpenTarget =
-  | { kind: "review"; section: "accreditation" }
+  | { kind: "review"; section: "accreditation" | "questionnaire" }
   | { kind: "tab"; tab: "overview" | "details" | "documents" }
   | { kind: "action"; action: "send_tax_form" }
   | { kind: "fund"; area: "approvals" | "banking" }
@@ -16,6 +16,8 @@ export function openTargetFor(key: string, owner?: string | null): OpenTarget {
     // A copy is never certification: the completing step is the investor signing their tax form in Sign.
     case "tax_documentation": case "tax_classification": return { kind: "action", action: "send_tax_form" };
     case "subscription_documents": return { kind: "tab", tab: "documents" };
+    case "bsa_aml": case "subscription_questionnaire": case "certifications":
+      return { kind: "review", section: "questionnaire" };
     case "accreditation": return { kind: "review", section: "accreditation" };
     case "funding": return { kind: "fund", area: "banking" };
     case "approved_to_fund": case "manager_approval": return { kind: "tab", tab: "overview" };
@@ -29,7 +31,7 @@ export function openLabelFor(key: string, owner: string | null | undefined): str
   if (key === "tax_documentation" && t.kind === "tab") return "Confirm tax form";
   if (key === "tax_classification" && t.kind === "tab") return "Open tax form";
   if (key === "aml") return "Open screening review";
-  if (t.kind === "review") return "Review accreditation";
+  if (t.kind === "review") return t.section === "accreditation" ? "Review accreditation" : "View details";
   if (t.kind === "action") return "Send tax form to sign";
   if (t.kind === "fund") return t.area === "approvals" ? "Review accreditation" : "Match wire in Banking";
   if (t.kind === "ops_onboarding") return key === "acceptance" ? "Accept & admit" : "Resolve exception";

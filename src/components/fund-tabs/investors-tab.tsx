@@ -1,4 +1,5 @@
 import { versionLabel } from "@/lib/version-label";
+import { openTargetFor } from "@/lib/readiness-open-target";
 import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { InvestorEconomicsCard } from "@/components/fund-tabs/investor-economics";
 import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";
@@ -319,6 +320,9 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
   const [reviewTab, setReviewTab] = useState(initialAccreditationReview ? "documents" : "details");
   const [reviewRequest, setReviewRequest] = useState(initialAccreditationReview ? 1 : 0);
   const accreditationRef = useRef<HTMLElement>(null);
+  const questionnaireRef = useRef<HTMLElement>(null);
+  const [questionnaireRequest, setQuestionnaireRequest] = useState(0);
+  const [questionnaireItem, setQuestionnaireItem] = useState<string | null>(null);
   const sendRef = useRef<HTMLElement>(null);
   const qc = useQueryClient();
   const load = useServerFn(investorDetailFn);
@@ -345,6 +349,14 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
     });
     return () => cancelAnimationFrame(frame);
   }, [reviewRequest, reviewTab, d]);
+  useEffect(() => {
+    if (!questionnaireRequest || reviewTab !== "documents" || !d) return;
+    const frame = requestAnimationFrame(() => {
+      questionnaireRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
+      questionnaireRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [questionnaireRequest, reviewTab, d]);
   // Uploaded documents sit above the questionnaire, and only when there are any.
   const uploadedDocs = d?.documents?.length ? (
     <section aria-label="Uploaded documents">
@@ -352,7 +364,15 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
       <div>{d.documents.map((x: any) => <UploadedDocRow key={x.id} doc={x} onboardingId={id} />)}</div>
     </section>
   ) : null;
-  const openReviewItem = (key: string) => {
+  const openReviewItem = (key: string, owner?: string | null) => {
+    const target = openTargetFor(key, owner);
+    if (target.kind === "review" && target.section === "questionnaire") {
+      setReviewTab("documents");
+      setQuestionnaireFor(id);
+      setQuestionnaireItem(key);
+      setQuestionnaireRequest(n => n + 1);
+      return;
+    }
     if (key === "tax_form") {
       sendRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
       sendRef.current?.focus({ preventScroll: true });
@@ -363,7 +383,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
       setReviewRequest(n => n + 1);
       return;
     }
-    onOpenItem?.(key);
+    onOpenItem?.(key, owner);
   };
   const fundingApprovalAction = d?.canApproveSubscription ? <ApprovalButton title="Approve this investor to send funds?" description="The investor will be notified to view this fund’s released bank details in their account. This does not record a payment or complete final admission." disabled={approving} onApprove={async () => {
     if (!id) return;
@@ -486,7 +506,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
             </section>
             {id && <PriorSignedDocuments fundId={fundId} onboardingId={id} />}
             {uploadedDocs}
-            <section aria-label="Investor questionnaire">
+            <section ref={questionnaireRef} tabIndex={-1} className="scroll-mt-28" aria-label="Investor questionnaire">
               <Collapsible open={questionnaireOpen} onOpenChange={(o) => setQuestionnaireFor(o ? id : null)} className="rounded-lg border">
                 <CollapsibleTrigger className="flex w-full items-center gap-2 p-3 text-left transition-colors hover:bg-muted/50">
                   {questionnaireOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
@@ -494,6 +514,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
                   <span className="shrink-0 text-xs text-muted-foreground">{d.reviewEvidence.questionnaireSubmittedAt ? `${d.reviewEvidence.questionnaire.length} answers · Submitted ${fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}` : d.reviewEvidence.questionnaire.length ? `In progress · ${d.reviewEvidence.questionnaire.length} of ${d.reviewEvidence.questionnaireTotal ?? d.reviewEvidence.questionnaire.length} answered` : "Not started"}</span>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="px-3 pb-3">
+                  {questionnaireItem ? <p className="mb-3 border-t pt-3 text-muted-foreground">{questionnaireItem === "bsa_aml" ? "The investor completes and confirms Financial background in Sign, under Investor questionnaire." : questionnaireItem === "certifications" ? "The investor reviews and certifies their answers in Sign." : "The investor completes and submits Subscription information in Sign, under Investor questionnaire."} This review does not complete their task.</p> : null}
                   {d.reviewEvidence.questionnaire.length ? <dl className="space-y-3 border-t pt-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl> : <p className="border-t pt-3 text-muted-foreground">Questionnaire has not been submitted.</p>}
                 </CollapsibleContent>
               </Collapsible>
@@ -513,6 +534,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
             </section>
           </>}
           {!d.reviewEvidence && uploadedDocs}
+          {!d.reviewEvidence && questionnaireRequest > 0 ? <section ref={questionnaireRef} tabIndex={-1} className="scroll-mt-28 space-y-2" aria-label="Investor questionnaire"><h4 className="font-medium">Investor questionnaire</h4><p className="text-muted-foreground">No questionnaire answers are available for review. The investor completes and confirms their answers in Sign, under Investor questionnaire.</p></section> : null}
             </TabsContent>
             <TabsContent value="terms" className="space-y-6">
           <section>

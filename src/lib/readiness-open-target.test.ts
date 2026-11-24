@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { openLabelFor, openTargetFor } from "./readiness-open-target";
 describe("readiness open targets", () => {
+  it.each(["bsa_aml", "subscription_questionnaire", "certifications"])("%s opens the investor questionnaire review instead of document uploads", (key) => {
+    expect(openTargetFor(key, "investor")).toEqual({ kind: "review", section: "questionnaire" });
+  });
   it("subscription documents open their copies instead of a preparation action", () => expect(openTargetFor("subscription_documents")).toEqual({ kind: "tab", tab: "documents" }));
   it("tax form never routes to copy approval", () => expect(openTargetFor("tax_documentation")).toEqual({ kind: "action", action: "send_tax_form" }));
   it("accreditation opens the investor's accreditation review, not fund approvals", () => expect(openTargetFor("accreditation")).toEqual({ kind: "review", section: "accreditation" }));

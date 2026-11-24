@@ -16,7 +16,7 @@ export function investorOutstandingTasks(requirements: readonly RequirementResul
     if (seen.has(r.key) || r.state === "valid" || r.state === "not_applicable") return [];
     seen.add(r.key);
     const step = (Object.keys(STEP_REQUIREMENTS) as JourneyStep[]).find((k) => STEP_REQUIREMENTS[k].includes(r.key))
-      ?? (r.key === "bsa_aml" || r.key === "bad_actor" ? "verify" : "sign");
+      ?? (r.key === "bad_actor" ? "verify" : "sign");
     const locked = steps.find((s) => s.key === step)?.state === "locked";
     const waiting = r.key === "signature" && r.awaitingCountersign === true;
     const review = r.state === "review_required";

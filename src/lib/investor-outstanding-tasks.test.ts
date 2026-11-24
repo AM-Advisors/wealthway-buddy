@@ -9,6 +9,12 @@ const steps: JourneyStepView[] = [
   { key: "fund", label: "Fund", state: "locked", message: "" },
 ];
 describe("outstanding tasks shared by home and notifications", () => {
+  it("financial background opens Sign, where its questions live, not Verification", () => {
+    const openSteps = steps.map((s) => s.key === "sign" ? { ...s, state: "action_required" as const } : s);
+    const task = investorOutstandingTasks([{ key: "bsa_aml", label: "Financial background", state: "missing" }], openSteps)[0];
+    expect(task?.step).toBe("sign");
+    expect(task?.actionable).toBe(true);
+  });
   it("lists missing requirements once and omits completed and inapplicable work", () => {
     const tasks = investorOutstandingTasks([
       { key: "identity_verification", label: "Identity", state: "valid" },
