@@ -187,6 +187,35 @@ describe("only known, necessary information is sent to the provider", () => {
     expect(serialised).not.toContain("000123456");
     expect(prefill["email"]).toBe("jane@example.com");
   });
+
+  it("recovers the country from a single-line imported address", () => {
+    const prefill = buildDiditPrefill({
+      legal_first_name: "Douglas",
+      legal_last_name: "DeGroote",
+      address_line1: "2854 Three Springs Dr, Westlake Village, CA 91361, USA",
+      country: null,
+    } as any);
+    expect(prefill["country"]).toBe("USA");
+    expect(prefill["address"]).toBe("2854 Three Springs Dr, Westlake Village, CA 91361, USA");
+  });
+
+  it("never sends an address without a country", () => {
+    const prefill = buildDiditPrefill({
+      legal_first_name: "Alex",
+      legal_last_name: "Roe",
+      address_line1: "12 Example Street",
+      city: "Springfield",
+      region: "IL",
+      postal_code: "62701",
+      country: null,
+    } as any);
+    expect(prefill["country"]).toBeUndefined();
+    expect(prefill["address"]).toBeUndefined();
+    expect(prefill["city"]).toBeUndefined();
+    expect(prefill["state"]).toBeUndefined();
+    expect(prefill["postal_code"]).toBeUndefined();
+    expect(prefill["first_name"]).toBe("Alex");
+  });
 });
 
 describe("address verification", () => {

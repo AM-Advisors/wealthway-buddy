@@ -78,11 +78,25 @@ function toAlpha3(v: string | null | undefined): string | null {
   return ALPHA3[k] ?? null;
 }
 
+/**
+ * Imported records sometimes hold a full address in one line ("…, CA 91361, USA")
+ * with the country field blank. The provider rejects any session that sends an
+ * address without a country, so recover the country from the address text when
+ * it is recognisable, and never send address fields without a country.
+ */
+function countryFromAddressText(line: string): string | null {
+  const tail = line.split(",").pop()?.trim() ?? "";
+  return toAlpha3(tail);
+}
+
 export function buildDiditPrefill(person: PersonForPrefill | null | undefined): Partial<
   Record<PrefillField, string>
 > {
   if (!person) return {};
   const line = [person.address_line1, person.address_line2].filter(Boolean).join(", ");
+  const country =
+    toAlpha3(person.country ?? (person["residence_country"] as string | null | undefined)) ??
+    (line ? countryFromAddressText(line) : null);
   const candidate: Partial<Record<PrefillField, unknown>> = {
     first_name: person.legal_first_name,
     last_name: person.legal_last_name,
@@ -93,7 +107,7 @@ export function buildDiditPrefill(person: PersonForPrefill | null | undefined): 
     city: person.city,
     state: person.region,
     postal_code: person.postal_code,
-    country: toAlpha3(person.country ?? (person["residence_country"] as string | null | undefined)),
+    country,
   };
 
   const out: Partial<Record<PrefillField, string>> = {};
@@ -103,6 +117,15 @@ export function buildDiditPrefill(person: PersonForPrefill | null | undefined): 
     if (typeof value !== "string") continue;
     const trimmed = value.trim();
     if (trimmed) out[field] = trimmed;
+  }
+  if (!out["country"]) {
+    // The provider refuses a session that carries an address with no country;
+    // dropping the address keeps the session startable and the person can type
+    // their address in the provider's own flow.
+    delete out["address"];
+    delete out["city"];
+    delete out["state"];
+    delete out["postal_code"];
   }
   return out;
 }
