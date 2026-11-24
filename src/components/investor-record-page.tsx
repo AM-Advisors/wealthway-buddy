@@ -1,4 +1,5 @@
 import { OpsRecordPage } from "@/components/ops-record";
+import { FillForInvestorButton } from "@/components/fill-for-investor";
 import { AccountIdentityQueue } from "@/components/account-identity-queue";
 import { InvestorVerificationCard } from "@/components/investor-verification-card";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
@@ -134,6 +135,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           <h2 className="mt-3 text-2xl">{data.overview.name}</h2>
           <p className="mt-1.5 text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {entrySourceLabel(data.overview.enteredBy)}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
+          {!data.overview.removed ? <FillForInvestorButton onboardingId={onboardingId} name={data.overview.name} /> : null}
           {!data.overview.removed ? <Button size="sm" variant="outline" onClick={correctDetails}><Pencil className="mr-2 h-4 w-4" />Correct investor details</Button> : null}
           {data.overview.removed ? <Badge variant="destructive">Removed from Fund</Badge> : null}
           {data.claimState === "prepared" ? <Badge variant="outline">{CLAIM_STATE_LABELS[data.claimState]}</Badge> : null}
