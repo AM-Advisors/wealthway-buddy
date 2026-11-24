@@ -17,6 +17,7 @@ import { InvestorDashboard } from "@/components/investor-dashboard";
 import { ParticipantHome } from "@/components/participant-home";
 import { ClientNotificationBell } from "@/components/client-notification-bell";
 import { OutstandingInvestments } from "@/components/outstanding-investments";
+import { InvestorPerspectiveButton } from "@/components/investor-perspective";
 import { Route as AccreditationRoute } from "@/routes/_authenticated/onboarding.accreditation";
 import { createQaJourney, QA_JOURNEY_ID, QA_JOURNEY_INVESTOR, type QaJourney } from "@/lib/qa-sandbox/investor-journey-fixture";
 import type { QaState } from "@/lib/qa-sandbox/mock-server";
@@ -85,6 +86,7 @@ export function QaInvestorJourneyLauncher() {
       </p>
       <Button asChild><Link to={"/investor/journey" as never}>Open the fictional investment</Link></Button>
       <Button asChild variant="outline"><Link to={"/investor/tasks" as never}>Open homepage tasks</Link></Button>
+      <InvestorPerspectiveButton onboardingId={QA_JOURNEY_ID} />
     </section>
   );
 }

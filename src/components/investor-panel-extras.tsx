@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { assignParticipantFn, checkEmailDeliveryFn, investorEmailHistoryFn, listParticipantsFn, removeParticipantFn } from "@/lib/investor-helpers.functions";
 import { updateInvestorRecordFn } from "@/lib/investor-record.functions";
+import { InvestorPerspectiveButton } from "@/components/investor-perspective";
 
 const KIND: Record<string, string> = { invitation: "Invitation", reminder: "Reminder", message: "Message", preparer_invite: "Preparer invitation", signer_invite: "Signer notice" };
 const when = (s: string) => new Date(s).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -81,7 +82,7 @@ export function InvestorHelpers({ onboardingId }: { onboardingId: string }) {
             {active.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span><span className="font-medium">{p.name}</span> · {p.email} · {p.roleLabel}{p.status === "invited" ? " · invited" : " · active"}</span>
-                <Button size="sm" variant="ghost" disabled={remove.isPending} onClick={() => remove.mutate(p.id)}>Remove</Button>
+                <div className="flex flex-wrap gap-2"><InvestorPerspectiveButton onboardingId={onboardingId} participantId={p.id} label="View perspective" /><Button size="sm" variant="ghost" disabled={remove.isPending} onClick={() => remove.mutate(p.id)}>Remove</Button></div>
               </li>
             ))}
           </ul>

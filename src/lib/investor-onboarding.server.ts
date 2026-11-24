@@ -1534,7 +1534,7 @@ export async function investorFundStatus(userId: string, offeringId: string) {
 }
 
 /** Documents whose investor-side signers have all signed on the current request (display only). */
-async function investorSideSignedDocuments(row: any): Promise<Set<string>> {
+export async function investorSideSignedDocuments(row: any): Promise<Set<string>> {
   const out = new Set<string>();
   if (!row.application_id) return out;
   const { investorSideSigned } = await import("@/lib/document-signing");

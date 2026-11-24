@@ -1,5 +1,11 @@
 # Roadmap
 
+## Clickable investor perspectives for fund teams (2026-11-24)
+- [x] Extend read-only investor perspectives to exact-fund managers and authorized investor team members, without other-fund or account access; view-only team sees progress, not private answers
+- [x] Make all investor steps and completed-by participant views openable; include recorded completion attribution and explicit System/Not recorded labels, keeping certification, signing and money actions protected
+- [x] 139 tests pass; manager opens all four steps, saved fictional answers, completed requirement details and preparer view on desktop/390px phone, without overflow, errors or real backend requests
+- Live-account verification remains pending because no independently isolated authenticated sessions are supplied; publishing not requested
+
 ## Fund-specific signing requests (2026-11-24)
 - [x] Keep personal signing cards, agreement lists and counts inside the selected fund; retain all-fund visibility on Signatures
 - [x] Test Upper90 versus LaaSy across all three signature sources; verify fund switching in isolated fictional QA, real signed-in Upper90 not exercised

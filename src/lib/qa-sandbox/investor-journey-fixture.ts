@@ -8,6 +8,7 @@ import { journeySteps, verificationSummary, investorHomeAction, nextJourneyStep 
 import { investorOutstandingTasks } from "@/lib/investor-outstanding-tasks";
 import { REQUIREMENT_LABELS, type RequirementKey, type RequirementResult, type RequirementState } from "@/lib/investor-onboarding-model";
 import { QA_FUND_ID, QA_FUND_NAME } from "./fictional-data";
+import { type InvestorPerspectiveData } from "../investor-perspective";
 
 export const QA_JOURNEY_ID = "0a000000-0000-4000-8000-00000000a001";
 export const QA_JOURNEY_INVESTOR = "John Smith";
@@ -51,6 +52,7 @@ export const QA_JOURNEY_FNS = [
   "getDocumentsStep", "saveSubscription", "signDocument", "getSigningStates", "readOfferingDocument", "recordStepView", "getFundScope",
   "getAccreditation", "submitSelfCertification", "getMyPortfolioValue", "getMyPersonalInvestmentLinks",
   "investorDashboardFn", "myParticipantAssignmentsFn", "getAttention", "listMyNotifications", "markNotificationsRead", "myInvitedFundsFn", "myInvestorUpdatesFn",
+  "investorPerspectiveFn",
 ] as const;
 
 const allSigned = (j: QaJourney) => DOCS.filter((d) => d.requiresSignature).every((d) => j.signatures[d.id]);
@@ -110,6 +112,23 @@ export function handleQaJourneyCall(fnName: string, data: any, j: QaJourney): un
   const fund = data?.offering_id ?? data?.offeringId;
   if (fund != null && fund !== QA_FUND_ID) throw block("Only the fictional fund is available.");
   switch (fnName) {
+    case "investorPerspectiveFn": {
+      const helperId = "0a000000-0000-4000-8000-00000000b001";
+      if (data?.participantId && data.participantId !== helperId) throw block("Only the fictional preparer is available.");
+      const detail = qaJourneyDetail(j);
+      return {
+        onboardingId: QA_JOURNEY_ID, fundName: QA_FUND_NAME, investorName: QA_JOURNEY_INVESTOR,
+        profileLabel: j.profile?.name ?? "John Smith", amountCents: j.amountCents ?? 5_000_000,
+        steps: detail.journey,
+        items: detail.requirements.map(r => ({ key: r.key, label: r.label, status: r.state === "valid" ? "complete" : r.state === "not_applicable" ? "not_applicable" : "needs_investor", owner: "investor" })),
+        questions: [{ key: "investing_experience", label: "Years of investing experience", answer: "8" }], canReadDetails: true,
+        participants: [{ id: helperId, name: "Jordan Helper", role: "preparer", status: "active" }],
+        selectedParticipant: data?.participantId ? { id: helperId, name: "Jordan Helper", role: "preparer" } : null,
+        person: [{ label: "Investor", value: QA_JOURNEY_INVESTOR }],
+        documents: detail.documents.map(d => ({ id: d.id, title: d.title, status: d.signed ? "Signed" : "Awaiting signatures" })),
+        history: [{ id: "qa-prepared", label: "Questionnaire answers prepared", step: "sign", actor: "Jordan Helper", at: "2026-11-24T10:00:00Z" }, { id: "qa-system", label: "Signature recorded", step: "sign", actor: "System", at: "2026-11-24T11:00:00Z" }],
+      } satisfies InvestorPerspectiveData;
+    }
     case "investorDashboardFn": {
       const detail = qaJourneyDetail(j);
       const home = investorHomeAction(detail.journey, null);

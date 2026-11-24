@@ -710,6 +710,9 @@ function personName(p: any) { return (p?.preferred_name || `${p?.legal_first_nam
 export async function fundInvestorRecords(userId: string, offeringId: string) {
   // Read-only viewers (fund team or company members) see the roster without contact details.
   const { actor, readOnly, canAddInvestors } = await fundRosterViewer(userId, offeringId);
+  const { fundAccessFor } = await import("./fund-access.server");
+  const { canOpenInvestorPerspective } = await import("./investor-perspective");
+  const canViewPerspective = canOpenInvestorPerspective(await fundAccessFor(db(), userId, offeringId));
   const { data: rows } = await db().from("investor_onboardings")
     .select("id, application_id, offering_id, person_id, investor_user_id, investment_profile_id, stage, requested_amount_cents, commitment_amount_cents, accepted_amount_cents, entry_source, investor_confirmed_at, invitation_id, created_at")
     .eq("offering_id", offeringId).is("removed_at", null).not("stage", "in", "(declined,cancelled)").order("created_at", { ascending: false });
@@ -731,6 +734,7 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
     isStaff: actor.isStaff,
     readOnly,
     canAddInvestors,
+    canViewPerspective,
     items: list.map((r) => {
       const p = r.person_id ? pMap.get(r.person_id) : uMap.get(r.investor_user_id);
       const pr = prMap.get(r.investment_profile_id);

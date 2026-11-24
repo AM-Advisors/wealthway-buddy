@@ -12,6 +12,7 @@ import { getFundWireInstructions } from "@/lib/wire-instructions.functions";
 import { getFundLaunchSteps } from "@/lib/fund-launch.functions";
 import { fundSetupSummary } from "@/lib/fund-launch-summary";
 import { ViewAsPicker } from "@/components/view-as";
+import { InvestorPerspectiveButton } from "@/components/investor-perspective";
 import { OWNER_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -117,7 +118,7 @@ function StageIcon({ s, current }: { s: ReadinessStatus; current: boolean }) {
 }
 
 /** Eight stages as a compact vertical journey; detail on demand. */
-export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer: Viewer; defaultOpen?: string | null }) {
+export function StageJourney({ r, viewer, defaultOpen = null, onOpenItem }: { r: any; viewer: Viewer; defaultOpen?: string | null; onOpenItem?: ((key: string, owner?: string | null) => void) | undefined }) {
   const [open, setOpen] = useState<string | null>(defaultOpen);
   return (
     <section className="space-y-1">
@@ -148,7 +149,7 @@ export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer
                 <ul className="mb-2 space-y-1.5 border-l-2 border-muted pl-3">
                   {items.length ? items.map((i: any) => (
                     <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}{viewer !== "investor" && !i.reason && waitingDetail(i, r.items) ? <span className="block text-xs text-muted-foreground">{waitingDetail(i, r.items)}</span> : null}</span>
+                      <span className="min-w-0">{onOpenItem ? <Button variant="link" size="sm" className="h-auto whitespace-normal p-0 text-left" onClick={() => onOpenItem(i.key, i.owner)}>{i.label}</Button> : i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}{viewer !== "investor" && !i.reason && waitingDetail(i, r.items) ? <span className="block text-xs text-muted-foreground">{waitingDetail(i, r.items)}</span> : null}</span>
                       <span className="flex items-center gap-2 text-xs">
                         {i.owner && i.status !== "complete" ? <span className="text-muted-foreground">{ownerText(i.owner)}</span> : null}
                         <span className={tone(i.status)}>{plainStatus(i.status, viewer)}</span>
@@ -202,10 +203,10 @@ export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenIte
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
       <AttentionNeeded r={r} viewer={viewer} onOpenItem={onOpenItem} onOpenAccreditation={onOpenAccreditation} fundingApprovalAction={fundingApprovalAction} />
-      {viewer === "staff" ? <><StageJourney r={r} viewer={viewer} /><AuditDetails r={r} /></> : (
+      {viewer === "staff" ? <><StageJourney r={r} viewer={viewer} onOpenItem={onOpenItem} /><AuditDetails r={r} /></> : (
         <details className="group">
           <summary className="cursor-pointer text-sm font-medium text-muted-foreground">Show all steps</summary>
-          <div className="mt-4"><StageJourney r={r} viewer={viewer} /></div>
+          <div className="mt-4"><StageJourney r={r} viewer={viewer} onOpenItem={onOpenItem} /></div>
         </details>
       )}
     </div>
@@ -244,7 +245,7 @@ export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem, 
       onOpenItem={!viewAs ? onOpenItem : undefined}
       onOpenAccreditation={!viewAs ? onOpenAccreditation : undefined}
       fundingApprovalAction={!viewAs ? fundingApprovalAction : undefined}
-      action={!viewAs && d.viewer === "staff" ? <ViewAsPicker onboardingId={onboardingId} label="View client perspective" /> : undefined}
+      action={!viewAs && d.viewer !== "investor" ? <InvestorPerspectiveButton onboardingId={onboardingId} /> : undefined}
     />
   );
 }
@@ -410,7 +411,7 @@ export function FundReadiness({ fundId, viewAs = false }: { fundId: string; view
       )}
       {sel ? (
         <ReadinessSurface r={sel.readiness} viewer={d.viewer} title={sel.investorName} subtitle={[money(sel.amountCents), sel.profileLabel].filter(Boolean).join(" · ")}
-          action={!viewAs && d.viewer === "staff" ? <ViewAsPicker onboardingId={sel.onboardingId} label="View client perspective" /> : undefined} />
+          action={!viewAs ? <InvestorPerspectiveButton onboardingId={sel.onboardingId} /> : undefined} />
       ) : null}
     </div>
   );

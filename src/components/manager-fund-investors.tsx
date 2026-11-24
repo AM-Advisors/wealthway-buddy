@@ -1,6 +1,7 @@
 import { InviteInvestorButton, InviteInvestorMenuItem } from "@/components/personal-investment-link";
 import { TestInvestorBadge } from "@/components/test-investor-control";
 import { FillForInvestorButton } from "@/components/fill-for-investor";
+import { InvestorPerspectiveButton } from "@/components/investor-perspective";
 import { useApplicationRoute, useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useMemo, useState, type ReactNode } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
@@ -141,7 +142,6 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
       details={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "profile" }}>{r.hasAccount && !isStaff ? "Suggest detail changes" : "Edit investor details"}</Link>}
       investment={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "investment" }}>Edit investment</Link>}
       readiness={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "readiness" }}>View readiness</Link>}
-      perspective={isStaff && r.hasAccount ? <Link to="/ops/readiness">View client perspective</Link> : undefined}
       invitation={!r.hasAccount ? <InviteInvestorMenuItem onboardingId={r.onboardingId} /> : undefined}
       removal={<DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Remove ${r.name} from this Fund? Their person record, other Funds and history are kept.`)) run(() => remove({ data: { onboardingId: r.onboardingId } }), "Removed from Fund"); }}>Remove from Fund</DropdownMenuItem>}
     />
@@ -249,9 +249,9 @@ export function ManagerFundInvestors({ fundId, moreSections }: { fundId: string;
                       <p className="truncate text-xs text-muted-foreground">{r.nameMissing && r.profileLabel && r.profileLabel === r.name ? "Contact name needed" : (r.profileLabel ?? r.profileType ?? "Profile needed")}{r.claimState === "prepared" ? (r.invited ? " · Invited, not signed in yet" : " · Not signed in yet") : ""}</p></div>
                     <p className="text-sm">{money(r.amountCents)}</p>
                     <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{[progressLine(r.onboardingId), nextLine(s.rc)].filter(Boolean).join(" · ")}</p>{stageChips(r.onboardingId)}</div>
-                  </>); const rowClass = "grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4"; return (
-                <li key={r.onboardingId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
-                  {readOnly ? <><div className={rowClass}>{body}</div>{teamMember && !r.hasAccount ? <InviteInvestorButton onboardingId={r.onboardingId} compact /> : null}</> : <><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} className={rowClass}>{body}</Link><FillForInvestorButton onboardingId={r.onboardingId} name={r.name} />{rowMenu(r)}</>}
+                  </>); const rowClass = "grid min-w-0 basis-full flex-1 gap-1 sm:basis-auto sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4"; return (
+                <li key={r.onboardingId} className="flex flex-wrap items-center gap-3 p-3 hover:bg-muted/30 sm:flex-nowrap">
+                  {readOnly ? <><div className={rowClass}>{body}</div>{records.data?.canViewPerspective && <InvestorPerspectiveButton onboardingId={r.onboardingId} />}{teamMember && !r.hasAccount ? <InviteInvestorButton onboardingId={r.onboardingId} compact /> : null}</> : <><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} className={rowClass}>{body}</Link><FillForInvestorButton onboardingId={r.onboardingId} name={r.name} /><InvestorPerspectiveButton onboardingId={r.onboardingId} />{rowMenu(r)}</>}
                 </li>); })}
               {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); const linked = linkedRecords.get(row.applicationId); return (
                 <li key={row.applicationId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
