@@ -41,7 +41,25 @@ describe("limited access during an open review", () => {
   });
 });
 
-import { personProviderCheckOpensAccount } from "./account-kyc-model";
+import { expiredKind, personProviderCheckOpensAccount } from "./account-kyc-model";
+describe("expired checks say what actually expired", () => {
+  const now = new Date("2026-11-24T00:00:00Z");
+  it("a past ID expiration date means the ID itself expired", () => {
+    expect(expiredKind({ status: "expired", decision_summary: { document: { expires: "2026-01-01" } } }, now)).toBe("id");
+  });
+  it("a timed-out link with no ID submitted is a session expiry, not an expired ID", () => {
+    expect(expiredKind({ status: "expired", decision_summary: null }, now)).toBe("session");
+    expect(expiredKind({ status: "expired", decision_summary: { document: { expires: null } } }, now)).toBe("session");
+  });
+  it("a submitted ID that is still current is a session expiry", () => {
+    expect(expiredKind({ status: "expired", decision_summary: { document: { expires: "2030-05-01" } } }, now)).toBe("session");
+  });
+  it("non-expired checks have no kind", () => {
+    expect(expiredKind({ status: "declined" }, now)).toBeNull();
+    expect(expiredKind(null, now)).toBeNull();
+  });
+});
+
 describe("verification already attached to the person by staff", () => {
   const ok = { kyc_status: "approved", aml_status: "approved" };
   const link = { mode: "link", status: "approved", id_status: "Approved", session_id: "s1" };

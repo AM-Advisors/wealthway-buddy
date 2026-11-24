@@ -41,7 +41,9 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
       case "start": return { title: "Verify your identity", text: "Before you can use Harmonious, we verify everyone's identity. This is required for fund administration and anti-money-laundering rules. You'll need a government ID and your phone or computer camera, it takes about 5 minutes. Your ID number is never shown in the portal.", cta: "Start verification" };
       case "in_progress": return { title: "We're checking your details", text: "If you didn't finish, you can continue where you left off. Otherwise this page updates by itself once the check is done.", cta: "Continue verification" };
       case "review": return { title: "Your check is with our compliance team", text: "A Harmonious compliance specialist is reviewing your verification. You'll get access as soon as it's approved, usually within one business day. This page updates by itself.", cta: null };
-      default: return { title: s.expired ? "Your ID has expired" : "We need you to try again", text: s.expired ? "The ID you used has expired. Please verify again with a current government-issued ID." : s.declineNote ? `Our team asked you to verify again: ${s.declineNote}` : "We couldn't verify your identity. Please try again, making sure your ID is clear and fully in frame.", cta: "Verify again" };
+      default: return s.expired && s.expiredKind === "session"
+        ? { title: "Your verification link expired", text: "The verification link expired before the check was finished. Start a fresh check, it takes about 5 minutes.", cta: "Start a new check" }
+        : { title: s.expired ? "Your ID has expired" : "We need you to try again", text: s.expired ? "The ID you used has expired. Please verify again with a current government-issued ID." : s.declineNote ? `Our team asked you to verify again: ${s.declineNote}` : "We couldn't verify your identity. Please try again, making sure your ID is clear and fully in frame.", cta: "Verify again" };
     }
   })();
 

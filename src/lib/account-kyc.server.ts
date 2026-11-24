@@ -1,7 +1,7 @@
 // Server-only: account-level identity verification that gates every non-staff account.
 // Investment-level KYC (kyc_verifications) stays separate; an approved one counts here.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, gateOpen, isSessionDecisionFor, limitedAccessWhileInReview, personProviderCheckOpensAccount, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
+import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, expiredKind, gateOpen, isSessionDecisionFor, limitedAccessWhileInReview, personProviderCheckOpensAccount, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
 export { isAccountDecisionEvent } from "@/lib/account-kyc-model";
 
 const db = () => supabaseAdmin as any;
@@ -42,7 +42,7 @@ export async function accountKycStatus(uid: string) {
   let state = resolveGate({ roles: r, grandfathered: false, latest: (l?.status ?? null) as AccountCheckStatus | null });
   if (!gateOpen(state) && (await grandfathered(uid))) state = "approved";
   const limited = !gateOpen(state) && limitedAccessWhileInReview(l);
-  return { state, open: gateOpen(state), limited, declineNote: l?.status === "declined" || l?.status === "sent_back" ? (l?.decision_note ?? null) : null, expired: l?.status === "expired" };
+  return { state, open: gateOpen(state), limited, declineNote: l?.status === "declined" || l?.status === "sent_back" ? (l?.decision_note ?? null) : null, expired: l?.status === "expired", expiredKind: expiredKind(l) };
 }
 
 /** Throws unless the account may use the platform. Used by the server-side gate. */

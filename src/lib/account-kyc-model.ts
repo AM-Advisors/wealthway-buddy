@@ -38,6 +38,20 @@ export function accountStatusFromProvider(raw: string | null | undefined, mapped
   return mapped === "approved" ? "approved" : mapped === "declined" ? "declined" : mapped === "review" ? "review" : "pending";
 }
 
+export type ExpiredKind = "id" | "session";
+
+/**
+ * An "expired" check can mean two very different things: the person's ID document itself is out of
+ * date, or the verification link simply timed out before the check was finished (often before any ID
+ * was submitted). The gate copy must say which, so nobody is told their ID expired when it didn't.
+ */
+export function expiredKind(check: { status?: string | null; decision_summary?: any } | null | undefined, now: Date = new Date()): ExpiredKind | null {
+  if (!check || check.status !== "expired") return null;
+  const expires = check.decision_summary?.document?.expires;
+  if (expires && !Number.isNaN(Date.parse(String(expires))) && new Date(String(expires)) < now) return "id";
+  return "session";
+}
+
 /**
  * "Limited" access while a provider-flagged check waits for a person: only when ID, liveness and
  * face match all passed (typically a possible watchlist match). Money, banking and account changes stay closed.
