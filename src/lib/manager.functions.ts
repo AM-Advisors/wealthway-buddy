@@ -62,12 +62,8 @@ export const getManagerFunds = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments, error } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      if (error) throw new Error(error.message);
-      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return { isAdmin, funds: [] as any[] };
     }
 
@@ -221,13 +217,8 @@ export const getFundSignedDocuments = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const roles = await assertReviewer(supabase, userId);
     if (!roles.includes("admin")) {
-      const { data: assignment } = await supabase
-        .from("fund_managers")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("offering_id", data.offeringId)
-        .maybeSingle();
-      if (!assignment) throw new Error("Forbidden: you do not manage this fund.");
+      const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+      if (!(await fundMembershipAllows(await fundAccessDb(), userId, data.offeringId, "manager"))) throw new Error("Forbidden: you do not manage this fund.");
     }
 
     const { data: apps, error: appsError } = await supabase
@@ -653,14 +644,8 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
     if (!application) throw new Error("Application not found.");
 
     if (!roles.includes("admin")) {
-      const { data: assignment, error: assignError } = await supabase
-        .from("fund_managers")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("offering_id", application.offering_id)
-        .maybeSingle();
-      if (assignError) throw new Error(assignError.message);
-      if (!assignment) throw new Error("Forbidden: you do not manage this fund.");
+      const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+      if (!(await fundMembershipAllows(await fundAccessDb(), userId, application.offering_id, "manager"))) throw new Error("Forbidden: you do not manage this fund.");
     }
 
     // Fund verified above; money and application state move with the privileged
@@ -768,12 +753,8 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments, error } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      if (error) throw new Error(error.message);
-      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) {
         return { isAdmin, roles, email: (context.claims as any)?.email ?? null, funds: [] as any[] };
       }
@@ -900,12 +881,8 @@ export const getWireTracking = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments, error } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      if (error) throw new Error(error.message);
-      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return { rows: [] as any[], totals: emptyWireTotals() };
     }
 
@@ -1118,12 +1095,8 @@ export const getWireConfirmationBoard = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments, error } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      if (error) throw new Error(error.message);
-      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return emptyResult;
     }
 

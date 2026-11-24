@@ -42,17 +42,13 @@ export const listClosingBoard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [{ data: roles }, { data: assignments }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin"),
-      supabase.from("fund_managers").select("offering_id").eq("user_id", userId),
-    ]);
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin");
     const isAdmin = ((roles ?? []) as any[]).length > 0;
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      offeringIds = Array.from(
-        new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string)),
-      );
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return { rows: [] as ClosingCandidate[] };
     }
 

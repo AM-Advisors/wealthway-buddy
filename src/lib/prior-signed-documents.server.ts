@@ -28,14 +28,15 @@ export const PRIOR_DOC_KINDS = {
 export type PriorDocKind = keyof typeof PRIOR_DOC_KINDS;
 
 async function access(db: any, userId: string, fundId: string, onboardingId: string) {
-  const [roles, managers, ob] = await Promise.all([
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [roles, manager, ob] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", userId),
-    db.from("fund_managers").select("id").eq("user_id", userId).eq("offering_id", fundId),
+    fundMembershipAllows(await fundAccessDb(), userId, fundId, "manager").catch(() => null),
     db.from("investor_onboardings").select("id, offering_id, removed_at").eq("id", onboardingId).maybeSingle(),
   ]);
-  if (roles.error || managers.error || ob.error) throw new Error("Access could not be checked.");
+  if (roles.error || manager === null || ob.error) throw new Error("Access could not be checked.");
   const staff = (roles.data ?? []).some((r: any) => STAFF.includes(r.role));
-  if (!staff && !managers.data?.length) throw new Error("Only Harmonious or this fund's managers can do this.");
+  if (!staff && !manager) throw new Error("Only Harmonious or this fund's managers can do this.");
   if (!ob.data || ob.data.offering_id !== fundId || ob.data.removed_at) throw new Error("That investor isn't in this fund.");
   return staff ? "harmonious" : "fund_manager";
 }

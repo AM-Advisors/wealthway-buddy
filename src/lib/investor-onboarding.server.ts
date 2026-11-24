@@ -97,17 +97,16 @@ export type OnboardingActor = {
 
 export async function onboardingActor(userId: string | null | undefined): Promise<OnboardingActor> {
   if (!userId) forbid("you are not signed in.");
-  const [{ data: roles }, { data: assignments }] = await Promise.all([
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: roles }, managedOfferingIds] = await Promise.all([
     db().from("user_roles").select("role").eq("user_id", userId),
-    db().from("fund_managers").select("offering_id").eq("user_id", userId),
+    exactManagerFundIds(await fundAccessDb(), String(userId)),
   ]);
   const list = ((roles ?? []) as { role: string }[]).map((r) => String(r.role));
   return {
     userId: String(userId),
     isStaff: list.includes("admin"),
-    managedOfferingIds: [
-      ...new Set(((assignments ?? []) as { offering_id: string }[]).map((a) => a.offering_id)),
-    ],
+    managedOfferingIds,
   };
 }
 

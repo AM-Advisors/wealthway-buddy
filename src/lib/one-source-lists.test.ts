@@ -54,3 +54,40 @@ describe("one accreditation rule", () => {
     expect(pick?.status).toBe("review");
   });
 });
+
+describe("one fund access check", () => {
+  // Files that may still read someone's manager rows directly, because they are not "may this login use this fund" checks:
+  // the shared reader itself, access administration and invitations (adding/removing managers), signer and W-9 signer
+  // resolution, company-level (client) membership, session facts, compliance roles and profile display.
+  const ALLOWED = [
+    "src/lib/access-admin.functions.ts",
+    "src/lib/access.functions.ts",
+    "src/lib/client-dashboard.functions.ts",
+    "src/lib/client-membership.ts",
+    "src/lib/client-portal.functions.ts",
+    "src/lib/fund-access.server.ts",
+    "src/lib/fund-manager-auto-invite.server.ts",
+    "src/lib/fund-manager-profile.server.ts",
+    "src/lib/fund-signatories.server.ts",
+    "src/lib/fund-signing-email.server.ts",
+    "src/lib/fund-signing-tracker.functions.ts",
+    "src/lib/fund-w9.server.ts",
+    "src/lib/invitations.functions.ts",
+    "src/lib/manager-profile.functions.ts",
+    "src/lib/onboarding-compliance.server.ts",
+    "src/lib/saas-orders.server.ts",
+    "src/lib/session-facts.server.ts",
+  ];
+  it("fund screens ask the shared fund access check instead of reading the manager list themselves", () => {
+    const readers = files
+      .filter((f) => /from\(\s*["']fund_managers["']\s*\)(?:(?!\.from\()[^;]){0,200}\.eq\(\s*["']user_id["']/s.test(f.s))
+      .map((f) => f.p.replace(/\\/g, "/"))
+      .filter((p) => !ALLOWED.includes(p));
+    expect(readers).toEqual([]);
+  });
+  it("client membership of a fund has one reader", () => {
+    const own = files.filter((f) => /export async function isClientMemberOfFund/.test(f.s));
+    expect(own.map((f) => f.p.replace(/\\/g, "/"))).toEqual(["src/lib/fund-cap-table.functions.ts"]);
+    expect(own[0]?.s).toMatch(/clientMemberOfFund\(db, uid, fundId\)/);
+  });
+});

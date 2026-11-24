@@ -1,5 +1,11 @@
 # Roadmap
 
+## Every fund screen uses the one shared access check (2026-11-24)
+- [x] Remaining fund screens ask the shared check (same people get in as before, at a named level)
+- [x] "Which funds do I manage" read from one place
+- [x] Guard test so new screens can't add their own fund check
+- [ ] Database rules (deal room and direct browser reads) still use their own fund manager check; separate change
+
 ## No repeat questions (2026-11-24)
 - [x] Complete your profile and new personal investing profiles start with details already on file; investor still confirms
 - [x] W-9 uses the tax ID already secured for that investing profile (only last four shown); new profiles now secure the full number

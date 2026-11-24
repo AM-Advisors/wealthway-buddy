@@ -217,9 +217,11 @@ export async function downloadTaxDocument(userId: string, claims: unknown, docum
 
 /** Delivery status per investor and year. File names and contents are never included. */
 export async function managerTaxDelivery(userId: string) {
-  const { data: managed } = await db().from("fund_managers").select("offering_id, offerings(name)").eq("user_id", userId);
-  const offeringIds = ((managed ?? []) as any[]).map((m) => m.offering_id as string);
+  const { exactManagerFundIds } = await import("@/lib/fund-access.server");
+  const offeringIds = await exactManagerFundIds(db(), userId);
   if (!offeringIds.length) return { funds: [] };
+  const { data: offs } = await db().from("offerings").select("id, name").in("id", offeringIds);
+  const managed = offeringIds.map((offering_id) => ({ offering_id, offerings: ((offs ?? []) as any[]).find((o) => o.id === offering_id) ?? null }));
   const [{ data: onboardings }, { data: docs }] = await Promise.all([
     db().from("investor_onboardings").select("offering_id, investment_profile_id, investment_profiles(legal_name, display_label)").in("offering_id", offeringIds),
     db().from("document_catalog").select("id, offering_id, recipient_profile_id, tax_year, status").in("offering_id", offeringIds),

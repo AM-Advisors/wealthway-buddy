@@ -227,7 +227,8 @@ export async function accessQueue(userId: string) {
   const reqs = checked<any[]>(await db.from('report_card_access_requests').select('id,card_id,requester_id,reason,created_at').order('created_at', { ascending: false }).limit(300)) ?? [];
   if (!reqs.length) return { rows: [] };
   const cards = checked<any[]>(await db.from('report_card_versions').select('id,subject_type,subject_id,period_start,period_end').in('id', [...new Set(reqs.map((r) => r.card_id))])) ?? [];
-  const managed = isApprover ? null : new Set((checked<any[]>(await db.from('fund_managers').select('offering_id').eq('user_id', userId)) ?? []).map((r) => r.offering_id));
+  const { exactManagerFundIds } = await import('@/lib/fund-access.server');
+  const managed = isApprover ? null : new Set(await exactManagerFundIds(db, userId).catch(() => checked<string[]>({ data: [], error: true })));
   const ds = checked<any[]>(await db.from('report_card_access_decisions').select('request_id,decision,expires_at,created_at,reason').in('request_id', reqs.map((r) => r.id))) ?? [];
   const mine = reqs.filter((r) => { const c = cards.find((x) => x.id === r.card_id); return c && r.requester_id !== userId && (isApprover || (c.subject_type === 'fund' && managed!.has(c.subject_id))); });
   if (!mine.length) return { rows: [] };

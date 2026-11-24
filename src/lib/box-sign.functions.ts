@@ -408,13 +408,8 @@ export const syncFundSignatures = createServerFn({ method: "POST" })
 
     const isAdmin = roles.some((r: any) => r.role === "admin");
     if (!isAdmin) {
-      const { data: assignment } = await supabase
-        .from("fund_managers")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("offering_id", data.offering_id)
-        .maybeSingle();
-      if (!assignment) throw new Error("Forbidden: not assigned to this fund.");
+      const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+      if (!(await fundMembershipAllows(await fundAccessDb(), userId, data.offering_id, "manager"))) throw new Error("Forbidden: not assigned to this fund.");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -486,13 +481,8 @@ export const archiveSignedDocument = createServerFn({ method: "POST" })
 
     const isAdmin = roles.some((r: any) => r.role === "admin");
     if (!isAdmin) {
-      const { data: assignment } = await supabase
-        .from("fund_managers")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("offering_id", application.offering_id)
-        .maybeSingle();
-      if (!assignment) throw new Error("Forbidden: not assigned to this fund.");
+      const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+      if (!(await fundMembershipAllows(await fundAccessDb(), userId, application.offering_id, "manager"))) throw new Error("Forbidden: not assigned to this fund.");
     }
 
     const { archiveSignatureToBox } = await import("@/lib/signed-box.server");

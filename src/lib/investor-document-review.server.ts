@@ -47,10 +47,9 @@ export async function approvedForSigning(db: any, applicationId: string, documen
 /** Provenance alone is insufficient: the creator must still manage this exact fund. */
 async function managerEntryAdmitsSigning(db: any, ob: any): Promise<boolean> {
   if (ob.entry_source !== "fund_manager" || !ob.created_by) return false;
-  const { data, error } = await db.from("fund_managers").select("user_id")
-    .eq("offering_id", ob.offering_id).eq("user_id", ob.created_by).maybeSingle();
-  if (error) throw new Error("Fund manager approval could not be checked. Please try again.");
-  return Boolean(data);
+  const { fundMembershipAllows } = await import("@/lib/fund-access.server");
+  return fundMembershipAllows(db, ob.created_by, ob.offering_id, "manager")
+    .catch(() => { throw new Error("Fund manager approval could not be checked. Please try again."); });
 }
 
 export async function listDocumentReviews(userId: string, offeringId: string) {
@@ -62,9 +61,10 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   ]);
   const rows = (obs ?? []) as any[];
   const creatorIds = [...new Set(rows.filter((r) => r.entry_source === "fund_manager").map((r) => r.created_by).filter(Boolean))];
-  const managers = creatorIds.length ? await db.from("fund_managers").select("user_id").eq("offering_id", offeringId).in("user_id", creatorIds) : { data: [], error: null };
-  if (managers.error) throw new Error("Fund manager approval could not be checked. Please try again.");
-  const managerIds = new Set((managers.data ?? []).map((r: any) => r.user_id));
+  const { fundMembershipAllows } = await import("@/lib/fund-access.server");
+  const stillManaging = await Promise.all(creatorIds.map((id) => fundMembershipAllows(db, id as string, offeringId, "manager")))
+    .catch(() => { throw new Error("Fund manager approval could not be checked. Please try again."); });
+  const managerIds = new Set(creatorIds.filter((_, i) => stillManaging[i]));
   const personIds = rows.map((r) => r.person_id).filter(Boolean);
   const appIds = rows.map((r) => r.application_id).filter(Boolean);
   const [{ data: persons }, { data: decisions }, { data: sigs }, { data: priors }] = await Promise.all([

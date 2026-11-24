@@ -21,16 +21,17 @@ async function viewerFor(context: any) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const db = supabaseAdmin as any;
   const userId = context.userId as string;
-  const [{ data: roles }, { data: managed }, { data: obs }] = await Promise.all([
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: roles }, managed, { data: obs }] = await Promise.all([
     context.supabase.from("user_roles").select("role").eq("user_id", userId),
-    db.from("fund_managers").select("offering_id").eq("user_id", userId),
+    exactManagerFundIds(await fundAccessDb(), userId),
     db.from("investor_onboardings").select("offering_id, investment_profile_id").eq("investor_user_id", userId),
   ]);
   return {
     db,
     viewer: {
       roles: (roles ?? []).map((r: any) => String(r.role)),
-      managedOfferingIds: (managed ?? []).map((m: any) => String(m.offering_id)),
+      managedOfferingIds: managed,
       ownInvestments: (obs ?? [])
         .filter((o: any) => o.investment_profile_id)
         .map((o: any) => ({ offeringId: String(o.offering_id), profileId: String(o.investment_profile_id) })),

@@ -16,13 +16,13 @@ export const APPROVAL_LABELS: Record<string, string> = {
 };
 
 async function reviewerScope(supabase: any, userId: string) {
-  const [{ data: roleRows }, { data: fundRows }] = await Promise.all([
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: roleRows }, fundIds] = await Promise.all([
     supabase.from("user_roles").select("role").eq("user_id", userId),
-    supabase.from("fund_managers").select("offering_id").eq("user_id", userId),
+    exactManagerFundIds(await fundAccessDb(), userId),
   ]);
   const roles = (roleRows ?? []).map((r: any) => r.role as string);
   const isAdmin = roles.includes("admin");
-  const fundIds = (fundRows ?? []).map((f: any) => f.offering_id as string);
   if (!isAdmin && fundIds.length === 0) {
     throw new Error("Forbidden: fund manager access required.");
   }

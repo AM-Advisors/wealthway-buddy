@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { isClientMemberOfFund } from "@/lib/fund-cap-table.functions";
 import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
 const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
@@ -13,10 +12,9 @@ async function isStaff(db: any, uid: string) {
 }
 
 async function canViewFund(db: any, uid: string, fundId: string) {
-  if (await isStaff(db, uid)) return true;
-  const { data: mgr } = await db.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", fundId).maybeSingle();
-  if (mgr) return true;
-  return isClientMemberOfFund(db, uid, fundId);
+  // Shared fund check: fund operations staff, this fund's managers or active members of its client.
+  const { fundAccessAllows } = await import("@/lib/fund-access.server");
+  return fundAccessAllows(db, uid, fundId, "manage");
 }
 
 async function sideLetterPricing(db: any, fundId: string, onboardingIds: string[]) {

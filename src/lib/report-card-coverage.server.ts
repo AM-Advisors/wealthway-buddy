@@ -14,11 +14,11 @@ export type CoverageView = {
 };
 
 export async function myReportCardCoverage(db: any, userId: string, today = new Date().toISOString().slice(0, 10)): Promise<CoverageView> {
-  const [fm, cu] = await Promise.all([
-    db.from('fund_managers').select('offering_id').eq('user_id', userId),
+  const { exactManagerFundIds } = await import('@/lib/fund-access.server');
+  const [fundIds, cu] = await Promise.all([
+    exactManagerFundIds(db, userId).catch(() => checked<string[]>({ data: [], error: true })),
     db.from('client_users').select('client_id').eq('user_id', userId).is('revoked_at', null),
   ]);
-  const fundIds = [...new Set((checked<any[]>(fm) ?? []).map((r) => r.offering_id).filter(Boolean))] as string[];
   const memberClientIds = [...new Set((checked<any[]>(cu) ?? []).map((r) => r.client_id).filter(Boolean))] as string[];
   const funds = fundIds.length ? checked<any[]>(await db.from('offerings').select('id,name,client_id').in('id', fundIds)) ?? [] : [];
   const clientIds = [...new Set([...memberClientIds, ...funds.map((f) => f.client_id).filter(Boolean)])] as string[];

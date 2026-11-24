@@ -161,7 +161,8 @@ export const fundEinFn = createServerFn({ method: "POST" }).middleware([requireS
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId);
     const d = await s.db();
     if (!a.staff) {
-      const { data: mgr } = await d.from("fund_managers").select("id").eq("user_id", context.userId).eq("offering_id", data.fundId).maybeSingle();
+      const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+      const mgr = await fundMembershipAllows(await fundAccessDb(), context.userId, data.fundId, "manager");
       const { data: tm } = await d.from("fund_team_members").select("id").eq("user_id", context.userId).eq("offering_id", data.fundId).in("team_role", ["gp", "manager"]).is("removed_at", null).maybeSingle();
       if (!mgr && !tm) return { allowed: false as const };
     }

@@ -9,8 +9,8 @@ export const getFundChanges = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { isStaff } = await import("@/lib/fund-tabs.server");
     const staff = await isStaff(context.userId);
-    const { data: manager, error: managerError } = await context.supabase.from("fund_managers").select("id").eq("user_id", context.userId).eq("offering_id", data.fundId).maybeSingle();
-    if (managerError) throw new Error("Fund access could not be checked.");
+    const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+    const manager = await fundMembershipAllows(await fundAccessDb(), context.userId, data.fundId, "manager").catch(() => { throw new Error("Fund access could not be checked."); });
     if (!staff && !manager) throw new Error("Only this fund's managers and Harmonious can review fund changes.");
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
     let requests = db.from("fund_service_requests").select("id,status,created_at").eq("fund_id", data.fundId).not("status", "in", "(DRAFT,COMPLETED,CANCELLED)").limit(100);

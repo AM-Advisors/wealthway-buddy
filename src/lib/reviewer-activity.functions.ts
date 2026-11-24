@@ -40,12 +40,8 @@ export const listReviewerActivity = createServerFn({ method: "GET" })
     // Funds the caller can work in, for the filter list.
     let fundQuery = supabase.from("offerings").select("id, name").order("name");
     if (!isAdmin) {
-      const { data: assignments, error: assignError } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      if (assignError) throw new Error(assignError.message);
-      const ids = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      const ids = await exactManagerFundIds(await fundAccessDb(), userId);
       fundQuery = ids.length ? fundQuery.in("id", ids) : fundQuery.in("id", [""]);
     }
     const { data: funds } = await fundQuery;

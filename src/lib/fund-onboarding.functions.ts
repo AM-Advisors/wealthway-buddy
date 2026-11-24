@@ -21,13 +21,8 @@ export async function fundAuthority(supabase: any, userId: string, offeringId: s
     .eq("role", "admin")
     .maybeSingle();
   if (role) return { allowed: true, isStaff: true };
-  const { data } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  return { allowed: Boolean(data), isStaff: false };
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  return { allowed: await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"), isStaff: false };
 }
 
 const mask = (v: unknown) => {

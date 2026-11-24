@@ -15,8 +15,8 @@ async function admin() { return (await import("@/integrations/supabase/client.se
 const CLIENT_COLS = "id, fund_id, task_id, approval_type, title, description, status, approval_amount, currency, effective_date, due_date, requested_at, approved_at, client_visible_summary, calculation_summary, supporting_documents, related_workflow_type, version, root_id, supersedes_id, required_approver_count, prepared_by, reviewed_by, service_request_id, created_at, updated_at";
 
 async function isFundManager(db: any, uid: string, fundId: string) {
-  const { data } = await db.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", fundId).maybeSingle();
-  return !!data;
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  return fundMembershipAllows(await fundAccessDb(), uid, fundId, "manager");
 }
 /** Approver count from configurable approval_policies (client-specific override first). */
 async function approversFor(db: any, type: string, amount: number | null | undefined, fundId: string) {

@@ -24,14 +24,8 @@ async function reviewerContext(supabase: any, userId: string, offeringId: string
   if (list.length === 0) throw new Error("Forbidden: reviewer access required.");
   const isAdmin = list.includes("admin");
   if (!isAdmin) {
-    const { data: assignment, error: assignError } = await supabase
-      .from("fund_managers")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("offering_id", offeringId)
-      .maybeSingle();
-    if (assignError) throw new Error(assignError.message);
-    if (!assignment) throw new Error("Forbidden: you do not manage that fund.");
+    const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+    if (!(await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage that fund.");
   }
   return { isAdmin };
 }
@@ -464,7 +458,8 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
         .eq("offering_id", offeringId).in("application_id", appIds.length ? appIds : ["00000000-0000-0000-0000-000000000000"]);
       const { data: odocs } = await supabase.from("offering_documents").select("id, countersigner_user_id, signing_mode").eq("offering_id", offeringId);
       const docMap = new Map(((odocs ?? []) as any[]).map((d) => [d.id, d]));
-      const { data: iManage } = await supabase.from("fund_managers").select("id").eq("offering_id", offeringId).eq("user_id", userId).maybeSingle();
+      const { fundMembershipAllows: managesFund, fundAccessDb: accessDb } = await import("@/lib/fund-access.server");
+      const iManage = await managesFund(await accessDb(), userId, offeringId, "manager");
       const bySig = new Map<string, any[]>();
       for (const r of (cs ?? []) as any[]) bySig.set(r.signature_id, [...(bySig.get(r.signature_id) ?? []), r]);
       const rank: Record<string, number> = { your_signature_required: 3, awaiting_fund_manager: 2, investor_not_signed: 1, fully_executed: 0, not_dual: 0 };
@@ -614,11 +609,8 @@ export const getManagerFundProgress = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return { funds: [] as any[] };
     }
 

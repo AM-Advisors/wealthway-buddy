@@ -12,8 +12,8 @@ export const getFundLaunchSteps = createServerFn({ method: "POST" })
     const roles = (roleRows ?? []).map((r: any) => String(r.role));
     const isStaff = can(capabilitiesFor(roles), "funds", "see");
     if (!isStaff) {
-      const { data: m } = await context.supabase.from("fund_managers").select("offering_id").eq("user_id", context.userId).eq("offering_id", data.offeringId).limit(1);
-      if (!m?.length) throw new Error("Not available for this fund.");
+      const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+      if (!(await fundMembershipAllows(await fundAccessDb(), context.userId, data.offeringId, "manager"))) throw new Error("Not available for this fund.");
     }
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
     const { data: setup } = await db.from("fund_setups").select("id,launch_state").eq("offering_id", data.offeringId).maybeSingle();

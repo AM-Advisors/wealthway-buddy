@@ -13,14 +13,15 @@ import { FUND_REQUEST_KINDS, milestones, requestLifecycle } from "@/lib/self-ser
 /** Clients this person may request a fund for: own (non read-only) membership, or clients of funds they manage. */
 async function requestableClients(context: any): Promise<{ id: string; name: string }[]> {
   const s = context.supabase;
-  const [{ data: members }, { data: managed }] = await Promise.all([
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: members }, managed] = await Promise.all([
     s.from("client_users").select("client_id, client_role").is("revoked_at", null).eq("user_id", context.userId),
-    s.from("fund_managers").select("offering_id").eq("user_id", context.userId),
+    exactManagerFundIds(await fundAccessDb(), context.userId),
   ]);
   const ids = new Set<string>(
     ((members ?? []) as any[]).filter((m) => m.client_role !== "client_readonly").map((m) => String(m.client_id)),
   );
-  const offeringIds = ((managed ?? []) as any[]).map((m) => m.offering_id);
+  const offeringIds = managed;
   if (offeringIds.length) {
     const { data: offerings } = await s.from("offerings").select("client_id").in("id", offeringIds);
     for (const o of (offerings ?? []) as any[]) if (o.client_id) ids.add(String(o.client_id));

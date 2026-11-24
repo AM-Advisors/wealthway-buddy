@@ -5,13 +5,10 @@ import { submittedSignedDocuments } from "./investor-signed-documents.server";
 
 /** Private manager evidence, independent of general client fund-view access. */
 export async function investorReviewEvidence(db: any, userId: string, fundId: string, onboardingId: string) {
-  const [roles, managers] = await Promise.all([
-    db.from("user_roles").select("role").eq("user_id", userId),
-    db.from("fund_managers").select("id").eq("user_id", userId).eq("offering_id", fundId),
-  ]);
-  if (roles.error || managers.error) throw new Error("Investor review access could not be checked.");
-  const staff = (roles.data ?? []).some((r: any) => ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"].includes(r.role));
-  if (!staff && !managers.data?.length) return null;
+  // Shared fund check: fund operations staff or this fund's own managers (client-wide members are not enough).
+  const { fundAccessAllows } = await import("@/lib/fund-access.server");
+  const allowed = await fundAccessAllows(db, userId, fundId, "manager").catch(() => { throw new Error("Investor review access could not be checked."); });
+  if (!allowed) return null;
   const { data: row, error } = await db.from("investor_onboardings")
     .select("id, offering_id, application_id, investment_profile_id, executed_snapshot, questionnaire_version, questionnaire_submitted_at, questionnaire_responses, removed_at")
     .eq("id", onboardingId).eq("offering_id", fundId).maybeSingle();

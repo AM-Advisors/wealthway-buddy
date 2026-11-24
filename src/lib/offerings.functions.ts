@@ -29,14 +29,8 @@ async function assertAdmin(supabase: any, userId: string) {
 /** Admins, or a fund manager assigned to this fund. */
 async function assertCanEditOffering(supabase: any, userId: string, offeringId: string) {
   if (await isAdminUser(supabase, userId)) return;
-  const { data, error } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: you do not manage that fund.");
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage that fund.");
 }
 
 
@@ -189,12 +183,8 @@ export const listManagedFundDocuments = createServerFn({ method: "GET" })
 
     let managedIds: string[] = [];
     if (!isAdmin) {
-      const { data: assignments, error } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      if (error) throw new Error(error.message);
-      managedIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      managedIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (managedIds.length === 0) return { isAdmin, offerings: [] };
     }
 

@@ -7,8 +7,8 @@ async function db() {
 }
 
 async function assertManager(d: any, userId: string, offeringId: string) {
-  const { fundAccessAllows } = await import("@/lib/fund-access.server");
-  if (!(await fundAccessAllows(d, userId, offeringId, "manager"))) throw new Error("Only this fund's managers or Harmonious can verify accreditation.");
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Only this fund's managers or Harmonious can verify accreditation.");
 }
 
 export async function listPending(userId: string, offeringId: string) {
@@ -212,7 +212,8 @@ export async function decideOnboardingProof(userId: string, input: { documentId:
 /** True when this user may verify accreditation for the fund: staff roles or a fund manager. */
 export async function canVerify(userId: string, offeringId: string) {
   const d = await db();
-  const { data: mgr } = await d.from("fund_managers").select("id").eq("offering_id", offeringId).eq("user_id", userId).maybeSingle();
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  const mgr = await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager");
   if (mgr) return true;
   const { data: roles } = await d.from("user_roles").select("role").eq("user_id", userId);
   return ((roles ?? []) as any[]).some((r) => ["admin", "super_admin", "operations", "compliance", "fund_administration"].includes(r.role));

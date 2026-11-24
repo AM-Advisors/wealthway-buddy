@@ -86,7 +86,7 @@ describe("wire reveal needs fresh authentication", () => {
 describe("cross-fund authority", () => {
   const fns = src("./fund-onboarding.functions.ts");
   it("settings and signing config require an assignment to that exact fund", () => {
-    expect(fns).toMatch(/\.eq\("offering_id", offeringId\)/);
+    expect(fns).toMatch(/fundMembershipAllows\(await fundAccessDb\(\), userId, offeringId, "manager"\)/);
     expect((fns.match(/fundAuthority\(/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
   it("countersigner must be currently assigned to the fund", () => {

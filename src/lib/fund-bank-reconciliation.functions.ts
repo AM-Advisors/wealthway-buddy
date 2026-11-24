@@ -9,13 +9,8 @@ async function assertFundAccess(supabase: any, userId: string, fundId: string) {
   const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   const list = ((roles ?? []) as any[]).map((r) => String(r.role));
   if (list.includes("admin") || list.includes("super_admin")) return list;
-  const { data: assignment } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", fundId)
-    .maybeSingle();
-  if (!assignment) throw new Error("Forbidden: you do not manage this fund.");
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundMembershipAllows(await fundAccessDb(), userId, fundId, "manager"))) throw new Error("Forbidden: you do not manage this fund.");
   return list;
 }
 

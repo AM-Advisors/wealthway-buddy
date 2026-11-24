@@ -8,8 +8,9 @@ const reason = z.string().trim().min(3).max(1000);
 async function viewer(uid: string, fundId: string) {
   const { db, isStaff } = await import("@/lib/fund-tabs.server");
   const d = await db();
-  const [{ data: mgr }, staff, { isSuperAdmin }] = await Promise.all([
-    d.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", fundId).maybeSingle(),
+  const { fundMembershipAllows } = await import("@/lib/fund-access.server");
+  const [mgr, staff, { isSuperAdmin }] = await Promise.all([
+    fundMembershipAllows(d, uid, fundId, "manager"),
     isStaff(uid),
     import("@/lib/self-approval.server"),
   ]);

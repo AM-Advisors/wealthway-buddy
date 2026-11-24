@@ -45,14 +45,10 @@ const personName = (p: any) => (p ? p.preferred_name || [p.legal_first_name, p.l
 export async function managedScope(userId: string): Promise<{ staff: boolean; fundIds: string[] | null; directFundIds: string[] }> {
   const { isStaff } = await import("@/lib/fund-tabs.server");
   if (await isStaff(userId)) return { staff: true, fundIds: null, directFundIds: [] };
-  const [{ data: fm }, { data: cu }] = await Promise.all([
-    d().from("fund_managers").select("offering_id, offerings(client_id)").eq("user_id", userId),
-    d().from("client_users").select("client_id").is("revoked_at", null).eq("user_id", userId),
-  ]);
-  const direct = uniq(((fm ?? []) as any[]).map((r) => r.offering_id));
-  const clients = uniq([...((fm ?? []) as any[]).map((r) => r.offerings?.client_id), ...((cu ?? []) as any[]).map((r) => r.client_id)]);
-  const { data: clientFunds } = clients.length ? await d().from("offerings").select("id").in("client_id", clients) : { data: [] };
-  return { staff: false, fundIds: uniq([...direct, ...((clientFunds ?? []) as any[]).map((o) => o.id)]), directFundIds: direct };
+  // Shared readers: exact managed funds, and every fund reached as a manager or client member ("manage").
+  const { exactManagerFundIds, memberFundIds } = await import("@/lib/fund-access.server");
+  const [direct, fundIds] = await Promise.all([exactManagerFundIds(d(), userId), memberFundIds(d(), userId, "manage")]);
+  return { staff: false, fundIds: uniq([...direct, ...fundIds]), directFundIds: direct };
 }
 
 export async function loadSignatureCenter(viewer: { userId: string; email: string | null }, opts: { offeringId?: string | undefined; everything?: boolean | undefined }) {

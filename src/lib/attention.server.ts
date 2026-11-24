@@ -489,9 +489,10 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   const s = ctx.supabase;
   const out: AttentionItem[] = [];
 
-  const managed = await safely(async () =>
-    rows(await s.from("fund_managers").select("offering_id").eq("user_id", ctx.userId)),
-  );
+  const managed = await safely(async () => {
+    const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+    return (await exactManagerFundIds(await fundAccessDb(), ctx.userId)).map((offering_id) => ({ offering_id }));
+  });
   // Own fund setup requests (RLS limits to the reader's firm).
   const requests = await safely(async () =>
     rows(

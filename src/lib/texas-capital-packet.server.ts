@@ -14,8 +14,8 @@ export async function adminDb() {
 export async function packetAuthority(supabase: any, userId: string, offeringId: string): Promise<{ authorized: boolean; isAdmin: boolean }> {
   const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
   if (role) return { authorized: true, isAdmin: true };
-  const { data: mgr } = await supabase.from("fund_managers").select("id").eq("user_id", userId).eq("offering_id", offeringId).maybeSingle();
-  return { authorized: !!mgr, isAdmin: false };
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  return { authorized: await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"), isAdmin: false };
 }
 
 export async function logPacket(db: any, packetId: string, event: string, actorId: string | null, detail: Record<string, unknown> = {}) {

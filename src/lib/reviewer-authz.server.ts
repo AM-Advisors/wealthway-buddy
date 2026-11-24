@@ -35,13 +35,8 @@ export async function reviewerScope(userId: string): Promise<ReviewerScope> {
 
   if (isAdmin) return { isAdmin: true, offeringIds: [] };
 
-  const { data: assignments } = await supabaseAdmin
-    .from("fund_managers")
-    .select("offering_id")
-    .eq("user_id", userId);
-  const offeringIds = [
-    ...new Set(((assignments ?? []) as { offering_id: string }[]).map((a) => a.offering_id)),
-  ];
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
   if (offeringIds.length === 0) throw new Error("Forbidden: you do not manage any funds.");
   return { isAdmin: false, offeringIds };
 }

@@ -16,13 +16,9 @@ async function admin() {
 }
 
 async function isManagerOf(db: any, userId: string, offeringId: string) {
-  const { data } = await db
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  return !!data;
+  // Shared fund check, fund's own manager list only (no staff shortcut here).
+  const { fundMembershipAllows } = await import("@/lib/fund-access.server");
+  return fundMembershipAllows(db, userId, offeringId, "manager");
 }
 
 async function isStaff(supabase: any, userId: string) {
@@ -105,8 +101,8 @@ export const listGrantableFunds = createServerFn({ method: "GET" })
       const { data: offs } = await db.from("offerings").select("id, name").order("name").limit(2000);
       return { staff: true, funds: ((offs ?? []) as any[]).map((o) => ({ id: o.id as string, name: o.name as string })) };
     }
-    const { data: mgrs } = await db.from("fund_managers").select("offering_id").eq("user_id", context.userId);
-    const ids = [...new Set(((mgrs ?? []) as any[]).map((m) => m.offering_id))];
+    const { exactManagerFundIds } = await import("@/lib/fund-access.server");
+    const ids = await exactManagerFundIds(db, context.userId);
     const { data: offs } = ids.length ? await db.from("offerings").select("id, name").in("id", ids).order("name") : { data: [] };
     return { staff: false, funds: ((offs ?? []) as any[]).map((o) => ({ id: o.id as string, name: o.name as string })) };
   });
@@ -276,8 +272,8 @@ export async function liveGrants(db: any, userId: string) {
       const { data: offs } = await db.from("offerings").select("id").limit(5000);
       fundIds = ((offs ?? []) as any[]).map((o) => o.id);
     } else {
-      const { data: mgrs } = await db.from("fund_managers").select("offering_id").eq("user_id", g.granted_by);
-      fundIds = [...new Set(((mgrs ?? []) as any[]).map((m) => m.offering_id))];
+      const { exactManagerFundIds } = await import("@/lib/fund-access.server");
+      fundIds = await exactManagerFundIds(db, g.granted_by);
     }
     for (const fid of fundIds) {
       if (seen.has(fid)) continue;

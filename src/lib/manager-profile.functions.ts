@@ -28,7 +28,8 @@ export const getManagerProfile = createServerFn({ method: "GET" })
     const roleList = ((roles ?? []) as any[]).map((r) => r.role as string);
     const isAdmin = roleList.includes("admin");
     const assignedRows = (assignments ?? []) as any[];
-    const assignedIds = assignedRows.map((a) => a.offering_id as string);
+    const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+    const assignedIds = await exactManagerFundIds(await fundAccessDb(), userId);
 
     let funds: Array<{
       id: string;

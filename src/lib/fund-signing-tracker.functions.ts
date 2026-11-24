@@ -4,10 +4,10 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 const scope = z.object({ fundId: z.string().uuid() });
 async function trackerAccess(userId: string, fundId: string) {
   const s = await import("@/lib/fund-tabs.server");
-  const access = await s.assertFund(userId, fundId);
+  await s.assertFund(userId, fundId);
   const d = await s.db();
-  const manager = await d.from("fund_managers").select("id").eq("offering_id", fundId).eq("user_id", userId).maybeSingle();
-  return { d, canLog: access.staff || Boolean(manager.data) };
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  return { d, canLog: await fundAccessAllows(await fundAccessDb(), userId, fundId, "manager") };
 }
 export const signingTrackerLogsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(scope.parse).handler(async ({ data, context }) => {

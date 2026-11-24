@@ -29,9 +29,10 @@ async function admin() {
 }
 
 async function actorKind(db: any, userId: string, fundId: string): Promise<ActorKind> {
-  const [{ data: roles }, { data: mgr }, { data: grant }] = await Promise.all([
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: roles }, mgr, { data: grant }] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", userId),
-    db.from("fund_managers").select("id").eq("user_id", userId).eq("offering_id", fundId).maybeSingle(),
+    fundMembershipAllows(await fundAccessDb(), userId, fundId, "manager"),
     db
       .from("fund_team_grants")
       .select("role, expires_at, granted_by")
@@ -44,12 +45,7 @@ async function actorKind(db: any, userId: string, fundId: string): Promise<Actor
   if (mgr) return "manager";
   if (await (await import("./fund-routine-access.server")).routineReviewer(db, userId, fundId)) return "reviewer";
   if (grant && (!grant.expires_at || new Date(grant.expires_at) > new Date())) {
-    const { data: granter } = await db
-      .from("fund_managers")
-      .select("id")
-      .eq("user_id", grant.granted_by)
-      .eq("offering_id", fundId)
-      .maybeSingle();
+    const granter = await fundMembershipAllows(await fundAccessDb(), grant.granted_by, fundId, "manager");
     if (granter) return grant.role === "fund_assistant" ? "assistant" : "viewer";
   }
   return "none";

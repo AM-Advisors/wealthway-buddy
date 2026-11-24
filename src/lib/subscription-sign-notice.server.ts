@@ -17,8 +17,9 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
   const { isStaff } = await import('@/lib/fund-tabs.server')
   const staff = await isStaff(actorId)
   if (!staff) {
-    const { data: mgr, error } = await db.from('fund_managers').select('id').eq('user_id', actorId).eq('offering_id', input.fundId).maybeSingle()
-    if (error || !mgr) throw new Error("Only this fund's managers or Harmonious can send this.")
+    const { fundMembershipAllows } = await import('@/lib/fund-access.server')
+    const mgr = await fundMembershipAllows(db, actorId, input.fundId, 'manager').catch(() => false)
+    if (!mgr) throw new Error("Only this fund's managers or Harmonious can send this.")
   }
   const { data: ob, error } = await db.from('investor_onboardings')
     .select('id, offering_id, investor_user_id, stage, removed_at').eq('id', input.onboardingId).maybeSingle()

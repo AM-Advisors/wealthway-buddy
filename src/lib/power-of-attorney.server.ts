@@ -43,8 +43,8 @@ async function access(userId: string, s: PoaSubject): Promise<Access> {
     const owner = p.owner_user_id === userId;
     let manager = false;
     if (!staff && !owner) {
-      const { data: managed } = await db().from("fund_managers").select("offering_id").eq("user_id", userId);
-      const ids = ((managed ?? []) as any[]).map((m) => m.offering_id);
+      const { exactManagerFundIds } = await import("@/lib/fund-access.server");
+      const ids = await exactManagerFundIds(db(), userId);
       if (ids.length) {
         const { data: onb } = await db().from("investor_onboardings").select("id").eq("investment_profile_id", s.id).in("offering_id", ids).is("removed_at", null).limit(1);
         manager = ((onb ?? []) as any[]).length > 0;

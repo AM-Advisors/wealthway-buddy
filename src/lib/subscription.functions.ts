@@ -175,12 +175,8 @@ async function assertReviewer(supabase: any, userId: string, offeringId: string)
     .in("role", ["admin", "fund_manager"]);
   const list = (roles ?? []).map((r: any) => r.role as string);
   if (list.includes("admin")) return;
-  const { data: assignment } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  const assignment = await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager");
   if (!assignment) throw new Error("Forbidden: you do not manage this fund.");
 }
 

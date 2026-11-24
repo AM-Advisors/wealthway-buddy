@@ -18,13 +18,14 @@ const SITE = "https://app.harmonious.co";
 export async function crmActor(userId: string): Promise<CrmActor & { opsStaff: boolean }> {
   const db = await admin();
   const now = new Date().toISOString();
-  const [{ data: roles, error: roleError }, { data: grants, error: grantError }, { data: fm, error: fundError }] = await Promise.all([
+  const { exactManagerFundIds } = await import("@/lib/fund-access.server");
+  const [{ data: roles, error: roleError }, { data: grants, error: grantError }, fm] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", userId),
     db.from("access_permission_grants").select("permission, effect, effective_at, expires_at, revoked_at")
       .eq("user_id", userId).in("permission", ["administration.crm.view_all", "administration.crm.assign", "administration.campaigns.approve"]),
-    db.from("fund_managers").select("offering_id").eq("user_id", userId),
+    exactManagerFundIds(db, userId).catch(() => null),
   ]);
-  if (roleError || grantError || fundError) throw new Error("Couldn't verify contact access.");
+  if (roleError || grantError || fm === null) throw new Error("Couldn't verify contact access.");
   const r = ((roles ?? []) as any[]).map((x) => x.role as string);
   const sp = staffProfile(r);
   const active = ((grants ?? []) as any[]).filter((g) => !g.revoked_at && g.effective_at <= now && (!g.expires_at || g.expires_at > now));
@@ -37,7 +38,7 @@ export async function crmActor(userId: string): Promise<CrmActor & { opsStaff: b
     canApproveCampaigns: has("administration.campaigns.approve"),
     harmoniousStaff: sp.isHarmoniousStaff,
     opsStaff: r.some((x) => (OPS_STAFF_ROLES as readonly string[]).includes(x)),
-    managedFunds: new Set(((fm ?? []) as any[]).map((x) => x.offering_id as string)),
+    managedFunds: new Set(fm),
   };
 }
 

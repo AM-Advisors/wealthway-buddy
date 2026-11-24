@@ -477,11 +477,8 @@ export const listCapTableFunds = createServerFn({ method: "GET" })
       return { funds: data ?? [], isAdmin: true };
     }
 
-    const { data: mine } = await supabase
-      .from("fund_managers")
-      .select("offering_id")
-      .eq("user_id", userId);
-    const ids = (mine ?? []).map((m: any) => m.offering_id as string);
+    const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+    const ids = await exactManagerFundIds(await fundAccessDb(), userId);
     if (ids.length === 0) return { funds: [], isAdmin: false };
     const { data } = await supabase
       .from("offerings")
@@ -704,11 +701,8 @@ export const getCapTableBoard = createServerFn({ method: "GET" })
       const { data } = await supabase.from("offerings").select("id");
       ids = ((data ?? []) as any[]).map((o) => o.id as string);
     } else {
-      const { data } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      ids = ((data ?? []) as any[]).map((m) => m.offering_id as string);
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      ids = await exactManagerFundIds(await fundAccessDb(), userId);
     }
     if (ids.length === 0) return { isAdmin, funds: [] as FundCapTableEditor[] };
 
@@ -778,11 +772,8 @@ export const getPortfolioValue = createServerFn({ method: "GET" })
       const { data } = await supabase.from("offerings").select("id");
       ids = ((data ?? []) as any[]).map((o) => o.id as string);
     } else {
-      const { data } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      ids = ((data ?? []) as any[]).map((m) => m.offering_id as string);
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      ids = await exactManagerFundIds(await fundAccessDb(), userId);
     }
     if (ids.length === 0) {
       return {

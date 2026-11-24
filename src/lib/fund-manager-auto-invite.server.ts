@@ -13,9 +13,10 @@ async function admin() {
 
 /** Same authority as the manual invitation: an administrator or a manager of this exact fund. */
 async function actorMayInvite(db: any, actorId: string, offeringId: string) {
-  const [{ data: roles }, { data: mgr }] = await Promise.all([
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: roles }, mgr] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", actorId).eq("role", "admin"),
-    db.from("fund_managers").select("id").eq("user_id", actorId).eq("offering_id", offeringId).maybeSingle(),
+    fundMembershipAllows(await fundAccessDb(), actorId, offeringId, "manager"),
   ]);
   return (roles ?? []).length > 0 || Boolean(mgr);
 }

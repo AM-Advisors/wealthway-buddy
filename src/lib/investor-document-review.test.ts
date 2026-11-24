@@ -11,7 +11,8 @@ function fixture(options: { source?: string; manager?: boolean; decision?: strin
   };
   return { from(table: string) {
     const result = { data: rows[table], error: options.errorTable === table ? { message: "unavailable" } : null };
-    const chain: any = { select: () => chain, eq: () => chain, is: () => chain, maybeSingle: async () => result, order: async () => result };
+    const list = { data: rows[table] == null ? [] : Array.isArray(rows[table]) ? rows[table] : [rows[table]], error: result.error };
+    const chain: any = { select: () => chain, eq: () => chain, is: () => chain, in: () => chain, maybeSingle: async () => result, order: async () => result, then: (resolve: any) => resolve(list) };
     return chain;
   } };
 }

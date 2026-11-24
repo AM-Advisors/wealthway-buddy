@@ -18,13 +18,8 @@ async function reviewerContext(supabase: any, userId: string): Promise<Roles> {
   if (error) throw new Error(error.message);
 
   const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
-  const { data: assignments } = await supabase
-    .from("fund_managers")
-    .select("offering_id")
-    .eq("user_id", userId);
-  const managedOfferingIds = [
-    ...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string)),
-  ] as string[];
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const managedOfferingIds = await exactManagerFundIds(await fundAccessDb(), userId);
 
 
   if (!isAdmin && managedOfferingIds.length === 0) {
@@ -715,9 +710,8 @@ export const getFundInvestorActions = createServerFn({ method: "GET" })
 /** Staff, or a fund manager of this exact fund (client self-service for the fund team). */
 async function canManageFundTeam(ctx: any, userId: string, fundId: string) {
   if (ctx.isAdmin) return true;
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await (supabaseAdmin as any).from("fund_managers").select("id").eq("offering_id", fundId).eq("user_id", userId).maybeSingle();
-  return !!data;
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  return fundMembershipAllows(await fundAccessDb(), userId, fundId, "manager");
 }
 
 export const getFundTeam = createServerFn({ method: "GET" })

@@ -5,9 +5,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { buildFundCapTable, readTerms, type ClassTerms } from "@/lib/fund-cap-table";
-import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 
 /** Read-only Fund Cap Table. Re-checks the caller's relationship to the exact Fund every call. */
 export const getFundCapTable = createServerFn({ method: "GET" })
@@ -17,19 +15,17 @@ export const getFundCapTable = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const uid = context.userId;
-    const [{ data: roles }, { data: mgr }, { data: grant }] = await Promise.all([
-      db.from("user_roles").select("role").eq("user_id", uid),
-      db.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", data.fundId).maybeSingle(),
-      db.from("fund_team_grants").select("expires_at, granted_by").eq("grantee_user_id", uid)
-        .eq("offering_id", data.fundId).eq("status", "active").maybeSingle(),
-    ]);
-    let allowed = ((roles ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role)) || !!mgr;
-    if (!allowed && grant && (!grant.expires_at || new Date(grant.expires_at) > new Date())) {
-      const { data: g } = await db.from("fund_managers").select("id").eq("user_id", grant.granted_by)
-        .eq("offering_id", data.fundId).maybeSingle();
-      allowed = !!g;
+    // Shared fund check ("manage": fund operations staff, this fund's managers, active client members),
+    // plus the older per-fund team grant whose granting manager is still on this fund.
+    const { fundAccessAllows, fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+    let allowed = await fundAccessAllows(await fundAccessDb(), uid, data.fundId, "manage");
+    if (!allowed) {
+      const { data: grant } = await db.from("fund_team_grants").select("expires_at, granted_by").eq("grantee_user_id", uid)
+        .eq("offering_id", data.fundId).eq("status", "active").maybeSingle();
+      if (grant && (!grant.expires_at || new Date(grant.expires_at) > new Date())) {
+        allowed = await fundMembershipAllows(await fundAccessDb(), grant.granted_by, data.fundId, "manager");
+      }
     }
-    if (!allowed) allowed = await isClientMemberOfFund(db, uid, data.fundId);
     if (!allowed) throw new Error("You don't have access to this Fund's cap table.");
 
     const { data: setup } = await db.from("fund_setups").select("id").eq("offering_id", data.fundId).maybeSingle();
@@ -95,20 +91,9 @@ function stripNull(t: ClassTerms): Partial<ClassTerms> {
 
 /** True when the user belongs to the Client that owns this Fund, or manages it (client portal access). */
 export async function isClientMemberOfFund(db: any, uid: string, fundId: string): Promise<boolean> {
-  const { data: off } = await db.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
-  if (!off?.client_id) return false;
-  // A fund manager of any fund under this client can view the client's funds,
-  // matching the list page (database read rules already allow the same).
-  const { data: fm } = await db
-    .from("fund_managers")
-    .select("id, offerings!inner(client_id)")
-    .eq("user_id", uid)
-    .eq("offerings.client_id", off.client_id)
-    .limit(1)
-    .maybeSingle();
-  if (fm) return true;
-  const { data: cu } = await db.from("client_users").select("id").is("revoked_at", null).eq("user_id", uid).eq("client_id", off.client_id).maybeSingle();
-  return !!cu;
+  // One reader for client membership of a fund, shared with the fund access check.
+  const { clientMemberOfFund } = await import("@/lib/fund-access.server");
+  return clientMemberOfFund(db, uid, fundId);
 }
 
 /** Client-portal Fund page: details, setup progress, Harmonious steps and side letter summary. */
@@ -119,9 +104,10 @@ export const getClientFund = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const uid = context.userId;
-    const { data: roles } = await db.from("user_roles").select("role").eq("user_id", uid);
-    const staff = ((roles ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role));
-    if (!staff && !(await isClientMemberOfFund(db, uid, data.fundId))) throw new Error("You don't have access to this Fund.");
+    // Shared fund check: fund operations staff or a member of the fund's client.
+    const { fundAccessFor, fundAccessDb } = await import("@/lib/fund-access.server");
+    const access = await fundAccessFor(await fundAccessDb(), uid, data.fundId, "manage");
+    if (!access.staff && !access.clientMember) throw new Error("You don't have access to this Fund.");
 
     const { data: f } = await db
       .from("offerings")

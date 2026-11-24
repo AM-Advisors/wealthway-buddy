@@ -131,13 +131,8 @@ async function isAdminUser(supabase: any, userId: string) {
 
 async function assertCanEdit(supabase: any, userId: string, offeringId: string) {
   if (await isAdminUser(supabase, userId)) return;
-  const { data } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  if (!data) throw new Error("Forbidden: you do not manage that fund.");
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage that fund.");
 }
 
 /** List the packs a manager can apply (no file access, just the menu). */

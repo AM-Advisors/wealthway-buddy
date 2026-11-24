@@ -8,8 +8,8 @@ import { normalizePaymentMethods, PAYMENT_METHODS } from "@/lib/payment-methods"
 async function assertCanEdit(supabase: any, userId: string, offeringId: string) {
   const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   if ((roles ?? []).some((r: any) => r.role === "admin" || r.role === "super_admin")) return;
-  const { data: m } = await supabase.from("fund_managers").select("offering_id").eq("user_id", userId).eq("offering_id", offeringId).maybeSingle();
-  if (!m) throw new Error("Only Harmonious staff or this fund's managers can change payment methods.");
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Only Harmonious staff or this fund's managers can change payment methods.");
 }
 
 export const getPaymentMethodsFn = createServerFn({ method: "GET" })

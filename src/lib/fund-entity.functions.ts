@@ -27,14 +27,8 @@ async function isAdminUser(supabase: any, userId: string) {
 /** Admins, or a fund manager assigned to this fund. */
 async function assertCanManageFund(supabase: any, userId: string, offeringId: string) {
   if (await isAdminUser(supabase, userId)) return true;
-  const { data, error } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: you do not manage that fund.");
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage that fund.");
   return false;
 }
 

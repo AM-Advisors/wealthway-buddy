@@ -10,12 +10,13 @@ export const getInvestorVerificationSummary = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { checkState, matchCount, reviewReason } = await import("@/lib/investor-verification-model");
-    const [{ data: roles }, { data: managed }] = await Promise.all([
+    const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: roles }, managed] = await Promise.all([
       db.from("user_roles").select("role").eq("user_id", context.userId),
-      db.from("fund_managers").select("offering_id").eq("user_id", context.userId),
+      exactManagerFundIds(await fundAccessDb(), context.userId),
     ]);
     const isAdmin = ((roles ?? []) as any[]).some((r) => r.role === "admin");
-    const managedIds = new Set(((managed ?? []) as any[]).map((m) => String(m.offering_id)));
+    const managedIds = new Set(managed);
     if (!isAdmin && !managedIds.size) throw new Error("Forbidden: reviewer access required.");
     if (!data.investorUserId && !data.applicationId) return { items: [] };
 

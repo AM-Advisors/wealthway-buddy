@@ -10,9 +10,8 @@ import {
 async function capacityFor(context: any, offeringId: string): Promise<PreparerCapacity> {
   const { data: staff } = await context.supabase.rpc("is_any_staff");
   if (staff) return "harmonious";
-  const { data: fm } = await context.supabase
-    .from("fund_managers").select("offering_id").eq("offering_id", offeringId).eq("user_id", context.userId).maybeSingle();
-  if (fm) return "fund_manager";
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (await fundMembershipAllows(await fundAccessDb(), context.userId, offeringId, "manager")) return "fund_manager";
   throw new Error("Forbidden: you can only prepare investors for funds you manage.");
 }
 

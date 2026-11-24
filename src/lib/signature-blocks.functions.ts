@@ -44,13 +44,8 @@ async function canEditFund(supabase: any, userId: string, offeringId: string) {
     .eq("role", "admin")
     .maybeSingle();
   if (admin) return true;
-  const { data } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  return Boolean(data);
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  return fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager");
 }
 
 /** The signature blocks a client has placed on one fund document. */

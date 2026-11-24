@@ -7,13 +7,11 @@ import { documentReadSource } from "./offering-document-reader";
 import { createLovableAiGatewayRunIdFetch } from "./fund-question-ai/run-id.ts";
 
 export async function questionAuthorAccess(client: any, userId: string, offeringId: string) {
-  const [roles, manager] = await Promise.all([
-    client.from("user_roles").select("role").eq("user_id", userId),
-    client.from("fund_managers").select("id").eq("user_id", userId).eq("offering_id", offeringId).limit(1),
-  ]);
-  if (roles.error || manager.error) throw new Error("Could not verify fund access.");
-  const staff = (roles.data ?? []).some((r: { role: string }) => ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"].includes(r.role));
-  if (!staff && !manager.data?.length) {
+  // Shared fund check ("manager": fund operations staff or this fund's managers), then the routine reviewer grant.
+  const { fundAccessFor } = await import("@/lib/fund-access.server");
+  const a = await fundAccessFor(client, userId, offeringId, "manager").catch(() => { throw new Error("Could not verify fund access."); });
+  const staff = a.staff;
+  if (!a.isFundManager) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await (await import("./fund-routine-access.server")).assertRoutineFund(supabaseAdmin, userId, offeringId);
   }

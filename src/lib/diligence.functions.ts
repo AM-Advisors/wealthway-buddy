@@ -1989,11 +1989,8 @@ export const listManagedDiligenceRooms = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      offeringIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return { isAdmin, funds: [] as any[] };
     }
 
@@ -2068,11 +2065,8 @@ export const getDiligenceRoomTraffic = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      offeringIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return { rooms: [] as any[] };
     }
 
@@ -2221,8 +2215,8 @@ export const getNdaDropOff = createServerFn({ method: "GET" })
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
-      const { data: assignments } = await supabase.from("fund_managers").select("offering_id").eq("user_id", userId);
-      offeringIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
       if (offeringIds.length === 0) return { funds: [] as any[] };
     }
 

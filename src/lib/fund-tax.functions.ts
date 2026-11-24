@@ -29,12 +29,8 @@ async function requireFundAccess(context: any, offeringId: string): Promise<Who>
     if (!roles.includes("fund_manager")) {
       throw new Error("Forbidden: the tax profile is for approved fund managers.");
     }
-    const { data: assignment } = await context.supabase
-      .from("fund_managers")
-      .select("id")
-      .eq("user_id", context.userId)
-      .eq("offering_id", offeringId)
-      .maybeSingle();
+    const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+    const assignment = await fundMembershipAllows(await fundAccessDb(), context.userId, offeringId, "manager");
     if (!assignment) throw new Error("Forbidden: you are not assigned to this fund.");
   }
 
@@ -64,11 +60,8 @@ export const listTaxProfileFunds = createServerFn({ method: "GET" })
 
     let query = supabase.from("offerings").select("id, name, legal_entity_name").order("name");
     if (!isAdmin) {
-      const { data: assignments } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      const ids = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      const ids = await exactManagerFundIds(await fundAccessDb(), userId);
       if (ids.length === 0) return { isAdmin, funds: [] as any[] };
       query = query.in("id", ids);
     }

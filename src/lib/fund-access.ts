@@ -36,3 +36,11 @@ export function allowsFundLevel(a: FundAccess, level: FundAccessLevel): boolean 
   if (level === "manager") return a.isFundManager;
   return level === "manage" ? a.canManage : a.canView;
 }
+
+/**
+ * Same answer from the fund's own lists only (manager list, active client members, live team access), ignoring staff roles.
+ * For screens whose staff rule is a purpose-specific list (money, tax, admin-only): they keep that list and ask this for everyone else.
+ */
+export function allowsFundMembership(a: FundAccessFacts, level: FundAccessLevel): boolean {
+  return allowsFundLevel(summarizeFundAccess({ ...a, staff: false }), level);
+}

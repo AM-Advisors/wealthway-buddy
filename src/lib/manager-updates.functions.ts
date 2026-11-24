@@ -16,8 +16,8 @@ export const listFundUpdates = createServerFn({ method: "GET" })
   .validator((d: unknown) => z.object({ offeringId: z.string().uuid().optional(), limit: z.number().int().min(1).max(50).optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: mine } = await supabase.from("fund_managers").select("offering_id").eq("user_id", userId);
-    let ids = ((mine ?? []) as { offering_id: string }[]).map((m) => m.offering_id);
+    const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+    let ids = await exactManagerFundIds(await fundAccessDb(), userId);
     if (data.offeringId) ids = ids.filter((i) => i === data.offeringId);
     if (ids.length === 0) return [] as FundUpdate[];
 

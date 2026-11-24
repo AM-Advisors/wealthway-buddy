@@ -45,13 +45,8 @@ async function reviewerRole(supabase: any, userId: string, offeringId: string) {
   if (list.includes("admin")) return "admin" as const;
   if (!list.includes("fund_manager")) throw new Error("Forbidden: reviewer access required.");
 
-  const { data: assigned } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  if (!assigned) throw new Error("Forbidden: you do not manage this fund.");
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage this fund.");
   return "fund_manager" as const;
 }
 

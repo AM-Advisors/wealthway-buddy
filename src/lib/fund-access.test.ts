@@ -16,3 +16,18 @@ describe("shared fund access", () => {
   it("the manager level lets in fund operations staff", () => expect(allowsFundLevel(summarizeFundAccess({ ...none, staff: true }), "manager")).toBe(true));
   it("the manager level does not let in client-wide members", () => expect(allowsFundLevel(summarizeFundAccess({ ...none, clientMember: true }), "manager")).toBe(false));
 });
+
+describe("fund's own lists without staff shortcut", () => {
+  it("staff alone does not pass the membership-only answer", async () => {
+    const { allowsFundMembership } = await import("./fund-access");
+    expect(allowsFundMembership({ ...none, staff: true }, "manager")).toBe(false);
+  });
+  it("an exact fund manager passes the membership-only answer", async () => {
+    const { allowsFundMembership } = await import("./fund-access");
+    expect(allowsFundMembership({ ...none, manager: true }, "manager")).toBe(true);
+  });
+  it("a client member passes manage but not manager", async () => {
+    const { allowsFundMembership } = await import("./fund-access");
+    expect([allowsFundMembership({ ...none, clientMember: true }, "manage"), allowsFundMembership({ ...none, clientMember: true }, "manager")]).toEqual([true, false]);
+  });
+});

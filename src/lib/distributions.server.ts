@@ -313,7 +313,8 @@ export async function requestPaymentInstruction(
   // approved destination stays with the investor or Harmonious.
   let managerEntry = false;
   if (!actor.isStaff && ownerId !== actor.userId && input.offeringId) {
-    const { data: fm } = await db().from("fund_managers").select("id").eq("offering_id", input.offeringId).eq("user_id", actor.userId).maybeSingle();
+    const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+    const fm = await fundMembershipAllows(await fundAccessDb(), actor.userId, input.offeringId, "manager");
     const { data: inv } = fm
       ? await db().from("investor_onboardings").select("id").eq("offering_id", input.offeringId).eq("investor_user_id", ownerId).is("removed_at", null).limit(1)
       : { data: [] as any[] };

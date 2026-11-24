@@ -19,9 +19,8 @@ async function roles(supabase: any, userId: string) {
 }
 
 async function assignedFundIds(supabase: any, userId: string) {
-  const { data, error } = await supabase.from("fund_managers").select("offering_id").eq("user_id", userId);
-  if (error) throw new Error(error.message);
-  return [...new Set((data ?? []).map((a: any) => a.offering_id as string))] as string[];
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  return exactManagerFundIds(await fundAccessDb(), userId);
 }
 
 /** Requests the signed-in reviewer may see: everything for admins, own funds for managers. */

@@ -22,8 +22,9 @@ export async function requestW9AfterUpload(uid: string, fundId: string, sourceRe
 }
 async function access(uid: string, fundId: string) {
   const actor = await setupActor(uid);
-  const { data: manager, error } = await db().from("fund_managers").select("user_id").eq("offering_id", fundId).eq("user_id", uid).maybeSingle();
-  if (error || (!actor.isStaff && !manager)) throw new Error("Only Harmonious or this fund's assigned manager can open the W-9.");
+  const { fundMembershipAllows } = await import("@/lib/fund-access.server");
+  const manager = await fundMembershipAllows(db(), uid, fundId, "manager").catch(() => null);
+  if (manager === null || (!actor.isStaff && !manager)) throw new Error("Only Harmonious or this fund's assigned manager can open the W-9.");
   return { staff: actor.isStaff, assigned: !!manager };
 }
 async function facts(sb: any, fundId: string) {

@@ -15,11 +15,8 @@ async function reviewerScope(supabase: any, userId: string) {
   const isAdmin = roles.includes("admin");
   let offeringIds: string[] = [];
   if (!isAdmin) {
-    const { data: assignments } = await supabase
-      .from("fund_managers")
-      .select("offering_id")
-      .eq("user_id", userId);
-    offeringIds = (assignments ?? []).map((a: any) => a.offering_id as string);
+    const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+    offeringIds = await exactManagerFundIds(await fundAccessDb(), userId);
   }
   return { isAdmin, offeringIds };
 }

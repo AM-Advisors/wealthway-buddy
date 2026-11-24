@@ -8,7 +8,14 @@ export const getWealthServices = createServerFn({ method: 'GET' }).middleware([r
   const [selections, holdings, funds] = await Promise.all([
     context.supabase.from('wealth_service_selections').select('*').eq('owner_user_id', context.userId).order('created_at', { ascending: false }),
     context.supabase.from('personal_wealth_observations').select('*').eq('owner_user_id', context.userId).order('created_at', { ascending: false }),
-    context.supabase.from('fund_managers').select('offering_id,offerings(name)').eq('user_id', context.userId),
+    (async () => {
+      const { exactManagerFundIds, fundAccessDb } = await import('@/lib/fund-access.server');
+      const db = await fundAccessDb();
+      const ids = await exactManagerFundIds(db, context.userId);
+      if (!ids.length) return { data: [] as any[], error: null };
+      const offs = await db.from('offerings').select('id,name').in('id', ids);
+      return { data: ids.map((id) => ({ offering_id: id, offerings: ((offs.data ?? []) as any[]).find((o) => o.id === id) ?? null })), error: offs.error };
+    })().catch(() => ({ data: [] as any[], error: true })),
   ]);
   if (selections.error || holdings.error || funds.error) throw new Error('Your wealth records could not be loaded. Please try again.');
   const history = (holdings.data ?? []) as WealthObservation[];
@@ -18,8 +25,9 @@ export const selectWealthServices = createServerFn({ method: 'POST' }).middlewar
   .validator((d: unknown) => z.object({ offeringId: z.string().uuid().nullable(), services: z.array(z.enum(['portfolio','report_cards'])).max(2) }).parse(d))
   .handler(async ({ context, data }) => {
     if (data.offeringId) {
-      const r = await context.supabase.from('fund_managers').select('id').eq('offering_id', data.offeringId).eq('user_id', context.userId).limit(1);
-      if (r.error || !r.data?.length) throw new Error('Only an assigned manager may select services for this fund.');
+      const { fundMembershipAllows, fundAccessDb } = await import('@/lib/fund-access.server');
+      const ok = await fundMembershipAllows(await fundAccessDb(), context.userId, data.offeringId, 'manager').catch(() => false);
+      if (!ok) throw new Error('Only an assigned manager may select services for this fund.');
     }
     const r = await context.supabase.from('wealth_service_selections').insert({ owner_user_id: context.userId, offering_id: data.offeringId, services: [...new Set(data.services)] });
     if (r.error) throw new Error('Your service selection could not be saved.');

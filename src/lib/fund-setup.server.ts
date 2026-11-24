@@ -67,13 +67,9 @@ export async function setupActor(userId: string | null | undefined): Promise<Set
   const { data: roles } = await db().from("user_roles").select("role").eq("user_id", userId);
   const list = ((roles ?? []) as { role: string }[]).map((r) => r.role);
   const isStaff = list.includes("admin");
-  const { data: assignments } = await db()
-    .from("fund_managers")
-    .select("offering_id")
-    .eq("user_id", userId);
-  const offeringIds = [
-    ...new Set(((assignments ?? []) as { offering_id: string }[]).map((a) => a.offering_id)),
-  ];
+  // Shared reader for "which funds is this login a listed manager of".
+  const { exactManagerFundIds } = await import("@/lib/fund-access.server");
+  const offeringIds = await exactManagerFundIds(db(), userId as string);
   return { userId: userId as string, isStaff, offeringIds };
 }
 

@@ -95,11 +95,8 @@ async function editableFunds(supabase: any, userId: string) {
       .order("created_at", { ascending: true });
     return (data ?? []) as any[];
   }
-  const { data: assigned } = await supabase
-    .from("fund_managers")
-    .select("offering_id")
-    .eq("user_id", userId);
-  const ids = ((assigned ?? []) as any[]).map((r) => r.offering_id as string);
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const ids = await exactManagerFundIds(await fundAccessDb(), userId);
   if (ids.length === 0) return [];
   const { data } = await supabase
     .from("offerings")

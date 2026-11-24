@@ -22,8 +22,9 @@ export async function resolveSideLetterTarget(userId: string, onboardingId: stri
   const d = await db();
   const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, commitment_amount_cents, accepted_amount_cents").eq("id", onboardingId).is("removed_at", null).maybeSingle();
   if (!ob) throw new Error("That investment wasn't found.");
-  const [{ data: mgr }, { data: o }, { data: existing }] = await Promise.all([
-    d.from("fund_managers").select("id").eq("offering_id", ob.offering_id).eq("user_id", userId).maybeSingle(),
+  const { fundMembershipAllows } = await import("@/lib/fund-access.server");
+  const [mgr, { data: o }, { data: existing }] = await Promise.all([
+    fundMembershipAllows(d, userId, ob.offering_id, "manager"),
     d.from("offerings").select("id, name, legal_entity_name, client_id, min_investment_cents").eq("id", ob.offering_id).maybeSingle(),
     d.from("side_letters").select("id").eq("onboarding_id", ob.id).not("fee_payment_id", "is", null).in("status", ["proposed", "active"]).limit(1),
   ]);
@@ -144,8 +145,8 @@ export async function ensureMinimumSideLetter(onboardingId: string, actorUserId:
 /** Fund manager view: investors below the minimum and the state of their side letter. */
 export async function listSideLetterNeeds(userId: string, offeringId: string) {
   const d = await db();
-  const { data: mgr } = await d.from("fund_managers").select("id").eq("offering_id", offeringId).eq("user_id", userId).maybeSingle();
-  if (!mgr) throw new Error("Only this fund's managers can see this.");
+  const { fundMembershipAllows } = await import("@/lib/fund-access.server");
+  if (!(await fundMembershipAllows(d, userId, offeringId, "manager"))) throw new Error("Only this fund's managers can see this.");
   const { data: o } = await d.from("offerings").select("min_investment_cents").eq("id", offeringId).maybeSingle();
   const min = Number(o?.min_investment_cents ?? 0);
   if (!min) return { minimumCents: 0, feeCents: SIDE_LETTER_FEE_CENTS, investors: [] };
@@ -164,10 +165,9 @@ export async function sideLetterDocumentUrl(userId: string, sideLetterId: string
   const d = await db();
   const { data: l } = await d.from("side_letters").select("offering_id, document_reference").eq("id", sideLetterId).maybeSingle();
   if (!l?.document_reference) throw new Error("No side letter document is stored yet.");
-  const { data: mgr } = await d.from("fund_managers").select("id").eq("offering_id", l.offering_id).eq("user_id", userId).maybeSingle();
-  const { data: roles } = await d.from("user_roles").select("role").eq("user_id", userId);
-  const staff = ((roles ?? []) as any[]).some((r) => ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"].includes(r.role));
-  if (!mgr && !staff) throw new Error("You can't open this side letter.");
+  // Shared fund check: fund operations staff or this fund's managers.
+  const { fundAccessAllows } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(d, userId, l.offering_id, "manager"))) throw new Error("You can't open this side letter.");
   const { data, error } = await d.storage.from("offering-files").createSignedUrl(l.document_reference, 300);
   if (error || !data) throw new Error("Couldn't open the side letter.");
   return { url: data.signedUrl as string };

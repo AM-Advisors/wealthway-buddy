@@ -44,15 +44,16 @@ export async function resolvePreparer(
 ): Promise<PreparerActor> {
   const { supabase, userId } = context;
 
-  const [{ data: funds }, { data: companies }] = await Promise.all([
-    supabase.from("fund_managers").select("offering_id").eq("user_id", userId),
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [offeringIds, { data: companies }] = await Promise.all([
+    exactManagerFundIds(await fundAccessDb(), userId),
     supabase.from("ct_companies").select("id"),
   ]);
 
   return {
     userId,
     capabilities,
-    offeringIds: ((funds ?? []) as any[]).map((f) => String(f.offering_id)),
+    offeringIds,
     companyIds: ((companies ?? []) as any[]).map((c) => String(c.id)),
   };
 }

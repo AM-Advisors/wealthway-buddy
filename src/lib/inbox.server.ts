@@ -13,16 +13,16 @@ async function db() {
 
 export async function inboxActor(userId: string) {
   const d = await db();
-  const [{ data: roles }, { data: cu }, { data: fm }, { data: prof }] = await Promise.all([
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  const [{ data: roles }, { data: cu }, offIds, { data: prof }] = await Promise.all([
     d.from("user_roles").select("role").eq("user_id", userId),
     d.from("client_users").select("client_id").is("revoked_at", null).eq("user_id", userId),
-    d.from("fund_managers").select("offering_id").eq("user_id", userId),
+    exactManagerFundIds(await fundAccessDb(), userId),
     d.from("profiles").select("email").eq("user_id", userId).maybeSingle(),
   ]);
   const roleList = ((roles ?? []) as any[]).map((r) => String(r.role));
   const staff = staffProfile(roleList);
   const clientIds = new Set<string>(((cu ?? []) as any[]).map((r) => r.client_id));
-  const offIds = ((fm ?? []) as any[]).map((r) => r.offering_id);
   if (offIds.length) {
     const { data: offs } = await d.from("offerings").select("client_id").in("id", offIds);
     for (const o of (offs ?? []) as any[]) if (o.client_id) clientIds.add(o.client_id);

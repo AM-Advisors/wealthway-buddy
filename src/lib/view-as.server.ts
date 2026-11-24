@@ -341,8 +341,8 @@ export async function viewAsPage(staffUserId: string, authSessionId: string | nu
     case "/my-funds": {
       let ids = [off];
       if (!p!.preview) {
-        const { data } = await d.from("fund_managers").select("offering_id").eq("user_id", p!.subjectUserId);
-        ids = [...new Set([off, ...((data ?? []) as any[]).map((x) => x.offering_id)])];
+        const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+        ids = [...new Set([off, ...(await exactManagerFundIds(await fundAccessDb(), p!.subjectUserId))])];
       }
       const { data } = await d.from("offerings").select("name, status, created_at").in("id", ids);
       return { items: ((data ?? []) as any[]).map((o) => ({ title: o.name, date: o.created_at, badge: human(o.status) })) };

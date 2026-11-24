@@ -61,10 +61,11 @@ export const listManagerOnboardingDocs = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
-    const [{ data: offerings }, { data: profiles }, { data: myFunds }] = await Promise.all([
+    const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+    const [{ data: offerings }, { data: profiles }, myFunds] = await Promise.all([
       supabase.from("offerings").select("id, name"),
       supabase.from("profiles").select("user_id, email, legal_name"),
-      supabase.from("fund_managers").select("offering_id").eq("user_id", userId),
+      exactManagerFundIds(await fundAccessDb(), userId),
     ]);
 
     const offeringName = new Map<string, string>();
@@ -89,7 +90,7 @@ export const listManagerOnboardingDocs = createServerFn({ method: "GET" })
       submittedBy: person.get(r.user_id) ?? null,
     }));
 
-    const fundIds = new Set((myFunds ?? []).map((f: any) => f.offering_id as string));
+    const fundIds = new Set(myFunds);
     const funds = (offerings ?? [])
       .filter((o: any) => isAdmin || fundIds.has(o.id))
       .map((o: any) => ({ id: o.id as string, name: o.name as string }))

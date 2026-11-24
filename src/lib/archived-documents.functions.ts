@@ -4,7 +4,6 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
-const STAFF = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
 
 /** Archived documents + earlier versions with the investors each still applies to. Staff or this fund's managers only. Read-only. */
 export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
@@ -14,13 +13,9 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const uid = context.userId;
-    const [roles, mgr] = await Promise.all([
-      db.from("user_roles").select("role").eq("user_id", uid),
-      db.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", data.fundId),
-    ]);
-    if (roles.error || mgr.error) throw new Error("Access could not be checked.");
-    const staff = ((roles.data ?? []) as any[]).some((r) => STAFF.includes(r.role));
-    if (!staff && !(mgr.data ?? []).length) throw new Error("Only Harmonious or this fund's managers can see archived documents.");
+    const { fundAccessAllows } = await import("@/lib/fund-access.server");
+    const allowed = await fundAccessAllows(db, uid, data.fundId, "manager").catch(() => { throw new Error("Access could not be checked."); });
+    if (!allowed) throw new Error("Only Harmonious or this fund's managers can see archived documents.");
 
     const [docsR, obsR, slR] = await Promise.all([
       db.from("offering_documents").select("id, title, active_version, removed_at, removed_reason, removed_by").eq("offering_id", data.fundId),

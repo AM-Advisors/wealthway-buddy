@@ -18,8 +18,9 @@ async function admin() {
 }
 
 async function isManagerOf(db: any, userId: string, offeringId: string) {
-  const { data } = await db.from("fund_managers").select("id").eq("user_id", userId).eq("offering_id", offeringId).maybeSingle();
-  return !!data;
+  // Shared fund check, fund's own manager list only (no staff shortcut here).
+  const { fundMembershipAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  return fundMembershipAllows(await fundAccessDb(), userId, offeringId, "manager");
 }
 
 async function liveGrant(db: any, userId: string, fundId: string) {

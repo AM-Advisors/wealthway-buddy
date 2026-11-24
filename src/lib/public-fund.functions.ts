@@ -388,11 +388,8 @@ export const listFundAccessRequests = createServerFn({ method: "GET" })
       const { data } = await supabase.from("offerings").select("id");
       ids = ((data ?? []) as any[]).map((o) => o.id as string);
     } else {
-      const { data } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      ids = ((data ?? []) as any[]).map((m) => m.offering_id as string);
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      ids = await exactManagerFundIds(await fundAccessDb(), userId);
     }
     if (ids.length === 0) return { isAdmin, requests: [] as any[] };
 
@@ -481,11 +478,8 @@ export const listManageableFunds = createServerFn({ method: "GET" })
       const { data } = await supabase.from("offerings").select("id");
       ids = ((data ?? []) as any[]).map((o) => o.id as string);
     } else {
-      const { data } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      ids = ((data ?? []) as any[]).map((m) => m.offering_id as string);
+      const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+      ids = await exactManagerFundIds(await fundAccessDb(), userId);
     }
     if (ids.length === 0) return { isAdmin, funds: [] as { id: string; name: string }[] };
 

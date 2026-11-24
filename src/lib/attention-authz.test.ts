@@ -139,6 +139,7 @@ describe("investor scope", () => {
 describe("fund scope", () => {
   it("shows nothing for a fund the reader does not manage", async () => {
     tables["fund_managers"] = [{ user_id: "other", offering_id: "fund-1" }];
+    adminTables["fund_managers"] = tables["fund_managers"];
     tables["capital_calls"] = [{ id: "call-1", offering_id: "fund-1", status: "published" }];
     const attentionFor = await load();
     const result = await attentionFor(ctx("manager-a"), "fund_manager");
@@ -151,6 +152,7 @@ describe("fund scope", () => {
       { id: "fund-2", name: "Fund Two" },
     ];
     tables["fund_managers"] = [{ user_id: "manager-a", offering_id: "fund-1" }];
+    adminTables["fund_managers"] = tables["fund_managers"]; // the shared manager-list reader reads with the server client
     tables["capital_calls"] = [
       { id: "call-1", offering_id: "fund-1", status: "published" },
       { id: "call-2", offering_id: "fund-2", status: "published" },

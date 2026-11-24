@@ -47,13 +47,8 @@ export async function taxActor(userId: string | null | undefined): Promise<TaxAc
   const isManager = list.includes("fund_manager");
   let offeringIds: string[] = [];
   if (isManager) {
-    const { data: assignments } = await db()
-      .from("fund_managers")
-      .select("offering_id")
-      .eq("user_id", userId);
-    offeringIds = [
-      ...new Set(((assignments ?? []) as { offering_id: string }[]).map((a) => a.offering_id)),
-    ];
+    const { exactManagerFundIds } = await import("@/lib/fund-access.server");
+    offeringIds = await exactManagerFundIds(db(), userId as string);
   }
   return { userId: userId as string, isStaff, isManager, offeringIds };
 }

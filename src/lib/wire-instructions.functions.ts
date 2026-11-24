@@ -34,11 +34,8 @@ async function managedOfferingIds(supabase: any, userId: string) {
   const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
   if (isAdmin) return { isAdmin, offeringIds: null as string[] | null };
 
-  const { data: assignments } = await supabase
-    .from("fund_managers")
-    .select("offering_id")
-    .eq("user_id", userId);
-  return { isAdmin, offeringIds: (assignments ?? []).map((a: any) => a.offering_id as string) };
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  return { isAdmin, offeringIds: await exactManagerFundIds(await fundAccessDb(), userId) };
 }
 
 export const listManagedWireInstructions = createServerFn({ method: "GET" })

@@ -116,8 +116,8 @@ async function scopeFundIds(supabase: any, userId: string) {
     const { data } = await supabase.from("offerings").select("id");
     return { isAdmin, ids: ((data ?? []) as any[]).map((o) => o.id as string) };
   }
-  const { data } = await supabase.from("fund_managers").select("offering_id").eq("user_id", userId);
-  return { isAdmin, ids: ((data ?? []) as any[]).map((m) => m.offering_id as string) };
+  const { exactManagerFundIds, fundAccessDb } = await import("@/lib/fund-access.server");
+  return { isAdmin, ids: await exactManagerFundIds(await fundAccessDb(), userId) };
 }
 
 async function assertCanManage(supabase: any, userId: string, offeringId: string) {
