@@ -11,6 +11,17 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { buildMyFunds, investorFundView, platformAgreementHistory, workspaceCategories } from "@/lib/client-portal-model";
 
+/** Open investments on the caller's own login or own claimed (unmerged) person record. */
+async function ownOnboardings(db: any, uid: string, offeringId?: string) {
+  const { data: persons } = await db.from("persons").select("id").eq("user_id", uid).is("merged_into_person_id", null);
+  const personIds = ((persons ?? []) as any[]).map((p) => p.id);
+  let q = db.from("investor_onboardings").select("id, offering_id, stage, requested_amount_cents, commitment_amount_cents, funded_amount_cents, investment_profile_id, created_at, updated_at").is("removed_at", null);
+  q = personIds.length ? q.or(`investor_user_id.eq.${uid},person_id.in.(${personIds.join(",")})`) : q.eq("investor_user_id", uid);
+  if (offeringId) q = q.eq("offering_id", offeringId);
+  const { data } = await q;
+  return (data ?? []) as any[];
+}
+
 async function relationshipFundIds(context: any) {
   const s = context.supabase;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -21,10 +32,12 @@ async function relationshipFundIds(context: any) {
     s.from("investor_applications").select("offering_id").eq("user_id", context.userId),
   ]);
   const ids = (rows: any) => [...new Set(((rows ?? []) as any[]).map((r) => String(r.offering_id)).filter(Boolean))];
+  // Investments prepared for the caller (manager- or Harmonious-added) belong to their own claimed person record.
+  const onbs = await ownOnboardings(supabaseAdmin as any, context.userId);
   // Shared access: Fund Team Access grants plus listed Team entries, resolved by the same reader as Shared funds.
   const { liveGrants } = await import("@/lib/fund-team-access.functions");
   const teamFundIds = ids(await liveGrants(supabaseAdmin as any, context.userId));
-  return { managedFundIds, investorFundIds: [...new Set([...ids(pos), ...ids(apps)])], teamFundIds };
+  return { managedFundIds, investorFundIds: [...new Set([...ids(pos), ...ids(apps), ...ids(onbs)])], teamFundIds };
 }
 
 export const getMyFunds = createServerFn({ method: "GET" })
@@ -96,7 +109,7 @@ export const getInvestorFundPortal = createServerFn({ method: "GET" })
     const db = supabaseAdmin as any;
     const [facts, { data: onbs }] = await Promise.all([
       relationshipFundIds(context),
-      db.from("investor_onboardings").select("id, stage, requested_amount_cents, commitment_amount_cents, funded_amount_cents, investment_profile_id, created_at, updated_at").eq("investor_user_id", uid).eq("offering_id", data.offeringId).is("removed_at", null),
+      ownOnboardings(db, uid, data.offeringId).then((rows) => ({ data: rows })),
     ]);
     const subs = (onbs ?? []) as any[];
     if (!facts.investorFundIds.includes(data.offeringId) && subs.length === 0) throw new Error("You don't have access to this fund.");
