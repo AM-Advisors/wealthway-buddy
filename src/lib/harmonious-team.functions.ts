@@ -52,30 +52,9 @@ export const getHarmoniousTeam = createServerFn({ method: "GET" })
     };
   });
 
-/** Setup is underway when any of the Client's funds is below 100% setup (or the client has no funds yet). */
 async function setupScope(scope: { clientId: string }) {
-  const db = await admin();
-  const clientId = scope.clientId;
-  const { data: fundRows } = await db.from("offerings").select("id").eq("client_id", clientId).is("consolidated_into", null);
-  const ids = ((fundRows ?? []) as any[]).map((o) => o.id);
-  const { data: c } = clientId ? await db.from("clients").select("saas_only").eq("id", clientId).maybeSingle() : { data: null };
-  let underway = !ids.length;
-  if (ids.length) {
-    const { fundLaunchPercents } = await import("@/lib/fund-launch-percent.server");
-    const pct = await fundLaunchPercents(ids);
-    underway = ids.some((id) => (pct.get(id) ?? 0) < 100);
-  }
-  return { underway, saasOnly: !!c?.saas_only };
-}
-
-async function assertAssignable(context: any, r: TeamRole, userId: string | null, scope: { clientId: string }) {
-  const roles = await requireStaff(context);
-  const { underway } = await setupScope(scope);
-  if (!canManageRole(r, roles, underway)) throw new Error("You can't change this assignment.");
-  if (userId) {
-    const { rolesFor } = await import("@/lib/harmonious-team.server");
-    if (!eligibleFor(r, await rolesFor(userId))) throw new Error("That person isn't eligible for this assignment.");
-  }
+  const { clientSetupScope } = await import("@/lib/harmonious-team.server");
+  return clientSetupScope(scope.clientId);
 }
 
 /** Set or clear a Client assignment. Inheriting Funds follow automatically. */
@@ -83,18 +62,8 @@ export const setClientTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ clientId: uuid, role, userId: uuid.nullable() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAssignable(context, data.role, data.userId, { clientId: data.clientId });
-    const db = await admin();
-    const { data: prev } = await db.from("client_team_assignments").select("user_id").eq("client_id", data.clientId).eq("team_role", data.role).maybeSingle();
-    const prior = (prev?.user_id as string | undefined) ?? null;
-    if (prior === data.userId) return { changed: false };
-    const { error } = data.userId
-      ? await db.from("client_team_assignments").upsert({ client_id: data.clientId, team_role: data.role, user_id: data.userId, assigned_by: context.userId, assigned_at: new Date().toISOString() })
-      : await db.from("client_team_assignments").delete().eq("client_id", data.clientId).eq("team_role", data.role);
-    if (error) throw new Error(error.message);
-    const { logTeamEvent } = await import("@/lib/harmonious-team.server");
-    await logTeamEvent({ scope: "client", clientId: data.clientId, role: data.role, priorUserId: prior, newUserId: data.userId, priorSource: prior ? "client" : "none", newSource: data.userId ? "client" : "none", changedBy: context.userId });
-    return { changed: true };
+    const { changeClientTeamMember } = await import("@/lib/harmonious-team.server");
+    return changeClientTeamMember(context.userId, data.clientId, data.role, data.userId);
   });
 
 /** Choose whether the client sees their Sales Team Member as their Sales Representative. Same people who may assign Sales. */

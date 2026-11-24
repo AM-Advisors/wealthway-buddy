@@ -17,13 +17,9 @@ async function isAdminUser(supabase: any, userId: string) {
 
 async function assertCanEdit(supabase: any, userId: string, offeringId: string) {
   if (await isAdminUser(supabase, userId)) return;
-  const { data } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  if (!data) throw new Error("Forbidden: you do not manage that fund.");
+  // Shared fund check: fund operations staff or a manager listed on this exact fund.
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage that fund.");
 }
 
 /** The full change history of a fund's legal documents, newest first. */

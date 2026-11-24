@@ -732,7 +732,10 @@ export const getFundTeam = createServerFn({ method: "GET" })
     if (!fund) throw new Error("Fund not found.");
     const [{ data: managers }, { data: staff }, { data: dels }] = await Promise.all([
       db.from("fund_managers").select("user_id, granted_by, created_at").eq("offering_id", data.fundId),
-      fund.client_id ? db.from("client_assignments").select("staff_user_id, assignment_role, created_at").eq("client_id", fund.client_id) : { data: [] },
+      fund.client_id
+        ? db.from("client_team_assignments").select("user_id, team_role, assigned_at").eq("client_id", fund.client_id)
+            .then((r: any) => ({ data: ((r.data ?? []) as any[]).map((a) => ({ staff_user_id: a.user_id, assignment_role: a.team_role, created_at: a.assigned_at })) }))
+        : { data: [] },
       db.from("delegations").select("delegate_user_id, authority_level, status, effective_at, expires_at").eq("scope_id", data.fundId).eq("status", "active"),
     ]);
     const ids = [...new Set([...(managers ?? []).map((m: any) => m.user_id), ...(staff ?? []).map((s: any) => s.staff_user_id), ...(dels ?? []).map((d: any) => d.delegate_user_id)].filter(Boolean))] as string[];

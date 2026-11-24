@@ -53165,7 +53165,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      activity_timeline: {
+        Row: {
+          actor_user_id: string | null
+          category: string | null
+          client_id: string | null
+          id: string | null
+          occurred_at: string | null
+          offering_id: string | null
+          subject_user_id: string | null
+          summary: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_service_quote: {

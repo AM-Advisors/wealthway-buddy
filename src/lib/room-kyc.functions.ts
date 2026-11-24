@@ -161,28 +161,34 @@ export const saveRoomIdentity = createServerFn({ method: "POST" })
     };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const existing = await supabaseAdmin
-      .from("kyc_verifications")
-      .select("id")
-      .eq("application_id", application.id)
-      .maybeSingle();
+    // One identity check per person: once the account check is approved it counts for every
+    // investment, so the older form never opens a second, per-investment check.
+    const { resolvePersonIdentity } = await import("@/lib/person-identity.server");
+    const accountCheck = (await resolvePersonIdentity(userId, null)).check;
+    if (accountCheck?.status !== "approved") {
+      const existing = await supabaseAdmin
+        .from("kyc_verifications")
+        .select("id")
+        .eq("application_id", application.id)
+        .maybeSingle();
 
-    if (existing.data) {
-      const { error } = await supabaseAdmin
-        .from("kyc_verifications")
-        .update({ result: identity, provider: "manual", updated_at: now })
-        .eq("id", existing.data.id);
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await supabaseAdmin
-        .from("kyc_verifications")
-        .insert({
-          application_id: application.id,
-          provider: "manual",
-          status: "not_started",
-          result: identity,
-        });
-      if (error) throw new Error(error.message);
+      if (existing.data) {
+        const { error } = await supabaseAdmin
+          .from("kyc_verifications")
+          .update({ result: identity, provider: "manual", updated_at: now })
+          .eq("id", existing.data.id);
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabaseAdmin
+          .from("kyc_verifications")
+          .insert({
+            application_id: application.id,
+            provider: "manual",
+            status: "not_started",
+            result: identity,
+          });
+        if (error) throw new Error(error.message);
+      }
     }
 
     return { ok: true, applicationId: application.id as string };

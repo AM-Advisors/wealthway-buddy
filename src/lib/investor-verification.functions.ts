@@ -30,6 +30,9 @@ export const getInvestorVerificationSummary = createServerFn({ method: "GET" })
       ? await db.from("persons").select("id, user_id, kyc_status, aml_status, kyc_verified_at, aml_screened_at, identity_verified_at").in("user_id", userIds)
       : [{ data: [] }];
     const pBy = new Map(((persons ?? []) as any[]).map((p) => [String(p.user_id), p]));
+    // The person's one ID check (account check first) decides the shown result.
+    const { personVerificationByUser } = await import("@/lib/person-verification.server");
+    const current = await personVerificationByUser(userIds);
     const [{ data: kyc }, { data: aml }] = ids.length
       ? await Promise.all([
           db.from("kyc_verifications").select("application_id, status, completed_at, updated_at").in("application_id", ids),
@@ -42,8 +45,9 @@ export const getInvestorVerificationSummary = createServerFn({ method: "GET" })
       items: visible.map((a) => {
         const person = pBy.get(String(a.user_id));
         const k = kBy.get(a.id); const s = aBy.get(a.id);
-        const kState = checkState(person?.kyc_status ?? a.kyc_status ?? k?.status);
-        const aState = checkState(person?.aml_status ?? a.aml_status ?? s?.status);
+        const now = current.get(String(a.user_id));
+        const kState = checkState(now?.kyc ?? person?.kyc_status ?? a.kyc_status ?? k?.status);
+        const aState = checkState(now?.aml ?? person?.aml_status ?? a.aml_status ?? s?.status);
         const n = matchCount(s?.matches);
         return {
           applicationId: a.id as string, offeringId: a.offering_id as string, fund: a.offerings?.name ?? "Fund",

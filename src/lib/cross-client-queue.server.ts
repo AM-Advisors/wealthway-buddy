@@ -33,7 +33,7 @@ export async function workQueue(): Promise<{ items: QueueItem[]; staff: { id: st
     d.from("inbox_threads").select("id, client_id, subject, last_message_at, channel").order("last_message_at", { ascending: false }).limit(300),
     d.from("fund_setups").select("id, offering_id, client_id, display_name, launch_state, updated_at").neq("launch_state", "launched").limit(500),
     d.from("fund_franchise_fees").select("offering_id, state, due_date, filed_on").is("removed_at", null).is("filed_on", null).limit(2000),
-    d.from("client_assignments").select("client_id, staff_user_id").limit(5000),
+    import("@/lib/harmonious-team.server").then(async (m) => ({ data: (await m.clientStaffRows()).map((a) => ({ client_id: a.client_id, staff_user_id: a.user_id })) })),
     d.from("offerings").select("id, name, client_id, legal_entity_name").limit(5000),
   ]);
   const off = new Map(((offerings.data ?? []) as any[]).map((o) => [o.id, o]));

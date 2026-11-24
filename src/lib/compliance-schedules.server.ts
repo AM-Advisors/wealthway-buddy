@@ -57,7 +57,11 @@ async function buildSections(db: any, keys: ReportSection[], asOf: string): Prom
         ...calls.filter((c) => !['cancelled', 'closed'].includes(String(c.status))).map((c) => ({ fund: fundName(c.offering_id), label: 'Capital call due', date: c.due_date })),
       ], asOf));
     } else if (k === 'kyc_aml') {
-      const rows = checked<any[]>(await db.from('kyc_verifications').select('status,verified_full_name,person_id').in('status', ['pending', 'review', 'in_review', 'declined'])) ?? [];
+      const raw = checked<any[]>(await db.from('kyc_verifications').select('status,verified_full_name,person_id').in('status', ['pending', 'review', 'in_review', 'declined'])) ?? [];
+      // Leftover per-investment checks for a person whose one ID check is approved are history, not open items.
+      const { identityApprovedPersons } = await import('@/lib/person-verification.server');
+      const approved = await identityApprovedPersons(raw.map((r) => r.person_id).filter(Boolean));
+      const rows = raw.filter((r) => !r.person_id || !approved.has(r.person_id));
       out.push(kycAml(rows.map((r) => ({ status: r.status, name: r.verified_full_name }))));
     } else if (k === 'kyb_missing') {
       const rows = checked<any[]>(await db.from('saas_orders').select('company_name,kyb_status,kyb_checked_at,kyb_sent_to_legal_at').in('kyb_status', ['needs_info', 'legal_review'])) ?? [];

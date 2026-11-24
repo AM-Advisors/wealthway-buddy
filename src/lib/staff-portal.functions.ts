@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
+import { TEAM_ROLES } from "@/lib/harmonious-team";
 
 const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
@@ -46,28 +47,6 @@ async function requireStaff(context: any) {
   return who;
 }
 
-async function audit(
-  context: any,
-  who: Who,
-  entry: {
-    action: string;
-    clientId?: string | null;
-    target?: string | null;
-    previous?: unknown;
-    next?: unknown;
-  },
-) {
-  await context.supabase.from("contract_audit_events").insert({
-    actor_id: who.userId,
-    actor_role: who.roles.join(", ") || null,
-    client_id: entry.clientId ?? null,
-    area: "client assignment",
-    action: entry.action,
-    target: entry.target ?? null,
-    previous_value: (entry.previous ?? null) as any,
-    new_value: (entry.next ?? null) as any,
-  });
-}
 
 const OPEN_REQUEST_STATUSES = ["requested", "in_review"];
 
@@ -80,10 +59,13 @@ export const getMyDesk = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
 
-    const { data: assignments, error: aErr } = await context.supabase
-      .from("client_assignments")
-      .select("client_id, staff_user_id, assignment_role, note");
-    if (aErr) throw new Error(aErr.message);
+    // One client staff list: Sales, Account Manager and Operations on the client team.
+    const { clientStaffRows } = await import("@/lib/harmonious-team.server");
+    const assignments = (await clientStaffRows()).map((a) => ({
+      client_id: a.client_id,
+      staff_user_id: a.user_id,
+      assignment_role: a.team_role,
+    }));
 
     const mine = (assignments ?? []).filter((a: any) => a.staff_user_id === who.userId);
     const showAll = Boolean(data.showAll) && who.isAdmin;
@@ -310,9 +292,7 @@ export const listClientCoverage = createServerFn({ method: "GET" })
 
     const [clientRes, assignRes, staffRes] = await Promise.all([
       context.supabase.from("clients").select("id, name, status").order("name"),
-      context.supabase
-        .from("client_assignments")
-        .select("id, client_id, staff_user_id, assignment_role, note"),
+      import("@/lib/harmonious-team.server").then((m) => m.clientStaffRows()),
       context.supabase.rpc("list_staff_accounts"),
     ]);
 
@@ -330,20 +310,20 @@ export const listClientCoverage = createServerFn({ method: "GET" })
       staff,
       clients: ((clientRes.data ?? []) as any[]).map((c: any) => ({
         ...c,
-        assignees: ((assignRes.data ?? []) as any[])
-          .filter((a: any) => String(a.client_id) === String(c.id))
-          .map((a: any) => ({
-            id: a.id,
-            staffUserId: String(a.staff_user_id),
-            name: nameOf(a.staff_user_id),
-            role: a.assignment_role as "lead" | "support",
-            note: a.note as string | null,
+        assignees: assignRes
+          .filter((a) => String(a.client_id) === String(c.id))
+          .map((a) => ({
+            id: `${a.client_id}|${a.team_role}`,
+            staffUserId: String(a.user_id),
+            name: nameOf(a.user_id),
+            role: a.team_role,
+            note: null as string | null,
           })),
       })),
     };
   });
 
-/** Put a Harmonious person on a client, or change whether they lead it. */
+/** Put a Harmonious person on a client team role. Saves to the one client team list. */
 export const assignClientStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) =>
@@ -351,75 +331,23 @@ export const assignClientStaff = createServerFn({ method: "POST" })
       .object({
         clientId: z.string().uuid(),
         staffUserId: z.string().uuid(),
-        assignmentRole: z.enum(["lead", "support"]),
-        note: z.string().trim().max(400).optional().or(z.literal("")),
+        assignmentRole: z.enum(TEAM_ROLES),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const who = await whoIs(context);
-    if (!who.canManage) {
-      throw new Error("Only staff with contract authority can change client coverage.");
-    }
-
-    const { data: existing } = await context.supabase
-      .from("client_assignments")
-      .select("id, assignment_role, note")
-      .eq("client_id", data.clientId)
-      .eq("staff_user_id", data.staffUserId)
-      .maybeSingle();
-
-    const { error } = await context.supabase.from("client_assignments").upsert(
-      {
-        client_id: data.clientId,
-        staff_user_id: data.staffUserId,
-        assignment_role: data.assignmentRole,
-        note: data.note || null,
-        assigned_by: who.userId,
-      },
-      { onConflict: "client_id,staff_user_id" },
-    );
-    if (error) throw new Error(error.message);
-
-    await audit(context, who, {
-      action: existing ? "coverage changed" : "coverage added",
-      clientId: data.clientId,
-      target: data.staffUserId,
-      previous: existing ?? null,
-      next: { assignment_role: data.assignmentRole, note: data.note || null },
-    });
+    const { changeClientTeamMember } = await import("@/lib/harmonious-team.server");
+    await changeClientTeamMember(context.userId, data.clientId, data.assignmentRole, data.staffUserId);
     return { ok: true };
   });
 
-/** Take a Harmonious person off a client. */
+/** Take a Harmonious person off a client team role. */
 export const unassignClientStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().regex(/^[0-9a-f-]{36}\|(sales|account_manager|operations)$/) }).parse(d))
   .handler(async ({ data, context }) => {
-    const who = await whoIs(context);
-    if (!who.canManage) {
-      throw new Error("Only staff with contract authority can change client coverage.");
-    }
-
-    const { data: row } = await context.supabase
-      .from("client_assignments")
-      .select("id, client_id, staff_user_id, assignment_role")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (!row) throw new Error("That coverage record is no longer there.");
-
-    const { error } = await context.supabase
-      .from("client_assignments")
-      .delete()
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-
-    await audit(context, who, {
-      action: "coverage removed",
-      clientId: String((row as any).client_id),
-      target: String((row as any).staff_user_id),
-      previous: row,
-      next: null,
-    });
+    const [clientId, role] = data.id.split("|") as [string, (typeof TEAM_ROLES)[number]];
+    const { changeClientTeamMember } = await import("@/lib/harmonious-team.server");
+    await changeClientTeamMember(context.userId, clientId, role, null);
     return { ok: true };
   });

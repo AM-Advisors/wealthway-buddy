@@ -1,3 +1,4 @@
+import { TEAM_ROLES, TEAM_ROLE_LABEL, type TeamRole } from "@/lib/harmonious-team";
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -159,8 +160,8 @@ export function StaffDesk() {
                     <CardTitle className="text-base">{c.name}</CardTitle>
                     <div className="flex flex-wrap items-center gap-2">
                       {c.assignmentRole ? (
-                        <Badge variant={c.assignmentRole === "lead" ? "default" : "secondary"}>
-                          {c.assignmentRole === "lead" ? "You lead" : "You support"}
+                        <Badge variant={c.assignmentRole === "account_manager" ? "default" : "secondary"}>
+                          {`You: ${TEAM_ROLE_LABEL[c.assignmentRole as TeamRole] ?? c.assignmentRole}`}
                         </Badge>
                       ) : (
                         <Badge variant="outline">Not yours</Badge>
@@ -469,7 +470,7 @@ export function ClientCoverageBoard() {
       ) : null}
 
       {clients.map((c: any) => {
-        const d = draft[c.id] ?? { staffUserId: "", role: "lead" };
+        const d = draft[c.id] ?? { staffUserId: "", role: "account_manager" };
         return (
           <Card key={c.id}>
             <CardHeader className="pb-2">
@@ -488,7 +489,7 @@ export function ClientCoverageBoard() {
                     className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm"
                   >
                     {a.name}
-                    <Badge variant={a.role === "lead" ? "default" : "secondary"}>{a.role}</Badge>
+                    <Badge variant={a.role === "account_manager" ? "default" : "secondary"}>{TEAM_ROLE_LABEL[a.role as TeamRole] ?? a.role}</Badge>
                     {data.canManage ? (
                       <button
                         type="button"
@@ -526,7 +527,7 @@ export function ClientCoverageBoard() {
                     </SearchablePeoplePicker>
                   </div>
                   <div className="w-40">
-                    <Label>Cover as</Label>
+                    <Label>Role</Label>
                     <Select
                       value={d.role}
                       onValueChange={(v) => setDraft({ ...draft, [c.id]: { ...d, role: v } })}
@@ -535,8 +536,11 @@ export function ClientCoverageBoard() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="lead">Lead</SelectItem>
-                        <SelectItem value="support">Support</SelectItem>
+                        {TEAM_ROLES.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {TEAM_ROLE_LABEL[r]}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

@@ -247,11 +247,7 @@ async function autoAssignee(db: any, fromEmail: string): Promise<{ clientId: str
   const { data: team } = await db.from("client_team_assignments").select("user_id, team_role").eq("client_id", clientId);
   const rank = ["account_manager", "lead", "operations"];
   const sorted = ((team ?? []) as any[]).sort((a, b) => (rank.indexOf(a.team_role) + 99) % 99 - (rank.indexOf(b.team_role) + 99) % 99);
-  let userId: string | null = sorted[0]?.user_id ?? null;
-  if (!userId) {
-    const { data: a } = await db.from("client_assignments").select("staff_user_id").eq("client_id", clientId).limit(1).maybeSingle();
-    userId = a?.staff_user_id ?? null;
-  }
+  const userId: string | null = sorted[0]?.user_id ?? null;
   return { clientId, userId };
 }
 

@@ -18,12 +18,8 @@ async function scope(userId: string) {
   if (!team && !roles.some((x) => ["account_manager", "client_success"].includes(x))) throw new Error("Account Management access only.");
   let clientIds: string[] | null = null;
   if (!team) {
-    const [{ data: a, error: aError }, { data: b, error: bError }] = await Promise.all([
-      db.from("client_team_assignments").select("client_id").eq("user_id", userId),
-      db.from("client_assignments").select("client_id").eq("staff_user_id", userId),
-    ]);
-    if (aError || bError) throw new Error("Couldn't verify assigned clients.");
-    clientIds = [...new Set([...((a ?? []) as any[]), ...((b ?? []) as any[])].map((x) => x.client_id))];
+    const { clientStaffRows } = await import("@/lib/harmonious-team.server");
+    clientIds = [...new Set((await clientStaffRows({ userId })).map((x) => x.client_id))];
   }
   return { db, team, clientIds };
 }

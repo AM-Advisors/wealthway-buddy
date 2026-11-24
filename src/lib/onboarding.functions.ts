@@ -312,28 +312,34 @@ export const submitKyc = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const existing = await supabaseAdmin
-      .from("kyc_verifications")
-      .select("id")
-      .eq("application_id", application.id)
-      .maybeSingle();
+    // One identity check per person: once the account check is approved it counts for every
+    // investment, so the older form never opens a second, per-investment check.
+    const { resolvePersonIdentity } = await import("@/lib/person-identity.server");
+    const accountCheck = (await resolvePersonIdentity(userId, null)).check;
+    if (accountCheck?.status !== "approved") {
+      const existing = await supabaseAdmin
+        .from("kyc_verifications")
+        .select("id")
+        .eq("application_id", application.id)
+        .maybeSingle();
 
-    if (existing.data) {
-      const { error } = await supabaseAdmin
-        .from("kyc_verifications")
-        .update({ status: "review", result: identity, provider: "manual", updated_at: new Date().toISOString() })
-        .eq("id", existing.data.id);
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await supabaseAdmin
-        .from("kyc_verifications")
-        .insert({ application_id: application.id, provider: "manual", status: "review", result: identity });
-      if (error) throw new Error(error.message);
+      if (existing.data) {
+        const { error } = await supabaseAdmin
+          .from("kyc_verifications")
+          .update({ status: "review", result: identity, provider: "manual", updated_at: new Date().toISOString() })
+          .eq("id", existing.data.id);
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabaseAdmin
+          .from("kyc_verifications")
+          .insert({ application_id: application.id, provider: "manual", status: "review", result: identity });
+        if (error) throw new Error(error.message);
+      }
     }
 
     const { error: statusError } = await supabase
       .from("investor_applications")
-      .update({ kyc_status: "review", current_step: "aml", updated_at: new Date().toISOString() })
+      .update({ kyc_status: accountCheck?.status === "approved" ? "approved" : "review", current_step: "aml", updated_at: new Date().toISOString() })
       .eq("id", application.id);
     if (statusError) throw new Error(statusError.message);
 

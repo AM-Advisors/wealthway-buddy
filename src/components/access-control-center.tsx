@@ -21,6 +21,7 @@ import { NEVER_GRANTABLE, PREDEFINED_STAFF_ROLES, STAFF_CAPABILITY_GROUPS } from
 import {
   getAccessProfile,
   listAccessAudit,
+  listActivityTimeline,
   listAccessPeople,
   listAccessRoles,
 } from "@/lib/access-control.functions";
@@ -318,6 +319,56 @@ function MatrixGrid({ perms, granular }: { perms: Permission[]; granular?: boole
           ))}
         </TableBody>
       </Table>
+    </div>
+  );
+}
+
+export const ACTIVITY_CATEGORIES = ["Access", "Staff role", "Client team", "Verification", "Fund access", "Review", "Client menu", "Investor record"] as const;
+
+/** One activity timeline across access, roles, teams, verification, fund access, reviews and record changes. */
+export function ActivityTimelineTab() {
+  const get = useServerFn(listActivityTimeline);
+  const [category, setCategory] = useState<string>("");
+  const [pages, setPages] = useState<string[]>([""]);
+  const before = pages[pages.length - 1] || undefined;
+  const { data, isLoading } = useQuery({
+    queryKey: ["activity-timeline", category, before ?? ""],
+    queryFn: () => get({ data: { ...(category ? { category } : {}), ...(before ? { before } : {}) } }),
+  });
+  const rows = (data?.rows ?? []) as { id: string; at: string; category: string; what: string; by: string; person: string | null; where: string | null }[];
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">Everything recorded in one place, newest first. Nothing here can be edited or deleted.</p>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter activity">
+        {["", ...ACTIVITY_CATEGORIES].map((c) => (
+          <Button key={c || "all"} size="sm" variant={category === c ? "default" : "outline"} onClick={() => { setCategory(c); setPages([""]); }}>
+            {c || "All"}
+          </Button>
+        ))}
+      </div>
+      {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : !rows.length ? <p className="text-sm text-muted-foreground">No activity recorded.</p> : (
+        <div className="overflow-x-auto rounded-md border">
+          <Table>
+            <TableHeader><TableRow><TableHead>When</TableHead><TableHead>Type</TableHead><TableHead>What</TableHead><TableHead>By</TableHead><TableHead>Person</TableHead><TableHead>Fund or client</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {rows.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="whitespace-nowrap text-xs">{fmt(r.at)}</TableCell>
+                  <TableCell><Badge variant="secondary">{r.category}</Badge></TableCell>
+                  <TableCell className="text-sm">{r.what}</TableCell>
+                  <TableCell className="text-sm">{r.by}</TableCell>
+                  <TableCell className="text-sm">{r.person ?? "·"}</TableCell>
+                  <TableCell className="text-sm">{r.where ?? "·"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {pages.length > 1 && <Button size="sm" variant="outline" onClick={() => setPages(pages.slice(0, -1))}>Newer</Button>}
+        {data?.nextBefore && <Button size="sm" variant="outline" onClick={() => setPages([...pages, data.nextBefore!])}>Older</Button>}
+      </div>
     </div>
   );
 }

@@ -68,13 +68,9 @@ async function reviewerScope(supabase: any, userId: string, offeringId: string) 
   const list = (roles ?? []).map((r: any) => r.role as string);
   if (list.length === 0) throw new Error("Forbidden: reviewer access required.");
   if (list.includes("admin")) return;
-  const { data: assigned } = await supabase
-    .from("fund_managers")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("offering_id", offeringId)
-    .maybeSingle();
-  if (!assigned) throw new Error("Forbidden: you do not manage this fund.");
+  // Shared fund check: fund operations staff or a manager listed on this exact fund.
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage this fund.");
 }
 
 function money(cents: number | null | undefined) {

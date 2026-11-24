@@ -10,7 +10,7 @@ import { useClientWorkspace } from "@/components/client-workspace";
 import { EmployeesPage } from "@/components/employees-panel";
 import { RolesPage } from "@/components/roles-panel";
 import { PeopleDirectory } from "@/components/people-directory";
-import { AccessPeopleTab, RolesTab, MatrixTab, AuditTab } from "@/components/access-control-center";
+import { AccessPeopleTab, RolesTab, MatrixTab, AuditTab, ActivityTimelineTab } from "@/components/access-control-center";
 import { visiblePeopleTabs, canSee, normalizePeopleSearch, EMPLOYEE_FILTERS, type PeopleFilter } from "@/lib/staff-nav";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -103,6 +103,7 @@ function PeopleAccessPage() {
           {roles.some((r) => r === "super_admin" || r === "admin") && <p><Link to="/admin/security-activity" className="text-primary hover:underline">Open security activity & password or authenticator resets →</Link></p>}
           <RecentSignIns />
           <Section title="Needs review"><NeedsReview /></Section>
+          <Section title="All activity"><ActivityTimelineTab /></Section>
           <Section title="Access change history"><AuditTab /></Section>
         </TabsContent>
       </Tabs>

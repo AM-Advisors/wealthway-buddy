@@ -19,7 +19,7 @@ Yes, everything is already in one database. The overlap comes from having severa
 ### 1. Access: one list per question
 - **Staff:** Staff roles stays the only list that decides. The 3 entries in the newer lists are matched to staff roles, then those lists stop taking new entries.
 - **Client staff:** one assignment list. The 2 entries in the older list are copied over, then it is retired.
-- **Fund access:** the fund team list says who is on the fund. Log-in access is kept in step with it automatically, so the two can no longer disagree (see the question).
+- **Fund access:** the fund team list says who is on the fund; fund access is granted separately (your decision: being on the team list never gives access by itself).
 - **Every fund screen** moves to the one shared fund check, in batches, with all accounts tested before and after each batch.
 - The database's own rules use the same shared check as the app.
 

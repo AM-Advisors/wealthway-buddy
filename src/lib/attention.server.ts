@@ -243,14 +243,19 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         await s
           .from("kyc_verifications")
           .select(
-            "id, application_id, status, harmonious_decision, document_expired, document_expiration_date, updated_at",
+            "id, application_id, person_id, status, harmonious_decision, document_expired, document_expiration_date, updated_at",
           )
           .in("application_id", applicationIds)
           .limit(LIMIT),
       ),
     );
+    // A review flag on a leftover per-investment check is stale once the person's one ID check is approved.
+    const { identityApprovedPersons } = await import("@/lib/person-verification.server");
+    const idApproved = await safely(async () => [...(await identityApprovedPersons((verifications as any[]).map((v) => v.person_id).filter(Boolean)))]);
+    const idApprovedSet = new Set(idApproved as string[]);
     for (const v of verifications as any[]) {
       if (!v.document_expired && v.harmonious_decision !== "review_required") continue;
+      if (!v.document_expired && v.person_id && idApprovedSet.has(v.person_id)) continue;
       // A review flag on a superseded record is stale; an expired ID is still a real fact.
       if (!v.document_expired && supersededIds.has(v.application_id)) continue;
       out.push(

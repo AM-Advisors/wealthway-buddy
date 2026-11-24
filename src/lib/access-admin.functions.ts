@@ -130,16 +130,14 @@ export const assignAccessRole = createServerFn({ method: "POST" })
       if (error) throw new Error("Could not assign the role.");
       return { ok: true };
     }
-    const row = {
-      user_id: data.targetUserId, role_key: data.roleKey, role_version: custom?.version ?? null,
-      scope_type: data.scope.type, scope_id: data.scope.id,
-      effective_at: data.effectiveAt ?? new Date().toISOString(), expires_at: data.expiresAt ?? null,
-      granted_by: p.actorId, reason: data.reason,
-    };
-    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: data.scope.type === "global" ? "Role assigned" : "Scope added", roleKey: data.roleKey, scopeType: data.scope.type, scopeId: data.scope.id, previous: before, next: { added: row }, reason: data.reason, correlationId: p.correlationId });
-    const { error } = await db.from("access_role_assignments").insert(row);
-    if (error) throw new Error("Could not assign the role.");
-    return { ok: true };
+    // One staff access list: permanent staff roles live only in user_roles. Timed, client- or
+    // fund-scoped role entries were a second list that never allowed or blocked anything, so
+    // they are no longer created. Client and fund access is added from that client or fund.
+    throw new Error(
+      data.scope.type === "global"
+        ? "Timed or custom staff roles aren't available. Give the permanent role, and remove it when it should end."
+        : `Add ${data.scope.type === "fund" ? "fund" : "client"} access from that ${data.scope.type === "fund" ? "fund's Team page" : "client's People & Team"} instead.`,
+    );
   });
 
 export const revokeAccessRole = createServerFn({ method: "POST" })

@@ -40,7 +40,12 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
   const clientIds = [...new Set(offerings.map((o) => o.client_id).filter(Boolean))];
   const [{ data: clients }, { data: assigns }] = await Promise.all([
     clientIds.length ? db().from("clients").select("id, name").in("id", clientIds) : { data: [] },
-    clientIds.length ? db().from("client_assignments").select("client_id, staff_user_id, assignment_role").in("client_id", clientIds) : { data: [] },
+    clientIds.length
+      ? db().from("client_team_assignments").select("client_id, user_id, team_role").in("client_id", clientIds)
+          .then((r: any) => ({ data: ((r.data ?? []) as any[])
+            .sort((a, b) => ["account_manager", "operations", "sales"].indexOf(a.team_role) - ["account_manager", "operations", "sales"].indexOf(b.team_role))
+            .map((a) => ({ client_id: a.client_id, staff_user_id: a.user_id, assignment_role: a.team_role })) }))
+      : { data: [] },
   ]);
   const people = [...new Set([...((managers ?? []) as any[]).map((m) => m.user_id), ...((assigns ?? []) as any[]).map((a) => a.staff_user_id)])];
   const { data: profs } = people.length ? await db().from("profiles").select("user_id, legal_name").in("user_id", people) : { data: [] };

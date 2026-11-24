@@ -136,3 +136,40 @@ function canonicalView(b: any, userId: string) {
     }),
   };
 }
+
+/** The one combined activity timeline (access, roles, team, verification, fund access, reviews, record changes). Read-only. */
+export const listActivityTimeline = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ category: z.string().max(40).optional(), before: z.string().max(40).optional() }).parse(d ?? {}))
+  .handler(async ({ context, data }) => {
+    await requireAccessViewer(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    let q = db.from("activity_timeline").select("id, occurred_at, category, actor_user_id, subject_user_id, offering_id, client_id, summary").order("occurred_at", { ascending: false });
+    if (data.category) q = q.eq("category", data.category);
+    if (data.before) q = q.lt("occurred_at", data.before);
+    const { data: rows, error } = await q.limit(101);
+    if (error) throw new Error("Couldn't load activity.");
+    const list = (rows ?? []) as any[];
+    const userIds = [...new Set(list.flatMap((r) => [r.actor_user_id, r.subject_user_id]).filter(Boolean))];
+    const fundIds = [...new Set(list.map((r) => r.offering_id).filter(Boolean))];
+    const clientIds = [...new Set(list.map((r) => r.client_id).filter(Boolean))];
+    const [{ data: profs }, { data: funds }, { data: clients }] = await Promise.all([
+      userIds.length ? db.from("profiles").select("user_id, legal_name, email").in("user_id", userIds) : { data: [] },
+      fundIds.length ? db.from("offerings").select("id, name").in("id", fundIds) : { data: [] },
+      clientIds.length ? db.from("clients").select("id, name").in("id", clientIds) : { data: [] },
+    ]);
+    const who = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Unnamed person"]));
+    const fund = new Map(((funds ?? []) as any[]).map((f) => [f.id, f.name]));
+    const client = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name]));
+    return {
+      rows: list.slice(0, 100).map((r) => ({
+        id: String(r.id), at: String(r.occurred_at), category: String(r.category), what: String(r.summary ?? ""),
+        by: r.actor_user_id ? who.get(r.actor_user_id) ?? "Unnamed person" : "System",
+        person: r.subject_user_id ? who.get(r.subject_user_id) ?? "Unnamed person" : null,
+        where: (r.offering_id && fund.get(r.offering_id)) || (r.client_id && client.get(r.client_id)) || null,
+        byUserId: r.actor_user_id ?? null, personUserId: r.subject_user_id ?? null,
+      })),
+      nextBefore: list.length > 100 ? String(list[99].occurred_at) : null,
+    };
+  });

@@ -210,8 +210,13 @@ export const getStepRail = createServerFn({ method: "GET" })
           value: String(acc.data.pre_existing_relationship).slice(0, 160),
         });
     }
+    // One accreditation rule: the investing party's accreditation counts first (same as readiness).
+    const { effectiveAccreditations } = await import("@/lib/accreditation-reader.server");
+    const effAcc = (await effectiveAccreditations([appId])).get(appId) ?? null;
+    const partyAcc = effAcc?.source === "investing_party" ? effAcc : null;
+    if (partyAcc?.status === "approved") accFacts.unshift({ label: "Accredited", value: "Yes: on file for this investing party" });
     steps[2]!.facts = accFacts;
-    steps[2]!.status = statusFromCheck(application.accreditation_status, accFacts.length > 0);
+    steps[2]!.status = statusFromCheck(partyAcc?.status ?? application.accreditation_status, accFacts.length > 0);
     steps[2]!.capturedAt = acc.data?.attested_at ?? null;
 
     // 4. Documents

@@ -430,8 +430,17 @@ export async function personActivity(viewer: string, subjectId: string, options:
     db.from("profiles").select("legal_name, email").eq("user_id", subjectId).maybeSingle(),
     db.auth.admin.getUserById(subjectId),
     activityQuery("staff_activity_events", "id, kind, path, label, created_at", "user_id"),
-    activityQuery("access_audit_events", "id, action, created_at", "actor_user_id"),
-    activityQuery("user_access_events", "id, action, reason, created_at", "subject_id"),
+    (() => {
+      // One activity timeline: access, role, team, verification, fund access, review and record changes
+      // this person made or that were made to them.
+      let q = db.from("activity_timeline").select("id, occurred_at, category, actor_user_id, subject_user_id, summary")
+        .or(`actor_user_id.eq.${subjectId},subject_user_id.eq.${subjectId}`).order("occurred_at", { ascending: false });
+      if (options.before) q = q.lt("occurred_at", options.before);
+      if (options.from) q = q.gte("occurred_at", options.from);
+      if (options.to) q = q.lte("occurred_at", options.to);
+      return q.limit(101);
+    })(),
+    Promise.resolve({ data: [] as any[] }),
     db.from("user_roles").select("role").eq("user_id", subjectId),
     activityQuery("security_events", "id,event_type,action,path,ip,created_at", "user_id").neq("event_type", "heartbeat").neq("event_type", "page_view"),
     db.from("security_events").select("event_type,action,ip,created_at").eq("user_id", subjectId).in("event_type", ["sign_in", "sign_out", "session_timeout"]).order("created_at", { ascending: false }).limit(50),
@@ -443,8 +452,8 @@ export async function personActivity(viewer: string, subjectId: string, options:
   const events = [
     ...((security.data ?? []) as any[]).map(a => ({ id: `security:${a.id}`, when: a.created_at, kind: "Security", what: `${String(a.event_type).replace(/_/g, " ")}${a.action ? ` — ${a.action}` : ""}`, path: a.path, ip: a.ip as string | null })),
     ...((acts ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: kindLabel[a.kind] ?? a.kind, what: a.label || a.path || "", path: a.path })),
-    ...((audits ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Action", what: String(a.action).replace(/_/g, " "), path: null })),
-    ...((access ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Access change", what: `${String(a.action).replace(/_/g, " ")}${a.reason && !String(a.action).startsWith("email_") ? ` — ${a.reason}` : ""}`, path: null })),
+    ...((audits ?? []) as any[]).map((a) => ({ id: a.id, when: a.occurred_at, kind: String(a.category), what: String(a.summary ?? ""), path: null })),
+    ...((access ?? []) as any[]),
   ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
   const u = auth?.user;
   const email = (u?.email ?? prof?.email ?? "").toLowerCase();
