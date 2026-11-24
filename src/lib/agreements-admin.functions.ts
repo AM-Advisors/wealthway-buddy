@@ -1,3 +1,4 @@
+import { isUnpricedSowLine } from "./sow-unpriced-line";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -506,7 +507,7 @@ export const countersignSow = createServerFn({ method: "POST" })
         .update({ locked: true })
         .eq("id", (snapshot as any).id);
 
-      const included = ((lines ?? []) as any[]).filter((l) => l.included);
+      const included = ((lines ?? []) as any[]).filter((l) => l.included && !isUnpricedSowLine(l));
       if (included.length) {
         await context.supabase.from("client_pricing").insert(
           included.map((l) => ({
@@ -753,7 +754,7 @@ export const getAgreementDocument = createServerFn({ method: "GET" })
       .join("");
 
     const pricingRows = ((lines ?? []) as any[])
-      .filter((l) => l.included)
+      .filter((l) => l.included && !isUnpricedSowLine(l))
       .map(
         (l) =>
           `<tr><td>${escapeHtml(l.label)}</td><td>${escapeHtml(String(l.pricing_model))}</td><td class="r">${
