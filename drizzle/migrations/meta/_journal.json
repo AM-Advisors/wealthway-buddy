@@ -3116,6 +3116,13 @@
       "when": 1795495860641,
       "tag": "0444_activity_timeline_readable_summaries",
       "breakpoints": true
+    },
+    {
+      "idx": 445,
+      "version": "7",
+      "when": 1795531458043,
+      "tag": "0445_shared_fund_list_check",
+      "breakpoints": true
     }
   ]
 }

@@ -1290,7 +1290,7 @@
 - [x] Staff access: user_roles decides; older staff access lists stop taking new entries
 - [x] Client staff: one assignment list; old list retired (its 2 entries kept as history, not copied, to avoid inventing a Sales owner)
 - [x] Fund team list stays separate from fund access (user decision: team list never grants access)
-- [ ] Remaining fund screens move to the shared check in batches (9 done; about 120 left); database fund rules still check the fund manager list
+- [x] Fund screens and database fund rules use the shared fund check (private.fund_list_allows)
 - [x] Verification: one shared reader; account check counts; older forms no longer open a second check
 - [x] Accreditation: one rule (investing party first, then investment record), used by the investor progress tracker
 - [x] One read-only activity timeline on View account and People & Access

@@ -467,3 +467,5 @@
 - Who counts as staff lives only in staff-roles.ts (STAFF_ROLES, FUND_OPERATIONS_ROLES, sales/marketing additions), mirrored by database is_any_staff()/is_fund_operations_staff(); never write a local staff role list (staff-roles.test.ts enforces); purpose-specific permission lists (money, contracts, Super Admin) stay beside their action - why: screens and database rules must agree on who is staff.
 
 - One source per question: staff roles = user_roles; client staff = client_team_assignments via changeClientTeamMember (client_assignments, access_role_assignments retired, write-blocked); person ID = person-verification.server.ts; accreditation = accreditation-rule.ts; activity reads = activity_timeline view (server-only, allowlisted). Fund team list never grants access. Why: no overlapping lists or duplicate checks.
+
+- Database fund rules and helpers ask private.fund_list_allows(uid, fund, level) (levels match fund-access.ts) instead of reading fund_managers directly; each rule keeps its own staff check — why: database and screens block a fund the same way.
