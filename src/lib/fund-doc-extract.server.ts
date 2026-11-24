@@ -14,7 +14,8 @@ const db = () => supabaseAdmin as any;
 async function assertFundAccess(userId: string, offeringId: string) {
   const { setupActor } = await import("@/lib/fund-setup.server");
   const actor = await setupActor(userId);
-  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, offeringId);
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) await (await import("./fund-routine-access.server")).assertRoutineFund(db(), userId, offeringId);
   return actor;
 }
 

@@ -2,19 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
-export const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "legal",
-  "compliance",
-  "fund_administration",
-  "tax",
-  "finance",
-  "client_success",
-  "executive",
-] as const;
+export const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 /** Roles allowed to change contractual scope, pricing or entitlements.
  *  CEO/CRO carry the executive role. */

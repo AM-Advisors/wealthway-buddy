@@ -11,9 +11,14 @@ export type FundAccessFacts = {
   teamSource: string | null;
 };
 
-export type FundAccessLevel = "manage" | "view";
+/**
+ * - "manager": fund operations staff or a listed manager of this exact fund (no client-wide membership).
+ * - "manage": "manager" plus active members of the fund's client.
+ * - "view": "manage" plus people with live fund team access.
+ */
+export type FundAccessLevel = "manager" | "manage" | "view";
 
-export type FundAccess = FundAccessFacts & { sources: string[]; canManage: boolean; canView: boolean };
+export type FundAccess = FundAccessFacts & { sources: string[]; isFundManager: boolean; canManage: boolean; canView: boolean };
 
 export function summarizeFundAccess(f: FundAccessFacts): FundAccess {
   const sources = [
@@ -22,10 +27,12 @@ export function summarizeFundAccess(f: FundAccessFacts): FundAccess {
     f.clientMember ? "client_member" : null,
     f.teamRole ? (f.teamSource ?? "team") : null,
   ].filter((s): s is string => !!s);
-  const canManage = f.staff || f.manager || f.clientMember;
-  return { ...f, sources, canManage, canView: canManage || !!f.teamRole };
+  const isFundManager = f.staff || f.manager;
+  const canManage = isFundManager || f.clientMember;
+  return { ...f, sources, isFundManager, canManage, canView: canManage || !!f.teamRole };
 }
 
 export function allowsFundLevel(a: FundAccess, level: FundAccessLevel): boolean {
+  if (level === "manager") return a.isFundManager;
   return level === "manage" ? a.canManage : a.canView;
 }

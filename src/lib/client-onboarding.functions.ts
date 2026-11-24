@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
 /** Staff-side onboarding portal for a new client.
  *
@@ -51,12 +52,7 @@ export const ONBOARDING_STEPS = [
 ] as const;
 
 const CONTRACT_ROLES = ["admin", "super_admin", "legal", "compliance", "finance", "client_success", "executive"];
-const STAFF_ROLES = [
-  ...CONTRACT_ROLES,
-  "operations",
-  "fund_administration",
-  "tax",
-];
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 async function whoIs(context: any) {
   const { data } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);

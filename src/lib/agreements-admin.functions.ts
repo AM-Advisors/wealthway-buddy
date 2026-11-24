@@ -3,31 +3,14 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { HARMONIOUS_LEGAL_NAME, SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
+import { STAFF_AND_SALES_ROLES } from "@/lib/staff-roles";
 
 /**
  * Harmonious side of Agreements & SOW: pricing the engagement, answering change
  * requests, countersigning, and issuing amendments against executed agreements.
  */
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "legal",
-  "compliance",
-  "fund_administration",
-  "tax",
-  "finance",
-  "client_success",
-  "executive",
-  "sales",
-  "account_executive",
-  "bdr",
-  "sales_management",
-  "cro",
-  "account_manager",
-  "leadership",
-] as const;
+const STAFF_ROLES: readonly string[] = STAFF_AND_SALES_ROLES;
 
 /** Sales owns MSAs/SOWs: only Sales roles plus CEO/Super Admin create, edit, send and amend. */
 const CONTRACT_ROLES = [

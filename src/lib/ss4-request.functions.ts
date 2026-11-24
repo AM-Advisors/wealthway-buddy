@@ -45,9 +45,8 @@ function splitAddress(addr: string | null | undefined): [string, string] {
 
 /** Staff, or a manager of this exact fund. */
 async function requireStaffOrManager(userId: string, offeringId: string) {
-  const { setupActor } = await import("@/lib/fund-setup.server");
-  const a = await setupActor(userId);
-  if (!a.isStaff && !a.offeringIds.includes(offeringId)) throw new Error("Forbidden: you do not manage that fund.");
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) throw new Error("Forbidden: you do not manage that fund.");
 }
 
 async function fundHasEin(context: any, offeringId: string) {

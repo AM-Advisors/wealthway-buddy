@@ -7,11 +7,8 @@ async function db() {
 }
 
 async function assertManager(d: any, userId: string, offeringId: string) {
-  const { data: mgr } = await d.from("fund_managers").select("id").eq("offering_id", offeringId).eq("user_id", userId).maybeSingle();
-  if (mgr) return;
-  const { data: roles } = await d.from("user_roles").select("role").eq("user_id", userId);
-  const staff = ((roles ?? []) as any[]).some((r) => ["admin", "super_admin", "operations", "compliance", "fund_administration"].includes(r.role));
-  if (!staff) throw new Error("Only this fund's managers or Harmonious can verify accreditation.");
+  const { fundAccessAllows } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(d, userId, offeringId, "manager"))) throw new Error("Only this fund's managers or Harmonious can verify accreditation.");
 }
 
 export async function listPending(userId: string, offeringId: string) {

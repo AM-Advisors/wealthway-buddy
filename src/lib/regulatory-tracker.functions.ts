@@ -8,8 +8,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 const FORM_D_HARMONIOUS_FEE_CENTS = 16000;
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 

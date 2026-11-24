@@ -2,19 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "legal",
-  "compliance",
-  "fund_administration",
-  "tax",
-  "finance",
-  "client_success",
-  "executive",
-];
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 /** Legal, compliance, finance, client success, CEO/CRO (executive) or admin. */
 const CONTRACT_ROLES = [

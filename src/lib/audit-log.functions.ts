@@ -4,19 +4,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { assertDiagnosticReads } from "@/lib/diagnostic-read";
 import { diagnosticText } from "@/lib/diagnostic-filter";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "legal",
-  "compliance",
-  "fund_administration",
-  "tax",
-  "finance",
-  "client_success",
-  "executive",
-] as const;
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 /** One row in the audit trail, whatever it came from. */
 export type AuditEntry = {

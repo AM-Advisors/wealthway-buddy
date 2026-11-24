@@ -2,24 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
 /** Staff view of how far each client has got through onboarding.
  *
  *  Harmonious records and reports progress here; it does not advise the client
  *  or act on their behalf. */
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "legal",
-  "compliance",
-  "finance",
-  "client_success",
-  "executive",
-  "operations",
-  "fund_administration",
-  "tax",
-];
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 async function requireStaff(context: any) {
   const { data } = await context.supabase

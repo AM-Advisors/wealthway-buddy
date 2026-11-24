@@ -2,8 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 const CLASS_GROUPS: Record<string, string> = { common: "Common", preferred: "Preferred", safe: "SAFE", note: "SAFE", warrant: "Warrants", option: "Option Pool", rsu: "Option Pool" };
 
 /** Read-only cap table dashboard for a client: totals, ownership mix, activity, stakeholder KYC. */

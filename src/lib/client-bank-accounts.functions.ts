@@ -3,18 +3,9 @@ import { z } from "zod";
 
 // Money, banking and account changes need a fully cleared identity check (not "limited" review access).
 import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "fund_administration",
-  "finance",
-  "legal",
-  "compliance",
-  "client_success",
-  "executive",
-];
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 const MANAGE_ROLES = ["admin", "super_admin", "operations", "fund_administration", "finance"];
 

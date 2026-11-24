@@ -3,8 +3,9 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { isClientMemberOfFund } from "@/lib/fund-cap-table.functions";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 
 async function isStaff(db: any, uid: string) {
   const { data } = await db.from("user_roles").select("role").eq("user_id", uid);

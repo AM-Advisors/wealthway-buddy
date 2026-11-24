@@ -7,6 +7,8 @@
  *    again on every request, and nobody approves their own preparation.
  */
 
+import { OPS_STAFF_ROLES } from "@/lib/staff-roles";
+
 export const OPS_AREAS = [
   "clients",
   "funds",
@@ -30,20 +32,8 @@ export type OpsAction = (typeof OPS_ACTIONS)[number];
 
 export type OpsCapability = `${OpsArea}:${OpsAction}`;
 
-/** Every Harmonious role that can open Operations at all. */
-export const OPS_STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "legal",
-  "compliance",
-  "fund_administration",
-  "tax",
-  "finance",
-  "client_success",
-  "executive",
-  "leadership",
-] as const;
+/** Every Harmonious role that can open Operations at all (defined once in staff-roles.ts). */
+export { OPS_STAFF_ROLES };
 
 const caps = (areas: readonly OpsArea[], actions: readonly OpsAction[]): OpsCapability[] =>
   areas.flatMap((area) => actions.map((action) => `${area}:${action}` as OpsCapability));

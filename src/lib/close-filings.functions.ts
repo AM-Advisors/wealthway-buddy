@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
 /*
  * Close approval and filing packets. Harmonious staff only. Nothing here
@@ -10,7 +11,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
  * can't approve, and the preparer can't record a filing.
  */
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 const FORM_D_HARMONIOUS_FEE_CENTS = 16000;
 
 async function staffDb(uid: string) {

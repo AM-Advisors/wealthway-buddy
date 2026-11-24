@@ -12,4 +12,7 @@ describe("shared fund access", () => {
   });
   it("someone on no list gets nothing", () => expect(summarizeFundAccess(none).canView).toBe(false));
   it("names every list that gave access", () => expect(summarizeFundAccess({ ...none, manager: true, teamRole: "fund_viewer", teamSource: "team_list" }).sources).toEqual(["fund_manager", "team_list"]));
+  it("the manager level lets in this fund's own managers", () => expect(allowsFundLevel(summarizeFundAccess({ ...none, manager: true }), "manager")).toBe(true));
+  it("the manager level lets in fund operations staff", () => expect(allowsFundLevel(summarizeFundAccess({ ...none, staff: true }), "manager")).toBe(true));
+  it("the manager level does not let in client-wide members", () => expect(allowsFundLevel(summarizeFundAccess({ ...none, clientMember: true }), "manager")).toBe(false));
 });

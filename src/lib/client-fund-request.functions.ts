@@ -4,8 +4,9 @@ import { z } from "zod";
 // Money, banking and account changes need a fully cleared identity check (not "limited" review access).
 import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 import type { FundRequest } from "@/lib/fund-request-model";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 const MAIN_CONTACT_ROLES = ["client_gp", "client_signatory", "client_finance", "client_legal", "client_compliance"];
 const TEAM_EMAIL = "operations@harmonious.co";
 const OPS_SITE = "https://ops.harmonious.co";

@@ -12,6 +12,7 @@ import {
   type ActorKind,
   type SideLetterSnapshot,
 } from "@/lib/side-letter-model";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
 /**
  * Side Letter Registry server functions. Every call re-resolves the caller's
@@ -20,7 +21,7 @@ import {
  * Nothing here touches economics, capital accounts, distributions or email.
  */
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

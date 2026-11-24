@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
 /** Bringing a fund that already exists elsewhere onto the platform.
  *  Records are staged first and only written into the live fund once
@@ -26,18 +27,7 @@ export const MIGRATION_STEPS = [
 
 export type StepState = { done: boolean; by?: string; at?: string; note?: string };
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "legal",
-  "compliance",
-  "fund_administration",
-  "tax",
-  "finance",
-  "client_success",
-  "executive",
-];
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 type Who = { userId: string; roles: string[]; isStaff: boolean; isSuper: boolean; email: string };
 

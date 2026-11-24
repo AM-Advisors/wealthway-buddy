@@ -18,7 +18,8 @@ const SENDABLE = ["subscription_agreement", "operating_agreement", "ppm", "offer
 
 async function assertManager(userId: string, offeringId: string) {
   const a = await setupActor(userId);
-  if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) forbid("you do not manage that fund.");
   return a;
 }
 

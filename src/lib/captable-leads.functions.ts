@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
 /** Requests from founders who want to move their cap table to Harmonious.
  *
@@ -45,16 +46,7 @@ export interface CapTableLead {
   updatedAt: string;
 }
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "client_success",
-  "executive",
-  "legal",
-  "compliance",
-  "finance",
-  "operations",
-];
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 const MANAGE_ROLES = ["admin", "super_admin", "client_success", "executive", "legal", "compliance", "finance"];
 
 async function whoIs(context: any) {

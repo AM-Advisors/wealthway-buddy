@@ -4,6 +4,7 @@ import { adoptedSignatureSchema } from "@/lib/adopted-signature";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { buildSowSections, HARMONIOUS_LEGAL_NAME, MSA_SECTIONS } from "@/lib/agreement-templates";
+import { STAFF_AND_SALES_ROLES } from "@/lib/staff-roles";
 
 /**
  * Agreements & SOW - the contracting workspace.
@@ -15,25 +16,7 @@ import { buildSowSections, HARMONIOUS_LEGAL_NAME, MSA_SECTIONS } from "@/lib/agr
  * amendments, never by rewriting the executed record.
  */
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "legal",
-  "compliance",
-  "fund_administration",
-  "tax",
-  "finance",
-  "client_success",
-  "executive",
-  "sales",
-  "account_executive",
-  "bdr",
-  "sales_management",
-  "cro",
-  "account_manager",
-  "leadership",
-] as const;
+const STAFF_ROLES: readonly string[] = STAFF_AND_SALES_ROLES;
 
 /** Sales owns MSAs/SOWs (see agreements-admin.functions.ts). */
 const CONTRACT_ROLES = [

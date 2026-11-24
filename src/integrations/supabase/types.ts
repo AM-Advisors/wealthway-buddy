@@ -53446,6 +53446,7 @@ export type Database = {
       is_any_staff: { Args: never; Returns: boolean }
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
+      is_fund_operations_staff: { Args: { _uid: string }; Returns: boolean }
       is_harmonious_email: { Args: { _email: string }; Returns: boolean }
       is_live_fund_reviewer: {
         Args: { _fund: string; _user: string }

@@ -6,14 +6,15 @@
  * Invited funds: an investor sees only funds whose invitation matches their
  * verified email, and starting one runs the normal startOnboarding flow.
  */
-import { setupActor, forbid } from "@/lib/fund-setup.server";
+import { forbid } from "@/lib/fund-setup.server";
 import { signatureConfirmed } from "@/lib/signature-confirmed";
 
 const admin = async () => ((await import("@/integrations/supabase/client.server")).supabaseAdmin as any);
 
 async function assertManager(userId: string, offeringId: string) {
-  const a = await setupActor(userId);
-  if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  if (!userId) forbid("not signed in.");
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) forbid("you do not manage that fund.");
 }
 
 function personName(p: any) {

@@ -3,8 +3,9 @@ import { z } from "zod";
 
 // Money, banking and account changes need a fully cleared identity check (not "limited" review access).
 import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 const BANKS = ["mercury", "texas_capital", "customers"] as const;
 const KYC_URL = "https://app.harmonious.co/onboarding/kyc";
 

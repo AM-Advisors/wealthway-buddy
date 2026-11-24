@@ -1,21 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { STAFF_ROLES as BASE_STAFF_ROLES } from "@/lib/staff-roles";
 
 // Money, banking and account changes need a fully cleared identity check (not "limited" review access).
 import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "operations",
-  "fund_administration",
-  "finance",
-  "legal",
-  "compliance",
-  "client_success",
-  "executive",
-  "fund_manager",
-];
+// Staff plus fund managers; the database rules still limit managers to their own funds.
+const STAFF_ROLES: readonly string[] = [...BASE_STAFF_ROLES, "fund_manager"];
 
 const MANAGE_ROLES = ["admin", "super_admin", "operations", "fund_administration", "finance"];
 

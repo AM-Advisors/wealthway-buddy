@@ -13,7 +13,8 @@ const MODEL = "openai/gpt-6.1-sol";
 async function assertManager(userId: string, offeringId: string) {
   const { setupActor, forbid } = await import("@/lib/fund-setup.server");
   const a = await setupActor(userId);
-  if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  const { fundAccessAllows, fundAccessDb } = await import("@/lib/fund-access.server");
+  if (!(await fundAccessAllows(await fundAccessDb(), userId, offeringId, "manager"))) forbid("you do not manage that fund.");
   return a;
 }
 

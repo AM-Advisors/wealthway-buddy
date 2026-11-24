@@ -5,8 +5,9 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { buildFundCapTable, readTerms, type ClassTerms } from "@/lib/fund-cap-table";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 
 /** Read-only Fund Cap Table. Re-checks the caller's relationship to the exact Fund every call. */
 export const getFundCapTable = createServerFn({ method: "GET" })

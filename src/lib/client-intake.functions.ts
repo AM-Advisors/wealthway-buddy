@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES as SHARED_STAFF_ROLES } from "@/lib/staff-roles";
 
 /** First-run fund details for a new client contact.
  *
@@ -19,18 +20,7 @@ const MAIN_CONTACT_ROLES = [
   "client_compliance",
 ];
 
-const STAFF_ROLES = [
-  "admin",
-  "super_admin",
-  "legal",
-  "compliance",
-  "finance",
-  "client_success",
-  "executive",
-  "operations",
-  "fund_administration",
-  "tax",
-];
+const STAFF_ROLES: readonly string[] = SHARED_STAFF_ROLES;
 
 export const ENTITY_TYPES = ["LLC", "LP", "Corporation", "Trust", "Series LLC", "Other"] as const;
 export const FUND_TYPES = [

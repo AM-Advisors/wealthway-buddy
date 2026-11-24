@@ -4,9 +4,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_AND_SALES_ROLES } from "@/lib/staff-roles";
 
 const ADMIN_ROLES = ["admin", "super_admin"];
-const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance", "account_manager", "sales_management", "cro"];
+const STAFF_ROLES: readonly string[] = STAFF_AND_SALES_ROLES;
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

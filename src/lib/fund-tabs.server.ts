@@ -9,8 +9,9 @@ import { investorSteps } from "@/lib/investor-step-status";
 import { identityScreeningSummary } from "@/lib/verification-status";
 import { currentProfileTaxDetails } from "@/lib/profile-tax-details.server";
 import { canonicalFundingState, CANONICAL_FUNDING_LABELS, isReconciledFunding } from "@/lib/funding-status";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
-export const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
+export const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 const SIGNED_STAGES = new Set(["harmonious_review", "accepted", "approved_to_fund", "awaiting_funds", "funded", "closed"]);
 
 export async function db() {

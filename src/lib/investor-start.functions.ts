@@ -3,8 +3,9 @@ import { z } from "zod";
 
 import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 import { missingProfileFields, planStartFund, profileFillPatch, PROFILE_FIELDS } from "@/lib/investor-start-model";
+import { EVERY_STAFF_ROLE } from "@/lib/staff-roles";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "client_success", "fund_administration", "finance", "executive", "cro", "sales", "marketing_manager", "marketing_specialist"];
+const STAFF_ROLES: readonly string[] = EVERY_STAFF_ROLE;
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;

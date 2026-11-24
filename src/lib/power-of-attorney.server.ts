@@ -18,12 +18,13 @@ import {
   poaCoveredTypesBlocker,
   poaPlainPowers,
 } from "@/lib/poa-authority";
+import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 
 const db = () => supabaseAdmin as any;
 const BUCKET = "power-of-attorney";
 const AUTHORITY_BUCKET = "authority-documents";
 const URL_TTL = 60;
-const STAFF_ROLES = ["admin", "super_admin", "operations", "compliance", "legal", "fund_administration"];
+const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 const CLIENT_ADMIN_ROLES = ["client_gp", "client_signatory", "client_finance", "client_legal", "client_compliance"];
 
 export type PoaSubject = { kind: "investment_profile" | "client"; id: string };

@@ -3095,6 +3095,13 @@
       "when": 1795486036088,
       "tag": "0441_removed_client_members_lose_access",
       "breakpoints": true
+    },
+    {
+      "idx": 442,
+      "version": "7",
+      "when": 1795493964442,
+      "tag": "0442_one_shared_staff_list",
+      "breakpoints": true
     }
   ]
 }
