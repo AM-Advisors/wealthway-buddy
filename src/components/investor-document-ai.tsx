@@ -20,7 +20,7 @@ type Found = FoundRow & { decision?: "approved" | "denied" | "updated"; appliedV
 type Owner = "match" | "needs" | "confirmed" | "moved";
 type Saved = { target: SaveTargetKey; documentId: string | null; signedOn: string | null; used?: boolean };
 type Result = {
-  file: string; blob: File; read: DocumentReadResult; found: Found[];
+  id: string; file: string; blob: File; read: DocumentReadResult; found: Found[];
   saveAs: SaveTargetKey | ""; signedOn: string; owner: Owner; ownerOnboardingId: string; ownerLabel: string | null;
   within: "entity" | "signer" | "owner" | ""; signedConfirmed: boolean; saveDuplicate: boolean; saved?: Saved; changingType?: boolean;
 };
@@ -42,7 +42,7 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
   const confirmOwner = useServerFn(confirmDocumentOwnerFn);
   const ownerOptions = useServerFn(documentOwnerOptionsFn);
   const createFromDoc = useServerFn(createInvestorFromDocumentFn);
-  const [newPick, setNewPick] = useState<{ ri: number; draft: NewInvestorDraft } | null>(null);
+  const [newPick, setNewPick] = useState<{ rid: string; draft: NewInvestorDraft } | null>(null);
   const recent = useServerFn(recentDocumentReadsFn);
   const logStep = useServerFn(recordDocumentStepFn);
   const resolve = useServerFn(resolveSuggestionFn);
@@ -58,11 +58,14 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
   const [results, setResults] = useState<Result[]>([]);
   const [deciding, setDeciding] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
-  const [working, setWorking] = useState<number | null>(null);
-  const [movePick, setMovePick] = useState<{ ri: number; value: string } | null>(null);
+  const [working, setWorking] = useState<string | null>(null);
+  const [movePick, setMovePick] = useState<{ rid: string; value: string } | null>(null);
   const recentQ = useQuery({ queryKey: ["doc-ai-recent", onboardingId], queryFn: () => recent({ data: { onboardingId } }) });
   const optionsQ = useQuery({ queryKey: ["doc-ai-owner-options", onboardingId], queryFn: () => ownerOptions({ data: { onboardingId } }), enabled: !!movePick });
-  const patch = (ri: number, p: Partial<Result>) => setResults((l) => l.map((r, i) => (i === ri ? { ...r, ...p } : r)));
+  // Rows are tracked by a stable id, never by list position: new reads are prepended while
+  // saves are in flight, so an index captured before an await can point at the wrong document.
+  const patch = (rid: string, p: Partial<Result>) => setResults((l) => l.map((r) => (r.id === rid ? { ...r, ...p } : r)));
+  const byId = (rid: string) => results.find((r) => r.id === rid);
   const refreshRecent = () => qc.invalidateQueries({ queryKey: ["doc-ai-recent", onboardingId] });
 
   async function run(files: FileList | File[] | null) {
@@ -73,7 +76,7 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
         const r = await read({ data: { onboardingId, fileName: file.name, mimeType: (file.type || "application/pdf") as any, base64: await toBase64(file), expectedKind: expected || null } });
         const today = new Date().toISOString().slice(0, 10);
         setResults((p) => [{
-          file: file.name, blob: file, read: r, found: r.found, saveAs: (expected || r.suggestedType || "") as SaveTargetKey | "",
+          id: crypto.randomUUID(), file: file.name, blob: file, read: r, found: r.found, saveAs: (expected || r.suggestedType || "") as SaveTargetKey | "",
           signedOn: r.documentDate && r.documentDate <= today ? r.documentDate : "",
           owner: r.owner.status === "match" ? "match" : "needs", ownerOnboardingId: onboardingId, ownerLabel: null,
           within: "", signedConfirmed: false, saveDuplicate: false,
@@ -85,36 +88,37 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
     void refreshRecent();
   }
 
-  async function ownerDecision(ri: number, targetOnboardingId: string, label: string | null) {
-    const r = results[ri]!;
-    setWorking(ri);
+  async function ownerDecision(rid: string, targetOnboardingId: string, label: string | null) {
+    const r = byId(rid);
+    if (!r) return;
+    setWorking(rid);
     try {
       const out = await confirmOwner({ data: { onboardingId, targetOnboardingId, fileName: r.file, values: r.read.values, within: r.within || null } });
-      patch(ri, { found: out.found, owner: targetOnboardingId === onboardingId ? "confirmed" : "moved", ownerOnboardingId: targetOnboardingId, ownerLabel: label });
+      patch(rid, { found: out.found, owner: targetOnboardingId === onboardingId ? "confirmed" : "moved", ownerOnboardingId: targetOnboardingId, ownerLabel: label });
       setMovePick(null);
       toast.success(targetOnboardingId === onboardingId ? "Owner confirmed." : `Moved to ${label ?? "the other investor"}. Nothing was saved here.`);
       void refreshRecent(); await qc.invalidateQueries();
     } catch (e) { toast.error((e as Error).message); } finally { setWorking(null); }
   }
 
-  async function addNewInvestor(ri: number, draft: NewInvestorDraft) {
-    const r = results[ri]!;
+  async function addNewInvestor(rid: string, draft: NewInvestorDraft) {
+    const r = byId(rid);
+    if (!r) return;
     const problems = draftProblems(draft);
     if (problems.length) { toast.error(problems[0]!); return; }
-    setWorking(ri);
+    setWorking(rid);
     try {
       const out = await createFromDoc({ data: { onboardingId, fileName: r.file, values: r.read.values, draft } });
-      patch(ri, { found: out.found, owner: "moved", ownerOnboardingId: out.onboardingId, ownerLabel: out.label });
+      patch(rid, { found: out.found, owner: "moved", ownerOnboardingId: out.onboardingId, ownerLabel: out.label });
       setNewPick(null);
       toast.success(`Added ${out.label} to this fund and moved ${r.file} to them. No email was sent.`);
       // Other files in this upload that name the same new person go to them too.
       const key = partyKey(draft);
-      for (let j = 0; j < results.length; j++) {
-        const o = results[j]!;
-        if (j === ri || o.owner !== "needs" || !key || partyKey(draftFromDocument(o.read.values, o.read.names)) !== key) continue;
+      for (const o of results) {
+        if (o.id === rid || o.owner !== "needs" || !key || partyKey(draftFromDocument(o.read.values, o.read.names)) !== key) continue;
         try {
           const m = await confirmOwner({ data: { onboardingId, targetOnboardingId: out.onboardingId, fileName: o.file, values: o.read.values, within: o.within || null } });
-          patch(j, { found: m.found, owner: "moved", ownerOnboardingId: out.onboardingId, ownerLabel: out.label });
+          patch(o.id, { found: m.found, owner: "moved", ownerOnboardingId: out.onboardingId, ownerLabel: out.label });
           toast.message(`${o.file} also moved to ${out.label}.`);
         } catch (e) { toast.error(`${o.file}: ${(e as Error).message}`); }
       }
@@ -122,37 +126,39 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
     } catch (e) { toast.error(`${(e as Error).message} If they're already on the fund, use "Belongs to someone else".`); } finally { setWorking(null); }
   }
 
-  async function decide(ri: number, fi: number, f: Found, action: "accept" | "reject" | "update", value?: string, quiet = false) {
+  async function decide(rid: string, fi: number, f: Found, action: "accept" | "reject" | "update", value?: string, quiet = false) {
     if (!f.suggestionId) return;
     setDeciding(f.suggestionId);
     try {
       await resolve({ data: { id: f.suggestionId, action, value: value ?? null } });
       const decision: Found["decision"] = action === "accept" ? "approved" : action === "reject" ? "denied" : "updated";
-      setResults((p) => p.map((r, i) => i !== ri ? r : { ...r, found: r.found.map((x, j) => j !== fi ? x : { ...x, decision, appliedValue: value }) }));
+      setResults((p) => p.map((r) => r.id !== rid ? r : { ...r, found: r.found.map((x, j) => j !== fi ? x : { ...x, decision, appliedValue: value }) }));
       setEditing(null);
       if (!quiet) toast.success(action === "accept" ? `${f.label} saved to the investor record` : action === "reject" ? `${f.label} suggestion denied` : `${f.label} updated on the investor record`);
     } catch (e) { toast.error((e as Error).message); throw e; }
     finally { setDeciding(null); }
   }
 
-  async function approveAll(ri: number) {
-    const r = results[ri]!;
+  async function approveAll(rid: string) {
+    const r = byId(rid);
+    if (!r) return;
     let n = 0;
     for (const [fi, f] of r.found.entries()) {
       if (!f.suggested || !f.suggestionId || f.decision) continue;
-      try { await decide(ri, fi, f, "accept", undefined, true); n++; } catch { break; }
+      try { await decide(rid, fi, f, "accept", undefined, true); n++; } catch { break; }
     }
     if (n) toast.success(`${n} detail${n === 1 ? "" : "s"} approved.`);
     await qc.invalidateQueries();
   }
 
-  async function save(ri: number) {
-    const r = results[ri]!;
+  async function save(rid: string) {
+    const r = byId(rid);
+    if (!r) return;
     const t = r.saveAs ? saveTarget(r.saveAs) : null;
     if (!t) { toast.error("Choose what this document is."); return; }
     if (t.store === "prior" && !r.signedOn) { toast.error("Enter the date it was signed."); return; }
     const target = r.ownerOnboardingId;
-    setWorking(ri);
+    setWorking(rid);
     try {
       let documentId: string | null = null;
       if (t.store === "upload") {
@@ -175,25 +181,26 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
         await logStep({ data: { onboardingId: target, fileName: r.file, step: "used", type: t.key, use: t.use } }).catch(() => null);
         used = true;
       }
-      patch(ri, { saved: { ...sv, used }, changingType: false });
+      patch(rid, { saved: { ...sv, used }, changingType: false });
       toast.success(used ? `Approved and filed as ${t.label}.` : `Saved as ${t.label}.`);
       void refreshRecent(); await qc.invalidateQueries();
     } catch (e) { toast.error((e as Error).message); } finally { setWorking(null); }
   }
 
-  async function use(ri: number) {
-    const r = results[ri]!;
+  async function use(rid: string) {
+    const r = byId(rid);
+    if (!r) return;
     const sv = r.saved; const t = sv ? saveTarget(sv.target) : null;
     if (!sv || !t?.use) return;
     if (!window.confirm(`${USE_LABEL[t.use]}? This is recorded in the investor's history.`)) return;
     const target = r.ownerOnboardingId;
-    setWorking(ri);
+    setWorking(rid);
     try {
       if (t.use === "tax_outside" && sv.documentId) await taxOutside({ data: { id: sv.documentId, note: "Signed copy read and saved from Read documents with AI" } });
       else if ((t.use === "accept_accreditation" || t.use === "accept_copy") && sv.documentId) await reviewUpload({ data: { id: sv.documentId, status: "accepted", note: null } });
       else if (t.use === "subscription_outside") await markOutside({ data: { fundId, onboardingId: target, marked: true, signedOn: sv.signedOn, note: "Signed copy saved from Read documents with AI" } });
       await logStep({ data: { onboardingId: target, fileName: r.file, step: "used", type: t.key, use: t.use } }).catch(() => null);
-      patch(ri, { saved: { ...sv, used: true } });
+      patch(rid, { saved: { ...sv, used: true } });
       toast.success("Done. The investor's steps are updated.");
       void refreshRecent(); await qc.invalidateQueries();
     } catch (e) { toast.error((e as Error).message); } finally { setWorking(null); }
@@ -219,14 +226,14 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
           <DriveDocumentPicker onboardingId={onboardingId} disabled={!!busy} onPicked={(files) => run(files)} />
         </div>
 
-        {results.map((r, i) => {
+        {results.map((r) => {
           const ownerOk = r.owner !== "needs";
           const pending = r.found.filter((f) => f.suggested && f.suggestionId && !f.decision).length;
           const steps = [
             ["Read", true], ["Type", !!r.saveAs], ["Owner", ownerOk], ["Details", ownerOk && pending === 0], ["Saved", !!r.saved], ["In use", !!r.saved?.used],
           ] as const;
           return (
-            <div key={`${r.file}-${i}`} className="space-y-2 rounded-md border p-3 text-sm">
+            <div key={r.id} className="space-y-2 rounded-md border p-3 text-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{r.file}</p>
                 <Badge variant="secondary">{r.read.documentKind}</Badge>
@@ -240,7 +247,7 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
               {r.read.summary ? <p className="text-xs text-muted-foreground">{r.read.summary}</p> : null}
               {r.read.typeMismatch && r.read.detectedType && (
                 <p className="rounded-md bg-muted p-2 text-xs">This looks like a <b>{saveTarget(r.read.detectedType)?.label}</b>, not a {saveTarget(r.saveAs || "other")?.label}.{" "}
-                  {!r.saved && <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => patch(i, { saveAs: r.read.detectedType! })}>Use {saveTarget(r.read.detectedType)?.label}</Button>}
+                  {!r.saved && <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => patch(r.id, { saveAs: r.read.detectedType! })}>Use {saveTarget(r.read.detectedType)?.label}</Button>}
                 </p>
               )}
               {r.read.warnings.map((w) => <p key={w} className="text-xs text-destructive">{w}</p>)}
@@ -255,22 +262,22 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
                     <p><Badge variant="destructive" className="mr-1">{r.read.owner.status === "unknown" ? "No name found" : "Different name"}</Badge>
                       {r.read.names.length ? `Document names: ${r.read.names.map((n) => n.name).join(", ")}` : "Confirm who this document belongs to."}</p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <select aria-label="Whose document within this investment" className="h-8 rounded-md border bg-background px-2" value={r.within} onChange={(e) => patch(i, { within: e.target.value as Result["within"] })}>
+                      <select aria-label="Whose document within this investment" className="h-8 rounded-md border bg-background px-2" value={r.within} onChange={(e) => patch(r.id, { within: e.target.value as Result["within"] })}>
                         <option value="">Whose document? (optional)</option>
                         <option value="entity">The entity or trust</option>
                         <option value="signer">A signer</option>
                         <option value="owner">A beneficial owner</option>
                       </select>
-                      <Button size="sm" className="h-8" disabled={working === i} onClick={() => void ownerDecision(i, onboardingId, null)}>It's this investor</Button>
-                      <Button size="sm" variant="outline" className="h-8" disabled={working === i} onClick={() => setMovePick({ ri: i, value: "" })}>Belongs to someone else</Button>
-                      <Button size="sm" variant="outline" className="h-8" disabled={working === i} onClick={() => setNewPick({ ri: i, draft: draftFromDocument(r.read.values, r.read.names) })}>Add as a new investor</Button>
+                      <Button size="sm" className="h-8" disabled={working === r.id} onClick={() => void ownerDecision(r.id, onboardingId, null)}>It's this investor</Button>
+                      <Button size="sm" variant="outline" className="h-8" disabled={working === r.id} onClick={() => setMovePick({ rid: r.id, value: "" })}>Belongs to someone else</Button>
+                      <Button size="sm" variant="outline" className="h-8" disabled={working === r.id} onClick={() => setNewPick({ rid: r.id, draft: draftFromDocument(r.read.values, r.read.names) })}>Add as a new investor</Button>
                     </div>
-                    {newPick?.ri === i && <NewInvestorForm draft={newPick.draft} busy={working === i} onChange={(d) => setNewPick({ ri: i, draft: d })} onCancel={() => setNewPick(null)} onSave={() => void addNewInvestor(i, newPick.draft)} />}
-                    {movePick?.ri === i && (
+                    {newPick?.rid === r.id && <NewInvestorForm draft={newPick.draft} busy={working === r.id} onChange={(d) => setNewPick({ rid: r.id, draft: d })} onCancel={() => setNewPick(null)} onSave={() => void addNewInvestor(r.id, newPick.draft)} />}
+                    {movePick?.rid === r.id && (
                       <div className="flex flex-wrap items-center gap-2">
                         <SearchableSelect aria-label="Investor in this fund" className="w-72" placeholder={optionsQ.isLoading ? "Loading investors…" : "Choose an investor in this fund…"}
-                          options={(optionsQ.data ?? []).filter((o) => o.value !== onboardingId)} value={movePick.value} onValueChange={(v) => setMovePick({ ri: i, value: v })} />
-                        <Button size="sm" className="h-8" disabled={!movePick.value || working === i} onClick={() => void ownerDecision(i, movePick.value, optionsQ.data?.find((o) => o.value === movePick.value)?.label ?? null)}>Move here</Button>
+                          options={(optionsQ.data ?? []).filter((o) => o.value !== onboardingId)} value={movePick.value} onValueChange={(v) => setMovePick({ rid: r.id, value: v })} />
+                        <Button size="sm" className="h-8" disabled={!movePick.value || working === r.id} onClick={() => void ownerDecision(r.id, movePick.value, optionsQ.data?.find((o) => o.value === movePick.value)?.label ?? null)}>Move here</Button>
                         <Button size="sm" variant="ghost" className="h-8" onClick={() => setMovePick(null)}>Cancel</Button>
                       </div>
                     )}
@@ -280,7 +287,7 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
 
               {/* Details */}
               {ownerOk && (r.found.length ? <>
-                {pending > 1 && <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={!!deciding} onClick={() => void approveAll(i)}>Approve all {pending} suggested</Button>}
+                {pending > 1 && <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={!!deciding} onClick={() => void approveAll(r.id)}>Approve all {pending} suggested</Button>}
                 <ul className="space-y-2">{r.found.map((f, j) => {
                   const busyRow = !!f.suggestionId && deciding === f.suggestionId;
                   const isEditing = !!f.suggestionId && editing?.id === f.suggestionId;
@@ -293,21 +300,21 @@ export function InvestorDocumentAi({ onboardingId, fundId }: { onboardingId: str
                         {f.decision ? <Badge variant="outline">{f.decision === "approved" ? "Approved" : f.decision === "denied" ? "Denied" : "Updated"}</Badge>
                           : <Badge variant={f.suggested ? "default" : "secondary"}>{f.suggested ? "Suggested" : "Already matches"}</Badge>}
                         {f.suggested && f.suggestionId && !f.decision && !isEditing && <span className="flex flex-wrap gap-1">
-                          <Button size="sm" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => void decide(i, j, f, "accept").then(() => qc.invalidateQueries(), () => null)}>Approve</Button>
-                          <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => void decide(i, j, f, "reject").catch(() => null)}>Deny</Button>
+                          <Button size="sm" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => void decide(r.id, j, f, "accept").then(() => qc.invalidateQueries(), () => null)}>Approve</Button>
+                          <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => void decide(r.id, j, f, "reject").catch(() => null)}>Deny</Button>
                           <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={busyRow} onClick={() => setEditing({ id: f.suggestionId!, value: f.editValue ?? String(f.value ?? "") })}>Update</Button>
                         </span>}
                       </div>
                       {isEditing && editing && <div className="flex flex-wrap items-center gap-2 pl-1">
                         <Input aria-label={`Corrected ${f.label}`} className="h-8 max-w-xs" value={editing.value} maxLength={300} autoFocus onChange={(e) => setEditing({ ...editing, value: e.target.value })} />
-                        <Button size="sm" className="h-8" disabled={busyRow || !editing.value.trim()} onClick={() => void decide(i, j, f, "update", editing.value.trim()).then(() => qc.invalidateQueries(), () => null)}>{busyRow ? "Saving…" : "Save correction"}</Button>
+                        <Button size="sm" className="h-8" disabled={busyRow || !editing.value.trim()} onClick={() => void decide(r.id, j, f, "update", editing.value.trim()).then(() => qc.invalidateQueries(), () => null)}>{busyRow ? "Saving…" : "Save correction"}</Button>
                         <Button size="sm" variant="ghost" className="h-8" disabled={busyRow} onClick={() => setEditing(null)}>Cancel</Button>
                       </div>}
                     </li>);
                 })}</ul>
               </> : <p className="text-xs text-muted-foreground">No investor details found.</p>)}
 
-              {ownerOk && <SaveRow r={r} busy={working === i} onChange={(p) => patch(i, p)} onSave={() => void save(i)} onUse={() => void use(i)} />}
+              {ownerOk && <SaveRow r={r} busy={working === r.id} onChange={(p) => patch(r.id, p)} onSave={() => void save(r.id)} onUse={() => void use(r.id)} />}
             </div>
           );
         })}
@@ -377,8 +384,8 @@ function SaveRow({ r, busy, onChange, onSave, onUse }: { r: Result; busy: boolea
         )}
         {st.use && !r.saved.used && <Button size="sm" className="h-7 px-2 text-xs" disabled={busy || !signedOk} onClick={onUse}>{USE_LABEL[st.use]}</Button>}
         {r.saved.used && <Badge variant="outline">In use</Badge>}
-        {!st.use && <span className="text-xs text-muted-foreground">{st.key === "identification" ? "Review identity in the Verification section." : "Kept with the investor's signed documents."}</span>}
-        {!r.saved.used && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => onChange({ changingType: true })}>Wrong type? Save as another</Button>}
+        <span className="text-xs text-muted-foreground">{st.key === "identification" ? "Review identity in the Verification section." : st.store === "prior" ? "Kept with the investor's signed documents." : "Saved with the investor's documents."}</span>
+        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => onChange({ changingType: true })}>Wrong type? Save as another</Button>
       </div>
     );
   }
