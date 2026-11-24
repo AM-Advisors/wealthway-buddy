@@ -248,7 +248,30 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       countersigner = { user_id: csId as string, email: cs.email, name: cs.name };
     }
 
-    const request = dual && countersigner
+    // Joint owners: every other active authorized signer of the investing trust/entity
+    // signs this same copy alongside the investor (same order, emailed by the signing service).
+    const coSigners: { email: string; name: string }[] = [];
+    {
+      const { data: obc } = await supabaseAdmin.from("investor_onboardings").select("investment_profile_id")
+        .eq("application_id", application.id).not("stage", "in", "(closed,declined,cancelled)").maybeSingle();
+      const pid = (obc as any)?.investment_profile_id ?? null;
+      if (pid) {
+        const { data: rels } = await supabaseAdmin.from("investment_profile_relationships")
+          .select("status, is_authorized_signer, persons(email, legal_first_name, legal_last_name)")
+          .eq("profile_id", pid).eq("is_authorized_signer", true);
+        const seen = new Set([signerEmail.toLowerCase(), String(profile.email).toLowerCase()]);
+        for (const r of (rels ?? []) as any[]) {
+          if (r.status === "removed") continue;
+          const em = String(r.persons?.email ?? "").trim().toLowerCase();
+          if (!em || seen.has(em)) continue;
+          seen.add(em);
+          coSigners.push({ email: em, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim() || em });
+        }
+      }
+    }
+    const coSignerInputs = coSigners.map((c, i) => ({ email: c.email, name: c.name, order: 1, externalUserId: `${application.id}:${doc.id}:co_signer:${i}`, emailOnly: true, redirectUrl: signerDoneUrl() }));
+
+    const request = (dual && countersigner) || coSigners.length
       ? await (async () => {
           const { createMultiSignerRequest } = await import("@/lib/box.server");
           const detail = await createMultiSignerRequest({
@@ -260,7 +283,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
             signers: [
               // Order 1: the named signer (emailed by Box) or the investor; order 2: the fund's countersigner.
               { email: signerEmail, name: signerName, order: 1, externalUserId: `${application.id}:${doc.id}:${namedSigner ? "named_signer" : "investor"}`, emailOnly: Boolean(namedSigner), ...(namedSigner ? { redirectUrl: signerDoneUrl() } : {}) },
-              { email: countersigner.email, name: countersigner.name, order: 2, externalUserId: `${application.id}:${doc.id}:fund_manager`, redirectUrl: fundSignerReturnUrl(String(doc.offering_id)) },
+              ...coSignerInputs,
+              ...(countersigner ? [{ email: countersigner.email, name: countersigner.name, order: 2, externalUserId: `${application.id}:${doc.id}:fund_manager`, redirectUrl: fundSignerReturnUrl(String(doc.offering_id)) }] : []),
             ],
           });
           const inv = namedSigner ? null : detail.signers.find((x) => x.email === String(profile.email).toLowerCase());
@@ -331,6 +355,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       await supabaseAdmin.from("document_signature_signers").delete().eq("signature_id", signatureId).neq("status", "signed");
       const base = { signature_id: signatureId, application_id: application.id, offering_document_id: doc.id, offering_id: doc.offering_id, required: true, status: "sent", sent_at: now };
       const rows: any[] = [{ ...base, role_key: namedSigner ? "named_signer" : "investor", signing_order: 1, signer_user_id: namedSigner ? null : userId, signer_email: signerEmail, signer_name: signerName }];
+      coSigners.forEach((c) => rows.push({ ...base, role_key: "co_signer", signing_order: 1, signer_user_id: null, signer_email: c.email, signer_name: c.name }));
       if (countersigner) rows.push({ ...base, role_key: "fund_manager", signing_order: 2, status: "waiting", sent_at: null, signer_user_id: countersigner.user_id, signer_email: countersigner.email, signer_name: countersigner.name });
       await supabaseAdmin.from("document_signature_signers").insert(rows);
     }
