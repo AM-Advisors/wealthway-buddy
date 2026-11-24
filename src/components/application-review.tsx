@@ -390,11 +390,13 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             <DecisionBar
               disabled={decideMutation.isPending}
               onDecide={(decision) => decideMutation.mutate({ area: "kyc", decision })}
+              status={(app as any)?.kyc_status}
               label="KYC decision"
             />
             <DecisionBar
               disabled={decideMutation.isPending}
               onDecide={(decision) => decideMutation.mutate({ area: "aml", decision })}
+              status={(app as any)?.aml_status}
               label="AML decision"
             />
           </CardContent>
@@ -465,6 +467,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             )}
             <DecisionBar
               disabled={decideMutation.isPending}
+              status={(app as any)?.accreditation_status}
               label="Accreditation decision"
               onDecide={(decision) =>
                 decideMutation.mutate(noteBody ? { area: "accreditation", decision, notes: noteBody } : { area: "accreditation", decision })
@@ -557,6 +560,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
 
             <DecisionBar
               disabled={decideMutation.isPending}
+              status={(app as any)?.documents_status}
               label="Document review decision"
               onDecide={(decision) => decideMutation.mutate({ area: "documents", decision })}
             />
@@ -1237,11 +1241,26 @@ function DecisionBar({
   label,
   disabled,
   onDecide,
+  status,
 }: {
   label: string;
   disabled: boolean;
   onDecide: (decision: "approved" | "declined" | "review") => void;
+  status?: string | null;
 }) {
+  const [changing, setChanging] = useState(false);
+  const decided = status === "approved" || status === "declined";
+  if (decided && !changing) {
+    return (
+      <div className="flex flex-wrap items-center gap-2 border-t pt-3">
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+        <Badge variant={statusTone(status ?? "")}>{prettyStatus(status ?? "")}</Badge>
+        <Button size="sm" variant="ghost" disabled={disabled} onClick={() => setChanging(true)}>
+          Change decision
+        </Button>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center gap-2 border-t pt-3">
       <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>

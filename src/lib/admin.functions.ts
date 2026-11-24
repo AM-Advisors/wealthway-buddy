@@ -159,9 +159,46 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
       : { data: [] as any[] };
     const docMap = new Map((offeringDocuments ?? []).map((d: any) => [d.id, d]));
 
+    // The signup profile is often blank for fields verification saved on the
+    // canonical person / investment profile. The application row above was read
+    // through RLS, so the caller is authorized for this exact application; read
+    // only that application's linked records for display (no tax data).
+    let mergedProfile: any = profile.data ?? null;
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: onb } = await supabaseAdmin
+        .from("investor_onboardings")
+        .select("person_id, investment_profile_id")
+        .eq("application_id", id)
+        .is("removed_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const [personRes, invProfileRes] = await Promise.all([
+        onb?.person_id
+          ? supabaseAdmin
+              .from("persons")
+              .select("date_of_birth, phone, address_line1, city, region, postal_code, country, citizenship_country")
+              .eq("id", onb.person_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        onb?.investment_profile_id
+          ? supabaseAdmin
+              .from("investment_profiles")
+              .select("profile_type, legal_name, phone, address_line1, city, region, postal_code, country")
+              .eq("id", onb.investment_profile_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      const { mergeInvestorDisplayProfile } = await import("@/lib/investor-display-profile");
+      mergedProfile = mergeInvestorDisplayProfile(profile.data ?? null, personRes.data as any, invProfileRes.data as any);
+    } catch (e) {
+      console.error("[getApplicationDetail] canonical profile merge failed", e);
+    }
+
     return {
       application,
-      profile: profile.data ?? null,
+      profile: mergedProfile,
       offering: offering.data ?? null,
       accreditation: accreditation.data ?? null,
       evidence: evidence.data ?? [],
