@@ -141,10 +141,10 @@ export async function setPriorDocWithdrawn(db: any, userId: string, input: { fun
 
 /**
  * Subscription Agreement completed outside the platform. Staff or the fund's managers mark it;
- * it counts as signed only once Harmonious has loaded the copy. Never touches funding.
+ * it counts as signed once Harmonious or the fund manager has loaded the signed copy. Never touches funding.
  */
 export async function outsideSubscriptionStates(db: any, onboardingIds: string[]) {
-  const out = new Map<string, { marked: boolean; signedOn: string | null; copyLoaded: boolean; copySignedOn: string | null; complete: boolean }>();
+  const out = new Map<string, { marked: boolean; signedOn: string | null; copyLoaded: boolean; copyLoadedBy: "Harmonious" | "Fund manager" | null; copySignedOn: string | null; complete: boolean }>();
   if (!onboardingIds.length) return out;
   const ids = [...new Set(onboardingIds)];
   const marks: any[] = []; const docs: any[] = [];
@@ -162,9 +162,9 @@ export async function outsideSubscriptionStates(db: any, onboardingIds: string[]
   for (const id of ids) {
     const latest = marks.find((m) => m.onboarding_id === id);
     const marked = latest?.action === "marked";
-    const copy = docs.find((d) => d.onboarding_id === id && d.uploaded_by_role === "harmonious" && !replaced.has(d.id) && !withdrawn.has(d.id));
+    const copy = docs.find((d) => d.onboarding_id === id && !replaced.has(d.id) && !withdrawn.has(d.id));
     const copyLoaded = Boolean(copy);
-    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: marked && copyLoaded });
+    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, copyLoadedBy: copy ? (copy.uploaded_by_role === "harmonious" ? "Harmonious" : "Fund manager") : null, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: marked && copyLoaded });
   }
   return out;
 }

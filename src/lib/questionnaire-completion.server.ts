@@ -33,7 +33,9 @@ export async function questionnaireCompletionForRows(d: any, rows: any[]) {
     if (error) throw new Error("Investing party details could not be loaded.");
     for (const p of data ?? []) profiles.set(p.id, p.profile_type);
   }
-  return new Map(rows.map((r) => [r.id, questionnaireCompletion({
+  // A Subscription Agreement signed outside the platform with its copy on file already holds the investor's answers.
+  const outside = await (await import("./prior-signed-documents.server")).outsideSubscriptionStates(d, rows.map((r) => r.id).filter(Boolean));
+  return new Map(rows.map((r) => [r.id, outside.get(r.id)?.complete ? { complete: true, missingRequired: 0 } : questionnaireCompletion({
     submittedAt: r.questionnaire_submitted_at, version: r.questionnaire_version,
     questions: questions.get(r.offering_id) ?? null, answers: r.questionnaire_responses,
     profileType: profiles.get(r.investment_profile_id), startedAt: r.created_at ?? null,

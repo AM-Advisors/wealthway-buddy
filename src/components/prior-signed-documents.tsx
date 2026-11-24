@@ -172,8 +172,8 @@ function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string;
       ) : (
         <div className="space-y-2 text-sm">
           <p>Signed outside the platform on {s.signedOn}.</p>
-          {s.complete ? <p className="text-xs text-muted-foreground">Harmonious has loaded the signed copy. The Sign step counts as done; funding is unchanged.</p>
-            : <p className="text-xs text-muted-foreground">Waiting for Harmonious to load the signed copy. Until then the Sign step stays open.</p>}
+          {s.complete ? <p className="text-xs text-muted-foreground">{`Signed copy loaded by ${s.copyLoadedBy === "Harmonious" ? "Harmonious" : "the fund manager"}. The Sign step counts as done; funding is unchanged.`}</p>
+            : <p className="text-xs text-muted-foreground">Upload the signed copy above. Until then the Sign step stays open.</p>}
           <div className="flex flex-wrap gap-2">
             {!s.complete && s.isHarmonious && <Button size="sm" onClick={() => onLoad(s.signedOn)}>Load the signed copy</Button>}
             {!open ? <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>Undo</Button>

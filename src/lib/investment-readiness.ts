@@ -277,7 +277,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
       reason = `Signed before Harmonious on ${input.priorSubscription.signedOn} (prior subscription confirmed).`;
     } else if (input.outsideSubscription && (stage === "subscription" || OUTSIDE_SIGNED_ANSWERS.has(r.key)) && r.state === "missing") {
       m = { status: "complete", owner: null, action: null };
-      reason = `Signed outside the platform on ${input.outsideSubscription.signedOn}; copy loaded by Harmonious.`;
+      reason = `Signed outside the platform on ${input.outsideSubscription.signedOn}; signed copy on file.`;
     } else if (r.key === "signature" && r.state === "missing" && input.requirements.some(req => req.key === "subscription_documents" && req.state !== "valid" && req.state !== "not_applicable")) {
       m = { status: "not_started", owner: null, action: null };
     }

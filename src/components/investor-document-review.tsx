@@ -62,7 +62,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
             <p className="text-xs text-muted-foreground">Signed{d.signed.signerName ? ` by ${d.signed.signerName}` : ""} on {new Date(d.signed.signedAt).toLocaleDateString()}</p>
           ) : null}
           {!d.signed && d.outsideSigned ? (
-            <p className="text-xs text-muted-foreground">Signed on {new Date(d.outsideSigned.signedOn + "T00:00:00").toLocaleDateString()}, copy on file with Harmonious</p>
+            <p className="text-xs text-muted-foreground">Signed on {new Date(d.outsideSigned.signedOn + "T00:00:00").toLocaleDateString()}, copy loaded by {d.outsideSigned.loadedBy ?? "the fund"}</p>
           ) : null}
           {d.signed && d.decision === "returned" && d.note ? (
             <p className="text-xs text-muted-foreground">Declined: {d.note}</p>

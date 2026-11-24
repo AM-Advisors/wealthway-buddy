@@ -71,7 +71,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
     personIds.length ? db.from("persons").select("id, email, preferred_name, legal_first_name, legal_last_name").in("id", personIds) : { data: [] },
     rows.length ? db.from("investor_document_approvals").select("*").in("onboarding_id", rows.map((r) => r.id)).order("decided_at", { ascending: false }) : { data: [] },
     appIds.length ? db.from("document_signatures").select("id, application_id, offering_document_id, signer_name, provider, provider_status, provider_completed_at, signed_at, pdf_path, executed_pdf_path, executed_at, cancelled_at, superseded_by").in("application_id", appIds) : { data: [] },
-    rows.length ? db.from("prior_signed_documents").select("id, onboarding_id, document_kind, signed_on, replaces_id, created_at").in("onboarding_id", rows.map((r) => r.id)).order("created_at", { ascending: false }) : { data: [] },
+    rows.length ? db.from("prior_signed_documents").select("id, onboarding_id, document_kind, signed_on, replaces_id, uploaded_by_role, created_at").in("onboarding_id", rows.map((r) => r.id)).order("created_at", { ascending: false }) : { data: [] },
   ]);
   const pMap = new Map(((persons ?? []) as any[]).map((p) => [p.id, p]));
   const withdrawnPriors = new Set((await (await import("@/lib/prior-signed-documents.server")).withdrawnPriorDocIds(db, rows.map((r) => r.id))).keys());
@@ -109,7 +109,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
             decidedAt: (dec?.decided_at ?? null) as string | null,
             countersignSignerId: (sig ? mySigner.get(sig.id) ?? null : null) as string | null,
             hasPendingFundSignature: Boolean(sig && pendingFundSignatures.has(sig.id)),
-            outsideSigned: (!sig ? outsideSignedFor((priors ?? []) as any[], r.id, d.doc_type, withdrawnPriors) : null) as { signedOn: string } | null,
+            outsideSigned: (!sig ? outsideSignedFor((priors ?? []) as any[], r.id, d.doc_type, withdrawnPriors) : null) as { signedOn: string; loadedBy: string } | null,
             signed: sig ? { hasCopy: Boolean(sig.pdf_path), signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string, fullyExecuted: Boolean(sig.executed_pdf_path), executedAt: (sig.executed_at ?? null) as string | null } : null,
           };
         }),
@@ -119,11 +119,11 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
 }
 
 /** Pure: a Harmonious-held copy of an outside-signed agreement shows as signed (evidence only, no approval). */
-export function outsideSignedFor(priors: any[], onboardingId: string, docType: string | null, withdrawn: Set<string> = new Set()): { signedOn: string } | null {
+export function outsideSignedFor(priors: any[], onboardingId: string, docType: string | null, withdrawn: Set<string> = new Set()): { signedOn: string; loadedBy: string } | null {
   if (docType !== "subscription_agreement" && docType !== "operating_agreement") return null;
   const replaced = new Set(priors.map((p) => p.replaces_id).filter(Boolean));
   const hit = priors.find((p) => p.onboarding_id === onboardingId && p.document_kind === docType && !replaced.has(p.id) && !withdrawn.has(p.id));
-  return hit ? { signedOn: hit.signed_on as string } : null;
+  return hit ? { signedOn: hit.signed_on as string, loadedBy: hit.uploaded_by_role === "harmonious" ? "Harmonious" : "the fund manager" } : null;
 }
 
 /** Pure: a manager decides only after the investor has signed; declining needs a reason. */

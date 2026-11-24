@@ -108,7 +108,7 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
     if (!dateOfBirth && !entity) missing.push("Date of birth");
     if (!taxIdLast4) missing.push("Tax ID");
     if (!committedCents) missing.push("Commitment amount");
-    if (!completions.get(o.id)?.complete) missing.push("Questionnaire");
+    if (!completions.get(o.id)?.complete && docs !== "Signed (outside platform)") missing.push("Questionnaire");
     if (!kycOk) missing.push(entity ? "KYB/AML check" : "KYC/AML check");
     if (docs !== "Signed" && docs !== "Signed (outside platform)") missing.push("Signed subscription");
     return {
@@ -132,7 +132,7 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
       kycOk,
       docs,
       wiring: CANONICAL_FUNDING_LABELS[funding],
-      steps: investorSteps({ stage: o.stage, claimed: !!o.investor_user_id, profileChosen: !!o.investment_profiles?.profile_type, questionnaireDone: completions.get(o.id)?.complete === true,
+      steps: investorSteps({ stage: o.stage, claimed: !!o.investor_user_id, profileChosen: !!o.investment_profiles?.profile_type, questionnaireDone: completions.get(o.id)?.complete === true || docs === "Signed (outside platform)",
         kyc, aml, signed: docs === "Signed" || docs === "Signed (outside platform)", outForSignature: docs === "Out for signature", funding }),
       lastActivity: o.last_activity_at ?? o.updated_at ?? null,
       stage: o.stage as string,
