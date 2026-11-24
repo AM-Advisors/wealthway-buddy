@@ -25,3 +25,19 @@ describe("pickOwners", () => {
     expect(_po([{ role: "account_manager", userId: "b" }, { role: "operations", userId: "a" }])).toEqual([{ userId: "a", role: "operations" }, { userId: "b", role: "account_manager" }]);
   });
 });
+
+import { actorLine, investorEventTitle } from "./ops-slack-notify.server";
+describe("investor Slack wording", () => {
+  it("names the investing party instead of the word Investor", () => {
+    expect(investorEventTitle("signature_completed", "Christofer Par")).toBe("Christofer Par signed subscription documents");
+    expect(investorEventTitle("signature_completed", "Christofer Par", true)).toBe("Christofer Par's subscription documents are fully signed");
+    expect(investorEventTitle("signature_completed", "  ")).toBe("Investor signed subscription documents");
+    expect(investorEventTitle("not_an_alert", "X")).toBeNull();
+  });
+  it("never says someone", () => {
+    expect(actorLine({ completed: true, submitter: null, when: "Nov 23, 5:51 PM" })).toBe("Recorded automatically by Harmonious · Nov 23, 5:51 PM");
+    expect(actorLine({ completed: true, submitter: "Thomas", automatic: true, when: "now" })).toBe("Recorded automatically by Harmonious · now");
+    expect(actorLine({ completed: true, submitter: "Christofer Par", when: "now" })).toBe("Completed by Christofer Par · now");
+    expect(JSON.stringify(buildMessage({ title: "t", place: "p", submitter: null, mention: null, url: "https://x", when: "now", completed: true }))).not.toContain("someone");
+  });
+});

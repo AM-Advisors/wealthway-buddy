@@ -27,7 +27,31 @@ export type SubmissionNotice = {
   completed?: boolean;
   /** Send at most once ever for this kind+ref (no 5-minute window). */
   once?: boolean;
+  /** Recorded by the platform (sync, webhook, reconciliation), not a person's action. */
+  automatic?: boolean;
 };
+
+const INVESTOR_EVENT_TITLES: Record<string, (who: string, automatic: boolean) => string> = {
+  questionnaire_submitted: (w) => `${w} submitted the questionnaire`,
+  signature_completed: (w, auto) => (auto ? `${w}'s subscription documents are fully signed` : `${w} signed subscription documents`),
+  investor_reports_funds_sent: (w) => `${w} reported a wire sent`,
+  amount_requested: (w) => `${w} submitted an investment amount`,
+  verification_completed: (w) => `${w}'s identity check finished`,
+};
+
+/** Slack title naming the investing party when known. Null for events that never alert. Pure, for tests. */
+export function investorEventTitle(event: string, partyName: string | null | undefined, automatic = false): string | null {
+  const f = INVESTOR_EVENT_TITLES[event];
+  if (!f) return null;
+  const who = typeof partyName === "string" && partyName.trim() ? partyName.trim() : "Investor";
+  return f(who, automatic);
+}
+
+/** Who-did-it line: never "someone"; platform-recorded items say so. Pure, for tests. */
+export function actorLine(n: { completed?: boolean; submitter: string | null; automatic?: boolean; when: string }): string {
+  if (n.automatic || !n.submitter) return `Recorded automatically by Harmonious · ${n.when}`;
+  return `${n.completed ? "Completed" : "Submitted"} by ${n.submitter} · ${n.when}`;
+}
 
 /** Operations owner and Account Manager (distinct people). Pure, for tests. */
 export function pickOwners(team: { role: string; userId: string | null }[]): { userId: string; role: string }[] {
@@ -54,7 +78,7 @@ export function dedupeKey(n: Pick<SubmissionNotice, "kind" | "ref" | "offeringId
 }
 
 /** Only the allow-listed fields ever reach Slack. Pure, for tests. */
-export function buildMessage(n: { title: string; place: string; submitter: string | null; mention: string | null; url: string; when: string; completed?: boolean }) {
+export function buildMessage(n: { title: string; place: string; submitter: string | null; mention: string | null; url: string; when: string; completed?: boolean; automatic?: boolean }) {
   const tag = n.mention ?? "_No Operations owner assigned._";
   const head = n.completed ? "Completed" : "New submission";
   const text = `${tag} ${head} · ${n.place}`;
@@ -62,7 +86,7 @@ export function buildMessage(n: { title: string; place: string; submitter: strin
     text,
     blocks: [
       { type: "section", text: { type: "mrkdwn", text: `${tag} *${head} - ${n.place}*\n${n.title}` } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `${n.completed ? "Completed" : "Submitted"} by ${n.submitter ?? "someone"} · ${n.when}` }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: actorLine(n) }] },
       { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Open in Harmonious" }, url: n.url }] },
     ],
   };
@@ -129,7 +153,8 @@ export async function notifySubmission(n: SubmissionNotice): Promise<void> {
     const sub = await (await import("@/lib/user-contact.server")).loadUserContact(db, n.submittedBy);
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const url = operationsNoticeUrl(n.path, n.offeringId);
-    const msg = buildMessage({ title: n.title, place, submitter: sub.name || sub.email || null, mention, url, when, completed: n.completed ?? false });
+    const submitter = n.submittedBy ? (sub.name || sub.email || "a signed-in user") : null;
+    const msg = buildMessage({ title: n.title, place, submitter, mention, url, when, completed: n.completed ?? false, automatic: n.automatic ?? false });
     const r = await slack("chat.postMessage", { channel: OPS_SLACK_CHANNEL, unfurl_links: false, ...msg });
     await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null, tagged_user_id: owner?.userId ?? null, client_id: clientId }).eq("dedupe_key", key);
   } catch (e) {

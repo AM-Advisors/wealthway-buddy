@@ -208,9 +208,23 @@ async function recordEvent(input: {
   actorUserId: string | null;
   actorRole?: string;
 }) {
-  const SLACK_EVENTS: Record<string, string> = { questionnaire_submitted: "Investor submitted the questionnaire", signature_completed: "Investor signed subscription documents", investor_reports_funds_sent: "Investor reported a wire sent", amount_requested: "Investor submitted an investment amount", verification_completed: "Investor identity check finished" };
-  if (SLACK_EVENTS[input.event]) {
-    void (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: `investor_${input.event}`, title: SLACK_EVENTS[input.event]!, offeringId: input.offeringId ?? null, submittedBy: input.actorUserId, ref: input.onboardingId, path: input.offeringId ? `/ops/fund-setup/${input.offeringId}` : null, completed: ["questionnaire_submitted", "signature_completed", "tax_form_uploaded", "w9_uploaded"].includes(input.event) }))().catch(() => null);
+  const SLACK_EVENTS = ["questionnaire_submitted", "signature_completed", "investor_reports_funds_sent", "amount_requested", "verification_completed"];
+  if (SLACK_EVENTS.includes(input.event)) {
+    const automatic = input.actorRole === "system" || !input.actorUserId || input.detail?.["automatic"] === true;
+    void (async () => {
+      const slack = await import("@/lib/ops-slack-notify.server");
+      // Name the investing party (never the login account), from the exact investment's profile.
+      let party: string | null = null;
+      if (input.onboardingId) {
+        const { data: ob } = await db().from("investor_onboardings").select("investment_profile_id").eq("id", input.onboardingId).maybeSingle();
+        if (ob?.investment_profile_id) {
+          const { data: prof } = await db().from("investment_profiles").select("legal_name, display_label").eq("id", ob.investment_profile_id).maybeSingle();
+          party = prof?.legal_name || prof?.display_label || null;
+        }
+      }
+      const title = slack.investorEventTitle(input.event, party, automatic)!;
+      await slack.notifySubmission({ kind: `investor_${input.event}`, title, offeringId: input.offeringId ?? null, submittedBy: automatic ? null : input.actorUserId, ref: input.onboardingId, path: input.offeringId ? `/ops/fund-setup/${input.offeringId}` : null, completed: ["questionnaire_submitted", "signature_completed", "tax_form_uploaded", "w9_uploaded"].includes(input.event), automatic });
+    })().catch(() => null);
   }
   await db().from("investor_onboarding_events").insert({
     onboarding_id: input.onboardingId,
