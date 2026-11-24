@@ -61,7 +61,7 @@ export function AcceptCloseCard({ onboardingId }: { onboardingId: string }) {
         <div className="flex flex-wrap gap-2">
           <Badge variant={funded ? "default" : "outline"}>{funded ? "Funds reconciled" : "Funds not reconciled"}</Badge>
           <Badge variant={closed ? "default" : "outline"}>{closed ? "Admitted" : "Not admitted"}</Badge>
-          <span className="text-muted-foreground">Received {money(o.funded_amount_cents)} of {money(o.accepted_amount_cents ?? o.requested_amount_cents)}</span>
+          <span className="text-muted-foreground">Received {money(o.funded_amount_cents)} of {money(o.accepted_amount_cents ?? o.commitment_amount_cents ?? o.requested_amount_cents)}</span>
         </div>
 
         <div className="space-y-2">

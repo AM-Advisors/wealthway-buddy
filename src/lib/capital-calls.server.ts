@@ -232,7 +232,7 @@ export async function commitmentSnapshot(offeringId: string): Promise<Commitment
   for (const row of (onboardings ?? []) as any[]) {
     const key = `${row.investor_user_id}:${row.investment_profile_id}`;
     if (covered.has(key)) continue;
-    const commitment = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+    const commitment = Number(row.accepted_amount_cents ?? row.commitment_amount_cents ?? row.requested_amount_cents ?? 0);
     if (commitment <= 0) continue;
     const contributed = posted.get(postedKey(row.investor_user_id, row.investment_profile_id)) ?? 0;
     lines.push({

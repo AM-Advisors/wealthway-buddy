@@ -5,7 +5,7 @@
 - [x] W-9 uses the tax ID already secured for that investing profile (only last four shown); new profiles now secure the full number
 - [x] Sign-off name/title, older document screen ownership/tax type and older funding screen sending bank start filled in
 - [x] Fund minimum: clearing or changing it updates both setup copies
-- [ ] 13 investments with two different amounts listed for review — waiting on Alyssa to pick the right amounts
+- [x] 13 investments with two amounts: commitment counts (Alyssa's choice); every screen, email, document and payment check now reads it
 - [ ] Trusts/companies: new ones have no recorded owners yet, so nothing to reuse; no current cases
 
 ## Submit subscription happens on its own (2026-11-23)

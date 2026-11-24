@@ -20,7 +20,7 @@ async function investorLabel(d: any, ob: any) {
 /** Checks the caller manages the fund and the investor really needs a side letter; never trusts the browser. */
 export async function resolveSideLetterTarget(userId: string, onboardingId: string) {
   const d = await db();
-  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, accepted_amount_cents").eq("id", onboardingId).is("removed_at", null).maybeSingle();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, commitment_amount_cents, accepted_amount_cents").eq("id", onboardingId).is("removed_at", null).maybeSingle();
   if (!ob) throw new Error("That investment wasn't found.");
   const [{ data: mgr }, { data: o }, { data: existing }] = await Promise.all([
     d.from("fund_managers").select("id").eq("offering_id", ob.offering_id).eq("user_id", userId).maybeSingle(),
@@ -29,7 +29,7 @@ export async function resolveSideLetterTarget(userId: string, onboardingId: stri
   ]);
   if (!mgr) throw new Error("Only this fund's managers can order a side letter.");
   if (!o?.client_id) throw new Error("This fund isn't linked to an organization yet.");
-  const commitment = Number(ob.accepted_amount_cents ?? ob.requested_amount_cents ?? 0);
+  const commitment = Number(ob.accepted_amount_cents ?? ob.commitment_amount_cents ?? ob.requested_amount_cents ?? 0);
   if (!sideLetterRequired(commitment, o.min_investment_cents)) throw new Error("This investor's commitment meets the fund minimum, so no side letter is needed.");
   if ((existing ?? []).length) throw new Error("A side letter has already been ordered for this investor.");
   return { clientId: o.client_id as string, offeringId: ob.offering_id as string, onboardingId: ob.id as string, commitment, minimum: Number(o.min_investment_cents) };
@@ -70,11 +70,11 @@ export async function generateSideLetterForPayment(paymentId: string) {
   if (done) return done.id as string;
   const onboardingId = (p.items ?? [])[0]?.onboardingId as string | undefined;
   if (!onboardingId) return null;
-  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, accepted_amount_cents").eq("id", onboardingId).maybeSingle();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, commitment_amount_cents, accepted_amount_cents").eq("id", onboardingId).maybeSingle();
   const { data: o } = ob ? await d.from("offerings").select("name, legal_entity_name, min_investment_cents").eq("id", ob.offering_id).maybeSingle() : { data: null };
   if (!ob || !o) return null;
   const label = await investorLabel(d, ob);
-  const commitment = Number(ob.accepted_amount_cents ?? ob.requested_amount_cents ?? 0);
+  const commitment = Number(ob.accepted_amount_cents ?? ob.commitment_amount_cents ?? ob.requested_amount_cents ?? 0);
   const today = new Date().toISOString().slice(0, 10);
   const { data: letter, error } = await d.from("side_letters").insert({
     offering_id: ob.offering_id, onboarding_id: ob.id, person_id: ob.person_id, investor_label: label,
@@ -108,10 +108,10 @@ export async function generateSideLetterForPayment(paymentId: string) {
  */
 export async function ensureMinimumSideLetter(onboardingId: string, actorUserId: string | null) {
   const d = await db();
-  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, accepted_amount_cents").eq("id", onboardingId).is("removed_at", null).maybeSingle();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, person_id, investment_profile_id, requested_amount_cents, commitment_amount_cents, accepted_amount_cents").eq("id", onboardingId).is("removed_at", null).maybeSingle();
   if (!ob) return null;
   const { data: o } = await d.from("offerings").select("name, legal_entity_name, min_investment_cents").eq("id", ob.offering_id).maybeSingle();
-  const commitment = Number(ob.accepted_amount_cents ?? ob.requested_amount_cents ?? 0);
+  const commitment = Number(ob.accepted_amount_cents ?? ob.commitment_amount_cents ?? ob.requested_amount_cents ?? 0);
   if (!o || !sideLetterRequired(commitment, o.min_investment_cents)) return null;
   const { data: open } = await d.from("side_letters").select("id").eq("onboarding_id", ob.id).in("status", ["proposed", "active"]).limit(1);
   if ((open ?? []).length) return open[0].id as string;
@@ -149,13 +149,13 @@ export async function listSideLetterNeeds(userId: string, offeringId: string) {
   const { data: o } = await d.from("offerings").select("min_investment_cents").eq("id", offeringId).maybeSingle();
   const min = Number(o?.min_investment_cents ?? 0);
   if (!min) return { minimumCents: 0, feeCents: SIDE_LETTER_FEE_CENTS, investors: [] };
-  const { data: obs } = await d.from("investor_onboardings").select("id, person_id, investment_profile_id, requested_amount_cents, accepted_amount_cents").eq("offering_id", offeringId).is("removed_at", null);
-  const below = ((obs ?? []) as any[]).filter((r) => sideLetterRequired(Number(r.accepted_amount_cents ?? r.requested_amount_cents ?? 0), min));
+  const { data: obs } = await d.from("investor_onboardings").select("id, person_id, investment_profile_id, requested_amount_cents, commitment_amount_cents, accepted_amount_cents").eq("offering_id", offeringId).is("removed_at", null);
+  const below = ((obs ?? []) as any[]).filter((r) => sideLetterRequired(Number(r.accepted_amount_cents ?? r.commitment_amount_cents ?? r.requested_amount_cents ?? 0), min));
   const { data: letters } = below.length ? await d.from("side_letters").select("id, onboarding_id, status, document_reference").in("onboarding_id", below.map((r) => r.id)) : { data: [] };
   const investors = [];
   for (const r of below) {
     const l = ((letters ?? []) as any[]).find((x) => x.onboarding_id === r.id && x.status !== "declined");
-    investors.push({ onboardingId: r.id as string, name: await investorLabel(d, r), commitmentCents: Number(r.accepted_amount_cents ?? r.requested_amount_cents), sideLetter: l ? { id: l.id as string, status: l.status as string, hasDocument: Boolean(l.document_reference) } : null });
+    investors.push({ onboardingId: r.id as string, name: await investorLabel(d, r), commitmentCents: Number(r.accepted_amount_cents ?? r.commitment_amount_cents ?? r.requested_amount_cents), sideLetter: l ? { id: l.id as string, status: l.status as string, hasDocument: Boolean(l.document_reference) } : null });
   }
   return { minimumCents: min, feeCents: SIDE_LETTER_FEE_CENTS, investors };
 }

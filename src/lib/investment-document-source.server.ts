@@ -8,7 +8,7 @@ export async function investmentDocumentSource(db: any, documentId: string, appl
   if (error || !doc) throw new Error("The agreement could not be loaded.");
   const [versions, investment, signature] = await Promise.all([
     db.from("offering_document_versions").select("id,version,file_path,file_name,target_onboarding_id,rollout_scope").eq("offering_document_id", doc.id),
-    applicationId ? db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,investor_user_id,requested_amount_cents,accepted_amount_cents").eq("application_id", applicationId).is("removed_at", null).maybeSingle() : { data: null },
+    applicationId ? db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,investor_user_id,requested_amount_cents, commitment_amount_cents,accepted_amount_cents").eq("application_id", applicationId).is("removed_at", null).maybeSingle() : { data: null },
     applicationId ? db.from("document_signatures").select("signature_template_version,provider_sent_at,provider_completed_at,cancelled_at,provider_status").eq("application_id", applicationId).eq("offering_document_id", doc.id).maybeSingle() : { data: null },
   ]);
   if (versions.error || investment.error || signature.error) throw new Error("The investment agreement version could not be loaded.");
@@ -31,7 +31,7 @@ export async function investmentDocumentSource(db: any, documentId: string, appl
     ]);
     if (profile.error || person.error) throw new Error("Investor agreement details could not be loaded.");
     const name = profile.data?.legal_name || [person.data?.legal_first_name, person.data?.legal_middle_name, person.data?.legal_last_name].filter(Boolean).join(" ");
-    const commitmentCents = ob.accepted_amount_cents ?? ob.requested_amount_cents ?? null;
+    const commitmentCents = ob.accepted_amount_cents ?? ob.commitment_amount_cents ?? ob.requested_amount_cents ?? null;
     const amount = commitmentCents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(commitmentCents / 100);
     const { fundTemplateValues } = await import("./fund-doc-templates.server");
     const { subscriptionLocks } = await import("./investor-onboarding.server");

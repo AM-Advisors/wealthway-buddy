@@ -156,7 +156,7 @@ export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promis
     readIn(profIds, (c) => d.from("investor_tax_forms").select("id, investment_profile_id, form_type, classification, status, tin_fingerprint, legal_name, expires_on, certified_at, superseded_by").in("investment_profile_id", c)),
     readIn(obIds, (c) => d.from("compliance_questionnaire_responses").select("id, onboarding_id, kind, review_status, superseded_by, created_at").in("onboarding_id", c).in("kind", ["bad_actor", "bsa_aml"]).is("superseded_by", null).order("created_at", { ascending: false })),
     readIn(obIds, (c) => d.from("investor_certifications").select("onboarding_id, certification_key, certification_version, evidence, created_at").in("onboarding_id", c).order("created_at", { ascending: true })),
-    readIn(obIds, (c) => d.from("investor_onboardings").select("id, requested_amount_cents, accepted_amount_cents").in("id", c)),
+    readIn(obIds, (c) => d.from("investor_onboardings").select("id, requested_amount_cents, commitment_amount_cents, accepted_amount_cents").in("id", c)),
     readIn(offIds, (c) => d.from("fund_managers").select("offering_id, user_id").in("offering_id", c)),
     readIn(obIds, (c) => d.from("investor_documents").select("id, onboarding_id, investment_profile_id, user_id, prepared_for_person_id, doc_kind, review_status, file_name").in("onboarding_id", c).eq("doc_kind", "tax_form").order("uploaded_at", { ascending: false })),
   ]);
@@ -180,7 +180,7 @@ export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promis
   for (const [k, v] of factMap) factMap.set(k, strip(v, ["investment_profile_id"]));
   return {
     rules, taxFacts: factMap, forms: groupBy(forms, "investment_profile_id"), badActor: ba, aml, certs: certMap,
-    amounts: new Map(amounts.map((a) => [String(a.id), { requested_amount_cents: a.requested_amount_cents, accepted_amount_cents: a.accepted_amount_cents }])),
+    amounts: new Map(amounts.map((a) => [String(a.id), { requested_amount_cents: a.requested_amount_cents, commitment_amount_cents: a.commitment_amount_cents, accepted_amount_cents: a.accepted_amount_cents }])),
     managers: new Set(mgrs.map((m) => `${m.offering_id}:${m.user_id}`)),
     taxUploads: groupBy(taxUploads, "onboarding_id"),
   };
@@ -284,7 +284,7 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
 
   const amlState = amlRequirementState((amlRows ?? [])[0] ?? null);
 
-  const commitmentCents = obRow ? Number(obRow.accepted_amount_cents ?? obRow.requested_amount_cents ?? 0) || null : null;
+  const commitmentCents = obRow ? Number(obRow.accepted_amount_cents ?? obRow.commitment_amount_cents ?? obRow.requested_amount_cents ?? 0) || null : null;
   const country = String(input.person?.residence_country ?? input.tax?.tax_residency_country ?? "") || null;
   const elig = effectiveEligibility({ regType, approved: parseEligibilityConfig(rules['eligibilityRequirements']) });
   const respByKey = new Map<string, any>();
@@ -750,10 +750,10 @@ export async function submitAml(userId: string, input: { onboardingId: string; a
   const { d, ob, profile } = await loadOwnOnboarding(userId, input.onboardingId);
   const { person } = await loadFacts(d, ob, userId);
   const policy = await amlPolicy(ob.offering_id);
-  const { data: obRow } = await d.from("investor_onboardings").select("requested_amount_cents, accepted_amount_cents").eq("id", ob.id).maybeSingle();
+  const { data: obRow } = await d.from("investor_onboardings").select("requested_amount_cents, commitment_amount_cents, accepted_amount_cents").eq("id", ob.id).maybeSingle();
   const facts = {
     profileType: profile.profile_type,
-    commitmentCents: Number(obRow?.accepted_amount_cents ?? obRow?.requested_amount_cents ?? 0) || null,
+    commitmentCents: Number(obRow?.accepted_amount_cents ?? obRow?.commitment_amount_cents ?? obRow?.requested_amount_cents ?? 0) || null,
     known: financialBackgroundKnown(person, profile, ob.questionnaire_responses ?? {}),
     answers: input.answers as any,
   };

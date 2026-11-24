@@ -28,3 +28,12 @@ describe("setup wording", () => {
     expect(setupDisplay(100, 3).text).toBe("100%");
   });
 });
+
+describe("commitment counts over the first amount entered", () => {
+  it("LumaSenseye II style record: $55,000 first entered, $50,000 commitment shows $50,000", () => {
+    expect(investmentAmountCents({ requested_amount_cents: 5_500_000, commitment_amount_cents: 5_000_000 })).toBe(5_000_000);
+  });
+  it("a raised commitment after a second call counts ($40,000 entered, $60,000 commitment)", () => {
+    expect(investmentAmountCents({ requested_amount_cents: 4_000_000, commitment_amount_cents: 6_000_000 })).toBe(6_000_000);
+  });
+});

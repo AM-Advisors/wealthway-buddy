@@ -998,7 +998,7 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
   }
   const locked = lockedAnswers({
     verifiedName,
-    commitmentCents: (row.accepted_amount_cents ?? row.requested_amount_cents ?? null) as number | null,
+    commitmentCents: (row.accepted_amount_cents ?? row.commitment_amount_cents ?? row.requested_amount_cents ?? null) as number | null,
     email: person?.email ?? loginEmail,
     phone: person?.phone ?? acct?.phone ?? (isIndividual ? profile?.phone : null) ?? null,
     profileType,
@@ -1443,7 +1443,7 @@ export async function investorFundingLedger(userId: string, onboardingId: string
     }
     return { id: e.id, at: e.created_at, kind: "opened", label: "Funding opened", amountCents: null, balanceCents: received };
   });
-  const expected = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+  const expected = Number(row.accepted_amount_cents ?? row.commitment_amount_cents ?? row.requested_amount_cents ?? 0);
   return {
     expectedCents: expected,
     receivedCents: Number(row.funded_amount_cents ?? received),
@@ -1732,7 +1732,7 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
       check: methods.includes("check") ? { payableTo: (pm as any)?.check_payable_to ?? null, mailTo: (pm as any)?.check_mail_address ?? null } : null,
       bankName: banking.bank_name as string | null,
       details,
-      expectedAmountCents: row.accepted_amount_cents ?? row.requested_amount_cents,
+      expectedAmountCents: row.accepted_amount_cents ?? row.commitment_amount_cents ?? row.requested_amount_cents,
       reference: `${String(row.id).slice(0, 8).toUpperCase()}`,
       warning:
         "Always confirm funding instructions inside this portal. Harmonious will never send changed bank details by email.",
@@ -1923,7 +1923,7 @@ export async function approveToFund(userId: string, input: { onboardingId: strin
   if (firstOutstanding) fail(`${firstOutstanding.label} is not complete.`);
   if (blocking > 0) fail("Resolve the open issues on this investment first.");
 
-  const accepted = Number(input.acceptedAmountCents ?? row.requested_amount_cents ?? 0);
+  const accepted = Number(input.acceptedAmountCents ?? row.commitment_amount_cents ?? row.requested_amount_cents ?? 0);
   if (accepted <= 0) fail("Record the accepted subscription amount.");
 
   if (!subscriptionReadyForReview(row.stage, facts.requirements, Boolean(row.removed_at), Boolean(row.approved_to_fund_at), blocking)) fail("This investment is not available for subscription approval.");
@@ -2199,7 +2199,7 @@ export async function applyBankActivity(
     offeringId: c.offering_id as string,
     investorUserId: c.investor_user_id as string,
     investmentProfileId: c.investment_profile_id as string | null,
-    expectedAmountCents: Number(c.accepted_amount_cents ?? c.requested_amount_cents ?? 0),
+    expectedAmountCents: Number(c.accepted_amount_cents ?? c.commitment_amount_cents ?? c.requested_amount_cents ?? 0),
     reference: String(c.id).slice(0, 8).toUpperCase(),
   }));
 
@@ -2233,7 +2233,7 @@ export async function applyBankActivity(
   }
 
   const row = await onboardingRow(onboardingId);
-  const expected = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+  const expected = Number(row.accepted_amount_cents ?? row.commitment_amount_cents ?? row.requested_amount_cents ?? 0);
   // Money already recorded by hand for this investment (same amount, not yet confirmed by a bank
   // line) is confirmed by this deposit instead of being counted a second time.
   const { data: priorMoney } = await db()
@@ -2302,7 +2302,7 @@ export async function recordManualReceipt(
   if (((prior ?? []) as any[]).some((p) => String(p.detail?.reference ?? "").toLowerCase() === reference.toLowerCase())) {
     fail("A receipt with this reference is already recorded for this investment.");
   }
-  const expected = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+  const expected = Number(row.accepted_amount_cents ?? row.commitment_amount_cents ?? row.requested_amount_cents ?? 0);
   const funded = Number(row.funded_amount_cents ?? 0) + input.amountCents;
   const status: FundingStatus = deriveFundingStatus({ acceptedAmountCents: expected, reconciledCents: funded });
   await touch(row.id, {
@@ -2402,7 +2402,7 @@ export async function acceptSubscription(
 /** Below-minimum investments close only once an approved (active) side letter is on file for them. */
 async function minimumSideLetterMissing(row: any, offering: any): Promise<boolean> {
   const { sideLetterRequired } = await import("@/lib/investor-onboarding-model");
-  const amount = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+  const amount = Number(row.accepted_amount_cents ?? row.commitment_amount_cents ?? row.requested_amount_cents ?? 0);
   if (!sideLetterRequired(amount, offering?.minInvestmentCents ?? null)) return false;
   const { data } = await db().from("side_letters").select("id").eq("onboarding_id", row.id).eq("status", "active").limit(1);
   return !(data ?? []).length;
@@ -3336,7 +3336,7 @@ export async function readinessQueue(userId: string) {
 // Each investor's own link is the existing email-bound invitation (/onboard/<token>), attached to
 // their investment so claiming it opens that exact investment. Creating one never sends email.
 async function personalLinkRow(onboardingId: string) {
-  const { data: row } = await db().from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id, person_id, requested_amount_cents, removed_at, persons(email, legal_first_name, legal_last_name)").eq("id", onboardingId).maybeSingle();
+  const { data: row } = await db().from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id, person_id, requested_amount_cents, commitment_amount_cents, removed_at, persons(email, legal_first_name, legal_last_name)").eq("id", onboardingId).maybeSingle();
   if (!row || row.removed_at) fail("That investor record was not found.");
   return row as any;
 }

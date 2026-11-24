@@ -116,7 +116,7 @@ export async function activeViewAs(staffUserId: string, authSessionId: string | 
   const [{ data: off }, name, onb] = await Promise.all([
     db().from("offerings").select("name").eq("id", p.offeringId).maybeSingle(),
     p.preview ? Promise.resolve("Fund manager preview") : nameOf(p.subjectUserId),
-    p.onboardingId ? db().from("investor_onboardings").select("requested_amount_cents").eq("id", p.onboardingId).maybeSingle() : Promise.resolve({ data: null }),
+    p.onboardingId ? db().from("investor_onboardings").select("requested_amount_cents, commitment_amount_cents, accepted_amount_cents").eq("id", p.onboardingId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   return {
     perspective: p.perspective,
@@ -125,7 +125,7 @@ export async function activeViewAs(staffUserId: string, authSessionId: string | 
     fundName: (off?.name as string | null) ?? "Fund",
     offeringId: p.offeringId,
     onboardingId: p.onboardingId,
-    amountCents: ((onb as any)?.data?.requested_amount_cents ?? null) as number | null,
+    amountCents: ((onb as any)?.data?.accepted_amount_cents ?? (onb as any)?.data?.commitment_amount_cents ?? (onb as any)?.data?.requested_amount_cents ?? null) as number | null,
   };
 }
 
@@ -213,7 +213,7 @@ export async function activeEditContext(staffUserId: string, authSessionId: stri
   const [{ data: off }, name, { data: onb }] = await Promise.all([
     db().from("offerings").select("name, client_id").eq("id", p.offeringId).maybeSingle(),
     nameOf(p.subjectUserId),
-    p.onboardingId ? db().from("investor_onboardings").select("requested_amount_cents, accepted_amount_cents, investment_profile_id").eq("id", p.onboardingId).maybeSingle() : Promise.resolve({ data: null }),
+    p.onboardingId ? db().from("investor_onboardings").select("requested_amount_cents, commitment_amount_cents, accepted_amount_cents, investment_profile_id").eq("id", p.onboardingId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const [{ data: client }, { data: profile }] = await Promise.all([
     off?.client_id ? db().from("clients").select("name").eq("id", off.client_id).maybeSingle() : Promise.resolve({ data: null }),
@@ -228,7 +228,7 @@ export async function activeEditContext(staffUserId: string, authSessionId: stri
     offeringId: p.offeringId as string,
     onboardingId: p.onboardingId as string | null,
     investmentProfileLabel: ((profile as any)?.display_label ?? null) as string | null,
-    amountCents: ((onb as any)?.accepted_amount_cents ?? (onb as any)?.requested_amount_cents ?? null) as number | null,
+    amountCents: ((onb as any)?.accepted_amount_cents ?? (onb as any)?.commitment_amount_cents ?? (onb as any)?.requested_amount_cents ?? null) as number | null,
   };
 }
 
