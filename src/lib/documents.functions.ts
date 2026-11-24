@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
@@ -76,7 +77,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
           .order("sort_order", { ascending: true }),
         supabase
           .from("document_signatures")
-          .select("id, offering_document_id, signer_name, signed_at, document_hash, pdf_path, signature_template_version")
+          .select("id, offering_document_id, signer_name, signed_at, document_hash, pdf_path, signature_template_version, provider, provider_status, provider_completed_at, cancelled_at")
           .eq("application_id", application.id),
         supabase
           .from("subscriptions")
@@ -108,7 +109,8 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
         approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval",
         outsideSignedOn: outsideSignedOn({ doc_type: d.doc_type }, investment.outside),
       })),
-      signatures: signatures ?? [],
+      // Only papers whose signing finished; a paper sent for signature is not "Signed".
+      signatures: ((signatures ?? []) as any[]).filter((x) => signatureConfirmed(x)).map(({ provider: _p, provider_status: _ps, provider_completed_at: done, cancelled_at: _c, ...rest }) => ({ ...rest, signed_at: done ?? rest.signed_at })) as typeof signatures & any[],
       subscription,
       profile,
     };

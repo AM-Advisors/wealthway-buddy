@@ -7,6 +7,7 @@
  * verified email, and starting one runs the normal startOnboarding flow.
  */
 import { setupActor, forbid } from "@/lib/fund-setup.server";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 
 const admin = async () => ((await import("@/integrations/supabase/client.server")).supabaseAdmin as any);
 
@@ -68,7 +69,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   const [{ data: persons }, { data: decisions }, { data: sigs }, { data: priors }] = await Promise.all([
     personIds.length ? db.from("persons").select("id, email, preferred_name, legal_first_name, legal_last_name").in("id", personIds) : { data: [] },
     rows.length ? db.from("investor_document_approvals").select("*").in("onboarding_id", rows.map((r) => r.id)).order("decided_at", { ascending: false }) : { data: [] },
-    appIds.length ? db.from("document_signatures").select("id, application_id, offering_document_id, signer_name, provider_status, provider_completed_at, signed_at, pdf_path, executed_pdf_path, executed_at, cancelled_at, superseded_by").in("application_id", appIds) : { data: [] },
+    appIds.length ? db.from("document_signatures").select("id, application_id, offering_document_id, signer_name, provider, provider_status, provider_completed_at, signed_at, pdf_path, executed_pdf_path, executed_at, cancelled_at, superseded_by").in("application_id", appIds) : { data: [] },
     rows.length ? db.from("prior_signed_documents").select("id, onboarding_id, document_kind, signed_on, replaces_id, created_at").in("onboarding_id", rows.map((r) => r.id)).order("created_at", { ascending: false }) : { data: [] },
   ]);
   const pMap = new Map(((persons ?? []) as any[]).map((p) => [p.id, p]));
@@ -87,7 +88,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
     : { data: [] };
   const invSignedAt = new Map(((invSignedRows ?? []) as any[]).map((r) => [r.signature_id, r.signed_at as string]));
   // Signed = completed with a stored copy, or the investor's part is signed and waiting on the fund.
-  const signed = liveSigs.filter((s) => ((s.provider_status === "completed" || s.signed_at) && s.pdf_path) || invSignedAt.has(s.id))
+  const signed = liveSigs.filter((s) => (signatureConfirmed(s) && s.pdf_path) || invSignedAt.has(s.id))
     .map((s) => (invSignedAt.has(s.id) && !s.provider_completed_at ? { ...s, provider_completed_at: invSignedAt.get(s.id) } : s));
   return {
     documents: docList.map((d) => ({ id: d.id as string, title: d.title as string, version: d.active_version as number | null, docType: (d.doc_type ?? null) as string | null })),

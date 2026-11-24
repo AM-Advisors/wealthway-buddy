@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { regTypeLabel } from "@/lib/reg-types";
 import { activeApplicationId } from "@/lib/active-application";
@@ -68,7 +69,7 @@ export const getStepRail = createServerFn({ method: "GET" })
       supabase.from("subscriptions").select("*").eq("application_id", appId).maybeSingle(),
       supabase
         .from("document_signatures")
-        .select("id, signer_name, signed_at")
+        .select("id, signer_name, signed_at, provider, provider_status, provider_completed_at, cancelled_at")
         .eq("application_id", appId),
       supabase
         .from("payments")
@@ -210,7 +211,7 @@ export const getStepRail = createServerFn({ method: "GET" })
     steps[2]!.capturedAt = acc.data?.attested_at ?? null;
 
     // 4. Documents
-    const signed = signatures.data ?? [];
+    const signed = (signatures.data ?? []).filter((s: any) => signatureConfirmed(s));
     const required = requiredDocs.data?.length ?? 0;
     const docFacts: RailStep["facts"] = [];
     if (required > 0 || signed.length > 0)

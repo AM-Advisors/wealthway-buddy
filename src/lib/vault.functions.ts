@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
@@ -70,7 +71,7 @@ export const getMyVault = createServerFn({ method: "GET" })
         ? supabase
             .from("document_signatures")
             .select(
-              "id, application_id, offering_document_id, signer_name, signed_at, pdf_path, provider_completed_at",
+              "id, application_id, offering_document_id, signer_name, signed_at, pdf_path, provider, provider_status, provider_completed_at, cancelled_at",
             )
             .in("application_id", appIds)
         : Promise.resolve({ data: [] as any[] } as any),
@@ -136,6 +137,7 @@ export const getMyVault = createServerFn({ method: "GET" })
     const rows: VaultRow[] = [];
 
     for (const sig of (signatures ?? []) as any[]) {
+      if (!signatureConfirmed(sig)) continue;
       const offeringId = appOffering.get(String(sig.application_id)) ?? null;
       const completed = iso(sig.provider_completed_at) ?? iso(sig.signed_at);
       rows.push({

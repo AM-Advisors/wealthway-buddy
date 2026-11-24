@@ -5,6 +5,7 @@
  * senders (remindFileSignerFn, emailFundSignatoryFn, sendSigningReminder).
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import { agreementKind, itemView, isViewersTurn, type RawItem, type RawSigner, type SignerRole } from "@/lib/signature-center-model";
 
 const d = () => supabaseAdmin as any;
@@ -156,7 +157,7 @@ export async function loadSignatureCenter(viewer: { userId: string; email: strin
     const rows = signersBySig.get(s.id) ?? [];
     const signers: RawSigner[] = rows.length
       ? rows.filter((r) => r.required !== false).map((r) => ({ id: r.id, name: r.signer_name, email: r.signer_email, userId: r.signer_user_id, role: role(r.role_key), order: r.signing_order ?? 1, status: r.status, sentAt: r.sent_at, signedAt: r.signed_at, viewedAt: r.viewed_at ?? null, windowOpenedAt: r.window_opened_at ?? null }))
-      : [{ id: s.id, name: s.signer_name ?? investorOf(ob), email: s.signer_email, userId: ob.investor_user_id, role: "investor", order: 1, status: s.signed_at || s.provider_status === "completed" ? "signed" : "waiting", sentAt: s.provider_sent_at, signedAt: s.signed_at ?? s.provider_completed_at }];
+      : [{ id: s.id, name: s.signer_name ?? investorOf(ob), email: s.signer_email, userId: ob.investor_user_id, role: "investor", order: 1, status: signatureConfirmed(s) ? "signed" : "waiting", sentAt: s.provider_sent_at, signedAt: signatureConfirmed(s) ? (s.provider_completed_at ?? s.signed_at) : null }];
     items.push(finish({ id: `ds:${s.id}`, source: "subscription", offeringId: ob.offering_id, fundName: fundName.get(ob.offering_id) ?? "Fund", title: doc?.title ?? "Subscription Agreement", kindHint: doc?.doc_type ?? null, investorName: investorOf(ob), onboardingId: ob.id, createdAt: s.provider_sent_at ?? rows[0]?.created_at ?? null, executedAt: s.executed_at, signers, signDocId: s.offering_document_id } as RawItem, ob, s.id));
   }
 

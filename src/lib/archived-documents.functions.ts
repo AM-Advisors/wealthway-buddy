@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
@@ -43,7 +44,7 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
     const [versR, ackR, sigR, prior2]: any[] = await Promise.all([
       docIds.length ? db.from("offering_document_versions").select("id, offering_document_id, version, file_name, created_at, superseded_at").in("offering_document_id", docIds) : none,
       docIds.length ? db.from("investment_document_acknowledgments").select("offering_document_id, version, onboarding_id, acknowledged_at").in("offering_document_id", docIds) : none,
-      docIds.length ? db.from("document_signatures").select("offering_document_id, application_id, signature_template_version, signed_at").in("offering_document_id", docIds).is("cancelled_at", null).not("signed_at", "is", null) : none,
+      docIds.length ? db.from("document_signatures").select("offering_document_id, application_id, signature_template_version, signed_at, provider, provider_status, provider_completed_at").in("offering_document_id", docIds).is("cancelled_at", null).not("signed_at", "is", null) : none,
       obIds.length ? db.from("prior_signed_documents").select("id, onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : none,
     ]);
     const sealed = await (await import("@/lib/sealed-records.server")).sealedIds(db, "offering_document_versions");
@@ -54,7 +55,7 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
 
     const evidence = [
       ...((ackR.data ?? []) as any[]).map((a) => ({ offering_document_id: a.offering_document_id, version: a.version, onboarding_id: a.onboarding_id, at: a.acknowledged_at, kind: "acknowledged" as const })),
-      ...((sigR.data ?? []) as any[]).filter((s) => appToOb[s.application_id]).map((s) => ({ offering_document_id: s.offering_document_id, version: s.signature_template_version, onboarding_id: appToOb[s.application_id] as string, at: s.signed_at, kind: "signed" as const })),
+      ...((sigR.data ?? []) as any[]).filter((s) => appToOb[s.application_id] && signatureConfirmed(s)).map((s) => ({ offering_document_id: s.offering_document_id, version: s.signature_template_version, onboarding_id: appToOb[s.application_id] as string, at: s.signed_at, kind: "signed" as const })),
     ].filter((e) => names[e.onboarding_id]);
 
     const { archivedApplicability } = await import("@/lib/archived-document-applicability");

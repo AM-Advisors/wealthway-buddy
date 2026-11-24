@@ -1,5 +1,6 @@
 /** Staff-only, read-only view of each open investment's questionnaire, tax form and signature status. */
 import { requireOperations } from "@/lib/ops-access.functions";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import {
   signingProgressRow,
   type SigningProgressFacts,
@@ -42,7 +43,7 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
     read("offerings", "id, name", "id", ids("offering_id")),
     read("persons", "id, legal_first_name, legal_last_name, preferred_name, email", "id", ids("person_id")),
     read("investor_tax_forms", "investment_profile_id, form_type, status, certified_at", "investment_profile_id", ids("investment_profile_id")),
-    read("document_signatures", "investment_profile_id, signed_at", "investment_profile_id", ids("investment_profile_id")),
+    read("document_signatures", "investment_profile_id, signed_at, provider, provider_status, provider_completed_at, cancelled_at", "investment_profile_id", ids("investment_profile_id")),
     read("investment_profiles", "id, profile_type", "id", ids("investment_profile_id")),
     read("onboarding_readiness_summaries", "onboarding_id, blocked, next_owner", "onboarding_id", rows.map((r) => r.id)),
   ]);
@@ -72,7 +73,7 @@ export async function signingProgress(context: any): Promise<{ rows: SigningProg
         taxFormType: tax?.form_type ?? null,
         taxFormSigned: Boolean(tax?.certified_at),
         documentsPrepared: r.document_template_version != null,
-        signaturesCompleted: sigs.filter((s) => s.investment_profile_id === r.investment_profile_id && s.signed_at).length,
+        signaturesCompleted: sigs.filter((s) => s.investment_profile_id === r.investment_profile_id && signatureConfirmed(s)).length,
         fundingStatus: r.funding_status ?? null,
         blocked: Boolean(ready.get(r.id)?.blocked),
         nextOwner: ready.get(r.id)?.next_owner ?? null,

@@ -1,4 +1,5 @@
 import { canonicalizeApplications } from "@/lib/verification-status";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import { canonicalExecutionStatus } from "@/lib/document-execution-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -155,7 +156,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
         appIds.length
           ? supabase
               .from("document_signatures")
-              .select("id, application_id, offering_document_id, signed_at, box_uploaded_at")
+              .select("id, application_id, offering_document_id, signed_at, box_uploaded_at, provider, provider_status, provider_completed_at, cancelled_at")
               .in("application_id", appIds)
               .limit(2000)
           : Promise.resolve({ data: [] as any[] }),
@@ -401,7 +402,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
     // Documents investors sign, with signature counts.
     const signedByDoc = new Map<string, number>();
     for (const sig of signatures) {
-      if (!sig.signed_at) continue;
+      if (!signatureConfirmed(sig)) continue;
       const key = sig.offering_document_id as string;
       signedByDoc.set(key, (signedByDoc.get(key) ?? 0) + 1);
     }
@@ -420,7 +421,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
     }));
 
     const signedCopies = signatures
-      .filter((s) => s.signed_at)
+      .filter((s) => signatureConfirmed(s))
       .sort((a, b) => String(b.signed_at).localeCompare(String(a.signed_at)))
       .slice(0, 25)
       .map((s) => ({
@@ -447,7 +448,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
     }
     const signedByApp = new Map<string, number>();
     for (const s of signatures) {
-      if (!s.signed_at) continue;
+      if (!signatureConfirmed(s)) continue;
       signedByApp.set(
         s.application_id as string,
         (signedByApp.get(s.application_id as string) ?? 0) + 1,

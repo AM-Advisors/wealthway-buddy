@@ -1,4 +1,5 @@
 import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -324,7 +325,7 @@ export const getFundOperations = createServerFn({ method: "GET" })
         appIds.length
           ? supabase
               .from("document_signatures")
-              .select("id, application_id, offering_document_id, signed_at, provider_status, pdf_path")
+              .select("id, application_id, offering_document_id, signed_at, provider, provider_status, provider_completed_at, cancelled_at, pdf_path")
               .in("application_id", appIds)
           : empty,
         appIds.length
@@ -377,6 +378,7 @@ export const getFundOperations = createServerFn({ method: "GET" })
     const signatures = (sigs ?? []) as any[];
     const signedByApp = new Map<string, Set<string>>();
     for (const s of signatures) {
+      if (!signatureConfirmed(s)) continue;
       if (!signedByApp.has(s.application_id)) signedByApp.set(s.application_id, new Set());
       signedByApp.get(s.application_id)!.add(s.offering_document_id);
     }
@@ -386,7 +388,7 @@ export const getFundOperations = createServerFn({ method: "GET" })
         const signed = signedByApp.get(app.id) ?? new Set<string>();
         const outstanding = requiredDocs.filter((d) => !signed.has(d.id));
         const lastSigned = signatures
-          .filter((s) => s.application_id === app.id && s.signed_at)
+          .filter((s) => s.application_id === app.id && signatureConfirmed(s))
           .map((s) => s.signed_at as string)
           .sort()
           .pop();

@@ -1,4 +1,5 @@
 import { canonicalizeApplications } from "@/lib/verification-status";
+import { signatureConfirmed } from "@/lib/signature-confirmed";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -75,7 +76,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       appIds.length
         ? supabase
             .from("document_signatures")
-            .select("application_id, signed_at")
+            .select("application_id, signed_at, provider, provider_status, provider_completed_at, cancelled_at")
             .in("application_id", appIds)
         : empty,
     ]);
@@ -127,7 +128,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
     );
 
     const signedByApp = new Set(
-      ((signatures ?? []) as any[]).filter((s) => s.signed_at).map((s) => s.application_id as string),
+      ((signatures ?? []) as any[]).filter((s) => signatureConfirmed(s)).map((s) => s.application_id as string),
     );
 
     const rowOf = (app: any) => {
