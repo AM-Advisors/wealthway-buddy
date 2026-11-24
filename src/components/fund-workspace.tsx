@@ -204,9 +204,9 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
         <FundTabBar fundId={fundId} mode={mode} tab={tab} extraTabs={extraTabs} />
 
         {extraTabs.map((x) => x.value === "setup"
-          ? <TabsContent key="setup" value="setup" className="space-y-10">{x.content}<section className="space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team and signers</h2><TeamTab fundId={fundId} /></section></TabsContent>
+          ? <TabsContent key="setup" value="setup" className="space-y-10">{x.content}<TeamSetupSection fundId={fundId} staff={staff} /></TabsContent>
           : <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
-        {!merged && <TabsContent value="setup" className="space-y-5">{detailsBody}<section className="space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team and signers</h2><TeamTab fundId={fundId} /></section></TabsContent>}
+        {!merged && <TabsContent value="setup" className="space-y-5">{detailsBody}<TeamSetupSection fundId={fundId} staff={staff} /></TabsContent>}
         <TabsContent value="distributions"><FundDistributions fundId={fundId} mode={mode} /></TabsContent>
         <TabsContent value="overview" className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -358,5 +358,16 @@ function StaffCloses({ fundId }: { fundId: string }) {
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
        !rows.length ? <Empty text="No close requests for this fund yet." /> : rows.map((r) => <CloseRequestReview key={r.id} r={r} />)}
     </div>
+  );
+}
+
+/** Staff keep the full editor in Setup; managers manage people in one place on the Team page. */
+function TeamSetupSection({ fundId, staff }: { fundId: string; staff: boolean }) {
+  if (staff) return <section className="space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team and signers</h2><TeamTab fundId={fundId} /></section>;
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5">
+      <div><h2 className="font-heading text-xl font-semibold">Team and signers</h2><p className="text-muted-foreground">Add people, choose who signs and who can log in, all on the Team page.</p></div>
+      <Button asChild size="lg"><Link to="/manager/fund/$fundId/team" params={{ fundId }}>Manage team</Link></Button>
+    </section>
   );
 }

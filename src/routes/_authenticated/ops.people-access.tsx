@@ -1,12 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { UserPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InviteStaffForm } from "@/components/invite-staff-form";
+import { NeedsReview } from "@/components/access-admin-panels";
 import { PossibleDuplicates } from "@/components/possible-duplicates";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { EmployeesPage } from "@/components/employees-panel";
 import { RolesPage } from "@/components/roles-panel";
 import { PeopleDirectory } from "@/components/people-directory";
-import { AccessControlCenter } from "@/components/access-control-center";
-import { visiblePeopleTabs, type PeopleTab } from "@/lib/staff-nav";
+import { AccessPeopleTab, RolesTab, MatrixTab, AuditTab } from "@/components/access-control-center";
+import { visiblePeopleTabs, canSee, normalizePeopleSearch, EMPLOYEE_FILTERS, type PeopleFilter } from "@/lib/staff-nav";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -27,46 +32,86 @@ export const Route = createFileRoute("/_authenticated/ops/people-access")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { tab?: PeopleTab | "records"; sub?: string } => ({
-    ...(typeof s["tab"] === "string" ? { tab: s["tab"] as PeopleTab | "records" } : {}),
+  validateSearch: (s: Record<string, unknown>): { tab?: string; sub?: string } => ({
+    ...(typeof s["tab"] === "string" ? { tab: s["tab"] } : {}),
     ...(typeof s["sub"] === "string" ? { sub: s["sub"] } : {}),
   }),
   component: PeopleAccessPage,
 });
 
+const FILTERS: { id: PeopleFilter; label: string }[] = [
+  { id: "employees", label: "Employees" },
+  { id: "accounts", label: "All accounts" },
+  { id: "fund_managers", label: "Fund managers" },
+  { id: "founders", label: "Founders" },
+  { id: "test", label: "Test & demo" },
+  { id: "access", label: "Access by person" },
+  { id: "records", label: "Details & ID checks" },
+  { id: "wix", label: "Wix members" },
+];
+
 function PeopleAccessPage() {
-  const { tab, sub } = Route.useSearch();
+  const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { session } = useClientWorkspace();
-  const tabs = visiblePeopleTabs(session?.staffRoles ?? []);
+  const roles = session?.staffRoles ?? [];
+  const tabs = visiblePeopleTabs(roles);
+  const isEmployeeAdmin = canSee("peopleEmployees", roles);
+  const norm = normalizePeopleSearch(search.tab, search.sub);
+  const [inviteOpen, setInviteOpen] = useState(norm.section === "invite");
   if (!tabs.length) return <main className="mx-auto max-w-3xl px-4 py-10 text-muted-foreground">You don't have access to People & Access.</main>;
-  const current = tab === "records" ? "records" : tabs.find((t) => t.id === tab)?.id ?? tabs[0]!.id;
+  const current = tabs.find((t) => t.id === norm.tab)?.id ?? tabs[0]!.id;
+  const filters = FILTERS.filter((f) => isEmployeeAdmin || !EMPLOYEE_FILTERS.includes(f.id));
+  const filter = filters.find((f) => f.id === norm.filter)?.id ?? filters[0]!.id;
+  const go = (tab: string, sub?: string) => navigate({ search: sub ? { tab, sub } : { tab }, replace: true });
   return (
-    <main className="mx-auto max-w-7xl space-y-4 px-4 py-8 sm:px-6">
-      <header>
-        <h1 className="font-heading text-2xl font-semibold">People & Access</h1>
-        <p className="text-muted-foreground">Employees in one group, everyone else (clients, fund managers, founders, investors) in another.</p>
-        <div className="mt-3"><Button onClick={() => navigate({ search: { tab: "access", sub: "invite" }, replace: true })}>Invite someone</Button></div>
+    <main className="mx-auto max-w-7xl space-y-5 px-4 py-8 sm:px-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold">People & Access</h1>
+          <p className="text-muted-foreground">Find anyone, see what they can reach, and change it in one place.</p>
+        </div>
+        {isEmployeeAdmin && <Button size="lg" onClick={() => setInviteOpen(true)}><UserPlus className="mr-2 size-4" />Invite someone</Button>}
       </header>
-      <RecentSignIns />
-      <Tabs value={current} onValueChange={(v) => navigate({ search: { tab: v as PeopleTab | "records" }, replace: true })}>
-        <TabsList className="flex-wrap">{tabs.map((t) => <TabsTrigger key={t.id} value={t.id}>{t.title}</TabsTrigger>)}<TabsTrigger value="records">Details & ID checks</TabsTrigger></TabsList>
-        <TabsContent value="records" className="space-y-6"><PossibleDuplicates /><PersonRecords /></TabsContent>
-        <TabsContent value="employees"><EmployeesPage /></TabsContent>
-        <TabsContent value="others" className="space-y-4">
-          <div className="flex flex-wrap gap-1">
-            {([["accounts", "All accounts"], ["fund_managers", "Fund managers"], ["founders", "Founders"], ["wix", "Wix members"]] as const).map(([id, label]) => (
-              <Button key={id} size="sm" variant={(sub ?? "accounts") === id ? "default" : "outline"} onClick={() => navigate({ search: { tab: "others", sub: id }, replace: true })}>{label}</Button>
-            ))}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader><DialogTitle>Invite someone</DialogTitle></DialogHeader>
+          <InviteStaffForm />
+        </DialogContent>
+      </Dialog>
+      <Tabs value={current} onValueChange={(v) => go(v)}>
+        <TabsList className="h-auto flex-wrap">{tabs.map((t) => <TabsTrigger key={t.id} value={t.id} className="text-base">{t.title}</TabsTrigger>)}</TabsList>
+        <TabsContent value="people" className="space-y-4">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Show">
+            {filters.map((f) => <Button key={f.id} size="sm" variant={filter === f.id ? "default" : "outline"} className="rounded-full" onClick={() => go("people", f.id)}>{f.label}</Button>)}
           </div>
-          {sub === "wix" ? <WixMembersPanel /> : sub === "fund_managers" ? <ContactDirectoryTable kind="fund_managers" /> : sub === "founders" ? <ContactDirectoryTable kind="founders" /> : <PeopleDirectory />}
+          {filter === "employees" ? <EmployeesPage />
+            : filter === "test" ? <PeopleDirectory initial="test" />
+            : filter === "access" ? <AccessPeopleTab />
+            : filter === "records" ? <div className="space-y-6"><PossibleDuplicates /><PersonRecords /></div>
+            : filter === "wix" ? <WixMembersPanel />
+            : filter === "fund_managers" ? <ContactDirectoryTable kind="fund_managers" />
+            : filter === "founders" ? <ContactDirectoryTable kind="founders" />
+            : <PeopleDirectory />}
         </TabsContent>
-        <TabsContent value="test"><PeopleDirectory initial="test" /></TabsContent>
-        <TabsContent value="roles"><RolesPage /></TabsContent>
-        <TabsContent value="access"><AccessControlCenter tab={sub ?? "people"} onTabChange={(t) => navigate({ search: { tab: "access", sub: t }, replace: true })} /></TabsContent>
+        <TabsContent value="roles" className="space-y-8">
+          <RolesPage />
+          <Section title="Role definitions"><RolesTab /></Section>
+          <Section title="Who can do what"><MatrixTab /></Section>
+        </TabsContent>
+        <TabsContent value="security" className="space-y-8">
+          {roles.some((r) => r === "super_admin" || r === "admin") && <p><Link to="/admin/security-activity" className="text-primary hover:underline">Open security activity & password or authenticator resets →</Link></p>}
+          <RecentSignIns />
+          <Section title="Needs review"><NeedsReview /></Section>
+          <Section title="Access change history"><AuditTab /></Section>
+        </TabsContent>
       </Tabs>
     </main>
   );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="space-y-3 border-t pt-6"><h2 className="font-heading text-xl font-semibold">{title}</h2>{children}</section>;
 }
 
 /** Latest sign-ins across all users; hidden for viewers who can't see the directory. */

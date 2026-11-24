@@ -233,12 +233,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     const ok = sub.filter((x) => allowed(x.url));
     return ok.length ? [{ id, title, url: ok[0]!.url, icon, sub: ok }] : [];
   };
-  const peopleSub = [
-    ...(has("super_admin", "admin") ? [{ title: "Security activity & resets", url: "/admin/security-activity" }] : []),
-    ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Employees", url: "/ops/people-access?tab=employees" }] : []),
-    ...(canSee("peopleOthers", staffRoles) ? [{ title: "Everyone else", url: "/ops/people-access?tab=others" }] : []),
-    ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Roles", url: "/ops/people-access?tab=roles" }, { title: "Invites & access", url: "/ops/people-access?tab=access" }] : []),
-  ];
+  const peopleSub = canSee("peopleOthers", staffRoles) || canSee("peopleEmployees", staffRoles) ? [{ title: "People & Access", url: "/ops/people-access" }] : [];
   const teamItems: NavItem[] = staffRoles.length ? [
     { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document", badge: taskAlerts },
     { id: "tech", title: "Tech", url: "/ops/tech", icon: "tasks" },
@@ -246,7 +241,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(has("super_admin", "executive", "admin") ? [{ id: "session-recordings", title: "Screen recordings", url: "/ops/session-recordings", icon: "document" as const }] : []),
     ...(!salesOnly ? [
     { id: "client-approvals", title: "Client approvals & requests", url: "/ops/client-approvals", icon: "document" },
-    ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people", sub: peopleSub }] : []),
+    ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people" }] : []),
     ...(canSee("mailboxes", staffRoles) ? [{ id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" }] : []),
     { id: "mail", title: "Mail", url: "/ops/mail", icon: "document" },
     { id: "help-center", title: "Help center", url: "/ops/help", icon: "document" },

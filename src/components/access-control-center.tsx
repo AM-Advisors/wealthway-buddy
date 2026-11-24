@@ -81,7 +81,7 @@ export function AccessControlCenter({ tab = "people", onTabChange }: { tab?: str
           <TabsTrigger value="review">Needs Review</TabsTrigger>
         </TabsList>
         <TabsContent value="invite"><InviteStaffForm /></TabsContent>
-        <TabsContent value="people"><PeopleTab /></TabsContent>
+        <TabsContent value="people"><AccessPeopleTab /></TabsContent>
         <TabsContent value="roles"><RolesTab /></TabsContent>
         <TabsContent value="matrix"><MatrixTab /></TabsContent>
         <TabsContent value="audit"><AuditTab /></TabsContent>
@@ -91,7 +91,7 @@ export function AccessControlCenter({ tab = "people", onTabChange }: { tab?: str
   );
 }
 
-function PeopleTab() {
+export function AccessPeopleTab() {
   const list = useServerFn(listAccessPeople);
   const { data, isLoading, error } = useQuery({ queryKey: ["access-people"], queryFn: () => list() });
   const [filter, setFilter] = useState<string>("all");
@@ -224,7 +224,7 @@ function AccessProfile({ userId }: { userId: string }) {
   );
 }
 
-function RolesTab() {
+export function RolesTab() {
   const get = useServerFn(listAccessRoles);
   const { data } = useQuery({ queryKey: ["access-roles"], queryFn: () => get() });
   return (
@@ -262,7 +262,7 @@ function blank(partial: Partial<Facts>): Facts {
   return { userId: "x", roles: [], staffGrants: [], customRoles: {}, managedFunds: [], investorFunds: [], investmentProfiles: [], clientMemberships: [], companies: [], professionalMemberships: [], delegations: [], ...partial };
 }
 
-function MatrixTab() {
+export function MatrixTab() {
   const [subject, setSubject] = useState(0);
   const [cell, setCell] = useState<{ area: string; summary: string } | null>(null);
   const perms = effectivePermissions(blank(MATRIX_SUBJECTS[subject]!.facts));
@@ -322,7 +322,7 @@ function MatrixGrid({ perms, granular }: { perms: Permission[]; granular?: boole
   );
 }
 
-function AuditTab() {
+export function AuditTab() {
   const get = useServerFn(listAccessAudit);
   const { data, isLoading } = useQuery({ queryKey: ["access-audit"], queryFn: () => get() });
   return (
