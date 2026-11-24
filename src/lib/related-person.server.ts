@@ -46,7 +46,7 @@ async function addRelatedPersonLocked(input: RelatedPersonInput): Promise<{ rela
   const { data: rel, error: rErr } = await db().from("investment_profile_relationships").insert({
     profile_id: input.profileId, person_id: person.id, role: input.role, ownership_percent: input.ownershipPercent ?? null,
     is_authorized_signer: Boolean(input.isSigner) || input.role === "authorized_signer", status: "active",
-    verification_status: input.verificationStatus ?? "unverified", added_by: input.actorUserId,
+    verification_status: input.verificationStatus ?? "not_started", added_by: input.actorUserId,
   }).select("id").single();
   if (rErr || !rel) throw new Error(rErr?.message ?? "Could not save that relationship.");
   if (kind !== "none") {
