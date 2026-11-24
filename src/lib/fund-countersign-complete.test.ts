@@ -31,3 +31,28 @@ describe("investor dashboard next step", () => {
     expect(investmentAttentionStep({ stage: "harmonious_review", approved_to_fund_at: null } as any)?.waiting).toBe(true);
   });
 });
+
+import { countersignAdmits } from "./fund-countersign-complete.server";
+describe("fund countersignature is the approval and acceptance", () => {
+  const ready = { stage: "funded", fundingStatus: "funded", acceptedAt: null, removedAt: null, investorUserId: "investor", signerUserId: "manager", outstanding: 0, blocking: 0 };
+  it("admits once funds are in and the fund countersigned, with no separate Harmonious step", () => {
+    expect(countersignAdmits(ready)).toBe(true);
+  });
+  it("admits when funds arrived before any manager approval", () => {
+    expect(countersignAdmits({ ...ready, stage: "harmonious_review" })).toBe(true);
+  });
+  it("waits for funds", () => {
+    expect(countersignAdmits({ ...ready, fundingStatus: "partially_funded" })).toBe(false);
+  });
+  it("waits while a requirement or blocking issue is open", () => {
+    expect(countersignAdmits({ ...ready, outstanding: 1 })).toBe(false);
+    expect(countersignAdmits({ ...ready, blocking: 1 })).toBe(false);
+  });
+  it("needs a countersignature and never the investor's own", () => {
+    expect(countersignAdmits({ ...ready, signerUserId: null })).toBe(false);
+    expect(countersignAdmits({ ...ready, signerUserId: "investor" })).toBe(false);
+  });
+  it("never accepts twice", () => {
+    expect(countersignAdmits({ ...ready, acceptedAt: "2026-11-24" })).toBe(false);
+  });
+});

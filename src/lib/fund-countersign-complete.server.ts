@@ -27,6 +27,10 @@ export async function completeFundCountersign(db: any, input: { signerRowId: str
     await db.from("document_signature_signers").update({ status: "signed", signed_at: signedAt, last_event_at: signedAt }).eq("id", me.id).neq("status", "signed");
   }
   if (sig?.application_id && me.signer_user_id) await releaseFundingAfterCountersign(db, sig.application_id, me.signer_user_id);
+  if (sig?.application_id) {
+    const { data: ob } = await db.from("investor_onboardings").select("id").eq("application_id", sig.application_id).is("removed_at", null).maybeSingle();
+    if (ob?.id) await acceptAfterCountersign(db, ob.id).catch((e: unknown) => console.error("[countersign] admit failed", e));
+  }
   // Every path that records a signature rechecks the investment so its checklist counts it.
   if (sig?.application_id) {
     const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
@@ -60,4 +64,54 @@ export async function releaseFundingAfterCountersign(db: any, applicationId: str
     console.log("[countersign] funding not released yet:", e instanceof Error ? e.message : "blocked");
     return { released: false };
   }
+}
+
+/** Pure: may a completed fund countersignature stand in for both manager approval and acceptance? */
+export function countersignAdmits(input: {
+  stage: string | null; fundingStatus: string | null; acceptedAt: string | null; removedAt: string | null;
+  investorUserId: string | null; signerUserId: string | null; outstanding: number; blocking: number;
+}): boolean {
+  if (input.removedAt || input.acceptedAt || !input.signerUserId) return false;
+  if (input.signerUserId === input.investorUserId) return false;
+  if (input.fundingStatus !== "funded") return false;
+  if (input.outstanding > 0 || input.blocking > 0) return false;
+  return ["harmonious_review", "approved_to_fund", "awaiting_funds", "funded"].includes(String(input.stage ?? ""));
+}
+
+/**
+ * The fund's countersignature is the approval and the acceptance: once funds are
+ * reconciled, record both from the countersign (no separate Approve or Accept & admit).
+ * Idempotent; refuses while any requirement or blocking issue is open. Never moves money.
+ */
+export async function acceptAfterCountersign(db: any, onboardingId: string) {
+  const { data: ob } = await db.from("investor_onboardings")
+    .select("id, offering_id, application_id, stage, funding_status, accepted_at, removed_at, investor_user_id, approved_to_fund_at, accepted_amount_cents, commitment_amount_cents, requested_amount_cents")
+    .eq("id", onboardingId).maybeSingle();
+  if (!ob?.application_id) return { accepted: false };
+  const { data: signer } = await db.from("document_signature_signers")
+    .select("signer_user_id, signer_name, signed_at").eq("application_id", ob.application_id)
+    .eq("role_key", "fund_manager").eq("status", "signed").not("signer_user_id", "is", null)
+    .order("signed_at", { ascending: false }).limit(1).maybeSingle();
+  const { readinessBlockers } = await import("@/lib/investor-onboarding.server");
+  const { outstanding, blocking } = await readinessBlockers(ob.id);
+  if (!countersignAdmits({ stage: ob.stage, fundingStatus: ob.funding_status, acceptedAt: ob.accepted_at, removedAt: ob.removed_at, investorUserId: ob.investor_user_id, signerUserId: signer?.signer_user_id ?? null, outstanding, blocking })) return { accepted: false };
+  const now = new Date().toISOString();
+  const amount = Number(ob.accepted_amount_cents ?? ob.commitment_amount_cents ?? ob.requested_amount_cents ?? 0);
+  const { data: done } = await db.from("investor_onboardings").update({
+    stage: "accepted",
+    ...(ob.approved_to_fund_at ? {} : { approved_to_fund_at: now, approved_to_fund_by: signer.signer_user_id, funding_released_at: now, accepted_amount_cents: amount }),
+    accepted_by: signer.signer_user_id,
+    accepted_at: now,
+    acceptance_capacity: `${signer.signer_name ?? "Fund signatory"} · Fund countersignature`,
+    updated_at: now,
+  }).eq("id", ob.id).is("accepted_at", null).select("id").maybeSingle();
+  if (!done) return { accepted: false };
+  await db.from("investor_onboarding_events").insert({
+    onboarding_id: ob.id, offering_id: ob.offering_id, event: "subscription_accepted", from_status: ob.stage, to_status: "accepted",
+    actor_user_id: signer.signer_user_id, actor_role: "fund_manager",
+    detail: { via: "fund_countersignature", signerName: signer.signer_name ?? null, countersignedAt: signer.signed_at ?? null, approvedToFund: !ob.approved_to_fund_at },
+  }).then(() => null, () => null);
+  const { onInvestmentAccepted } = await import("@/lib/drive.server");
+  await onInvestmentAccepted(ob.id, signer.signer_user_id).catch(() => null);
+  return { accepted: true };
 }

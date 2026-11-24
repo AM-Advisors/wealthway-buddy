@@ -1909,6 +1909,20 @@ export async function reviewDetail(userId: string, onboardingId: string) {
   };
 }
 
+/** Open requirements and blocking issues for one investment (server-only helper). */
+export async function readinessBlockers(onboardingId: string) {
+  const row = await onboardingRow(onboardingId);
+  const facts = await gatherFacts(row);
+  const exceptions = await openExceptions(row.id);
+  return { outstanding: outstandingRequirements(facts.requirements).length, blocking: exceptions.filter((e) => e.severity === "blocking").length };
+}
+
+async function admitIfCountersigned(onboardingId: string, status: string) {
+  if (status !== "funded") return;
+  const { acceptAfterCountersign } = await import("@/lib/fund-countersign-complete.server");
+  await acceptAfterCountersign(db(), onboardingId).catch((e) => console.error("[countersign] admit after funding failed", e));
+}
+
 export async function approveToFund(userId: string, input: { onboardingId: string; acceptedAmountCents?: number }) {
   const row = await onboardingRow(input.onboardingId);
   const actor = await onboardingActor(userId);
@@ -2272,6 +2286,7 @@ export async function applyBankActivity(
 
   await settleFundingExceptions(userId, actor.userId, row.id, status, expected, funded);
   await syncInvitation(row);
+  await admitIfCountersigned(row.id, status);
   return { matched: true, onboardingId: row.id, fundingStatus: status, fundedAmountCents: funded };
 }
 
@@ -2321,6 +2336,7 @@ export async function recordManualReceipt(
   });
   await settleFundingExceptions(userId, actor.userId, row.id, status, expected, funded);
   await syncInvitation(row);
+  await admitIfCountersigned(row.id, status);
   return { fundingStatus: status, fundedAmountCents: funded, expectedAmountCents: expected };
 }
 
