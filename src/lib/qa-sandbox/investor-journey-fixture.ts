@@ -127,6 +127,8 @@ export function handleQaJourneyCall(fnName: string, data: any, j: QaJourney): un
         person: [{ label: "Investor", value: QA_JOURNEY_INVESTOR }],
         documents: detail.documents.map(d => ({ id: d.id, title: d.title, status: d.signed ? "Signed" : "Awaiting signatures" })),
         history: [{ id: "qa-prepared", label: "Questionnaire answers prepared", step: "sign", actor: "Jordan Helper", at: "2026-11-24T10:00:00Z" }, { id: "qa-system", label: "Signature recorded", step: "sign", actor: "System", at: "2026-11-24T11:00:00Z" }],
+        missing: [{ key: "phone", label: "Phone", group: "person" }, { key: "dateOfBirth", label: "Date of birth", group: "person" }],
+        editor: "manager",
       } satisfies InvestorPerspectiveData;
     }
     case "investorDashboardFn": {

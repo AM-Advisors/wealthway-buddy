@@ -4,7 +4,7 @@ import { computeReadinessFor, fundRosterViewer, investorDeskActor, investorSideS
 import { investmentAmountCents } from "./investment-amounts";
 import { readinessView } from "./investment-readiness";
 import { journeySteps } from "./investor-journey-model";
-import { canOpenInvestorPerspective, completionActor, COMPLETION_EVENTS, safePerspectiveQuestion, type InvestorPerspectiveData } from "./investor-perspective";
+import { perspectiveEditor, perspectiveMissingFields, canOpenInvestorPerspective, completionActor, COMPLETION_EVENTS, safePerspectiveQuestion, type InvestorPerspectiveData } from "./investor-perspective";
 import { canInvestorFund, questionAppliesToProfile, questionVisible, type Question } from "./investor-onboarding-model";
 import { SENSITIVE_TITLE } from "./didit-questionnaire";
 import standardQuestions from "./standard-investor-questionnaire.json";
@@ -19,6 +19,7 @@ export async function investorPerspective(userId: string, input: { onboardingId:
   await fundRosterViewer(userId, row.offering_id);
   const desk = await investorDeskActor(userId, row.offering_id).catch(() => null);
   const canReadDetails = access.staff || access.manager || Boolean(desk?.viaTeam);
+  const editor = perspectiveEditor(access, Boolean(desk?.viaTeam));
   const [{ result, facts }, { data: offering, error: offeringError }, { data: participants, error: participantError }, { data: events, error: eventError }] = await Promise.all([
     computeReadinessFor(row),
     db.from("offerings").select("name").eq("id", row.offering_id).maybeSingle(),
@@ -56,6 +57,8 @@ export async function investorPerspective(userId: string, input: { onboardingId:
     selectedParticipant: selected ? { id: selected.id, name: selected.full_name, role: selected.role } : null,
     person: readDetails ? [{ label: "Investor", value: investorName }, { label: "Investing as", value: facts.profile?.display_label ?? "Not selected" }, { label: "Address", value: [person.address_line1, person.city, person.region, person.postal_code, person.country].filter(Boolean).join(", ") || "Not provided" }] : [],
     documents: (facts.documents ?? []).map((d: any) => ({ id: String(d.id), title: d.title ?? "Fund document", status: d.signed ? "Signed" : investorSigned.has(String(d.id)) ? "Investor signed, waiting on fund countersignature" : d.requiresAcknowledgment ? (d.acknowledged ? "Acknowledged" : "Acknowledgment pending") : d.requiresSignature ? "Awaiting signatures" : "Available" })),
+    missing: readDetails ? perspectiveMissingFields({ person: { ...person, tax_id_last4: person.tax_id_last4 ?? null }, profile: facts.profile ?? null, amountCents: investmentAmountCents(row) }) : [],
+    editor: readDetails && !selected ? editor : null,
     history: (events ?? []).flatMap((e: any) => {
       const entry = COMPLETION_EVENTS[e.event];
       return entry ? [{ id: e.id, ...entry, actor: completionActor(e.actor_role, names.get(e.actor_user_id) ?? null), at: e.created_at }] : [];

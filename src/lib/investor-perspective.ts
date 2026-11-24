@@ -50,4 +50,43 @@ export type InvestorPerspectiveData = {
   person: { label: string; value: string }[];
   documents: { id: string; title: string; status: string }[];
   history: { id: string; label: string; step: PerspectiveStep; actor: string; at: string }[];
+  missing: PerspectiveField[];
+  editor: PerspectiveEditor;
 };
+export type PerspectiveEditor = "staff" | "manager" | "team" | null;
+export type PerspectiveField = { key: PerspectiveFieldKey; label: string; group: "person" | "profile" | "tax" | "investment" };
+export type PerspectiveFieldKey = "firstName" | "lastName" | "email" | "phone" | "dateOfBirth" | "addressLine1" | "city" | "region" | "postalCode" | "country" | "legalName" | "taxId" | "commitmentCents";
+
+/** Who may type into the client perspective. View-only fund team never edits; server saves re-authorize. */
+export function perspectiveEditor(access: FundAccess, teamManagesInvestors: boolean): PerspectiveEditor {
+  if (access.staff) return "staff";
+  if (access.manager) return "manager";
+  return teamManagesInvestors ? "team" : null;
+}
+
+/** Investor-only requirements never get inputs: answers, certifications, signatures, consent. */
+export const INVESTOR_ONLY_KEYS = new Set(["bsa_aml", "subscription_questionnaire", "financial_background", "certifications", "review_certify", "signatures", "identity_verification"]);
+
+const blank = (v: unknown) => v == null || String(v).trim() === "";
+
+export function perspectiveMissingFields(input: {
+  person: Record<string, unknown>; profile: Record<string, unknown> | null; amountCents: number | null;
+}): PerspectiveField[] {
+  const p = input.person, out: PerspectiveField[] = [];
+  const add = (key: PerspectiveFieldKey, label: string, group: PerspectiveField["group"], value: unknown) => { if (blank(value)) out.push({ key, label, group }); };
+  add("firstName", "Legal first name", "person", p["legal_first_name"]);
+  add("lastName", "Legal last name", "person", p["legal_last_name"]);
+  add("email", "Email", "person", p["email"]);
+  add("phone", "Phone", "person", p["phone"]);
+  add("dateOfBirth", "Date of birth", "person", p["date_of_birth"]);
+  add("addressLine1", "Street address", "person", p["address_line1"]);
+  add("city", "City", "person", p["city"]);
+  add("region", "State", "person", p["region"]);
+  add("postalCode", "ZIP code", "person", p["postal_code"]);
+  add("country", "Country", "person", p["country"]);
+  const entity = input.profile && input.profile["profile_type"] !== "individual";
+  if (entity) add("legalName", "Entity legal name", "profile", input.profile?.["legal_name"]);
+  add("taxId", entity ? "EIN" : "SSN", "tax", input.profile?.["tax_id_last4"] ?? p["tax_id_last4"]);
+  if (input.amountCents == null || input.amountCents <= 0) out.push({ key: "commitmentCents", label: "Commitment amount", group: "investment" });
+  return out;
+}

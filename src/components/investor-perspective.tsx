@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { updateInvestorRecordFn } from "@/lib/investor-record.functions";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useServerFn } from "@tanstack/react-start";
 import { Eye } from "lucide-react";
 import { investorPerspectiveFn } from "@/lib/investor-perspective.functions";
-import { PERSPECTIVE_STEPS, perspectiveStepFor, type InvestorPerspectiveData, type PerspectiveStep } from "@/lib/investor-perspective";
+import { INVESTOR_ONLY_KEYS, PERSPECTIVE_STEPS, perspectiveStepFor, type PerspectiveField, type InvestorPerspectiveData, type PerspectiveStep } from "@/lib/investor-perspective";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +23,7 @@ function InvestorPerspectiveDialog({ onboardingId, participantId, onClose }: { o
   const [person, setPerson] = useState(participantId);
   const q = useQuery({ queryKey: ["investor-perspective", onboardingId, person], queryFn: () => load({ data: { onboardingId, participantId: person } }), retry: false });
   return <Dialog open onOpenChange={o => !o && onClose()}><DialogContent className="max-h-[90dvh] max-w-4xl overflow-y-auto">
-    <DialogHeader><DialogTitle>{q.data?.selectedParticipant ? `${q.data.selectedParticipant.name}: ${q.data.selectedParticipant.role} view` : "Investor perspective"}</DialogTitle><DialogDescription>{q.data ? `${q.data.fundName} · ${q.data.investorName}` : "Loading investment"} · Read-only</DialogDescription></DialogHeader>
+    <DialogHeader><DialogTitle>{q.data?.selectedParticipant ? `${q.data.selectedParticipant.name}: ${q.data.selectedParticipant.role} view` : "Investor perspective"}</DialogTitle><DialogDescription>{q.data ? `${q.data.fundName} · ${q.data.investorName}` : "Loading investment"} · {q.data?.editor ? "You can fill in missing details" : "Read-only"}</DialogDescription></DialogHeader>
     {q.isPending ? <p>Loading…</p> : q.isError || !q.data ? <LoadError what="Investor perspective" error={q.error} onRetry={() => void q.refetch()} /> : <InvestorPerspectiveContent data={q.data} onParticipant={setPerson} />}
   </DialogContent></Dialog>;
 }
@@ -37,7 +41,8 @@ export function InvestorPerspectiveContent({ data, onParticipant }: { data: Inve
     <nav aria-label="Investor steps" className="grid grid-cols-2 gap-2 sm:grid-cols-4">{PERSPECTIVE_STEPS.map(key => <Button key={key} variant={step === key ? "default" : "outline"} className="h-auto min-h-16 flex-col items-start whitespace-normal text-left" onClick={() => { setStep(key); setItem(null); }}><span>{LABELS[key]}</span><span className="text-xs font-normal">{data.steps.find(s => s.key === key)?.message ?? "View requirements"}</span></Button>)}</nav>
     <section className="space-y-3" aria-label={LABELS[step]}><h2 className="text-xl font-semibold">{LABELS[step]}</h2>
       <ul className="divide-y border-y">{items.map(i => <li key={i.key}><Button variant="ghost" className="h-auto w-full justify-between gap-3 whitespace-normal py-3 text-left" onClick={() => setItem(item === i.key ? null : i.key)} aria-expanded={item === i.key}><span>{i.label}</span><Badge variant="outline" className="shrink-0 capitalize">{status(i.status)}</Badge></Button></li>)}</ul>
-      {selected && <div className="space-y-2 border-l-2 border-accent pl-4" role="region" aria-label={`${selected.label} details`}><h3 className="font-medium">{selected.label}</h3><p className="text-sm capitalize">{status(selected.status)}</p><p className="text-sm text-muted-foreground">{selected.status === "complete" ? "Completed in the recorded investment." : selected.owner === "investor" ? "The investor completes this requirement." : selected.owner === "fund_manager" ? "The fund manager completes this requirement." : "See the recorded progress below."}</p></div>}
+      {selected && <div className="space-y-2 border-l-2 border-accent pl-4" role="region" aria-label={`${selected.label} details`}><h3 className="font-medium">{selected.label}</h3><p className="text-sm capitalize">{status(selected.status)}</p><p className="text-sm text-muted-foreground">{selected.status === "complete" ? "Completed in the recorded investment." : INVESTOR_ONLY_KEYS.has(selected.key) ? "Waiting on the investor. Only the investor can answer, certify or sign this." : selected.owner === "investor" ? "The investor completes this requirement." : selected.owner === "fund_manager" ? "The fund manager completes this requirement." : "See the recorded progress below."}</p></div>}
+      {step === "about" && <MissingDetails data={data} />}
       {step === "about" && <dl className="grid gap-4 sm:grid-cols-2">{data.person.map(p => <div key={p.label}><dt className="text-sm text-muted-foreground">{p.label}</dt><dd className="break-words">{p.value}</dd></div>)}<div><dt className="text-sm text-muted-foreground">Commitment</dt><dd>{data.amountCents == null ? "Not provided" : (data.amountCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</dd></div></dl>}
       {step === "sign" && <><section aria-label="Investor questionnaire" className="space-y-3"><h3 className="text-lg font-medium">Investor questionnaire</h3>{data.canReadDetails ? <dl className="space-y-4">{data.questions.map(q => <div key={q.key} className="border-b pb-3"><dt className="break-words text-sm text-muted-foreground">{q.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{q.answer ?? "Not answered yet"}</dd></div>)}</dl> : <p className="text-sm text-muted-foreground">Your access shows progress only. Private answers are not included.</p>}</section><section className="space-y-2" aria-label="Fund documents"><h3 className="text-lg font-medium">Fund documents</h3>{data.documents.map(d => <details key={d.id} className="border-b py-2"><summary className="cursor-pointer break-words">{d.title}</summary><p className="py-2 text-sm">{d.status}</p></details>)}</section></>}
     </section>
@@ -46,4 +51,42 @@ export function InvestorPerspectiveContent({ data, onParticipant }: { data: Inve
     </section>
     <div className="flex justify-between border-t pt-3"><Button variant="outline" disabled={step === "about"} onClick={() => { setStep(PERSPECTIVE_STEPS[Math.max(0, PERSPECTIVE_STEPS.indexOf(step) - 1)] ?? "about"); setItem(null); }}>Back</Button><Button variant="outline" disabled={step === "fund"} onClick={() => { setStep(PERSPECTIVE_STEPS[Math.min(3, PERSPECTIVE_STEPS.indexOf(step) + 1)] ?? "fund"); setItem(null); }}>Next</Button></div>
   </div>;
+}
+function toPayload(f: PerspectiveField, v: string) {
+  const t = v.trim();
+  if (f.group === "person") return { person: { [f.key]: t } };
+  if (f.group === "profile") return { profile: { legalName: t } };
+  if (f.group === "tax") return { taxId: t.replace(/\D/g, "") };
+  const cents = Math.round(Number(t.replace(/[$,]/g, "")) * 100);
+  if (!Number.isFinite(cents) || cents <= 0) throw new Error("Enter a dollar amount above zero.");
+  return { investment: { commitmentCents: cents } };
+}
+
+function MissingDetails({ data }: { data: InvestorPerspectiveData }) {
+  if (!data.missing.length) return <p className="rounded-md border p-3 text-sm">All required details are on file.</p>;
+  return <section aria-label="Details needed" className="space-y-3 rounded-md border p-4"><h3 className="text-lg font-medium">Details needed ({data.missing.length})</h3>
+    {!data.editor && <p className="text-sm text-muted-foreground">Your access shows what is missing only. The fund manager, helper or Harmonious can enter these.</p>}
+    <ul className="space-y-3">{data.missing.map(f => <MissingField key={f.key} field={f} data={data} />)}</ul></section>;
+}
+
+function MissingField({ field, data }: { field: PerspectiveField; data: InvestorPerspectiveData }) {
+  const save = useServerFn(updateInvestorRecordFn);
+  const qc = useQueryClient();
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const id = `pf-${field.key}`;
+  if (!data.editor) return <li className="text-sm">{field.label}<span className="ml-2 text-muted-foreground">Missing</span></li>;
+  const submit = async () => {
+    if (!value.trim()) return;
+    setBusy(true);
+    try {
+      await save({ data: { onboardingId: data.onboardingId, ...toPayload(field, value) } as any });
+      toast.success(`Done and saved: ${field.label}`);
+      setValue("");
+      await Promise.all([qc.invalidateQueries({ queryKey: ["investor-perspective", data.onboardingId] }), qc.invalidateQueries({ queryKey: ["investor-record"] }), qc.invalidateQueries({ queryKey: ["investment-readiness"] })]);
+    } catch (e) { toast.error(e instanceof Error ? e.message : "That detail could not be saved."); }
+    finally { setBusy(false); }
+  };
+  const type = field.key === "dateOfBirth" ? "date" : field.key === "email" ? "email" : "text";
+  return <li className="grid gap-1 sm:grid-cols-[1fr_auto] sm:items-end"><div><Label htmlFor={id}>{field.label}</Label><Input id={id} type={type} value={value} onChange={e => setValue(e.target.value)} inputMode={field.group === "tax" || field.group === "investment" ? "numeric" : undefined} autoComplete="off" /></div><Button size="sm" disabled={busy || !value.trim()} onClick={() => void submit()}>{busy ? "Saving…" : "Save"}</Button></li>;
 }
