@@ -1,9 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { agreementKind, isViewersTurn, itemView, matchesFilters, type RawItem, type RawSigner } from "./signature-center-model";
+import { agreementKind, isViewersTurn, itemView, matchesFilters, signatureItemsForFund, type RawItem, type RawSigner } from "./signature-center-model";
 
 const signer = (over: Partial<RawSigner>): RawSigner => ({ id: "s", name: "Pat", email: "pat@example.com", userId: "u-pat", role: "investor", order: 1, status: "sent", sentAt: null, signedAt: null, ...over });
 const item = (over: Partial<RawItem>): RawItem => ({ id: "i", source: "fund_file", offeringId: "f", fundName: "Fund", title: "Side Letter", kindHint: null, investorName: "Pat", onboardingId: null, createdAt: "2026-11-01T00:00:00Z", executedAt: null, signers: [], ...over });
 const now = new Date("2026-11-20T00:00:00Z");
+
+describe("fund workspace signing scope", () => {
+  const rows = [
+    { ...item({ id: "upper90", offeringId: "upper90", fundName: "Upper90" }), yourTurn: false },
+    { ...item({ id: "laasy", offeringId: "laasy", fundName: "Corps LaaSy", title: "Subscription Agreement" }), yourTurn: true },
+  ];
+  it("does not show a personal LaaSy signing request on Upper90", () => {
+    const upper90 = signatureItemsForFund(rows, "upper90");
+    expect(upper90.map((r) => r.id)).toEqual(["upper90"]);
+    expect(upper90.filter((r) => r.yourTurn)).toEqual([]);
+  });
+  it("keeps the request on LaaSy", () => {
+    expect(signatureItemsForFund(rows, "laasy").filter((r) => r.yourTurn).map((r) => r.id)).toEqual(["laasy"]);
+  });
+  it("keeps both funds in the all-fund signing view", () => {
+    expect(signatureItemsForFund(rows).map((r) => r.id)).toEqual(["upper90", "laasy"]);
+  });
+});
 
 describe("agreement grouping", () => {
   it("groups side letters, subscription and operating agreements", () => {

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fund-specific signing requests (2026-11-24)
+- [x] Keep personal signing cards, agreement lists and counts inside the selected fund; retain all-fund visibility on Signatures
+- [x] Test Upper90 versus LaaSy across all three signature sources; verify fund switching in isolated fictional QA, real signed-in Upper90 not exercised
+- [x] Read related fund document/signing lists, entry points, senders, completion handlers and database links; no other mixing found, recorded signatures and access unchanged
+
 ## Findable outstanding tasks and Girardi fund visibility (2026-11-24)
 - [x] Show canonical outstanding requirements on the investor homepage and notifications, including later and waiting items without duplicate completion state
 - [x] Diagnose Girardi visibility: Kimberly owns the investment, Dante has an existing invited preparer assignment omitted from home, Joseph has no login; show existing helper/contact assignments without new grants

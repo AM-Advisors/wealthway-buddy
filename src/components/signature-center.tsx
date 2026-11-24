@@ -24,6 +24,7 @@ import {
   itemView,
   matchesFilters,
   signerState,
+  signatureItemsForFund,
   sortRows,
   type AgreementKind,
   type StatusFilter,
@@ -51,9 +52,10 @@ export function SignatureCenter({ surface, offeringId, everything, title = "Sign
   const [search, setSearch] = useState("");
   const [remindFor, setRemindFor] = useState<any | null>(null);
 
-  const rows = useMemo(() => (q.data?.items ?? []).map((i: any) => ({ ...i, view: itemView(i) })), [q.data]);
-  const mine = sortRows(rows.filter((r: any) => r.yourTurn));
-  const managed = rows.filter((r: any) => r.managed && (fund === "all" || r.offeringId === fund));
+  const rows = useMemo(() => signatureItemsForFund(q.data?.items ?? [], offeringId).map((i: any) => ({ ...i, view: itemView(i) })), [q.data, offeringId]);
+  const selectedRows = signatureItemsForFund(rows, offeringId ?? (fund === "all" ? undefined : fund));
+  const mine = sortRows(selectedRows.filter((r: any) => r.yourTurn));
+  const managed = selectedRows.filter((r: any) => r.managed);
   const kindScoped = managed.filter((r: any) => kind === "all" || r.kind === kind);
   const counts = {
     waiting: kindScoped.filter((r: any) => r.view.status === "waiting").length,
@@ -62,7 +64,7 @@ export function SignatureCenter({ surface, offeringId, everything, title = "Sign
     all: kindScoped.length,
   };
   const list = sortRows(managed.filter((r: any) => matchesFilters(r, { status, kind, search })));
-  const mySigned = rows.filter((r: any) => !r.managed && !r.yourTurn);
+  const mySigned = selectedRows.filter((r: any) => !r.managed && !r.yourTurn);
 
   if (q.isPending) return <div className="space-y-3"><Skeleton className="h-8 w-48" /><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div>;
   if (q.isError) return (
@@ -125,7 +127,7 @@ export function SignatureCenter({ surface, offeringId, everything, title = "Sign
                 <SelectTrigger className="sm:w-72" aria-label="Fund"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All funds</SelectItem>
-                  {q.data!.funds.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                  {q.data?.funds.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             )}

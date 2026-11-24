@@ -135,6 +135,11 @@ export function isViewersTurn(view: ItemView, viewer: { userId: string; email?: 
 
 export type StatusFilter = "all" | "waiting" | "stuck" | "signed";
 
+/** A fund workspace never includes personal signing requests from another fund. */
+export function signatureItemsForFund<T extends { offeringId: string }>(items: readonly T[], offeringId?: string): T[] {
+  return items.filter((item) => !offeringId || item.offeringId === offeringId);
+}
+
 export function matchesFilters(
   row: { view: ItemView; kind: AgreementKind; title: string; fundName: string; investorName: string | null; signers: RawSigner[] },
   f: { status: StatusFilter; kind: AgreementKind | "all"; search: string },

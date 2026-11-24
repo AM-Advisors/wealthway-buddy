@@ -6,7 +6,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { signatureConfirmed } from "@/lib/signature-confirmed";
-import { agreementKind, itemView, isViewersTurn, type RawItem, type RawSigner, type SignerRole } from "@/lib/signature-center-model";
+import { agreementKind, itemView, isViewersTurn, signatureItemsForFund, type RawItem, type RawSigner, type SignerRole } from "@/lib/signature-center-model";
 
 const d = () => supabaseAdmin as any;
 const LIMIT = 2000;
@@ -58,7 +58,7 @@ export async function loadSignatureCenter(viewer: { userId: string; email: strin
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(viewer.userId, opts.offeringId);
   }
-  // Which funds to list in full. Personal items are always added on top.
+  // Which funds to list in full. Personal items are added only within the requested fund.
   const fundFilter: string[] | null = opts.offeringId ? [opts.offeringId] : opts.everything ? null : (scope.fundIds ?? []);
   const manages = (fundId: string) => scope.staff || (scope.fundIds ?? []).includes(fundId) || opts.offeringId === fundId;
   // Subscription and countersign emails are limited to staff or that fund's own managers.
@@ -189,13 +189,14 @@ export async function loadSignatureCenter(viewer: { userId: string; email: strin
     return { ...raw, signDocId: (raw as any).signDocId ?? null, signers, kind: agreementKind(raw.title, raw.kindHint), isTest: !!ob?.is_test_investor, managed, yourTurn, signLink, remind, lastRemindedAt: null };
   }
 
-  const keys = uniq(items.map((i) => i.remind?.key));
+  const scopedItems = signatureItemsForFund(items, opts.offeringId);
+  const keys = uniq(scopedItems.map((i) => i.remind?.key));
   if (keys.length) {
     const { lastRemindersByKeys } = await import("@/lib/signing-reminder.server");
     const last = await lastRemindersByKeys(keys);
-    for (const i of items) if (i.remind?.key) i.lastRemindedAt = last[i.remind.key] ?? null;
+    for (const i of scopedItems) if (i.remind?.key) i.lastRemindedAt = last[i.remind.key] ?? null;
   }
 
-  const funds = uniq(items.filter((i) => i.managed).map((i) => i.offeringId)).map((id) => ({ id, name: fundName.get(id) ?? "Fund" })).sort((a, b) => a.name.localeCompare(b.name));
-  return { staff: scope.staff, managesAny: scope.staff || (scope.fundIds?.length ?? 0) > 0, funds, items };
+  const funds = uniq(scopedItems.filter((i) => i.managed).map((i) => i.offeringId)).map((id) => ({ id, name: fundName.get(id) ?? "Fund" })).sort((a, b) => a.name.localeCompare(b.name));
+  return { staff: scope.staff, managesAny: scope.staff || (scope.fundIds?.length ?? 0) > 0, funds, items: scopedItems };
 }
