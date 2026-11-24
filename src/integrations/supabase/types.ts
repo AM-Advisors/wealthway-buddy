@@ -39943,6 +39943,131 @@ export type Database = {
           },
         ]
       }
+      person_id_documents: {
+        Row: {
+          confirmed_at: string | null
+          created_at: string
+          document_type: string
+          expires_on: string | null
+          file_name: string
+          id: string
+          id_number_last4: string | null
+          issuing_region: string | null
+          mime_type: string
+          offering_id: string | null
+          onboarding_id: string | null
+          person_id: string
+          read_birth_date: string | null
+          read_confidence: string | null
+          read_name: string | null
+          side: string
+          size_bytes: number
+          source: string
+          source_government_id: string | null
+          status: string
+          storage_path: string
+          superseded_at: string | null
+          superseded_by: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          confirmed_at?: string | null
+          created_at?: string
+          document_type: string
+          expires_on?: string | null
+          file_name: string
+          id?: string
+          id_number_last4?: string | null
+          issuing_region?: string | null
+          mime_type: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          person_id: string
+          read_birth_date?: string | null
+          read_confidence?: string | null
+          read_name?: string | null
+          side: string
+          size_bytes: number
+          source?: string
+          source_government_id?: string | null
+          status?: string
+          storage_path: string
+          superseded_at?: string | null
+          superseded_by?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          confirmed_at?: string | null
+          created_at?: string
+          document_type?: string
+          expires_on?: string | null
+          file_name?: string
+          id?: string
+          id_number_last4?: string | null
+          issuing_region?: string | null
+          mime_type?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          person_id?: string
+          read_birth_date?: string | null
+          read_confidence?: string | null
+          read_name?: string | null
+          side?: string
+          size_bytes?: number
+          source?: string
+          source_government_id?: string | null
+          status?: string
+          storage_path?: string
+          superseded_at?: string | null
+          superseded_by?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_id_documents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_identifier_reveals: {
+        Row: {
+          actor_role: string
+          actor_user_id: string
+          created_at: string
+          id: string
+          investment_profile_id: string | null
+          kind: string
+          offering_id: string | null
+          onboarding_id: string | null
+          person_id: string | null
+        }
+        Insert: {
+          actor_role: string
+          actor_user_id: string
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          kind: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          person_id?: string | null
+        }
+        Update: {
+          actor_role?: string
+          actor_user_id?: string
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          kind?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          person_id?: string | null
+        }
+        Relationships: []
+      }
       person_kyc_requests: {
         Row: {
           aml_status: string | null

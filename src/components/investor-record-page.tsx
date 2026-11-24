@@ -10,6 +10,7 @@ import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
+import { InvestmentIdentityCard } from "@/components/investment-identity-card";
 import { DistributionBankCard, EntityRequirementsList, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Pencil } from "lucide-react";
@@ -205,6 +206,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
               <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]])) } })}>Save {isEntity ? "entity details" : "profile"}</Button>
             </CardContent></Card>
             <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={editableProfile} onChanged={refresh} entity={isEntity} />
+            <InvestmentIdentityCard onboardingId={onboardingId} />
             <Card><CardHeader><CardTitle className="text-base">{isEntity ? "Owners, control persons & signers" : "Other people on this investment"}</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
               <RelatedPartiesEditor onboardingId={onboardingId} related={data.related as any} editable={editableProfile} onChanged={refresh} entity={isEntity} />
               <p className="text-xs text-muted-foreground sm:col-span-2">ID images and verification evidence are never shown here.</p>
