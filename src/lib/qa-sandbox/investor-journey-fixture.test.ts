@@ -6,6 +6,14 @@ const call = (j: ReturnType<typeof createQaJourney>, fn: string, data: any = {})
 const step = (j: ReturnType<typeof createQaJourney>, key: string) => qaJourneyDetail(j).journey.find((s) => s.key === key)?.state;
 
 describe("fictional investor journey", () => {
+  it("home and notifications read current requirements after a completed check", () => {
+    const j = createQaJourney();
+    const dashboard = () => handleQaJourneyCall("investorDashboardFn", {}, j) as { investments: { outstandingTasks: { key: string }[] }[] };
+    expect(dashboard().investments[0]?.outstandingTasks.map((t) => t.key)).toContain("identity_verification");
+    j.identity = "valid";
+    expect(dashboard().investments[0]?.outstandingTasks.map((t) => t.key)).not.toContain("identity_verification");
+    expect(dashboard().investments[0]?.outstandingTasks.map((t) => t.key)).toContain("accreditation");
+  });
   it("refuses any investment other than the fictional one", () => {
     expect(() => handleQaJourneyCall("onboardingDetailFn", { onboardingId: "real-investment" }, createQaJourney())).toThrow(/fictional investment/);
   });

@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { listItemsPreparedForMe, reviewPreparedItem } from "@/lib/assisted.functions";
 import { DRAFT_STATUS_LABELS } from "@/lib/assisted-fields";
+import { AttentionCenter } from "@/components/attention-center";
+import { ParticipantHome } from "@/components/participant-home";
+import { useClientWorkspace } from "@/components/client-workspace";
+import { OutstandingInvestments } from "@/components/outstanding-investments";
+import { useInvestorDashboard } from "@/components/investor-dashboard";
 
 const label = (field: string) => field.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 
@@ -18,6 +23,8 @@ function show(value: unknown) {
 }
 
 function PreparedForMe() {
+  const { activeKind } = useClientWorkspace();
+  const investments = useInvestorDashboard(false, activeKind === "investor");
   const qc = useQueryClient();
   const listFn = useServerFn(listItemsPreparedForMe);
   const reviewFn = useServerFn(reviewPreparedItem);
@@ -46,12 +53,17 @@ function PreparedForMe() {
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-4 py-8">
       <header>
-        <h1 className="text-3xl">Items prepared for me</h1>
+        <h1 className="text-3xl">Notifications & tasks</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Your adviser, lawyer or accountant can prepare information for you. Nothing they prepare
           takes effect until you approve it here, and only you can approve it.
         </p>
       </header>
+
+      <ParticipantHome />
+      <OutstandingInvestments enabled={activeKind === "investor"} />
+      <AttentionCenter {...(activeKind ? { workspace: activeKind } : {})} coveredInvestmentIds={activeKind === "investor" ? investments.data?.investments.map((i) => i.id) ?? [] : []} />
+      <h2 className="text-xl font-semibold">Items prepared for me</h2>
 
       {isPending ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -146,16 +158,16 @@ function PreparedForMe() {
 export const Route = createFileRoute("/_authenticated/prepared")({
   head: () => ({
     meta: [
-      { title: "Items prepared for me | Harmonious" },
+      { title: "Notifications & tasks | Harmonious" },
       {
         name: "description",
         content:
-          "Review, approve or reject information your adviser, lawyer or accountant prepared for you.",
+          "See your outstanding investment tasks, assigned investments and information prepared for your review.",
       },
-      { property: "og:title", content: "Items prepared for me | Harmonious" },
+      { property: "og:title", content: "Notifications & tasks | Harmonious" },
       {
         property: "og:description",
-        content: "Nothing a professional prepares takes effect until you approve it yourself.",
+        content: "Your current Harmonious tasks and review requests in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

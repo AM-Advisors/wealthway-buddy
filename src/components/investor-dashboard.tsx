@@ -17,6 +17,7 @@ import { CLIENT_STEPS, FUNDING_STATE_LABELS, type FundingState } from "@/lib/das
 import { money } from "@/lib/status";
 import { showStartFundPromo } from "@/lib/attention-model";
 import { LoadError } from "@/components/load-error";
+import { InvestmentTaskList } from "@/components/investment-task-list";
 
 const WAITING: Record<string, string> = { harmonious: "Harmonious is reviewing: nothing needed from you right now.", fund_manager: "Waiting on the fund manager: nothing needed from you right now." };
 
@@ -66,10 +67,10 @@ export function InvestorDashboard({ viewAs = false }: { viewAs?: boolean } = {})
           <CardTitle className="text-xl">{p.nextAction ?? (p.complete ? "You're all set" : "You're caught up")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {(p.outstandingTasks ?? []).length > 0 && <div><h3 className="text-base font-semibold">Outstanding tasks</h3><InvestmentTaskList tasks={p.outstandingTasks ?? []} /></div>}
           {!p.nextAction && !p.complete && p.waitingOn ? <p className="text-sm text-muted-foreground">{WAITING[p.waitingOn] ?? ""}</p> : null}
           {p.nextAction ? (
             <>
-              <p className="text-sm text-muted-foreground">Continue takes you to this step. The steps go in order, and each one opens the next when it's done. You can come back here any time.</p>
               <Button asChild size="lg"><Link to="/investment/$onboardingId" params={{ onboardingId: p.id }}>Continue</Link></Button>
             </>
           ) : null}
@@ -109,6 +110,7 @@ export function InvestorDashboard({ viewAs = false }: { viewAs?: boolean } = {})
                 <span className="text-sm">{i.complete ? "Complete" : CLIENT_STEPS[Math.min(i.step, 3)]} · {FUNDING_STATE_LABELS[i.fundingState as FundingState]}{i.nextAction ? <span className="block text-xs font-medium text-primary">{i.nextAction}</span> : null}</span>
               </Link></li>
             ))}</ul>
+            {d.investments.filter((i: any) => i.id !== p.id && i.outstandingTasks?.length).map((i: any) => <div key={i.id}><h3 className="text-base font-semibold">{i.fundName}: outstanding tasks</h3><InvestmentTaskList tasks={i.outstandingTasks} /></div>)}
           </CardContent>
         </Card>
       ) : null}

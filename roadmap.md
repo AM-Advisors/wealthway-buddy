@@ -1,5 +1,10 @@
 # Roadmap
 
+## Findable outstanding tasks and Girardi fund visibility (2026-11-24)
+- [x] Show canonical outstanding requirements on the investor homepage and notifications, including later and waiting items without duplicate completion state
+- [x] Diagnose Girardi visibility: Kimberly owns the investment, Dante has an existing invited preparer assignment omitted from home, Joseph has no login; show existing helper/contact assignments without new grants
+- [x] Verify task visibility and completed-task removal on desktop/phone in fictional QA; test exact-email, removed access, locked steps and countersignature boundaries. Real Girardi screens remain unverified from their own sessions
+
 ## Every fund screen uses the one shared access check (2026-11-24)
 - [x] Remaining fund screens ask the shared check (same people get in as before, at a named level)
 - [x] "Which funds do I manage" read from one place

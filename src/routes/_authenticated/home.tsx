@@ -24,6 +24,7 @@ import { AttentionCenter } from "@/components/attention-center";
 import { InvestorDashboard, useInvestorDashboard } from "@/components/investor-dashboard";
 import { SetupCard } from "@/components/setup-card";
 import { PageLoading } from "@/components/page-loading";
+import { ParticipantHome } from "@/components/participant-home";
 
 import { money, prettyStatus, statusTone } from "@/lib/status";
 
@@ -317,6 +318,7 @@ function RoleHome() {
         </div>
       </header>
 
+      <ParticipantHome />
       {activeKind === "investor" ? <InvestorDashboard /> : null}
 
       {/* Investors finish account setup inside their investment's steps (or on the investor dashboard when they have none). */}

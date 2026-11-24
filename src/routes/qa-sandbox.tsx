@@ -38,7 +38,7 @@ import { listFundSubmissionsFn } from "@/lib/fund-manager-submissions.functions"
 import { SecurityGate } from "@/components/security-gate";
 import { createQaMfaAuth, QA_MFA_CODE, type QaMfaScenario } from "@/lib/qa-sandbox/mfa-fixture";
 import { Suspense } from "react";
-import { QaAccreditationPage, QaFundDocumentsPage, QaInvestorHomePage, QaInvestorJourneyLauncher, QaJourneyPage } from "@/components/qa-investor-journey";
+import { QaAccreditationPage, QaFundDocumentsPage, QaInvestorHomePage, QaInvestorJourneyLauncher, QaJourneyPage, QaInvestorTasksPage, QaNotificationsTasksPage } from "@/components/qa-investor-journey";
 
 export const Route = createFileRoute("/qa-sandbox")({
   head: () => ({
@@ -97,12 +97,14 @@ function QaSandboxPage() {
     const st = () => stateRef.current ?? createQaState("staff");
     const journey = createRoute({ getParentRoute: () => root, path: "/investor/journey", component: () => <QaJourneyPage state={st()} /> });
     const investorHome = createRoute({ getParentRoute: () => root, path: "/investor", component: () => <QaInvestorHomePage state={st()} /> });
+    const investorTasks = createRoute({ getParentRoute: () => root, path: "/investor/tasks", component: () => <QaInvestorTasksPage state={st()} /> });
+    const notificationsTasks = createRoute({ getParentRoute: () => root, path: "/prepared", component: () => <QaNotificationsTasksPage state={st()} /> });
     const fundDocs = createRoute({ getParentRoute: () => root, path: "/fund/$offeringId/documents", component: () => <QaFundDocumentsPage state={st()} /> });
     const accreditation = createRoute({ getParentRoute: () => root, path: "/onboarding/accreditation", component: () => <QaAccreditationPage state={st()} /> });
     const toJourney = (path: string) => createRoute({ getParentRoute: () => root, path, beforeLoad: () => { throw redirect({ to: "/investor/journey" as never }); } });
     const toHome = createRoute({ getParentRoute: () => root, path: "/home", beforeLoad: () => { throw redirect({ to: "/investor" }); } });
     return createRouter({
-      routeTree: root.addChildren([index, record, opsRecord, journey, investorHome, fundDocs, accreditation, toJourney("/fund/$offeringId/funding"), toJourney("/onboarding/documents"), toHome]),
+      routeTree: root.addChildren([index, record, opsRecord, journey, investorHome, investorTasks, notificationsTasks, fundDocs, accreditation, toJourney("/fund/$offeringId/funding"), toJourney("/onboarding/documents"), toJourney("/investment/$onboardingId"), toJourney("/onboard/prepare/$token"), toHome]),
       history: createMemoryHistory({ initialEntries: ["/"] }),
     });
     // Role is read through context at render time; the router itself is stable.

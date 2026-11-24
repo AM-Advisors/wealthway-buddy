@@ -11,6 +11,7 @@ import { breadcrumbsFor, parentPath } from "@/lib/breadcrumbs";
 import { surfaceLabelForPath } from "@/lib/navigation";
 import { getNavigation } from "@/lib/navigation";
 import { useClientWorkspace } from "@/components/client-workspace";
+import { ClientNotificationBell } from "@/components/client-notification-bell";
 
 /** Whether the top bar should carry the brand: only when no sidebar logo is visible. */
 export function topbarShowsLogo(isMobile: boolean, openMobile: boolean): boolean {
@@ -85,6 +86,7 @@ export function PortalTopbar(_props: { onSignOut: () => void }) {
           </Button>
         )}
         <QuickJump />
+        {!inOperations && !pathname.startsWith("/client") && session && <ClientNotificationBell />}
       </div>
     </header>
   );

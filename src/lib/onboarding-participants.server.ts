@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, forbid } from "@/lib/investor-onboarding.server";
 import { allowsMultipleContacts, canAssignParticipant, participantRoleLabel, type ParticipantRole } from "@/lib/onboarding-participants-model";
+import { visibleParticipantAssignment } from "@/lib/participant-home-model";
 
 // Server-only. People who help complete an investment for the investor:
 // a preparer (fills details, uploads, owners/signers) and the named signer.
@@ -25,6 +26,25 @@ async function access(userId: string, row: any) {
 async function userEmail(userId: string) {
   const { data } = await (supabaseAdmin as any).auth.admin.getUserById(userId);
   return String(data?.user?.email ?? "").trim().toLowerCase();
+}
+
+/** Read-only discovery of existing helper/contact entry points, scoped to the authenticated email. */
+export async function myParticipantAssignments(userId: string) {
+  const email = await userEmail(userId);
+  if (!email) return [];
+  const { data, error } = await db().from("onboarding_participants")
+    .select("id, onboarding_id, role, email, status, removed_at, token, investor_onboardings(stage, removed_at, merged_into_onboarding_id, offerings(name), investment_profiles(legal_name, display_label))")
+    .eq("email", email).in("role", ["preparer", "contact"]).in("status", ["invited", "active"]).is("removed_at", null).limit(50);
+  if (error) fail("Your assigned investments could not be loaded. Please try again.");
+  return ((data ?? []) as any[]).filter((p) => visibleParticipantAssignment(p, email)
+    && p.investor_onboardings && !p.investor_onboardings.removed_at && !p.investor_onboardings.merged_into_onboarding_id
+    && !["declined", "cancelled"].includes(p.investor_onboardings.stage)).map((p) => ({
+      id: String(p.id), onboardingId: String(p.onboarding_id),
+      fundName: String(p.investor_onboardings.offerings?.name ?? "Fund"),
+      investingAs: String(p.investor_onboardings.investment_profiles?.legal_name || p.investor_onboardings.investment_profiles?.display_label || "Investor"),
+      role: p.role as "preparer" | "contact", roleLabel: participantRoleLabel(p.role),
+      href: `/onboard/${p.role === "preparer" ? "prepare" : "contact"}/${p.token}`,
+    }));
 }
 
 async function event(row: any, ev: string, userId: string, actorRole: string, detail: Record<string, unknown>) {

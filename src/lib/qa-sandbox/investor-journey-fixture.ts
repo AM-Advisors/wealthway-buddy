@@ -4,7 +4,8 @@
  * in-memory state; the step model is the same pure code the server uses.
  * Nothing here reaches the backend, sends email or moves money.
  */
-import { journeySteps, verificationSummary } from "@/lib/investor-journey-model";
+import { journeySteps, verificationSummary, investorHomeAction, nextJourneyStep } from "@/lib/investor-journey-model";
+import { investorOutstandingTasks } from "@/lib/investor-outstanding-tasks";
 import { REQUIREMENT_LABELS, type RequirementKey, type RequirementResult, type RequirementState } from "@/lib/investor-onboarding-model";
 import { QA_FUND_ID, QA_FUND_NAME } from "./fictional-data";
 
@@ -49,6 +50,7 @@ export const QA_JOURNEY_FNS = [
   "fundingInstructionsFn", "investorReportsFundsSentFn", "investorFundingLedgerFn", "feeStatusFn", "profileUploadStateFn",
   "getDocumentsStep", "saveSubscription", "signDocument", "getSigningStates", "readOfferingDocument", "recordStepView", "getFundScope",
   "getAccreditation", "submitSelfCertification", "getMyPortfolioValue", "getMyPersonalInvestmentLinks",
+  "investorDashboardFn", "myParticipantAssignmentsFn", "getAttention", "listMyNotifications", "markNotificationsRead", "myInvitedFundsFn", "myInvestorUpdatesFn",
 ] as const;
 
 const allSigned = (j: QaJourney) => DOCS.filter((d) => d.requiresSignature).every((d) => j.signatures[d.id]);
@@ -108,6 +110,23 @@ export function handleQaJourneyCall(fnName: string, data: any, j: QaJourney): un
   const fund = data?.offering_id ?? data?.offeringId;
   if (fund != null && fund !== QA_FUND_ID) throw block("Only the fictional fund is available.");
   switch (fnName) {
+    case "investorDashboardFn": {
+      const detail = qaJourneyDetail(j);
+      const home = investorHomeAction(detail.journey, null);
+      const investment = { id: QA_JOURNEY_ID, offeringId: QA_FUND_ID, fundName: QA_FUND_NAME,
+        profileLabel: j.profile?.name ?? "John Smith", amountCents: j.amountCents, step: j.identity === "valid" ? 2 : 1,
+        funded: j.received, fundingState: j.received ? "funded" : "not_ready", complete: j.received,
+        nextAction: home.nextAction, waitingOn: home.waitingOn, nextStep: nextJourneyStep(detail.journey),
+        outstandingTasks: investorOutstandingTasks(detail.requirements, detail.journey),
+      };
+      return { investments: [investment], primary: investment, summary: { investments: 1, inProgress: 1, funded: 0, needsAttention: home.nextAction ? 1 : 0 } };
+    }
+    case "myParticipantAssignmentsFn": return [{ id: "qa-helper", onboardingId: QA_JOURNEY_ID, role: "preparer", roleLabel: "Prepares details", fundName: QA_FUND_NAME, investingAs: "Fictional Family Trust", href: "/onboard/prepare/qa-helper" }];
+    case "getAttention": return { workspace: "investor", groups: { needs_you: [], harmonious_working: [], waiting_third_party: [], recently_completed: [] }, gaps: [] };
+    case "listMyNotifications": return [];
+    case "markNotificationsRead": return { ok: true };
+    case "myInvitedFundsFn": return [];
+    case "myInvestorUpdatesFn": return { funds: [], updates: [] };
     case "onboardingDetailFn": return qaJourneyDetail(j);
     case "eligibleProfilesFn": return { profiles: j.profile ? [{ id: j.profile.id, display_label: j.profile.name, legal_name: j.profile.name, profile_type: j.profile.type }] : [] };
     case "chooseProfileFn": {

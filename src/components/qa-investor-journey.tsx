@@ -13,6 +13,10 @@ import { InvestorPortalFrame } from "@/components/investor-portal-frame";
 import { InvestorOnboardingJourney } from "@/components/investor-onboarding-journey";
 import { DocumentsStep } from "@/components/steps/documents-step";
 import { InvestorHome } from "@/components/investor-home";
+import { InvestorDashboard } from "@/components/investor-dashboard";
+import { ParticipantHome } from "@/components/participant-home";
+import { ClientNotificationBell } from "@/components/client-notification-bell";
+import { OutstandingInvestments } from "@/components/outstanding-investments";
 import { Route as AccreditationRoute } from "@/routes/_authenticated/onboarding.accreditation";
 import { createQaJourney, QA_JOURNEY_ID, QA_JOURNEY_INVESTOR, type QaJourney } from "@/lib/qa-sandbox/investor-journey-fixture";
 import type { QaState } from "@/lib/qa-sandbox/mock-server";
@@ -63,6 +67,14 @@ export function QaInvestorHomePage({ state }: { state: QaState }) {
   return <Portal state={state}><InvestorHome /></Portal>;
 }
 
+export function QaInvestorTasksPage({ state }: { state: QaState }) {
+  return <Portal state={state}><div className="mx-auto max-w-4xl space-y-6 px-4 py-8"><div className="flex items-center justify-between"><h1 className="text-2xl font-semibold">Home</h1><ClientNotificationBell /></div><ParticipantHome /><InvestorDashboard /><Button asChild variant="outline"><Link to={"/prepared" as never}>Notifications & tasks</Link></Button></div></Portal>;
+}
+
+export function QaNotificationsTasksPage({ state }: { state: QaState }) {
+  return <Portal state={state}><div className="mx-auto max-w-4xl space-y-6 px-4 py-8"><h1 className="text-2xl font-semibold">Notifications & tasks</h1><ParticipantHome /><OutstandingInvestments enabled /></div></Portal>;
+}
+
 /** Sandbox tab: where the fictional investor journey starts. */
 export function QaInvestorJourneyLauncher() {
   return (
@@ -72,6 +84,7 @@ export function QaInvestorJourneyLauncher() {
         The strip above the portal stands in for the ID check, the fund manager and the bank.
       </p>
       <Button asChild><Link to={"/investor/journey" as never}>Open the fictional investment</Link></Button>
+      <Button asChild variant="outline"><Link to={"/investor/tasks" as never}>Open homepage tasks</Link></Button>
     </section>
   );
 }

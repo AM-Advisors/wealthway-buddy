@@ -1,5 +1,6 @@
 import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
 import { countsInFundTotals, investmentAmountCents, isLiveInvestment } from "@/lib/investment-amounts";
+import { investorOutstandingTasks } from "@/lib/investor-outstanding-tasks";
 /**
  * Role dashboards - server aggregation. Every number is built here, from
  * records the caller is authorized to see, using the shared definitions in
@@ -204,6 +205,7 @@ export async function investorDashboard(userId: string) {
       nextAction: investorAction, waitingOn: home.waitingOn, complete: funnelStageOf(fact) === "complete",
       // The step Continue opens, so other home lists point to the same place.
       nextStep: nextJourneyStep(steps),
+      outstandingTasks: investorOutstandingTasks(requirements, steps),
     };
   });
   return {
