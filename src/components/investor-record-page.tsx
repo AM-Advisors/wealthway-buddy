@@ -13,7 +13,8 @@ import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
 import { InvestmentPartiesCard } from "@/components/investment-parties-card";
 import { InvestmentIdentityCard } from "@/components/investment-identity-card";
-import { DistributionBankCard, EntityRequirementsList, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
+import { EntityRequirementsInline } from "@/components/entity-requirements-inline";
+import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -202,7 +203,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
             <Card><CardHeader><CardTitle className="text-base">{isEntity ? `${data.profile.typeLabel} details` : `Investment Profile · ${data.profile.typeLabel}`}</CardTitle>
               {isEntity ? <p className="text-sm text-muted-foreground">The {data.profile.typeLabel.toLowerCase()} is the investor. Fields marked <span className="text-destructive">*</span> are required.</p> : null}
             </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
-              {isEntity ? <EntityRequirementsList legalName={data.profile.legalName} einOnFile={Boolean((data.profile as any).taxIdLast4)} related={data.related as any} /> : null}
+              {isEntity ? <EntityRequirementsInline onboardingId={onboardingId} legalName={data.profile.legalName} einOnFile={Boolean((data.profile as any).taxIdLast4)} related={data.related as any} editable={editableProfile} onChanged={refresh} /> : null}
               {field("legalName", isEntity ? "Legal name *" : "Legal investor name", data.profile.legalName)}
               {isEntity ? field("jurisdiction", "State or country of formation", (data.profile.details as any).jurisdiction) : null}
               {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
