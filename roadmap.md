@@ -1,5 +1,9 @@
 # Roadmap
 
+## Compliance spreadsheet import (2026-11-25)
+- [ ] Read the supplied Google Sheet, match CIK, Form D and Blue Sky records to exact funds, and import only unambiguous applicable records through the existing compliance model.
+- [ ] Verify saved records read back correctly and report unmatched or conflicting rows without guessing.
+
 ## Shared fund Close experience (2026-11-25)
 - [x] Use the same manager close data, cards and detail editor for Operations, with Operations-only review and filing controls added; the shared reader also returns the exact fund id needed to refresh Operations decisions.
 - [x] Fictional desktop and mobile checks confirm 15 identical details in both views and no Operations controls in the manager view; no page errors, 10 focused tests pass, typecheck and preview build pass. No production records, authority changes or publishing.
