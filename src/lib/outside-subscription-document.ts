@@ -1,6 +1,6 @@
 /**
  * A fund's Subscription Agreement signed outside the platform counts as completed for the
- * investor only when Harmonious marked it and loaded the signed copy (outsideSubscriptionStates
+ * investor once Harmonious loaded the signed copy, or a manager copy was marked or signed (outsideSubscriptionStates
  * complete). Other documents and partial records keep their platform status.
  */
 export type OutsideSubscription = { marked: boolean; signedOn: string | null; copyLoaded: boolean; copySignedOn?: string | null; complete: boolean };
