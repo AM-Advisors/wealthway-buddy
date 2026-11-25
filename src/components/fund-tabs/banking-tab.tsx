@@ -16,12 +16,22 @@ import { LEDGER_CATEGORIES } from "@/lib/fund-doc-templates";
 import { addLedgerEntryFn, fundBooksFn, tagTransactionFn, voidLedgerEntryFn } from "@/lib/fund-tabs.functions";
 import { fmtDate, toCents, usd } from "./shared";
 import { StatementUpload } from "./statement-upload";
+import { ManualTransactionForm } from "./manual-books-entry";
 import { FundBankingReview } from "@/components/fund-setup-phase3";
 
 const NONE = "__none";
 
-export function BankingTab({ fundId }: { fundId: string }) {
+/** The fund's banking home: how to share the account, the statements and transactions on it, and the receiving details. */
+export function BankingTab({ fundId, staff = false }: { fundId: string; staff?: boolean }) {
   const [mode, setMode] = useState<"upload" | "connect">("upload");
+  const load = useServerFn(fundBooksFn);
+  const q = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
+  const d = q.data as any;
+  const books = q.isPending
+    ? <p className="text-sm text-muted-foreground">Loading bank records…</p>
+    : q.error || !d
+      ? <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the bank records."}</p>
+      : null;
   return (
     <div className="space-y-5">
       <Card>
@@ -43,6 +53,15 @@ export function BankingTab({ fundId }: { fundId: string }) {
           <CardContent><BankFeedPanel fundId={fundId} /></CardContent>
         </Card>
       )}
+      {books ?? (
+        <>
+          <StatementUpload fundId={fundId} investors={d.investors ?? []} canEnter={staff} />
+          <div className="space-y-5">
+            <Transactions fundId={fundId} d={d} />
+            {staff && <ManualTransactionForm fundId={fundId} investors={d.investors ?? []} />}
+          </div>
+        </>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Wire instructions</CardTitle>
@@ -51,24 +70,6 @@ export function BankingTab({ fundId }: { fundId: string }) {
         <CardContent><WireFromBankForm fundId={fundId} allowPrefill={mode === "connect"} /></CardContent>
       </Card>
       <FundBankingReview offeringId={fundId} />
-    </div>
-  );
-}
-
-/** Day-to-day books after setup: statements, transactions and bookkeeping (lives under Accounting, not Fund Setup). */
-export function FundBooks({ fundId }: { fundId: string }) {
-  const load = useServerFn(fundBooksFn);
-  const q = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
-  const d = q.data;
-  return (
-    <div className="space-y-5">
-      {q.isLoading ? <p className="text-sm text-muted-foreground">Loading books…</p> : q.error || !d ? <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the books."}</p> : (
-        <>
-          <StatementUpload fundId={fundId} investors={d.investors ?? []} />
-          <Transactions fundId={fundId} d={d} />
-          <Ledger fundId={fundId} d={d} />
-        </>
-      )}
     </div>
   );
 }

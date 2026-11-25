@@ -182,7 +182,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
               </CardContent>
             </Card>
           )}
-          <BankingTab fundId={fundId} />
+          <BankingTab fundId={fundId} staff={staff} />
   </>;
 
   return (
