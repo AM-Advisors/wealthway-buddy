@@ -20,7 +20,7 @@ import { FundCalendar } from "@/components/fund-calendar";
 import { FundApprovalsHub } from "@/components/fund-approvals-hub";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
-import { CloseRequestReview } from "@/components/close-request-review";
+import { CloseDetailsSummary, CloseRequestReview } from "@/components/close-request-review";
 import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
@@ -81,6 +81,7 @@ const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Not recorded";
 
 const CLOSE_STATUS: Record<string, string> = {
+  draft: "Draft: not sent for review",
   submitted: "Submitted: Harmonious reviewing",
   in_review: "In review",
   completed: "Completed",
@@ -128,6 +129,8 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
   const staff = mode === "harmonious";
   const tab = normalizeFundTab(rawTab);
   const [closeOpen, setCloseOpen] = useState(false);
+  const [closeDraft, setCloseDraft] = useState<any | null>(null);
+  const openClose = (request: any | null = null) => { setCloseDraft(request); setCloseOpen(true); };
   const loadFund = useServerFn(getClientFund);
   const loadCap = useServerFn(getFundCapTable);
   const loadTabs = useServerFn(getFundTabsData);
@@ -197,7 +200,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
           <Badge variant="outline">{fundOriginLabel(f.fund_origin)}</Badge>
           <Badge variant={f.is_open ? "default" : "secondary"}>{f.is_open ? "Open to investors" : "In setup"}</Badge>
           {headerExtra}
-          {!staff && <Button onClick={() => setCloseOpen(true)}>Request Fund Close</Button>}
+          {!staff && <Button onClick={() => openClose()}>Prepare Fund Close</Button>}
         </div>
       </div>
 
@@ -299,21 +302,23 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
             <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
               <div>
                 <CardTitle className="text-base">Closes</CardTitle>
-                <CardDescription>Close requests are reviewed by Harmonious before anything happens.</CardDescription>
+                <CardDescription>Save close details as a draft without sending or finalizing anything. Harmonious reviews only after you send the request.</CardDescription>
               </div>
-              <Button size="sm" onClick={() => setCloseOpen(true)}>Request Fund Close</Button>
+              <Button size="sm" onClick={() => openClose()}>Prepare Fund Close</Button>
             </CardHeader>
             <CardContent>
               {crq.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
-               !crq.data?.length ? <Empty text="No close requests yet." /> : (
+               !crq.data?.length ? <Empty text="No close drafts or requests yet." /> : (
                 <div className="divide-y rounded-md border">
                   {crq.data.map((c: any) => (
                     <div key={c.id} className="space-y-1 p-3 text-sm">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium">Requested {fmtDate(c.created_at)} · {c.onboarding_ids.length} investor{c.onboarding_ids.length === 1 ? "" : "s"}</p>
+                        <p className="font-medium">{c.status === "draft" ? "Saved" : "Requested"} {fmtDate(c.created_at)} · {c.onboarding_ids.length} investor{c.onboarding_ids.length === 1 ? "" : "s"}</p>
                         <Badge variant={c.status === "completed" ? "default" : c.status === "returned" ? "destructive" : "secondary"}>{CLOSE_STATUS[c.status] ?? c.status}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">Target close date: {c.target_date ? fmtDate(c.target_date) : "Not set"}</p>
+                      <CloseDetailsSummary r={c} />
+                      {c.status === "draft" && <Button size="sm" variant="outline" onClick={() => openClose(c)}>Continue details</Button>}
                       {c.notes && <p className="text-xs">{c.notes}</p>}
                       {c.staff_note && <p className="text-xs text-muted-foreground">Harmonious: {c.staff_note}</p>}
                     </div>
@@ -325,7 +330,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
         </TabsContent>
       </Tabs>
 
-      <RequestCloseDialog fundId={fundId} open={closeOpen} onOpenChange={setCloseOpen} onDone={() => onTab("closes")} />
+      <RequestCloseDialog fundId={fundId} open={closeOpen} onOpenChange={setCloseOpen} onDone={() => onTab("closes")} request={closeDraft} />
     </div>
   );
 }
@@ -356,7 +361,7 @@ function StaffCloses({ fundId }: { fundId: string }) {
   const rows = ((q.data ?? []) as any[]).filter((r) => r.offering_id === fundId);
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Approve a close, generate its Form D and state filing packets, then file them yourself and record the confirmation. Nothing is submitted automatically.</p>
+      <p className="text-sm text-muted-foreground">Drafts are saved details only, with no approval or completion action. After a manager sends a close, approve it, generate its Form D and state filing packets, then file them yourself and record the confirmation. Nothing is submitted automatically.</p>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
        !rows.length ? <Empty text="No close requests for this fund yet." /> : rows.map((r) => <CloseRequestReview key={r.id} r={r} />)}
     </div>

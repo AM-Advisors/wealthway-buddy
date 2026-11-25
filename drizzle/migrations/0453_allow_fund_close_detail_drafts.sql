@@ -1,0 +1,3 @@
+ALTER TABLE public.fund_close_requests DROP CONSTRAINT fund_close_requests_status_check;
+ALTER TABLE public.fund_close_requests ADD CONSTRAINT fund_close_requests_status_check CHECK (status = ANY (ARRAY['draft','submitted','in_review','approved','completed','returned']));
+COMMENT ON TABLE public.fund_close_requests IS 'Fund close details may be saved as drafts by authorized fund users; only explicit submission starts staff review. Status changes never file, charge, close or move money.';

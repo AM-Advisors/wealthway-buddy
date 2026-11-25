@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
+import { canFinalizeCloseRequest, closeStatusForIntent } from "@/lib/fund-close-request-model";
 
 const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 
@@ -27,6 +28,22 @@ async function sideLetterPricing(db: any, fundId: string, onboardingIds: string[
 }
 
 const fundInput = (d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d);
+
+const closeDetailsSchema = z.object({
+  assetMode: z.enum(["existing", "new"]),
+  existingAsset: z.string().max(200).default(""),
+  asset: z.object({ name: z.string().max(200), issuer: z.string().max(200), type: z.string().max(100), amountCents: z.number().int().min(0).max(1e13).nullable(), notes: z.string().max(2000) }),
+  purchaseAgreement: z.object({ fileName: z.string().max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).nullable(),
+  managementFeePct: z.number().min(0).max(100).nullable(),
+  managementFeeCents: z.number().int().min(0).max(1e13).nullable(),
+  feeConfirmed: z.boolean(),
+  wire: z.object({ method: z.enum(["wire", "ach"]), beneficiary: z.string().max(200), bankName: z.string().max(200), routingLast4: z.string().max(4), accountLast4: z.string().max(4), reference: z.string().max(200), amountCents: z.number().int().min(0).max(1e13).nullable() }),
+  investorStates: z.array(z.string().max(40)).max(60),
+  legalFeesCents: z.number().int().min(0).max(1e13).nullable(),
+  legalFeesDetail: z.string().max(1000),
+  brokerDealerFeesCents: z.number().int().min(0).max(1e13).nullable(),
+  brokerDealerDetail: z.string().max(1000),
+}).optional();
 
 /** Read-only, informational tabs: Banking, Taxes, Assets. Nothing here needs approval. */
 export const getFundTabsData = createServerFn({ method: "GET" })
@@ -97,69 +114,99 @@ export const listFundCloseRequests = createServerFn({ method: "GET" })
 export const createFundCloseRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d) => z.object({
+    id: z.string().uuid().optional(),
     fundId: z.string().uuid(),
-    onboardingIds: z.array(z.string().uuid()).min(1, "Pick at least one investor.").max(500),
+    intent: z.enum(["draft", "submit"]).default("submit"),
+    onboardingIds: z.array(z.string().uuid()).max(500),
     targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
     notes: z.string().max(2000).optional().default(""),
-    details: z.object({
-      assetMode: z.enum(["existing", "new"]),
-      existingAsset: z.string().max(200).default(""),
-      asset: z.object({ name: z.string().max(200), issuer: z.string().max(200), type: z.string().max(100), amountCents: z.number().int().min(0).max(1e13).nullable(), notes: z.string().max(2000) }),
-      purchaseAgreement: z.object({ fileName: z.string().max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).nullable(),
-      managementFeePct: z.number().min(0).max(100).nullable(),
-      managementFeeCents: z.number().int().min(0).max(1e13).nullable(),
-      feeConfirmed: z.boolean(),
-      wire: z.object({ method: z.enum(["wire", "ach"]), beneficiary: z.string().max(200), bankName: z.string().max(200), routingLast4: z.string().max(4), accountLast4: z.string().max(4), reference: z.string().max(200), amountCents: z.number().int().min(0).max(1e13).nullable() }),
-      investorStates: z.array(z.string().max(40)).max(60),
-      legalFeesCents: z.number().int().min(0).max(1e13).nullable(),
-      legalFeesDetail: z.string().max(1000),
-      brokerDealerFeesCents: z.number().int().min(0).max(1e13).nullable(),
-      brokerDealerDetail: z.string().max(1000),
-    }).optional(),
+    details: closeDetailsSchema,
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const uid = context.userId;
     if (!(await canViewFund(db, uid, data.fundId))) throw new Error("You don't have access to this Fund.");
-    const { data: obs } = await db.from("investor_onboardings").select("id").eq("offering_id", data.fundId).is("removed_at", null).in("id", data.onboardingIds);
-    if ((obs ?? []).length !== new Set(data.onboardingIds).size) throw new Error("Some selected investors aren't in this fund.");
-    const { data: off } = await db.from("offerings").select("client_id").eq("id", data.fundId).maybeSingle();
-    const { data: row, error } = await db.from("fund_close_requests").insert({
-      offering_id: data.fundId, client_id: off?.client_id ?? null, requested_by: uid,
-      target_date: data.targetDate, notes: data.notes.trim() || null, onboarding_ids: [...new Set(data.onboardingIds)],
-    }).select("id").single();
-    if (error) throw new Error("Couldn't submit the close request.");
+    const onboardingIds = [...new Set(data.onboardingIds)];
+    const nextStatus = closeStatusForIntent(data.intent);
+    if (data.intent === "submit" && !onboardingIds.length) throw new Error("Pick at least one investor before sending for review.");
+    if (data.intent === "submit" && data.details && !data.details.feeConfirmed) throw new Error("Confirm the management fee before sending for review.");
+    if (data.intent === "submit" && data.details?.assetMode === "new" && data.details.asset.name.trim().length < 2) throw new Error("Add the asset name before sending for review.");
+    if (onboardingIds.length) {
+      const { data: obs } = await db.from("investor_onboardings").select("id").eq("offering_id", data.fundId).is("removed_at", null).in("id", onboardingIds);
+      if ((obs ?? []).length !== onboardingIds.length) throw new Error("Some selected investors aren't in this fund.");
+    }
+
+    let rowId = data.id ?? null;
+    let previousStatus: string | null = null;
+    let previousDetails: Record<string, any> = {};
+    if (rowId) {
+      const { data: existing } = await db.from("fund_close_requests").select("id, status, offering_id, details").eq("id", rowId).eq("offering_id", data.fundId).maybeSingle();
+      if (!existing) throw new Error("Close details not found.");
+      if (existing.status !== "draft") throw new Error("Only draft close details can be changed or sent for review.");
+      previousStatus = existing.status;
+      previousDetails = existing.details && typeof existing.details === "object" ? existing.details : {};
+      const { data: updated, error } = await db.from("fund_close_requests").update({
+        target_date: data.targetDate, notes: data.notes.trim() || null,
+        onboarding_ids: onboardingIds, updated_at: new Date().toISOString(),
+      }).eq("id", rowId).eq("status", "draft").select("id");
+      if (error || !updated?.length) throw new Error("These close details changed. Refresh and try again.");
+    } else {
+      const { data: off } = await db.from("offerings").select("client_id").eq("id", data.fundId).maybeSingle();
+      const { data: row, error } = await db.from("fund_close_requests").insert({
+        offering_id: data.fundId, client_id: off?.client_id ?? null, requested_by: uid, status: "draft",
+        target_date: data.targetDate, notes: data.notes.trim() || null, onboarding_ids: onboardingIds,
+      }).select("id").single();
+      if (error) throw new Error(data.intent === "draft" ? "Couldn't save the close details." : "Couldn't submit the close request.");
+      rowId = row.id as string;
+    }
+
     // Server-recomputed side-letter estimate; client totals are never trusted.
-    const sl = await sideLetterPricing(db, data.fundId, [...new Set(data.onboardingIds)]);
+    const sl = await sideLetterPricing(db, data.fundId, onboardingIds);
     const sideLetterDetails = { sideLetterCount: sl.count, sideLetterPaidCount: sl.paidCount, sideLetterFeeCents: sl.feeCents, sideLetterUnitCents: sl.unitCents };
-    if (!data.details) await db.from("fund_close_requests").update({ details: { ...sideLetterDetails, feesAreEstimate: true } }).eq("id", row.id);
-    await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "close_request", title: "Fund close request submitted", offeringId: data.fundId, submittedBy: uid, ref: row.id, path: "/ops/close-requests" });
     if (data.details) {
       const det = data.details;
-      let paPath: string | null = null;
+      let paPath: string | null = typeof previousDetails["purchaseAgreementPath"] === "string" ? previousDetails["purchaseAgreementPath"] : null;
+      let paName: string | null = typeof previousDetails["purchaseAgreementName"] === "string" ? previousDetails["purchaseAgreementName"] : null;
       if (det.purchaseAgreement) {
         const bytes = Buffer.from(det.purchaseAgreement.base64, "base64");
         if (bytes.byteLength > 20 * 1024 * 1024) throw new Error("The purchase agreement must be 20 MB or smaller.");
-        paPath = `close-requests/${data.fundId}/${row.id}/${det.purchaseAgreement.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
+        paPath = `close-requests/${data.fundId}/${rowId}/${Date.now()}-${det.purchaseAgreement.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
         const { error: upErr } = await db.storage.from("manager-uploads").upload(paPath, bytes, { contentType: det.purchaseAgreement.contentType || "application/pdf", upsert: false });
-        if (upErr) paPath = null;
+        if (upErr) throw new Error("The purchase agreement couldn't be saved. Please try again.");
+        paName = det.purchaseAgreement.fileName;
       }
-      if (det.assetMode === "new" && det.asset.name.trim()) {
-        await db.from("fund_proposed_assets").insert({
-          offering_id: data.fundId, close_request_id: row.id, asset_name: det.asset.name.trim(), issuer_name: det.asset.issuer || null,
+      // A proposed asset is created only on explicit submission, never by saving draft details.
+      if (data.intent === "submit" && det.assetMode === "new" && det.asset.name.trim()) {
+        const { error: assetError } = await db.from("fund_proposed_assets").insert({
+          offering_id: data.fundId, close_request_id: rowId, asset_name: det.asset.name.trim(), issuer_name: det.asset.issuer || null,
           asset_type: det.asset.type || null, amount_cents: det.asset.amountCents, purchase_agreement_path: paPath,
-          purchase_agreement_name: det.purchaseAgreement?.fileName ?? null, details: { notes: det.asset.notes }, created_by: uid,
+          purchase_agreement_name: paName, details: { notes: det.asset.notes }, created_by: uid,
         });
+        if (assetError) throw new Error("The asset details couldn't be saved. Please try again.");
       }
       // Only the last four digits of bank numbers are kept here; full instructions are verified by Harmonious.
       const { purchaseAgreement: _pa, ...rest } = det;
-      await db.from("fund_close_requests").update({
-        details: { ...rest, purchaseAgreementPath: paPath, purchaseAgreementName: det.purchaseAgreement?.fileName ?? null, formDFeeCents: 16000, ...sideLetterDetails, feesAreEstimate: true },
-      }).eq("id", row.id);
+      const { error: detailsError } = await db.from("fund_close_requests").update({
+        details: { ...rest, purchaseAgreementPath: paPath, purchaseAgreementName: paName, formDFeeCents: 16000, ...sideLetterDetails, feesAreEstimate: true },
+      }).eq("id", rowId);
+      if (detailsError) throw new Error("The close details couldn't be saved. Please try again.");
+    } else {
+      await db.from("fund_close_requests").update({ details: { ...sideLetterDetails, feesAreEstimate: true } }).eq("id", rowId);
     }
-    await db.from("fund_close_request_events").insert({ close_request_id: row.id, actor_id: uid, from_status: null, to_status: "submitted" });
-    return { id: row.id as string };
+
+    const { data: finalizedSave, error: statusError } = await db.from("fund_close_requests")
+      .update({ status: nextStatus, updated_at: new Date().toISOString() })
+      .eq("id", rowId).eq("status", "draft").select("id");
+    if (statusError || !finalizedSave?.length) throw new Error("These close details changed. Refresh and try again.");
+    await db.from("fund_close_request_events").insert({
+      close_request_id: rowId, actor_id: uid, from_status: previousStatus, to_status: nextStatus,
+      note: data.intent === "draft" ? "Close details saved without submission." : null,
+    });
+    if (data.intent === "submit") {
+      await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "close_request", title: "Fund close request submitted", offeringId: data.fundId, submittedBy: uid, ref: rowId, path: "/ops/close-requests" });
+    }
+    return { id: rowId as string, status: nextStatus };
   });
 
 /** Operations queue (staff only). */
@@ -196,6 +243,7 @@ export const updateFundCloseRequestStatus = createServerFn({ method: "POST" })
       const rows = (fl ?? []) as any[];
       if (!rows.length) throw new Error("Generate the Form D and state filings first.");
       if (rows.some((f) => f.status === "prepared")) throw new Error("Every filing must be recorded as filed or not required before completing.");
+      if (!canFinalizeCloseRequest({ isStaff: true, status: cur.status, filingStatuses: rows.map((f) => f.status) })) throw new Error("This close isn't ready to complete.");
     }
     if (cur.status === "approved" && data.status === "in_review") throw new Error("Approved close requests can't go back to review; return it instead.");
     const note = data.note.trim() || null;

@@ -3172,6 +3172,13 @@
       "when": 1795630824830,
       "tag": "0452_fund_compliance_sec_identifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 453,
+      "version": "7",
+      "when": 1795642118386,
+      "tag": "0453_allow_fund_close_detail_drafts",
+      "breakpoints": true
     }
   ]
 }

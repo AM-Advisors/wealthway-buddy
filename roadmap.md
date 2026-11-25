@@ -1,5 +1,10 @@
 # Roadmap
 
+## Close detail drafts (2026-11-25)
+- [x] Save and reopen incomplete close details without sending them for review or finalizing; drafts stay visible to the fund manager and Harmonious, outside the review queue.
+- [x] Keep finalization with the currently authorized roles and retain approval and filing gates; five focused rules and code checks pass.
+- [ ] Signed-in draft save/read-back remains unverified because no production close records may be created for testing.
+
 ## Investor document email instruction sheet (2026-11-25)
 - [x] Create a one-page fund manager guide for adding custom updates and emailing selected investors; distinguish fund-wide availability, reviewed agreements and private investor versions. Single-investor versions without an active fund document do not appear in the bulk sender; the guide names this limit rather than recommending fund-wide exposure.
 - [x] Sheet downloadable from Documents, Send to investors; all PDF content visually inspected without clipping, exact served download verified, 14 existing privacy/follow-up regressions pass and preview build OK. No emails, access changes or publishing; live signed-in sending remains unverified.

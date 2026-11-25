@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ import { SIDE_LETTER_FEE_CENTS } from "@/lib/side-letter-fee";
 const FORM_D_CENTS = 16000;
 const NEW = "__new";
 
-export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fundId: string; open: boolean; onOpenChange: (o: boolean) => void; onDone: () => void }) {
+export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request }: { fundId: string; open: boolean; onOpenChange: (o: boolean) => void; onDone: () => void; request: any | null }) {
   const qc = useQueryClient();
   const loadCandidates = useServerFn(getCloseCandidates);
   const loadBooks = useServerFn(fundBooksFn);
@@ -40,7 +40,31 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
   const [states, setStates] = useState("");
   const [legal, setLegal] = useState({ amount: "", detail: "" });
   const [bd, setBd] = useState({ amount: "", detail: "" });
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"draft" | "submit" | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const d = request?.details ?? {};
+    setPicked(new Set(request?.onboarding_ids ?? []));
+    setDate(request?.target_date ?? "");
+    setNotes(request?.notes ?? "");
+    setAssetSel(d.assetMode === "new" ? NEW : d.existingAsset ?? "");
+    setAsset({
+      name: d.asset?.name ?? "", issuer: d.asset?.issuer ?? "", type: d.asset?.type ?? "",
+      amount: d.asset?.amountCents == null ? "" : String(d.asset.amountCents / 100), notes: d.asset?.notes ?? "",
+    });
+    setPa(null);
+    setFeePct(d.managementFeePct == null ? null : String(d.managementFeePct));
+    setFeeOk(d.feeConfirmed === true);
+    setWire({
+      method: d.wire?.method === "ach" ? "ach" : "wire", beneficiary: d.wire?.beneficiary ?? "",
+      bankName: d.wire?.bankName ?? "", routingLast4: d.wire?.routingLast4 ?? "", accountLast4: d.wire?.accountLast4 ?? "",
+      reference: d.wire?.reference ?? "", amount: d.wire?.amountCents == null ? "" : String(d.wire.amountCents / 100),
+    });
+    setStates(Array.isArray(d.investorStates) ? d.investorStates.join(", ") : "");
+    setLegal({ amount: d.legalFeesCents == null ? "" : String(d.legalFeesCents / 100), detail: d.legalFeesDetail ?? "" });
+    setBd({ amount: d.brokerDealerFeesCents == null ? "" : String(d.brokerDealerFeesCents / 100), detail: d.brokerDealerDetail ?? "" });
+  }, [open, request]);
 
   const rows = cq.data ?? [];
   const assets = bq.data?.assets ?? [];
@@ -54,14 +78,16 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
   const isNew = assetSel === NEW || (assets.length === 0 && assetSel === "");
   const toggle = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-  async function onSubmit() {
-    if (isNew && asset.name.trim().length < 2) { toast.error("Add the asset name."); return; }
-    if (!feeOk) { toast.error("Confirm the management fee."); return; }
-    setBusy(true);
+  async function onSave(intent: "draft" | "submit") {
+    if (intent === "submit" && picked.size === 0) { toast.error("Pick at least one investor before sending for review."); return; }
+    if (intent === "submit" && isNew && asset.name.trim().length < 2) { toast.error("Add the asset name."); return; }
+    if (intent === "submit" && !feeOk) { toast.error("Confirm the management fee."); return; }
+    setBusy(intent);
     try {
       const purchaseAgreement = pa ? { fileName: pa.name, contentType: pa.type || "application/pdf", base64: await fileToBase64(pa) } : null;
       await submit({ data: {
-        fundId, onboardingIds: [...picked], targetDate: date || null, notes,
+        ...(request?.id ? { id: request.id } : {}),
+        fundId, intent, onboardingIds: [...picked], targetDate: date || null, notes,
         details: {
           assetMode: isNew ? "new" : "existing", existingAsset: isNew ? "" : assetSel,
           asset: { name: asset.name, issuer: asset.issuer, type: asset.type, amountCents: toCents(asset.amount), notes: asset.notes },
@@ -73,14 +99,14 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
           brokerDealerFeesCents: toCents(bd.amount), brokerDealerDetail: bd.detail,
         },
       } });
-      toast.success("Close request sent to Harmonious.");
+      toast.success(intent === "draft" ? "Close details saved. Nothing was sent for review or finalized." : "Close request sent to Harmonious for review.");
       await qc.invalidateQueries({ queryKey: ["client-fund-closes", fundId] });
+      await qc.invalidateQueries({ queryKey: ["ops-close-requests"] });
       await qc.invalidateQueries({ queryKey: ["fund-books", fundId] });
-      setPicked(new Set()); setDate(""); setNotes(""); setPa(null); setFeeOk(false);
       onOpenChange(false); onDone();
     } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't send the close request.");
-    } finally { setBusy(false); }
+      toast.error(e?.message ?? (intent === "draft" ? "Couldn't save the close details." : "Couldn't send the close request."));
+    } finally { setBusy(null); }
   }
 
   const section = "space-y-2 rounded-md border p-3";
@@ -88,8 +114,8 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Request Fund Close</DialogTitle>
-          <DialogDescription>Harmonious reviews every request. Nothing closes, files or moves money automatically, and fees below are estimates Harmonious confirms.</DialogDescription>
+          <DialogTitle>{request ? "Continue close details" : "Prepare fund close"}</DialogTitle>
+          <DialogDescription>Save what you know without sending it. Only Send for review starts Harmonious review; saving never finalizes a close, files anything or moves money.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 text-sm">
           <div className={section}>
@@ -128,7 +154,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
                 <p className="text-xs text-muted-foreground sm:col-span-2">This asset will be added to your Assets list for Harmonious to confirm.</p>
               </div>
             )}
-            <div className="space-y-1"><Label>Purchase agreement</Label><Input type="file" onChange={(e) => setPa(e.target.files?.[0] ?? null)} /></div>
+            <div className="space-y-1"><Label>Purchase agreement</Label><Input type="file" onChange={(e) => setPa(e.target.files?.[0] ?? null)} />{request?.details?.purchaseAgreementName && !pa && <p className="text-xs text-muted-foreground">On file: {request.details.purchaseAgreementName}. Choose a file only to replace it.</p>}</div>
           </div>
 
           <div className={section}>
@@ -181,8 +207,9 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
           <div className="space-y-1"><Label htmlFor="close-notes">Notes (optional)</Label><Textarea id="close-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} /></div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={onSubmit} disabled={busy || picked.size === 0}>{busy ? "Sending…" : "Send request"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy !== null}>Cancel</Button>
+          <Button variant="secondary" onClick={() => onSave("draft")} disabled={busy !== null}>{busy === "draft" ? "Saving…" : "Save details"}</Button>
+          <Button onClick={() => onSave("submit")} disabled={busy !== null || picked.size === 0}>{busy === "submit" ? "Sending…" : "Send for review"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

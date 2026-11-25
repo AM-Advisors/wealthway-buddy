@@ -37,8 +37,8 @@ function Page() {
       </div>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
        q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
-       !q.data?.length ? <p className="text-sm text-muted-foreground">No close requests yet.</p> :
-       q.data.map((r: any) => <CloseRequestReview key={r.id} r={r} />)}
+       !q.data?.some((r: any) => r.status !== "draft") ? <p className="text-sm text-muted-foreground">No close requests sent for review yet.</p> :
+       q.data.filter((r: any) => r.status !== "draft").map((r: any) => <CloseRequestReview key={r.id} r={r} />)}
     </div>
   );
 }
