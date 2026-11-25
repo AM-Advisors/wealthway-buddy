@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getFilingForm } from "@/lib/close-filings.functions";
 import type { FilingForm } from "@/lib/filing-forms";
+import officialFormD from "@/assets/official-form-d.pdf.asset.json";
 
-async function downloadPdf(form: FilingForm, fileName: string) {
-  const { renderFilingPdf } = await import("@/lib/filing-pdf");
-  const bytes = await renderFilingPdf(form);
+async function downloadPdf(form: FilingForm, fileName: string, worksheet = false) {
+  const { renderFilingPdf, renderFilingWorksheetPdf } = await import("@/lib/filing-pdf");
+  const bytes = await (worksheet ? renderFilingWorksheetPdf(form) : renderFilingPdf(form));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/pdf" }));
   a.download = fileName;
@@ -37,8 +38,12 @@ export function FilingFormDialog({ filingId, fileName, open, onOpenChange }: { f
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               {missing ? <Badge variant="destructive">{missing} field{missing === 1 ? "" : "s"} need entry</Badge> : <Badge variant="secondary">All fields filled</Badge>}
-              <Button size="sm" onClick={() => downloadPdf(form, fileName).catch(() => toast.error("Couldn't create the PDF."))}><Download className="mr-1 h-4 w-4" />Download PDF</Button>
+              {form.kind === "form_d" ? <div className="flex flex-wrap gap-2">
+                <Button size="sm" asChild><a href={officialFormD.url} target="_blank" rel="noreferrer"><Download className="mr-1 h-4 w-4" />Official Form D PDF</a></Button>
+                <Button size="sm" variant="outline" onClick={() => downloadPdf(form, `worksheet-${fileName}`, true).catch(() => toast.error("Couldn't create the worksheet."))}><Download className="mr-1 h-4 w-4" />Preparation worksheet</Button>
+              </div> : <Button size="sm" onClick={() => downloadPdf(form, fileName).catch(() => toast.error("Couldn't create the PDF."))}><Download className="mr-1 h-4 w-4" />Download PDF</Button>}
             </div>
+            {form.kind === "form_d" && <p className="text-sm text-muted-foreground">The official PDF is blank and includes the SEC instructions and continuation pages. The recorded details below are a separate preparation worksheet, not a submitted filing.</p>}
             {form.sections.map((s) => (
               <div key={s.title} className="rounded border">
                 <p className="bg-muted px-3 py-1.5 text-sm font-medium">{s.title}</p>

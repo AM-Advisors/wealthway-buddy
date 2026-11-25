@@ -1,5 +1,10 @@
 # Roadmap
 
+## Official Form D paperwork (2026-11-25)
+- [x] Use the supplied unchanged SEC Form D PDF on Compliance and in Form D preparation; keep the recorded-data worksheet separate and preserve manual submission.
+- [x] Served PDF is byte-for-byte identical to the supplied 18-page original; seven focused tests and preview build pass. Original first page visually inspected without issues; no regenerated or filled PDF produced.
+- Production authenticated filing preparation remains unverified without isolated QA; no production records, signatures, submissions or publishing changed.
+
 ## Compliance spreadsheet import (2026-11-25)
 - [x] Imported 33 exact-fund CIKs (logged), 22 confirmed Form D accessions and 16 Blue Sky states with confirmed receipt or charge evidence; unverified notices were left out.
 - [x] Read back all counts. Not imported because no single exact fund matched: ControlQore SPV 1, Mountain Crest Fund 1, Gymble, Chapter 7, ETHZilla, Eurus, SpaceCraft and Satschel.

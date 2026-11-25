@@ -14,6 +14,8 @@ import { usd, fmtDate, toCents } from "./shared";
 import { FundFilingStatusCard } from "@/components/fund-filing-status";
 import { StateFilingsCard } from "./state-filings-card";
 import { SecComplianceCards } from "./sec-compliance-cards";
+import officialFormD from "@/assets/official-form-d.pdf.asset.json";
+import { Download } from "lucide-react";
 
 const statusLabel = (s: string) => ({ prepared: "Prepared", filed: "Filed", not_required: "Not required", recorded: "Recorded" } as Record<string, string>)[s] ?? s;
 
@@ -29,7 +31,8 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
 
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
-  const { filings, fees, calendar, filingStatus, staff } = q.data!;
+  if (!q.data) return null;
+  const { filings, fees, calendar, filingStatus, staff } = q.data;
 
   const submit = async () => {
     try {
@@ -40,6 +43,10 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
 
   return (
     <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><p className="font-medium">Official Form D paperwork</p><p className="text-sm text-muted-foreground">Blank SEC form, instructions and continuation pages. Electronic submission remains separate.</p></div>
+        <Button variant="outline" asChild><a href={officialFormD.url} target="_blank" rel="noreferrer"><Download className="mr-2 h-4 w-4" />Official Form D PDF</a></Button>
+      </div>
       <SecComplianceCards fundId={fundId} />
       {filingStatus && (
         <Card>

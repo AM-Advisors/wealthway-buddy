@@ -6,7 +6,7 @@
  */
 export type FormField = { label: string; value: string; needsEntry?: boolean };
 export type FormSection = { title: string; fields: FormField[] };
-export type FilingForm = { title: string; subtitle: string; where: string; sections: FormSection[]; notices: string[] };
+export type FilingForm = { kind?: "form_d" | "state_notice"; title: string; subtitle: string; where: string; sections: FormSection[]; notices: string[] };
 
 export type FormInput = {
   filing: { filing_type: string; jurisdiction: string; is_amendment: boolean; investor_count: number; amount_cents: number; fee_cents: number | null; fee_needs_review: boolean; packet: any };
@@ -94,6 +94,7 @@ export function buildFormD({ filing, offering: o, related, firstSaleDate }: Form
     ] },
   ];
   return {
+    kind: "form_d",
     title: `Form D${filing.is_amendment ? "/A" : ""} Notice of Exempt Offering of Securities`,
     subtitle: o?.legal_entity_name ?? o?.name ?? "",
     where: "File on SEC EDGAR (Form D online filing) using the issuer's EDGAR access codes. Due 15 days after the date of first sale.",
@@ -107,6 +108,7 @@ export function buildStateNotice({ filing, offering: o, firstSaleDate }: FormInp
   const st = filing.jurisdiction;
   const investors: any[] = p.investors ?? [];
   return {
+    kind: "state_notice",
     title: `${st} Rule 506 Notice Filing`,
     subtitle: o?.legal_entity_name ?? o?.name ?? "",
     where: `File through NASAA's Electronic Filing Depository (EFD) for ${st}, attaching the filed Form D. Most states require it within 15 days after the first sale in the state; confirm ${st}'s current rules on EFD.`,

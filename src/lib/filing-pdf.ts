@@ -1,7 +1,18 @@
 import type { FilingForm } from "./filing-forms";
+import officialFormD from "@/assets/official-form-d.pdf.asset.json";
 
-/** Renders a filled filing form as a PDF (pure JS). */
+/** Form D paperwork is the unchanged official form, not our preparation worksheet. */
 export async function renderFilingPdf(form: FilingForm): Promise<Uint8Array> {
+  if (form.kind === "form_d") {
+    const response = await fetch(officialFormD.url);
+    if (!response.ok) throw new Error("Couldn't load the official Form D.");
+    return new Uint8Array(await response.arrayBuffer());
+  }
+  return renderFilingWorksheetPdf(form);
+}
+
+/** Separate recorded-data worksheet, never represented as a filed SEC form. */
+export async function renderFilingWorksheetPdf(form: FilingForm): Promise<Uint8Array> {
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
