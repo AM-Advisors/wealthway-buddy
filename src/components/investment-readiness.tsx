@@ -103,7 +103,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem, onOpenAccreditation, fu
               <p className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</p>
               {viewer !== "investor" && waitingDetail(i, r.items) ? <p className="break-words text-xs text-muted-foreground" data-testid="waiting-detail">{waitingDetail(i, r.items)}</p> : null}
             </div>
-            {i.key === "approved_to_fund" && fundingApprovalAction ? fundingApprovalAction : i.key === "accreditation" && onOpenAccreditation ? <Button variant="outline" size="sm" className="w-full" onClick={onOpenAccreditation}>{openLabelFor(i.key, i.owner)}</Button> : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key, i.owner)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
+            {(i.key === "approved_to_fund" || i.key === "manager_approval") && fundingApprovalAction ? fundingApprovalAction : i.key === "accreditation" && onOpenAccreditation ? <Button variant="outline" size="sm" className="w-full" onClick={onOpenAccreditation}>{openLabelFor(i.key, i.owner)}</Button> : onOpenItem ? <Button variant="outline" size="sm" className="w-full" onClick={() => onOpenItem(i.key, i.owner)}>{openLabelFor(i.key, i.owner)}</Button> : <span />}
           </li>
         ))}
       </ul>
