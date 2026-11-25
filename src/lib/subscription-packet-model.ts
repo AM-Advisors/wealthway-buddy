@@ -69,6 +69,7 @@ export function packetChecklist(docs: PacketDocInput[]): PacketChecklistItem[] {
   return [
     { targetKey: "subscriber-information", title: "Subscriber Information Form: complete all applicable answers", action: "Complete" },
     { targetKey: "onboarding-instructions", title: "Verification: complete the checks requested in your secure portal", action: "Portal" },
+    { targetKey: "helper-instructions", title: "If using a helper: assign Prepares details and check their invitation", action: "Optional" },
     ...docs.map((d) => ({ targetKey: d.versionId, title: d.title, action: sectionFor(d).action })),
     { targetKey: "tax-forms", title: "Tax forms: complete, sign and date one applicable form only", action: "Complete one" },
   ];

@@ -50,6 +50,9 @@ export function SubscriptionPacketCard({ fundId }: { fundId: string }) {
         {file && file.missing.length > 0 && (
           <p className="text-sm text-muted-foreground">Not included yet because it still needs approval: {file.missing.join(", ")}.</p>
         )}
+        <Button asChild variant="outline" className="whitespace-normal text-left">
+          <a href="/downloads/Harmonious-Add-a-Paperwork-Helper.pdf" download><Download className="mr-2 h-4 w-4 shrink-0" aria-hidden />Client instructions: add a paperwork helper</a>
+        </Button>
       </CardContent>
     </Card>
   );

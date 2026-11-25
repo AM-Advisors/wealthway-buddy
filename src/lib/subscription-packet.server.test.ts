@@ -65,11 +65,11 @@ async function checkPacket(count: number, fileName: string, wire?: Record<string
 describe("Subscription packet generated PDF, fictional records only", () => {
   it("inserts a linked index and checklist without losing any source or tax pages", async () => {
     const { pages } = await checkPacket(4, "standard.pdf");
-    // Cover, index, fund summary, instructions and checklist precede the original documents.
+    // Cover, index, fund summary, instructions, helper guide and checklist precede the original documents.
     expect(pages.length).toBeGreaterThan(5 + 4 * 2 + 3);
-    expect(pages[1]?.node.Annots()?.size()).toBe(12);
-    expect(pages[4]?.node.Annots()?.size()).toBe(7);
-    expect(pages[3]?.node.Annots()?.size()).toBe(2);
+    expect(pages[1]?.node.Annots()?.size()).toBe(13);
+    expect(pages[5]?.node.Annots()?.size()).toBe(8);
+    expect(pages[3]?.node.Annots()?.size()).toBe(3);
   });
   it("paginates long indexes and checklists with valid destinations after insertion", async () => {
     const { pages } = await checkPacket(32, "long.pdf");
@@ -78,6 +78,6 @@ describe("Subscription packet generated PDF, fictional records only", () => {
   });
   it("indexes wire instructions only when the caller supplies already-authorized details", async () => {
     const { pages } = await checkPacket(4, "with-wire.pdf", { beneficiary: "Fictional beneficiary", reference: "Fictional reference" });
-    expect(pages[1]?.node.Annots()?.size()).toBe(13);
+    expect(pages[1]?.node.Annots()?.size()).toBe(14);
   });
 });

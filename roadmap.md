@@ -1,5 +1,9 @@
 # Roadmap
 
+## Client helper instruction sheet (2026-11-25)
+- [x] Create a one-page printable client guide using the actual helper controls and existing access limits; include it in the subscription packet index, instructions and optional checklist, with a standalone download on Documents.
+- [x] Seven fictional packet regressions pass; internal page links remain valid, standalone and packet helper pages visually inspected without clipping, exact PDF download verified. No production writes, invitations, access changes or publishing; production verification pending.
+
 ## Client perspective purchase-message correction (2026-11-25)
 - [x] Identify the personal-purchase gate intercepting the exact-fund staff preview; only server-validated matching fund previews omit that presentation block. No purchase, permission, signature or read-only rules changed.
 - [x] 14 focused preview/purchase regressions pass; shared purchase-message content transitions blocked → exact-fund read-only preview → blocked on exit at 1280px and 740px, with real requests blocked and no page errors. Preview build OK.

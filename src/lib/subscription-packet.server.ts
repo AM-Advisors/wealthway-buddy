@@ -6,6 +6,7 @@
 import { PDFDocument, PDFName, PDFNumber, PDFString, StandardFonts, rgb, type PDFFont, type PDFPage, type PDFRef } from "pdf-lib";
 import { PACKET_ONBOARDING_STEPS, packetChecklist, selectPacketDocuments, sectionFor, TAX_FORMS, type PacketDocInput } from "@/lib/subscription-packet-model";
 import questions from "@/lib/standard-investor-questionnaire.json";
+import { addHelperInstructionPage } from "@/lib/helper-instructions-pdf";
 
 const NAVY = rgb(0.078, 0.149, 0.278), TEAL = rgb(0.365, 0.776, 0.82), INK = rgb(0.133, 0.122, 0.125);
 const SLATE = rgb(0.255, 0.357, 0.506), LINE = rgb(0.835, 0.863, 0.902), TEALBG = rgb(0.91, 0.965, 0.973), WHITE = rgb(1, 1, 1);
@@ -155,6 +156,10 @@ export async function buildSubscriptionPacket(db: any, input: PacketBuildInput):
   }
   const instructionLinksY = text(instructions, "The packet index lists the documents and page numbers. Your portal remains the source for current requirements and recorded completion.", M, iy, 9.5, ital, SLATE) - 16;
 
+  const helperPage = await addHelperInstructionPage(pdf);
+  branded.add(helperPage);
+  marks.push({ key: "helper-instructions", title: "Add a paperwork helper", page: helperPage, action: "Optional" });
+
   let checklistPage = newPage(); header(checklistPage, "Completion checklist");
   marks.push({ key: "completion-checklist", title: "Completion checklist", page: checklistPage, action: "Track paperwork" });
   checklistPage.drawText("Completion checklist", { x: M, y: H - 100, size: 20, font: bold, color: NAVY });
@@ -279,6 +284,9 @@ export async function buildSubscriptionPacket(db: any, input: PacketBuildInput):
   }
   const firstIndex = indexRows[0]?.page;
   if (firstIndex) marks.splice(1, 0, { key: "packet-index", title: "Packet index", page: firstIndex, action: "Reference" });
+  const helperCaption = `Using a helper? See Add a paperwork helper: p. ${pageNumber(helperPage)}`;
+  instructions.drawText(helperCaption, { x: M, y: instructionLinksY - 24, size: 9.5, font: bold, color: NAVY });
+  pageLink(instructions, helperPage, M, instructionLinksY - 24, bold.widthOfTextAtSize(helperCaption, 9.5));
   for (const [offset, key, label] of [[0, "packet-index", "Packet index"], [210, "completion-checklist", "Completion checklist"]] as const) {
     const target = marks.find((m) => m.key === key);
     if (!target) continue;
