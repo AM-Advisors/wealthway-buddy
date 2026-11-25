@@ -4,6 +4,18 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 import { canFinalizeCloseRequest, closeStatusForIntent } from "@/lib/fund-close-request-model";
+import { estimateCloseFilingCosts, stateCode } from "@/lib/blue-sky-fees";
+
+async function filedBlueSkyStates(db: any, fundId: string): Promise<string[]> {
+  const { data } = await db.from("fund_regulatory_filings").select("state").eq("offering_id", fundId).eq("filing_type", "blue_sky").is("removed_at", null);
+  return ((data ?? []) as any[]).map((r) => stateCode(r.state)).filter(Boolean) as string[];
+}
+
+async function investorStatesFor(db: any, fundId: string, ids: string[]): Promise<string[]> {
+  if (!ids.length) return [];
+  const { data } = await db.from("investor_onboardings").select("id, persons(region), investment_profiles(region)").eq("offering_id", fundId).in("id", ids);
+  return ((data ?? []) as any[]).map((o) => stateCode(o.investment_profiles?.region) ?? stateCode(o.persons?.region)).filter(Boolean) as string[];
+}
 
 const STAFF_ROLES: readonly string[] = FUND_OPERATIONS_ROLES;
 
@@ -43,6 +55,17 @@ const closeDetailsSchema = z.object({
   legalFeesDetail: z.string().max(1000),
   brokerDealerFeesCents: z.number().int().min(0).max(1e13).nullable(),
   brokerDealerDetail: z.string().max(1000),
+  closeAmountCents: z.number().int().min(0).max(1e13).nullable().optional(),
+  feeBankName: z.string().max(200).optional(),
+  feeAddress: z.string().max(500).optional(),
+  legalOn: z.boolean().optional(),
+  legalPayee: z.string().max(200).optional(),
+  legalDueDate: z.string().max(10).optional(),
+  brokerDealerOn: z.boolean().optional(),
+  brokerDealerPayee: z.string().max(200).optional(),
+  brokerDealerName: z.string().max(200).optional(),
+  brokerDealerDueDate: z.string().max(10).optional(),
+  wireAddress: z.string().max(500).optional(),
 }).optional();
 
 /** Read-only, informational tabs: Banking, Taxes, Assets. Nothing here needs approval. */
@@ -77,14 +100,15 @@ export const getCloseCandidates = createServerFn({ method: "GET" })
     if (!(await canViewFund(db, context.userId, data.fundId))) throw new Error("You don't have access to this Fund.");
     const [{ data: obs }, { data: tasks }] = await Promise.all([
       db.from("investor_onboardings")
-        .select("id, stage, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, removed_at, persons(legal_first_name, legal_last_name, preferred_name), investment_profiles(legal_name)")
+        .select("id, stage, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, removed_at, persons(legal_first_name, legal_last_name, preferred_name, region), investment_profiles(legal_name, region)")
         .eq("offering_id", data.fundId).is("removed_at", null),
       db.from("investment_readiness_tasks").select("onboarding_id, title").eq("offering_id", data.fundId).is("resolved_at", null),
     ]);
     const open: Record<string, string[]> = {};
     for (const t of (tasks ?? []) as any[]) (open[t.onboarding_id] ??= []).push(t.title);
     const sl = await sideLetterPricing(db, data.fundId, ((obs ?? []) as any[]).map((o) => o.id));
-    return ((obs ?? []) as any[]).map((o) => {
+    const filedStates = await filedBlueSkyStates(db, data.fundId);
+    const investors = ((obs ?? []) as any[]).map((o) => {
       const p = o.persons;
       const name = p ? p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") : "";
       return {
@@ -94,8 +118,10 @@ export const getCloseCandidates = createServerFn({ method: "GET" })
         amountCents: o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null,
         openItems: open[o.id] ?? [],
         sideLetters: sl.perInvestor[o.id] ?? 0,
+        state: stateCode(o.investment_profiles?.region) ?? stateCode(o.persons?.region),
       };
     });
+    return { investors, filedStates };
   });
 
 export const listFundCloseRequests = createServerFn({ method: "GET" })
@@ -187,8 +213,11 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       }
       // Only the last four digits of bank numbers are kept here; full instructions are verified by Harmonious.
       const { purchaseAgreement: _pa, ...rest } = det;
+      // Blue Sky states come from investor addresses and the fund's Compliance filings, recomputed here.
+      const filing = estimateCloseFilingCosts({ investorStates: await investorStatesFor(db, data.fundId, onboardingIds), filedStates: await filedBlueSkyStates(db, data.fundId) });
+      rest.investorStates = filing.lines.map((l) => l.state);
       const { error: detailsError } = await db.from("fund_close_requests").update({
-        details: { ...rest, purchaseAgreementPath: paPath, purchaseAgreementName: paName, formDFeeCents: 16000, ...sideLetterDetails, feesAreEstimate: true },
+        details: { ...rest, purchaseAgreementPath: paPath, purchaseAgreementName: paName, formDFeeCents: filing.formDCents, blueSkyLines: filing.lines, filingTotalCents: filing.totalCents, ...sideLetterDetails, feesAreEstimate: true },
       }).eq("id", rowId);
       if (detailsError) throw new Error("The close details couldn't be saved. Please try again.");
     } else {

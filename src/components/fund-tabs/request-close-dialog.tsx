@@ -14,8 +14,9 @@ import { createFundCloseRequest, getCloseCandidates } from "@/lib/fund-close-req
 import { fundBooksFn, fundTeamFn } from "@/lib/fund-tabs.functions";
 import { fileToBase64, toCents, toPct, usd } from "./shared";
 import { SIDE_LETTER_FEE_CENTS } from "@/lib/side-letter-fee";
+import { Switch } from "@/components/ui/switch";
+import { estimateCloseFilingCosts } from "@/lib/blue-sky-fees";
 
-const FORM_D_CENTS = 16000;
 const NEW = "__new";
 
 export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request, canSend }: { fundId: string; open: boolean; onOpenChange: (o: boolean) => void; onDone: () => void; request: any | null; canSend: boolean }) {
@@ -37,7 +38,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const [feePct, setFeePct] = useState<string | null>(null);
   const [feeOk, setFeeOk] = useState(false);
   const [wire, setWire] = useState({ method: "wire" as "wire" | "ach", beneficiary: "", bankName: "", routingLast4: "", accountLast4: "", reference: "", amount: "" });
-  const [states, setStates] = useState("");
+  const [extra, setExtra] = useState({ closeAmount: "", feeBank: "", feeAddress: "", legalOn: false, legalPayee: "", legalDue: "", bdOn: false, bdPayee: "", bdName: "", bdDue: "", wireAddress: "" });
   const [legal, setLegal] = useState({ amount: "", detail: "" });
   const [bd, setBd] = useState({ amount: "", detail: "" });
   const [busy, setBusy] = useState<"draft" | "submit" | null>(null);
@@ -61,12 +62,18 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
       bankName: d.wire?.bankName ?? "", routingLast4: d.wire?.routingLast4 ?? "", accountLast4: d.wire?.accountLast4 ?? "",
       reference: d.wire?.reference ?? "", amount: d.wire?.amountCents == null ? "" : String(d.wire.amountCents / 100),
     });
-    setStates(Array.isArray(d.investorStates) ? d.investorStates.join(", ") : "");
+    setExtra({
+      closeAmount: d.closeAmountCents == null ? "" : String(d.closeAmountCents / 100), feeBank: d.feeBankName ?? "", feeAddress: d.feeAddress ?? "",
+      legalOn: d.legalOn ?? d.legalFeesCents != null, legalPayee: d.legalPayee ?? "", legalDue: d.legalDueDate ?? "",
+      bdOn: d.brokerDealerOn ?? d.brokerDealerFeesCents != null, bdPayee: d.brokerDealerPayee ?? "", bdName: d.brokerDealerName ?? "", bdDue: d.brokerDealerDueDate ?? "",
+      wireAddress: d.wireAddress ?? "",
+    });
     setLegal({ amount: d.legalFeesCents == null ? "" : String(d.legalFeesCents / 100), detail: d.legalFeesDetail ?? "" });
     setBd({ amount: d.brokerDealerFeesCents == null ? "" : String(d.brokerDealerFeesCents / 100), detail: d.brokerDealerDetail ?? "" });
   }, [open, request]);
 
-  const rows = cq.data ?? [];
+  const rows = cq.data?.investors ?? [];
+  const filedStates = cq.data?.filedStates ?? [];
   const assets = bq.data?.assets ?? [];
   const activeFeePct = tq.data?.activeFee?.management_fee_pct ?? null;
   const pctStr = feePct ?? (activeFeePct != null ? String(activeFeePct) : "");
@@ -74,7 +81,9 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const feeCents = toPct(pctStr) != null ? Math.round((selectedCents * (toPct(pctStr) as number)) / 100) : null;
   const notReady = rows.filter((r) => picked.has(r.id) && r.openItems.length > 0).length;
   const sideLetterCount = rows.filter((r) => picked.has(r.id)).reduce((s, r) => s + (r.sideLetters ?? 0), 0);
-  const stateList = useMemo(() => [...new Set(states.split(/[,\s]+/).map((s) => s.trim().toUpperCase()).filter(Boolean))], [states]);
+  const pickedRows = rows.filter((r) => picked.has(r.id));
+  const filing = useMemo(() => estimateCloseFilingCosts({ investorStates: pickedRows.map((r) => r.state), filedStates }), [pickedRows.map((r) => r.id).join(), filedStates.join()]);
+  const noAddress = pickedRows.filter((r) => !r.state);
   const isNew = assetSel === NEW || (assets.length === 0 && assetSel === "");
   const toggle = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
@@ -95,9 +104,13 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
           purchaseAgreement,
           managementFeePct: toPct(pctStr), managementFeeCents: feeCents, feeConfirmed: feeOk,
           wire: { method: wire.method, beneficiary: wire.beneficiary, bankName: wire.bankName, routingLast4: wire.routingLast4.slice(-4), accountLast4: wire.accountLast4.slice(-4), reference: wire.reference, amountCents: toCents(wire.amount) },
-          investorStates: stateList,
-          legalFeesCents: toCents(legal.amount), legalFeesDetail: legal.detail,
-          brokerDealerFeesCents: toCents(bd.amount), brokerDealerDetail: bd.detail,
+          investorStates: filing.lines.map((l) => l.state),
+          legalFeesCents: extra.legalOn ? toCents(legal.amount) : null, legalFeesDetail: legal.detail,
+          brokerDealerFeesCents: extra.bdOn ? toCents(bd.amount) : null, brokerDealerDetail: bd.detail,
+          closeAmountCents: toCents(extra.closeAmount), feeBankName: extra.feeBank, feeAddress: extra.feeAddress,
+          legalOn: extra.legalOn, legalPayee: extra.legalPayee, legalDueDate: extra.legalDue,
+          brokerDealerOn: extra.bdOn, brokerDealerPayee: extra.bdPayee, brokerDealerName: extra.bdName, brokerDealerDueDate: extra.bdDue,
+          wireAddress: extra.wireAddress,
         },
       } });
       toast.success(intent === "draft" ? "Close details saved. Nothing was sent for review or finalized." : "Close request sent to Harmonious for review.");
@@ -113,14 +126,21 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const section = "space-y-2 rounded-md border p-3";
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{request ? "Continue close details" : "Prepare fund close"}</DialogTitle>
           <DialogDescription>Save what you know without sending it. Only Send for review starts Harmonious review; saving never finalizes a close, files anything or moves money.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 text-sm">
           <div className={section}>
-            <p className="font-medium">1. Investors in this close</p>
+            <p className="font-medium">Close details</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-1"><Label htmlFor="close-date">Close date requested</Label><Input id="close-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+              <div className="space-y-1"><Label>Amount for close ($)</Label><Input inputMode="decimal" value={extra.closeAmount} onChange={(e) => setExtra({ ...extra, closeAmount: e.target.value })} placeholder={selectedCents ? String(selectedCents / 100) : ""} /></div>
+            </div>
+          </div>
+          <div className={section}>
+            <p className="font-medium">Investors in this close</p>
             <div className="max-h-56 space-y-1 overflow-y-auto">
               {cq.isLoading ? <p className="text-muted-foreground">Loading investors…</p> : rows.length === 0 ? <p className="text-muted-foreground">No investors in this fund yet.</p> : rows.map((r) => (
                 <label key={r.id} className="flex cursor-pointer items-start gap-3 rounded p-2 hover:bg-muted">
@@ -138,7 +158,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
           </div>
 
           <div className={section}>
-            <p className="font-medium">2. Asset being purchased</p>
+            <p className="font-medium">Asset being purchased</p>
             {assets.length > 0 && (
               <Select value={assetSel} onValueChange={setAssetSel}>
                 <SelectTrigger><SelectValue placeholder="Pick an asset" /></SelectTrigger>
@@ -159,23 +179,69 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
           </div>
 
           <div className={section}>
-            <p className="font-medium">3. Management fee</p>
+            <p className="font-medium">Fees</p>
             <div className="grid items-end gap-2 sm:grid-cols-2">
               <div className="space-y-1"><Label>Management fee %</Label><Input inputMode="decimal" value={pctStr} onChange={(e) => { setFeePct(e.target.value); setFeeOk(false); }} /></div>
               <p>Amount on selected investors: <span className="font-semibold">{usd(feeCents)}</span></p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-1"><Label>Bank name</Label><Input value={extra.feeBank} onChange={(e) => setExtra({ ...extra, feeBank: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Address</Label><Input value={extra.feeAddress} onChange={(e) => setExtra({ ...extra, feeAddress: e.target.value })} /></div>
             </div>
             <label className="flex items-center gap-2"><Checkbox checked={feeOk} onCheckedChange={(v) => setFeeOk(!!v)} /> I confirm this percentage and amount are correct.</label>
             {activeFeePct != null && toPct(pctStr) !== Number(activeFeePct) && <p className="text-xs text-destructive">This differs from the fund's recorded fee of {activeFeePct}%. Harmonious will check it.</p>}
           </div>
 
           <div className={section}>
-            <p className="font-medium">4. Where the money goes</p>
+            <p className="font-medium">Legal fees</p>
+            <label className="flex items-center gap-2"><Switch checked={extra.legalOn} onCheckedChange={(v) => setExtra({ ...extra, legalOn: v })} /> {extra.legalOn ? "Yes" : "No legal fees"}</label>
+            {extra.legalOn && <div className="grid gap-2 sm:grid-cols-3">
+              <div className="space-y-1"><Label>Payee account</Label><Input value={extra.legalPayee} onChange={(e) => setExtra({ ...extra, legalPayee: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Amount ($)</Label><Input inputMode="decimal" value={legal.amount} onChange={(e) => setLegal({ ...legal, amount: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Due date</Label><Input type="date" value={extra.legalDue} onChange={(e) => setExtra({ ...extra, legalDue: e.target.value })} /></div>
+              <div className="space-y-1 sm:col-span-3"><Label>Details</Label><Input value={legal.detail} onChange={(e) => setLegal({ ...legal, detail: e.target.value })} /></div>
+            </div>}
+          </div>
+
+          <div className={section}>
+            <p className="font-medium">Broker-Dealer fee</p>
+            <label className="flex items-center gap-2"><Switch checked={extra.bdOn} onCheckedChange={(v) => setExtra({ ...extra, bdOn: v })} /> {extra.bdOn ? "Yes" : "No Broker-Dealer fee"}</label>
+            {extra.bdOn && <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-1"><Label>Fee amount ($)</Label><Input inputMode="decimal" value={bd.amount} onChange={(e) => setBd({ ...bd, amount: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Payee account</Label><Input value={extra.bdPayee} onChange={(e) => setExtra({ ...extra, bdPayee: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Broker-Dealer name</Label><Input value={extra.bdName} onChange={(e) => setExtra({ ...extra, bdName: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Due date</Label><Input type="date" value={extra.bdDue} onChange={(e) => setExtra({ ...extra, bdDue: e.target.value })} /></div>
+              <div className="space-y-1 sm:col-span-2"><Label>Details</Label><Input value={bd.detail} onChange={(e) => setBd({ ...bd, detail: e.target.value })} /></div>
+            </div>}
+          </div>
+
+          <div className={section}>
+            <p className="font-medium">Form D & Blue Sky fees</p>
+            <p className="text-xs text-muted-foreground">Worked out from the addresses of the investors you picked and the filings already on the Compliance tab.</p>
+            <div className="divide-y rounded border">
+              <div className="flex justify-between p-2"><span>Harmonious Form D electronic filing (always included)</span><span className="font-medium">{usd(filing.formDCents)}</span></div>
+              {filing.lines.map((l) => (
+                <div key={l.state} className="flex justify-between p-2">
+                  <span>{l.state} Blue Sky notice · {l.investors} investor{l.investors === 1 ? "" : "s"}</span>
+                  <span className={l.status === "review" ? "text-destructive" : "font-medium"}>{l.status === "filed" ? "Already filed · $0" : l.status === "none" ? "No state fee" : l.status === "review" ? "Needs review" : usd(l.cents)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between p-2 font-semibold"><span>Estimated total{filing.needsReview.length ? " (plus states needing review)" : ""}</span><span>{usd(filing.totalCents)}</span></div>
+            </div>
+            {noAddress.length > 0 && <p className="text-xs text-destructive">No state on file for: {noAddress.map((r) => r.name).join(", ")}. Add their address so their state is counted.</p>}
+            <p className="text-xs text-muted-foreground">Harmonious confirms each state fee before filing. Nothing is filed or paid automatically.</p>
+            <p>Side letters: {sideLetterCount === 0 ? "none for the selected investors" : <>{sideLetterCount} side letter{sideLetterCount === 1 ? "" : "s"} × {usd(SIDE_LETTER_FEE_CENTS)} = <span className="font-semibold">{usd(sideLetterCount * SIDE_LETTER_FEE_CENTS)}</span>. Harmonious confirms the total and credits any side letter already paid for.</>}</p>
+          </div>
+
+          <div className={section}>
+            <p className="font-medium">Receiving account (wire to)</p>
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="space-y-1"><Label>Method</Label>
                 <Select value={wire.method} onValueChange={(v) => setWire({ ...wire, method: v as "wire" | "ach" })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="wire">Wire</SelectItem><SelectItem value="ach">ACH</SelectItem></SelectContent></Select>
               </div>
               <div className="space-y-1"><Label>Amount to send ($)</Label><Input inputMode="decimal" value={wire.amount} onChange={(e) => setWire({ ...wire, amount: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Beneficiary</Label><Input value={wire.beneficiary} onChange={(e) => setWire({ ...wire, beneficiary: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Bank address</Label><Input value={extra.wireAddress} onChange={(e) => setExtra({ ...extra, wireAddress: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Account name</Label><Input value={wire.beneficiary} onChange={(e) => setWire({ ...wire, beneficiary: e.target.value })} /></div>
               <div className="space-y-1"><Label>Bank name</Label><Input value={wire.bankName} onChange={(e) => setWire({ ...wire, bankName: e.target.value })} /></div>
               <div className="space-y-1"><Label>Routing number (last 4)</Label><Input maxLength={4} value={wire.routingLast4} onChange={(e) => setWire({ ...wire, routingLast4: e.target.value.replace(/\D/g, "") })} /></div>
               <div className="space-y-1"><Label>Account number (last 4)</Label><Input maxLength={4} value={wire.accountLast4} onChange={(e) => setWire({ ...wire, accountLast4: e.target.value.replace(/\D/g, "") })} /></div>
@@ -184,27 +250,6 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
             <p className="text-xs text-muted-foreground">Attach the full instructions to the purchase agreement or send them to Harmonious. Harmonious verifies instructions by phone before any money moves; nothing is sent from here.</p>
           </div>
 
-          <div className={section}>
-            <p className="font-medium">5. Filing fees (estimate)</p>
-            <div className="space-y-1"><Label>States where investors live (e.g. TX, CA, NY)</Label><Input value={states} onChange={(e) => setStates(e.target.value)} /></div>
-            <p>Harmonious Form D Filing Fee: <span className="font-semibold">{usd(FORM_D_CENTS)}</span></p>
-            <p>Blue Sky state fees: {stateList.length ? `${stateList.length} state${stateList.length === 1 ? "" : "s"} (${stateList.join(", ")}). Needs Review: Harmonious confirms each state's fee.` : "add states above"}</p>
-            <p>Side letters: {sideLetterCount === 0 ? "none for the selected investors" : <>{sideLetterCount} side letter{sideLetterCount === 1 ? "" : "s"} × {usd(SIDE_LETTER_FEE_CENTS)} = <span className="font-semibold">{usd(sideLetterCount * SIDE_LETTER_FEE_CENTS)}</span>. Harmonious confirms the total and credits any side letter already paid for.</>}</p>
-          </div>
-
-          <div className={section}>
-            <p className="font-medium">6. Other fees</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="space-y-1"><Label>Legal fees ($)</Label><Input inputMode="decimal" value={legal.amount} onChange={(e) => setLegal({ ...legal, amount: e.target.value })} placeholder="Leave blank if none" /></div>
-              <div className="space-y-1"><Label>Legal fee details</Label><Input value={legal.detail} onChange={(e) => setLegal({ ...legal, detail: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Broker/Dealer Fee ($)</Label><Input inputMode="decimal" value={bd.amount} onChange={(e) => setBd({ ...bd, amount: e.target.value })} placeholder="Leave blank if none" /></div>
-              <div className="space-y-1"><Label>Broker/Dealer details</Label><Input value={bd.detail} onChange={(e) => setBd({ ...bd, detail: e.target.value })} /></div>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1"><Label htmlFor="close-date">Target close date</Label><Input id="close-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-          </div>
           <div className="space-y-1"><Label htmlFor="close-notes">Notes (optional)</Label><Textarea id="close-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} /></div>
         </div>
         <DialogFooter>

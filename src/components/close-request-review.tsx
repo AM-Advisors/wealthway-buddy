@@ -28,29 +28,61 @@ const fmtDate = (value: string | null | undefined) => value
   ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   : "Not recorded";
 
+function Field({ k, v }: { k: string; v: React.ReactNode }) {
+  return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "Not recorded"}</dd></div>;
+}
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="rounded-md border p-4"><p className="mb-3 font-semibold">{title}</p><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{children}</dl></section>;
+}
+
 export function CloseDetailsSummary({ r }: { r: any }) {
   if (!r.details || !Object.keys(r.details).length) return null;
   const d = r.details;
   const asset = d.assetMode === "new" ? d.asset?.name : d.existingAsset;
-  const assetDetail = d.assetMode === "new"
-    ? [d.asset?.issuer, d.asset?.type, d.asset?.amountCents == null ? null : money(d.asset.amountCents)].filter(Boolean).join(" · ")
-    : "";
+  const assetDetail = d.assetMode === "new" ? [d.asset?.issuer, d.asset?.type, d.asset?.amountCents == null ? null : money(d.asset.amountCents)].filter(Boolean).join(" · ") : "";
   const wire = d.wire ?? {};
-  const payment = [wire.method?.toUpperCase(), wire.amountCents == null ? null : money(wire.amountCents), wire.beneficiary, wire.bankName].filter(Boolean).join(" · ");
-  const account = [wire.routingLast4 ? `Routing ending ${wire.routingLast4}` : null, wire.accountLast4 ? `Account ending ${wire.accountLast4}` : null].filter(Boolean).join(" · ");
-  const legal = [money(d.legalFeesCents), d.legalFeesDetail].filter(Boolean).join(" · ");
-  const broker = [money(d.brokerDealerFeesCents), d.brokerDealerDetail].filter(Boolean).join(" · ");
+  const lines: any[] = Array.isArray(d.blueSkyLines) ? d.blueSkyLines : [];
+  const yes = (on: boolean | undefined, cents: number | null | undefined) => (on ?? cents != null) ? "Yes" : "No";
   return (
-    <dl className="grid gap-4 rounded-md border p-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div><dt className="text-xs text-muted-foreground">Asset</dt><dd>{asset || "Not recorded"}{assetDetail && <span className="block text-xs text-muted-foreground">{assetDetail}</span>}{d.asset?.notes && <span className="block text-xs text-muted-foreground">{d.asset.notes}</span>}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Management fee</dt><dd>{d.managementFeePct == null ? "Not recorded" : `${d.managementFeePct}% · ${money(d.managementFeeCents)}`}{d.feeConfirmed === true && <span className="block text-xs text-muted-foreground">Confirmed by the preparer</span>}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Payment details</dt><dd>{payment || "Not recorded"}{account && <span className="block text-xs text-muted-foreground">{account}</span>}{wire.reference && <span className="block text-xs text-muted-foreground">Reference: {wire.reference}</span>}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Investor states</dt><dd>{d.investorStates?.length ? d.investorStates.join(", ") : "Not recorded"}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Purchase agreement</dt><dd>{d.purchaseAgreementName || "Not attached"}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Legal fees</dt><dd>{legal}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Broker/Dealer Fee</dt><dd>{broker}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">Harmonious Form D Filing Fee</dt><dd>{money(d.formDFeeCents ?? 16000)}</dd></div>
-    </dl>
+    <div className="space-y-3">
+      <Group title="Close details">
+        <Field k="Close date requested" v={fmtDate(r.target_date)} />
+        <Field k="Amount for close" v={d.closeAmountCents == null ? null : money(d.closeAmountCents)} />
+        <Field k="Asset" v={<>{asset}{assetDetail && <span className="block text-xs font-normal text-muted-foreground">{assetDetail}</span>}</>} />
+        <Field k="Purchase agreement" v={d.purchaseAgreementName || "Not attached"} />
+      </Group>
+      <Group title="Fees">
+        <Field k="Management fees" v={d.managementFeePct == null ? null : `${d.managementFeePct}% · ${money(d.managementFeeCents)}`} />
+        <Field k="Bank name" v={d.feeBankName} />
+        <Field k="Address" v={d.feeAddress} />
+      </Group>
+      <Group title="Legal fees">
+        <Field k="Legal fees" v={yes(d.legalOn, d.legalFeesCents)} />
+        <Field k="Payee account" v={d.legalPayee} />
+        <Field k="Amount" v={d.legalFeesCents == null ? null : money(d.legalFeesCents)} />
+        <Field k="Due date" v={d.legalDueDate ? fmtDate(d.legalDueDate) : null} />
+      </Group>
+      <Group title="Broker-Dealer fee">
+        <Field k="Broker-Dealer fee" v={yes(d.brokerDealerOn, d.brokerDealerFeesCents)} />
+        <Field k="Fee amount" v={d.brokerDealerFeesCents == null ? null : money(d.brokerDealerFeesCents)} />
+        <Field k="Payee account" v={d.brokerDealerPayee} />
+        <Field k="Broker-Dealer name" v={d.brokerDealerName} />
+        <Field k="Due date" v={d.brokerDealerDueDate ? fmtDate(d.brokerDealerDueDate) : null} />
+      </Group>
+      <Group title="Form D & Blue Sky fees">
+        <Field k="Electronic Form D" v={money(d.formDFeeCents ?? 16000)} />
+        <Field k="States" v={lines.length ? lines.map((l) => l.state).join(", ") : (d.investorStates?.length ? d.investorStates.join(", ") : null)} />
+        <Field k="State fees" v={lines.length ? lines.map((l) => `${l.state}: ${l.status === "filed" ? "already filed" : l.status === "review" ? "needs review" : l.status === "none" ? "no fee" : money(l.cents)}`).join(" · ") : null} />
+        <Field k="Estimated total" v={d.filingTotalCents == null ? null : money(d.filingTotalCents)} />
+      </Group>
+      <Group title="Receiving account (wire to)">
+        <Field k="Account name" v={wire.beneficiary} />
+        <Field k="Bank name" v={wire.bankName} />
+        <Field k="Address" v={d.wireAddress} />
+        <Field k="Account number" v={wire.accountLast4 ? `Ending ${wire.accountLast4}` : null} />
+        <Field k="Routing number" v={wire.routingLast4 ? `Ending ${wire.routingLast4}` : null} />
+      </Group>
+    </div>
   );
 }
 
