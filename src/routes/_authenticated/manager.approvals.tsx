@@ -80,7 +80,7 @@ function ApprovalsPage() {
   const decide = useServerFn(decideApplicationApproval);
 
   const [fund, setFund] = useState("all");
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useState("ready");
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
 
@@ -133,7 +133,9 @@ function ApprovalsPage() {
 
   const rows = applications.filter((a) => {
     if (fund !== "all" && a.offering_id !== fund) return false;
-    if (status !== "all" && a.manager_review_status !== status) return false;
+    if (status === "ready") { if (!(a.manager_review_status === "pending" && a.readyForApproval)) return false; }
+    else if (status === "in_progress") { if (!(a.manager_review_status === "pending" && !a.readyForApproval)) return false; }
+    else if (status !== "all" && a.manager_review_status !== status) return false;
     if (search.trim()) {
       const term = search.trim().toLowerCase();
       const hay = `${a.investorName ?? ""} ${a.investorEmail ?? ""} ${a.offeringName ?? ""}`;
@@ -161,13 +163,13 @@ function ApprovalsPage() {
         <Card>
           <CardContent className="p-4">
             <p className="text-xs uppercase text-muted-foreground">Waiting on you</p>
-            <p className="text-2xl">{counts.pending}</p>
+            <p className="text-2xl">{counts.ready}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs uppercase text-muted-foreground">Ready to approve</p>
-            <p className="text-2xl">{counts.ready}</p>
+            <p className="text-xs uppercase text-muted-foreground">Still with the investor</p>
+            <p className="text-2xl">{counts.pending - counts.ready}</p>
           </CardContent>
         </Card>
         <Card>
@@ -218,7 +220,8 @@ function ApprovalsPage() {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="pending">Waiting on you</option>
+                <option value="ready">Waiting on you</option>
+                <option value="in_progress">Still with the investor</option>
                 <option value="approved">Approved</option>
                 <option value="declined">Sent back</option>
                 <option value="all">All</option>
