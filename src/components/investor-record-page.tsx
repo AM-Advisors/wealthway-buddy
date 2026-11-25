@@ -22,6 +22,7 @@ import { openTargetFor } from "@/lib/readiness-open-target";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { approveToFundFn } from "@/lib/investor-onboarding.functions";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
 import { CLAIM_STATE_LABELS, SOURCE_LABELS, entrySourceLabel, type EntrySource } from "@/lib/investor-record-model";
 import { prettyStatus, statusTone } from "@/lib/status";
@@ -70,6 +71,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const load = useServerFn(investorRecordDetailFn);
   const update = useServerFn(updateInvestorRecordFn);
   const resolve = useServerFn(resolveSuggestionFn);
+  const approveInvestor = useServerFn(approveToFundFn);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
@@ -86,6 +88,16 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const staff = data.viewer === "staff";
   const p = data.person; const inv = data.investment as any;
   const openItem = async (key: string, owner?: string | null) => {
+    if (key === "manager_approval" || key === "approved_to_fund") {
+      // The button approves right here; it used to only jump to the top of the page.
+      if (!window.confirm(`Approve ${data.overview.name} for admission to this fund?`)) return;
+      try {
+        await approveInvestor({ data: { onboardingId } });
+        toast.success("Investor approved.");
+        refresh();
+      } catch (e) { toast.error((e as Error).message); }
+      return;
+    }
     const t = openTargetFor(key, owner);
     if (t.kind === "review") { setTab("overview"); return; }
     if (t.kind === "tab") { setTab(t.tab); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); return; }
