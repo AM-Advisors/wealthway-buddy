@@ -1364,6 +1364,7 @@
 - [ ] Verify in Kelby’s live account after publishing: no authorized Kelby session available
 
 ## Investor flow plan (approved Nov 25)
+- [x] Add a page-linked index, completion checklist and onboarding instructions to the shared subscription packet template; seven tests and fictional PDF visual/link checks passed, production verification pending, unpublished
 - [x] Match the surrounding Client perspective menu to the viewed client's services; 23 focused tests and isolated desktop/mobile checks passed, live verification pending, no access changes or publishing
 - [x] Where investors are stuck page (/ops/stalled-investors), display only
 - [ ] Send reminder from stalled list (needs confirmation design)

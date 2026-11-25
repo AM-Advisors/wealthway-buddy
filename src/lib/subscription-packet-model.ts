@@ -55,3 +55,21 @@ export const TAX_FORMS = [
   { key: "fw8ben", label: "Form W-8BEN", who: "Individuals who are not U.S. persons." },
   { key: "fw8bene", label: "Form W-8BEN-E", who: "Companies and other entities that are not U.S. persons." },
 ] as const;
+
+/** Guidance only: never records completion, verification, signatures or funding. */
+export const PACKET_ONBOARDING_STEPS = [
+  { title: "1. About You", text: "Enter the investing party's legal name, subscription amount and applicable details in the Subscriber Information Form or your portal. For a trust or company, keep the entity's details separate from each trustee, owner and signer. Reuse details already on file and complete anything missing." },
+  { title: "2. Verification", text: "Complete the identity and eligibility checks requested in your portal, including any applicable accreditation evidence. Provide sensitive identifiers and supporting documents through the secure portal, not ordinary email. Paper answers and checklist ticks do not replace these checks." },
+  { title: "3. Sign", text: "Read the fund documents, check every answer and sign the documents marked Sign. Complete, sign and date only the tax form that applies to the investing party. Leave fund manager signature and acceptance sections blank. Your portal shows any details or reviews still needed before signing." },
+  { title: "4. Fund", text: "Follow the wire instructions released for your investment only when your portal allows funding. Confirm bank details by phone using a number you already have. Sending money does not replace missing information, verification or signatures." },
+] as const;
+
+export type PacketChecklistItem = { targetKey: string; title: string; action: string };
+export function packetChecklist(docs: PacketDocInput[]): PacketChecklistItem[] {
+  return [
+    { targetKey: "subscriber-information", title: "Subscriber Information Form: complete all applicable answers", action: "Complete" },
+    { targetKey: "onboarding-instructions", title: "Verification: complete the checks requested in your secure portal", action: "Portal" },
+    ...docs.map((d) => ({ targetKey: d.versionId, title: d.title, action: sectionFor(d).action })),
+    { targetKey: "tax-forms", title: "Tax forms: complete, sign and date one applicable form only", action: "Complete one" },
+  ];
+}
