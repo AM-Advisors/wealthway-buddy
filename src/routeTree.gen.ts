@@ -308,6 +308,7 @@ import { Route as AuthenticatedOpsSignaturesRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsSoftwareIssuesRouteImport } from './routes/_authenticated/ops.software-issues'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStalledRouteImport } from './routes/_authenticated/ops.stalled'
+import { Route as AuthenticatedOpsStalledInvestorsRouteImport } from './routes/_authenticated/ops.stalled-investors'
 import { Route as AuthenticatedOpsStatementsRouteImport } from './routes/_authenticated/ops.statements'
 import { Route as AuthenticatedOpsSystemStatusRouteImport } from './routes/_authenticated/ops.system-status'
 import { Route as AuthenticatedOpsTasksRouteImport } from './routes/_authenticated/ops.tasks'
@@ -2197,6 +2198,12 @@ const AuthenticatedOpsStalledRoute = AuthenticatedOpsStalledRouteImport.update({
   path: '/ops/stalled',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsStalledInvestorsRoute =
+  AuthenticatedOpsStalledInvestorsRouteImport.update({
+    id: '/ops/stalled-investors',
+    path: '/ops/stalled-investors',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsStatementsRoute =
   AuthenticatedOpsStatementsRouteImport.update({
     id: '/ops/statements',
@@ -3676,6 +3683,7 @@ export interface FileRoutesByFullPath {
   '/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/stalled': typeof AuthenticatedOpsStalledRoute
+  '/ops/stalled-investors': typeof AuthenticatedOpsStalledInvestorsRoute
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
   '/ops/tasks': typeof AuthenticatedOpsTasksRoute
@@ -4173,6 +4181,7 @@ export interface FileRoutesByTo {
   '/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/stalled': typeof AuthenticatedOpsStalledRoute
+  '/ops/stalled-investors': typeof AuthenticatedOpsStalledInvestorsRoute
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
   '/ops/tasks': typeof AuthenticatedOpsTasksRoute
@@ -4678,6 +4687,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/software-issues': typeof AuthenticatedOpsSoftwareIssuesRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/stalled': typeof AuthenticatedOpsStalledRoute
+  '/_authenticated/ops/stalled-investors': typeof AuthenticatedOpsStalledInvestorsRoute
   '/_authenticated/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/_authenticated/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
   '/_authenticated/ops/tasks': typeof AuthenticatedOpsTasksRoute
@@ -5184,6 +5194,7 @@ export interface FileRouteTypes {
     | '/ops/software-issues'
     | '/ops/ss4'
     | '/ops/stalled'
+    | '/ops/stalled-investors'
     | '/ops/statements'
     | '/ops/system-status'
     | '/ops/tasks'
@@ -5681,6 +5692,7 @@ export interface FileRouteTypes {
     | '/ops/software-issues'
     | '/ops/ss4'
     | '/ops/stalled'
+    | '/ops/stalled-investors'
     | '/ops/statements'
     | '/ops/system-status'
     | '/ops/tasks'
@@ -6185,6 +6197,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/software-issues'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/stalled'
+    | '/_authenticated/ops/stalled-investors'
     | '/_authenticated/ops/statements'
     | '/_authenticated/ops/system-status'
     | '/_authenticated/ops/tasks'
@@ -8587,6 +8600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsStalledRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/stalled-investors': {
+      id: '/_authenticated/ops/stalled-investors'
+      path: '/ops/stalled-investors'
+      fullPath: '/ops/stalled-investors'
+      preLoaderRoute: typeof AuthenticatedOpsStalledInvestorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/statements': {
       id: '/_authenticated/ops/statements'
       path: '/ops/statements'
@@ -10526,6 +10546,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsSoftwareIssuesRoute: typeof AuthenticatedOpsSoftwareIssuesRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStalledRoute: typeof AuthenticatedOpsStalledRoute
+  AuthenticatedOpsStalledInvestorsRoute: typeof AuthenticatedOpsStalledInvestorsRoute
   AuthenticatedOpsStatementsRoute: typeof AuthenticatedOpsStatementsRoute
   AuthenticatedOpsSystemStatusRoute: typeof AuthenticatedOpsSystemStatusRoute
   AuthenticatedOpsTasksRoute: typeof AuthenticatedOpsTasksRoute
@@ -10893,6 +10914,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsSoftwareIssuesRoute: AuthenticatedOpsSoftwareIssuesRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStalledRoute: AuthenticatedOpsStalledRoute,
+  AuthenticatedOpsStalledInvestorsRoute: AuthenticatedOpsStalledInvestorsRoute,
   AuthenticatedOpsStatementsRoute: AuthenticatedOpsStatementsRoute,
   AuthenticatedOpsSystemStatusRoute: AuthenticatedOpsSystemStatusRoute,
   AuthenticatedOpsTasksRoute: AuthenticatedOpsTasksRoute,

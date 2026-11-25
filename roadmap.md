@@ -1346,3 +1346,13 @@
 - [x] Verify all three questionnaire buttons in isolated desktop/mobile QA and regression tests
 - [x] Correct the shared homepage/notifications financial-background task destination to Sign
 - [ ] Verify in Kelby’s live account after publishing: no authorized Kelby session available
+
+## Investor flow plan (approved Nov 25)
+- [x] Where investors are stuck page (/ops/stalled-investors), display only
+- [ ] Send reminder from stalled list (needs confirmation design)
+- [ ] One "What's left" checklist per person shared by investor, manager and signing check
+- [ ] "Ready to sign?" preflight before signing requests; inactive-document warning on fund
+- [ ] Trustees add their own details from their login
+- [ ] EIN Yes/No question; staff investor-type change with reason
+- [ ] Duplicate-person offer when adding people
+- [ ] Fewer routine confirmations; auto-advance About you and Tax
