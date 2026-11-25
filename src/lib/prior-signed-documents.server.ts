@@ -102,7 +102,17 @@ export async function recordPriorDoc(db: any, userId: string, input: { fundId: s
   // Loaded per investor = completed outside the platform: read the signatures now.
   const { analyzePriorDoc } = await import("@/lib/prior-doc-signatures.server");
   await analyzePriorDoc(data.id, userId).catch((e) => console.error("signature check skipped", (e as Error).message));
-  if (input.kind === "subscription_agreement") await reconcileOutside(input.onboardingId, userId);
+  if (input.kind === "subscription_agreement") {
+    // One-step upload: a fund manager's signed copy with its signed date also records the outside-signing mark.
+    const { data: ob } = await db.from("investor_onboardings").select("executed_snapshot").eq("id", input.onboardingId).maybeSingle();
+    if (shouldAutoMarkOutside({ kind: input.kind, role, signedOnPlatform: !!ob?.executed_snapshot })) {
+      await db.from("outside_subscription_marks").insert({
+        offering_id: input.fundId, onboarding_id: input.onboardingId, action: "marked", signed_on: input.signedOn,
+        note: "Recorded with the signed copy upload", actor_user_id: userId, actor_role: role,
+      }).then(() => null, (e: unknown) => console.error("auto outside mark skipped", e));
+    }
+    await reconcileOutside(input.onboardingId, userId);
+  }
   await db.from("investor_onboarding_events").insert({ onboarding_id: input.onboardingId, offering_id: input.fundId, event: "prior_signed_document_loaded", actor_user_id: userId, actor_role: role, detail: { document_id: data.id, kind: input.kind, replaces: input.replacesId ?? null } }).then(() => null, () => null);
   return { id: data.id as string };
 }
@@ -204,4 +214,9 @@ export async function reconcileOutside(onboardingId: string, userId: string) {
     const { reconcileInvestmentReadiness } = await import("@/lib/investor-onboarding.server");
     await reconcileInvestmentReadiness(onboardingId, { actorUserId: userId, trigger: "outside_subscription" });
   } catch (e) { console.error("outside subscription reconcile", e); }
+}
+
+/** Fund-manager subscription uploads carry their own outside-signing mark; Harmonious copies already count on their own. */
+export function shouldAutoMarkOutside(i: { kind: string; role: string; signedOnPlatform: boolean }) {
+  return i.kind === "subscription_agreement" && i.role !== "harmonious" && !i.signedOnPlatform;
 }
