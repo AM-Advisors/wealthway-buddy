@@ -261,9 +261,12 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
 
     const existing = await admin
       .from("accreditation_records")
-      .select("id")
+      .select("id, status")
       .eq("application_id", application.id)
       .maybeSingle();
+
+    // Verified stays verified: a later submission never moves an approved accreditation back to review.
+    if ((existing.data as any)?.status === "approved") return { ok: true, alreadyApproved: true } as any;
 
     if (existing.data) {
       const { error } = await admin
