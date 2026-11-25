@@ -12,6 +12,7 @@ import { approveFundCloseRequest } from "@/lib/close-filings.functions";
 import { openCloseAttachment, updateFundCloseRequestStatus } from "@/lib/fund-close-requests.functions";
 import { CloseInvestorTerms } from "@/components/close-investor-terms";
 import { Pencil } from "lucide-react";
+import { CloseHarmoniousFees } from "@/components/close-harmonious-fees";
 
 const LABEL: Record<string, string> = {
   draft: "Draft: not sent for review",
@@ -130,7 +131,7 @@ export function CloseRequestCard({ r, onContinue, operations = false, showFund =
         {r.notes && <p>{r.notes}</p>}
         <CloseDetailsSummary r={r} />
         {Array.isArray(r.investorTerms ?? r.details?.investorTerms) && <CloseInvestorTerms investors={r.investorTerms ?? r.details.investorTerms} />}
-        {r.details?.sideLetterCount != null && <p>Side letters (estimate): {r.details.sideLetterCount} × ${((r.details.sideLetterUnitCents ?? 150000) / 100).toLocaleString("en-US")}{r.details.sideLetterPaidCount ? `, ${r.details.sideLetterPaidCount} already paid` : ""} = <span className="font-semibold">${(r.details.sideLetterFeeCents / 100).toLocaleString("en-US")}</span></p>}
+        {(r.harmoniousFees ?? r.details?.harmoniousFees) ? <CloseHarmoniousFees fees={r.harmoniousFees ?? r.details.harmoniousFees} operations={operations} clientId={r.client_id ?? r.details?.harmoniousFees?.clientId ?? null} /> : r.details?.sideLetterCount != null && <p>Side letters (recorded estimate): {money(r.details.sideLetterFeeCents)}. This earlier close has no full Harmonious fee schedule on file.</p>}
         {r.staff_note && <p className="text-xs text-muted-foreground">Harmonious: {r.staff_note}</p>}
         {r.status === "draft" && onContinue && <Button size="sm" variant="outline" onClick={onContinue}><Pencil className="mr-2 h-4 w-4" />Edit close details</Button>}
         {operations && <CloseRequestOperations r={r} />}

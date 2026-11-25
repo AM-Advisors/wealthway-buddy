@@ -1,9 +1,11 @@
 import { CloseRequestCard } from "@/components/close-request-review";
 import { closeInvestorTerms } from "@/lib/close-investor-terms";
+import { closeHarmoniousFees } from "@/lib/close-harmonious-fees";
 
 const QA_CLOSE_REQUEST = {
   id: "qa-close-request",
   offering_id: "qa-fund",
+  client_id: "qa-fictional-client",
   status: "submitted",
   created_at: "2026-11-20T15:00:00.000Z",
   target_date: "2026-12-15",
@@ -11,6 +13,7 @@ const QA_CLOSE_REQUEST = {
   notes: "Fictional request used to compare the manager and Operations screens.",
   staff_note: "Fictional review note visible in both views.",
   details: {
+    harmoniousFees: closeHarmoniousFees({ fundId: 'qa-fund', today: '2026-11-25', isSpv: true, raiseCents: 75000000, bands: [{ id:'qa-band', label:'Fictional raise band', min_raise_usd:0, max_raise_usd:null, fee_usd:5000, sort_order:0 }], pricing:[{ id:'qa-price', service_key:'side_letters', offering_id:'qa-fund', contracted_cents:100000, approved_by:'qa-reviewer', approved_at:'2026-11-20' }], roles:[{user_id:'qa-reviewer',role:'executive'}], catalog:[{service_key:'nav_reporting',label:'NAV reporting',amount_cents:250000,pricing_model:'quarterly'}], entitlements:[{service_key:'nav_reporting',offering_id:'qa-fund',status:'active'}], selections:[], agreementLines:[], snapshots:[], snapshotLines:[], sideLetterCount:2, sideLetterPaidCount:1 }),
     investorTerms: [{ id: "qa-investor-one", name: "Fictional Family Trust", terms: closeInvestorTerms("qa-fund", "qa-investor-one", [{ id: "qa-letter", offering_id: "qa-fund", onboarding_id: "qa-investor-one", status: "active", effective_date: null, expiry_date: null, current_version: 2, terms: [{ category: "fee_discount", value: "0%", description: "Management fee" }, { category: "carry_reduction", value: "0%", description: "Carried interest" }, { category: "information_rights", value: "Quarterly", description: "Reporting" }] }]) }],
     assetMode: "new",
     asset: { name: "Juniper House", issuer: "Juniper House LLC", type: "Real estate", amountCents: 75000000, notes: "Fictional asset details." },

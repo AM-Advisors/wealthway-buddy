@@ -10,15 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { createFundCloseRequest, getCloseCandidates } from "@/lib/fund-close-requests.functions";
+import { createFundCloseRequest, getCloseCandidates, getCloseHarmoniousFees } from "@/lib/fund-close-requests.functions";
 import { fundBooksFn, fundTeamFn } from "@/lib/fund-tabs.functions";
 import { fileToBase64, toCents, toPct, usd } from "./shared";
-import { SIDE_LETTER_FEE_CENTS } from "@/lib/side-letter-fee";
 import { Switch } from "@/components/ui/switch";
 import { estimateCloseFilingCosts } from "@/lib/blue-sky-fees";
 import { closeManagementFee } from "@/lib/close-investor-terms";
 import { CloseInvestorTerms } from "@/components/close-investor-terms";
 import { missingCloseAttachments } from "@/lib/close-attachments";
+import { CloseHarmoniousFees } from "@/components/close-harmonious-fees";
 
 const NEW = "__new";
 
@@ -28,11 +28,13 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const loadBooks = useServerFn(fundBooksFn);
   const loadTeam = useServerFn(fundTeamFn);
   const submit = useServerFn(createFundCloseRequest);
+  const loadHarmoniousFees = useServerFn(getCloseHarmoniousFees);
   const cq = useQuery({ queryKey: ["close-candidates", fundId], queryFn: () => loadCandidates({ data: { fundId } }), enabled: open });
   const bq = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => loadBooks({ data: { fundId } }), enabled: open });
   const tq = useQuery({ queryKey: ["fund-team", fundId], queryFn: () => loadTeam({ data: { fundId } }), enabled: open });
 
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  const hfq = useQuery({ queryKey: ["close-harmonious-fees", fundId, [...picked].sort()], queryFn: () => loadHarmoniousFees({ data: { fundId, onboardingIds: [...picked] } }), enabled: open });
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [assetSel, setAssetSel] = useState<string>("");
@@ -87,7 +89,6 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const selectedCents = rows.filter((r) => picked.has(r.id)).reduce((s, r) => s + (r.amountCents ?? 0), 0);
   const feeCents = closeManagementFee(rows.filter(r => picked.has(r.id)), toPct(pctStr));
   const notReady = rows.filter((r) => picked.has(r.id) && r.openItems.length > 0).length;
-  const sideLetterCount = rows.filter((r) => picked.has(r.id)).reduce((s, r) => s + (r.sideLetters ?? 0), 0);
   const pickedRows = rows.filter((r) => picked.has(r.id));
   const filing = useMemo(() => estimateCloseFilingCosts({ investorStates: pickedRows.map((r) => r.state), filedStates }), [pickedRows.map((r) => r.id).join(), filedStates.join()]);
   const noAddress = pickedRows.filter((r) => !r.state);
@@ -247,8 +248,9 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
             </div>
             {noAddress.length > 0 && <p className="text-xs text-destructive">No state on file for: {noAddress.map((r) => r.name).join(", ")}. Add their address so their state is counted.</p>}
             <p className="text-xs text-muted-foreground">Harmonious confirms each state fee before filing. Nothing is filed or paid automatically.</p>
-            <p>Side letters: {sideLetterCount === 0 ? "none for the selected investors" : <>{sideLetterCount} side letter{sideLetterCount === 1 ? "" : "s"} × {usd(SIDE_LETTER_FEE_CENTS)} = <span className="font-semibold">{usd(sideLetterCount * SIDE_LETTER_FEE_CENTS)}</span>. Harmonious confirms the total and credits any side letter already paid for.</>}</p>
           </div>
+
+          {hfq.data ? <CloseHarmoniousFees fees={hfq.data.fees} operations={hfq.data.operations} clientId={hfq.data.fees.clientId} /> : <p className="text-sm text-muted-foreground">{hfq.error ? "Harmonious fees couldn't be loaded." : "Loading Harmonious fees…"}{hfq.error && <Button variant="link" onClick={() => hfq.refetch()}>Retry</Button>}</p>}
 
           <div className={section}>
             <p className="font-medium">Receiving account (wire to)</p>

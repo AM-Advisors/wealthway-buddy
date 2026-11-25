@@ -50,6 +50,18 @@ async function closeTermRows(db: any, fundId: string, ids: string[], letters: an
 
 const fundInput = (d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d);
 
+export const getCloseHarmoniousFees = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ fundId: z.string().uuid(), onboardingIds: z.array(z.string().uuid()).max(500) }).parse(d))
+  .handler(async ({ data, context }) => {
+    if (!(await canViewFund(context.supabase, context.userId, data.fundId))) throw new Error("You don't have access to this Fund.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const sl = await sideLetterPricing(db, data.fundId, data.onboardingIds);
+    const { loadCloseHarmoniousFees } = await import("@/lib/close-harmonious-fees.server");
+    return { fees: await loadCloseHarmoniousFees(db, data.fundId, sl), operations: await isStaff(context.supabase, context.userId) };
+  });
+
 const closeDetailsSchema = z.object({
   assetMode: z.enum(["existing", "new"]),
   existingAsset: z.string().max(200).default(""),
@@ -144,13 +156,14 @@ export const listFundCloseRequests = createServerFn({ method: "GET" })
     const db = supabaseAdmin as any;
     if (!(await canViewFund(db, context.userId, data.fundId))) throw new Error("You don't have access to this Fund.");
     const { data: rows } = await db.from("fund_close_requests")
-      .select("id, offering_id, target_date, notes, onboarding_ids, status, staff_note, created_at, updated_at, details")
+      .select("id, offering_id, client_id, target_date, notes, onboarding_ids, status, staff_note, created_at, updated_at, details")
       .eq("offering_id", data.fundId).order("created_at", { ascending: false });
     const requests = (rows ?? []) as any[];
     const ids = [...new Set(requests.flatMap(r => r.onboarding_ids ?? []))] as string[];
     const sl = await sideLetterPricing(db, data.fundId, ids);
     const terms = await closeTermRows(db, data.fundId, ids, sl.letters);
-    return requests.map(r => ({ ...r, investorTerms: r.status !== "draft" && Array.isArray(r.details?.investorTerms) ? r.details.investorTerms : terms.filter(i => (r.onboarding_ids ?? []).includes(i.id)) }));
+    // Saved fee schedules stay pinned. Opening Edit loads current prices once, not once per listed close.
+    return requests.map(r => ({ ...r, investorTerms: r.status !== "draft" && Array.isArray(r.details?.investorTerms) ? r.details.investorTerms : terms.filter(i => (r.onboarding_ids ?? []).includes(i.id)), harmoniousFees: r.details?.harmoniousFees ?? null }));
   });
 
 export const createFundCloseRequest = createServerFn({ method: "POST" })
@@ -217,7 +230,10 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
     }
 
     // Server-recomputed side-letter estimate; client totals are never trusted.
-    const sideLetterDetails = { sideLetterCount: sl.count, sideLetterPaidCount: sl.paidCount, sideLetterFeeCents: sl.feeCents, sideLetterUnitCents: sl.unitCents, investorTerms };
+    const { loadCloseHarmoniousFees } = await import("@/lib/close-harmonious-fees.server");
+    const harmoniousFees = await loadCloseHarmoniousFees(db, data.fundId, sl);
+    const sideLine = harmoniousFees.lines.find(l => l.key === "side_letters");
+    const sideLetterDetails = { sideLetterCount: sl.count, sideLetterPaidCount: sl.paidCount, sideLetterFeeCents: sideLine?.cents ?? null, sideLetterUnitCents: sideLine?.unitCents ?? null, investorTerms, harmoniousFees };
     if (data.details) {
       const det = data.details;
       let paPath: string | null = typeof previousDetails["purchaseAgreementPath"] === "string" ? previousDetails["purchaseAgreementPath"] : null;

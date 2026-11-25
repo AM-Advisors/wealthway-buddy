@@ -8,6 +8,7 @@ vi.mock("@tanstack/react-start", () => ({ createServerFn: () => {
 vi.mock("@/lib/require-auth", () => ({ requireSupabaseAuth: {} }));
 vi.mock("@/lib/fund-access.server", () => ({ fundAccessAllows: async () => mock.allowed }));
 vi.mock("@/lib/ops-slack-notify.server", () => ({ notifySubmission: mock.notify }));
+vi.mock("@/lib/close-harmonious-fees.server", () => ({ loadCloseHarmoniousFees: async () => ({ lines: [], oneTimeCents: 0, raiseCents: null, needsReview: false, sideLetterPaidCount: 0, clientId: "client" }) }));
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   from: (table: string) => {
     let writing = false;
@@ -24,7 +25,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   storage: { from: () => ({ upload: async (...args: unknown[]) => { mock.uploads(...args); return { error: null }; }, createSignedUrl: async (path: string) => ({ data: { signedUrl: `https://fictional.test/${path}` }, error: null }) }) },
 } }));
 
-import { createFundCloseRequest, openCloseAttachment } from "./fund-close-requests.functions";
+import { createFundCloseRequest, getCloseHarmoniousFees, openCloseAttachment } from "./fund-close-requests.functions";
 // The isolated builder exposes handlers; no network or real storage is available.
 const create = createFundCloseRequest as unknown as (input: any) => Promise<any>;
 const open = openCloseAttachment as unknown as (input: any) => Promise<any>;
@@ -34,6 +35,17 @@ const input = (d: unknown, intent = "submit") => ({ data: { fundId: "fund", onbo
 
 beforeEach(() => { mock.details = {}; mock.allowed = true; mock.uploads.mockClear(); mock.notify.mockClear(); mock.writes.mockClear(); });
 describe("server-enforced close paperwork", () => {
+  it("recomputes Harmonious fee snapshots instead of trusting a browser amount", async () => {
+    await create(input({ ...details(), harmoniousFees: { oneTimeCents: 99999999 } }));
+    const saved = mock.writes.mock.calls.find(call => call[1]?.details?.harmoniousFees);
+    expect(saved?.[1]?.details?.harmoniousFees.oneTimeCents).toBe(0);
+  });
+  it("refuses fee reads without exact-fund access", async () => {
+    mock.allowed = false;
+    const fees = getCloseHarmoniousFees as unknown as (input: any) => Promise<any>;
+    await expect(fees({ data: { fundId: 'fund', onboardingIds: [] }, context: { userId: 'other', supabase: {} } })).rejects.toThrow("don't have access");
+    expect(mock.writes).not.toHaveBeenCalled();
+  });
   it("refuses missing details on direct submission before writes or notices", async () => {
     await expect(create(input(undefined))).rejects.toThrow("Upload the signed purchase agreement.");
     expect(mock.writes).not.toHaveBeenCalled(); expect(mock.notify).not.toHaveBeenCalled();

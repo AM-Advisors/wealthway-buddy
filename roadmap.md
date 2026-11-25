@@ -1,5 +1,9 @@
 # Roadmap
 
+## Harmonious fees on Close (2026-11-25)
+- [x] Show side-letter, raise-based SPV and applicable service fees in preparation and the shared Close view. Signed exact-fund SOW terms and approved exact-fund/client prices precede standard rates; paid side letters are credited, recurring/included services remain separate, and raise estimates use canonical accepted/commitment amounts excluding tests, employees, ended and duplicate investments. No charges or invoices are generated.
+- [x] Operations links directly to the existing client Services/internal approval workspace; no new approval queue or authority. Close saves recompute and pin fee schedules; submitted history is unchanged. 55 focused tests pass; fictional desktop/phone checks confirm shared amounts and Operations-only adjustment access with no page errors. Preview build passes. Sandbox validated; production verification pending, including durable fee save/read-back and internal adjustment approval. No production records, emails, money, auth changes or publishing touched.
+
 ## Required close attachments (2026-11-25)
 - [x] Require a signed purchase agreement copy with uploader confirmation and a separate wire-instructions file before submission; incomplete drafts remain saveable. Shared browser/server gate blocks missing details and unconfirmed copies; saved exact-close files can be reused.
 - [x] Keep both files private and openable from the shared close view; 21 offline tests pass, including real handler upload/save/submission with mocked storage and authorization denials. Fictional manager and Operations views show both attachment details; preview build passes. Sandbox validated; production verification pending. No production records, emails, money or publishing touched; live upload/send/read-back remains unverified.
