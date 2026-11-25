@@ -587,6 +587,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
           profileId: profile.id,
           profileType: eff.profileType,
           kybStatus: entity?.kyb_status ?? null,
+          taxIdType: (profile as any).tax_id_type ?? null,
           entityAmlStatus: entity?.entity_aml_status ?? null,
           entityVerificationExpiresAt: entity?.expires_at ?? null,
           relatedPeople: gatingPeople,

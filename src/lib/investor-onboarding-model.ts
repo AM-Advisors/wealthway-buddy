@@ -266,6 +266,8 @@ export interface ProfileFacts {
   profileId?: string | null;
   profileType?: InvestmentProfileType | string | null;
   kybStatus?: string | null;
+  /** "ssn" when a trust runs under a trustee's personal SSN; such trusts skip the business check. */
+  taxIdType?: string | null;
   entityAmlStatus?: string | null;
   entityVerificationExpiresAt?: string | null;
   /** Gating related people (control persons, trustees, signers, beneficial owners). */
@@ -278,6 +280,11 @@ export interface ProfileFacts {
   taxClassification?: string | null;
   isForeign?: boolean;
   jurisdiction?: string | null;
+}
+
+/** Trusts that run off a trustee's SSN need no separate business check. */
+export function trustUsesPersonalSsn(profileType: unknown, taxIdType: unknown): boolean {
+  return profileType === "trust" && taxIdType === "ssn";
 }
 
 export interface SubscriptionFacts {
@@ -381,7 +388,9 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
     add("entity_verification", "not_applicable");
     add("beneficial_owners", "not_applicable");
   } else {
-    add(
+    // A trust under a trustee's personal SSN is verified through its people, not a business check.
+    if (trustUsesPersonalSsn(profileType, profile.taxIdType)) add("entity_verification", "not_applicable");
+    else add(
       "entity_verification",
       reuseState(profile.kybStatus, profile.entityVerificationExpiresAt, nowIso),
     );
