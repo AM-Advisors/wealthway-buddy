@@ -1236,3 +1236,26 @@ export async function confirmInvestorInformation(userId: string, input: { onboar
 }
 
 export { planIncoming };
+
+
+/**
+ * A trustee/owner/signer fills their OWN blank details from their own login.
+ * Exact-person only: the relationship's person must be linked to this login.
+ * Blanks only (non-staff actor); existing values need Harmonious. Signed investments lock it.
+ */
+export async function saveMyOwnPartyDetails(userId: string, input: { onboardingId: string } & RelatedPersonDetails) {
+  const { data: row } = await db().from("investor_onboardings").select("id, offering_id, investment_profile_id, removed_at").eq("id", input.onboardingId).maybeSingle();
+  if (!row || row.removed_at || !row.investment_profile_id) forbid("this investment isn't available.");
+  const { data: mine } = await db().from("persons").select("id").eq("user_id", userId);
+  const ids = ((mine ?? []) as any[]).map((p) => p.id);
+  if (!ids.length) forbid("you aren't listed on this investment.");
+  const { data: rel } = await db().from("investment_profile_relationships").select("id, person_id").eq("profile_id", row!.investment_profile_id).in("person_id", ids).eq("status", "active").limit(1).maybeSingle();
+  if (!rel) forbid("you aren't listed on this investment.");
+  if (!(await investorEditWindow(row, { allowAfterFunding: true }))) forbid("this investment is already signed; ask Harmonious to change your details.");
+  const actor = { ...(await onboardingActor(userId)), isStaff: false };
+  const { onboardingId: _o, ...details } = input;
+  delete (details as any).email;
+  const n = await writeRelatedPersonDetails(rel!.person_id, details, actor, { offeringId: row!.offering_id, onboardingId: row!.id, source: "investor" });
+  if (n) await reconcileAfter([row!.id], { actorUserId: userId, trigger: "own_party_details" });
+  return { ok: true, saved: n };
+}

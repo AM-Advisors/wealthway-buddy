@@ -191,3 +191,7 @@ export const createInvestorFromDocumentFn = createServerFn({ method: "POST" }).m
       phone: draftStr, dateOfBirth: draftStr, citizenship: draftStr, addressLine1: draftStr, addressLine2: draftStr, city: draftStr, region: draftStr, postalCode: draftStr, country: draftStr }),
   }).parse)
   .handler(async ({ data, context }) => (await (await docAi()).createInvestorFromDocument(context.userId, data)) as unknown as { found: import("@/lib/investor-document-save-model").FoundRow[]; onboardingId: string; label: string; hasEmail: boolean });
+
+export const saveMyOwnPartyDetailsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid, phone: z.string().max(40).nullable().optional(), dateOfBirth: z.string().max(10).nullable().optional(), ssn: z.string().max(20).nullable().optional(), citizenship: z.string().max(80).nullable().optional(), addressLine1: z.string().max(200).nullable().optional(), addressLine2: z.string().max(200).nullable().optional(), city: z.string().max(100).nullable().optional(), region: z.string().max(100).nullable().optional(), postalCode: z.string().max(20).nullable().optional(), country: z.string().max(80).nullable().optional() }).parse)
+  .handler(async ({ data, context }) => (await srv()).saveMyOwnPartyDetails(context.userId, data as any));
