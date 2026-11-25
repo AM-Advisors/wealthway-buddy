@@ -366,6 +366,19 @@ export const recordEvidence = createServerFn({ method: "POST" })
     }).select("id").single();
     if (error) throw new Error(error.message);
 
+    // An uploaded proof moves accreditation to "under review" so the investor isn't asked again.
+    // Never downgrades an approved accreditation.
+    {
+      const { supabaseAdmin: d } = await import("@/integrations/supabase/client.server");
+      const now = new Date().toISOString();
+      const { data: existing } = await d.from("accreditation_records").select("id, status").eq("application_id", application.id).maybeSingle();
+      if (!existing) await d.from("accreditation_records").insert({ application_id: application.id, reg_type: "506c", method: data.doc_kind === "verification_letter" ? "third_party_letter" : "documents", status: "review", qualifies: null, updated_at: now } as never);
+      else if (existing.status !== "approved") await d.from("accreditation_records").update({ status: "review", updated_at: now } as never).eq("id", existing.id);
+      const { data: appRow } = await d.from("investor_applications").select("accreditation_status").eq("id", application.id).maybeSingle();
+      if (appRow?.accreditation_status !== "approved") await d.from("investor_applications").update({ accreditation_status: "review", updated_at: now } as never).eq("id", application.id);
+      if (doc?.id) void (await import("@/lib/accreditation-ai.server")).checkDocument(doc.id, null).catch(() => {});
+    }
+
     void (await import("@/lib/accreditation-review.server")).notifyAccreditationActivity(application.id, {
       kind: "evidence_uploaded", fileName: data.file_name, docKind: data.doc_kind, documentId: doc?.id ?? null,
     }).catch(() => {});
