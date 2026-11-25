@@ -88,3 +88,11 @@ describe("reconciliation semantics", () => {
     expect(p2.create).toEqual([]);
   });
 });
+
+describe("countersign catch-up admission", () => {
+  it("reconciling a funded, unaccepted investment re-runs countersign admission", () => {
+    const src = require("node:fs").readFileSync(require("node:path").join(__dirname, "investor-onboarding.server.ts"), "utf8") as string;
+    const s = src.indexOf("export async function reconcileInvestmentReadiness(");
+    expect(src.slice(s, s + 4000)).toContain("acceptAfterCountersign(db(), row.id)");
+  });
+});

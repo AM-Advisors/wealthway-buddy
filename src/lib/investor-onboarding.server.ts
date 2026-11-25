@@ -3179,6 +3179,12 @@ export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { 
       await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_auto_advanced", fromStatus: "verification", toStatus: "signature", actorUserId: ctx.actorUserId, actorRole: "system", detail: { trigger: ctx.trigger } });
     }
   }
+  // Catch-up: countersigned and funded in either order still admits (same gates; idempotent).
+  if (row.funding_status === "funded" && !row.accepted_at && !row.removed_at) {
+    const { acceptAfterCountersign } = await import("@/lib/fund-countersign-complete.server");
+    const admitted = await acceptAfterCountersign(db(), row.id).catch((e: unknown) => { console.error("[countersign] catch-up admit failed", e); return { accepted: false }; });
+    if (admitted.accepted) { row = await onboardingRow(onboardingId); ({ result, facts } = await computeReadinessFor(row)); }
+  }
   await saveReadinessSummary(row, result);
   const [{ data: evs }, { data: tasks }] = await Promise.all([
     db().from("investment_readiness_events").select("requirement_key,new_status,created_at").eq("onboarding_id", row.id).order("created_at", { ascending: true }),
