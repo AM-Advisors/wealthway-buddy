@@ -69,9 +69,9 @@ export function PerspectiveList({ items, onPick }: { items: any[]; onPick: (p: a
   );
 }
 
-export function useActiveViewAs() {
+export function useActiveViewAs(enabled = true) {
   const load = useServerFn(activeViewAsFn);
-  return useQuery({ queryKey: ["view-as", "active"], queryFn: () => load(), retry: false });
+  return useQuery({ queryKey: ["view-as", "active"], queryFn: () => load(), retry: false, enabled });
 }
 
 /** Persistent banner. Makes clear the staff member is still signed in as themselves. */

@@ -37,3 +37,4 @@
 - TrustPeopleCard + trust-people-model.ts render each trust/company person once for staff and investors (investor read-only); EntityRequirementsInline keeps only checklist + add form — why: overlapping boxes conflicted.
 - Shared TabsList condenses bars over MAX_VISIBLE_TABS into 4 tabs + a More menu (always keeping the open tab visible); pass condense={false} to opt out — why: fewer tabs everywhere without per-screen rewrites.
 - Operations sidebar groups already-entitled links through consolidateOpsMenus before dedupeNav; grouped menus retain destinations and alert counts, query shortcuts identify their own view — why: fewer overlapping choices without authority changes.
+- PlanAccessContent projects the purchase gate; a validated exact-fund staff Client View omits personal-purchase messaging only, retaining fund server checks and read-only behavior — why: staff preview is not a personal service purchase.

@@ -1,4 +1,4 @@
-import { Link, Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
@@ -29,7 +29,9 @@ import { SecurityGate } from "@/components/security-gate";
 import { PortalTopbar } from "@/components/portal-topbar";
 import { PortalFooter } from "@/components/portal-footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { EditContextBanner } from "@/components/view-as";
+import { EditContextBanner, useActiveViewAs } from "@/components/view-as";
+import { isExactFundClientPreview } from "@/lib/view-as";
+import { PlanAccessContent } from "@/components/plan-access-content";
 import { logSecurityEvent } from "@/lib/account-security.functions";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -129,17 +131,17 @@ function PlanAwarePortalGate({ children, onSignOut }: { children: ReactNode; onS
 /** Clients on purchased-services menus can't open pages they haven't bought (server checks still apply). */
 function EntitlementGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { session, loading: sessionLoading } = useClientWorkspace();
   const entFn = useServerFn(myEntitlementsFn);
   const need = requiredEntitlement(pathname);
+  const checkPreview = !!need && session?.operations === true && pathname.startsWith("/manager/fund/");
+  const preview = useActiveViewAs(checkPreview);
   const ents = useQuery({ queryKey: ["my-entitlements"], queryFn: () => entFn(), staleTime: 60_000, enabled: !!need });
-  if (!need || !ents.data || ents.data.includes(need)) return <>{children}</>;
-  return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
-      <h1 className="text-3xl">Not in your plan</h1>
-      <p className="mt-3 text-sm text-muted-foreground">This area isn't part of the services you've purchased.</p>
-      <Link to="/plan/start" className="mt-6 inline-block text-sm font-medium text-primary underline">Add to plan</Link>
-    </div>
-  );
+  const clientPreview = checkPreview && !preview.isError && isExactFundClientPreview(pathname, session?.operations === true, preview.data);
+  return <PlanAccessContent
+    loading={!!need && (sessionLoading || (checkPreview && (preview.isPending || preview.isFetching)))}
+    allowed={clientPreview || !need || !ents.data || ents.data.includes(need)}
+  >{children}</PlanAccessContent>;
 }
 
 function WorkspaceShell({ children }: { children: ReactNode }) {

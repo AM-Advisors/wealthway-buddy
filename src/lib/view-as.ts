@@ -93,3 +93,10 @@ export function clientViewDestination(p: { perspective: Perspective; offeringId:
   | { to: "/view-as" } {
   return p.perspective === "fund_manager" && p.offeringId ? { to: "/manager/fund/$fundId", fundId: p.offeringId } : { to: "/view-as" };
 }
+
+/** Presentation only: a server-validated staff preview uses its exact fund, not the staff member's purchases. */
+export function isExactFundClientPreview(pathname: string, isStaff: boolean, context: { perspective: string; offeringId: string | null } | null | undefined): boolean {
+  if (!isStaff || context?.perspective !== "fund_manager" || !context.offeringId) return false;
+  const base = `/manager/fund/${context.offeringId}`;
+  return pathname === base || pathname.startsWith(`${base}/`);
+}

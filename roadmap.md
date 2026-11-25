@@ -1,5 +1,11 @@
 # Roadmap
 
+## Client perspective purchase-message correction (2026-11-25)
+- [x] Identify the personal-purchase gate intercepting the exact-fund staff preview; only server-validated matching fund previews omit that presentation block. No purchase, permission, signature or read-only rules changed.
+- [x] 14 focused preview/purchase regressions pass; shared purchase-message content transitions blocked → exact-fund read-only preview → blocked on exit at 1280px and 740px, with real requests blocked and no page errors. Preview build OK.
+- [x] Read sibling preview entries, return/exit, investor view/readiness readers, client menus, fund reader/open mode, purchase reader/billing warnings and session schema; findings recorded in the review. No other behavior changed.
+- Sandbox validated; production verification pending. Actual authenticated Client perspective and fund data loading were not exercised; two pre-existing broad-source View As assertions fail on the existing name-label fallback, unrelated to this presentation change. Nothing is published.
+
 ## Operations navigation overlap (2026-11-25)
 - [x] Combine work and approvals, investor progress/checks, dashboard shortcuts and software work into existing-context menus; retain all entitled destinations, alert counts and old links. Fix duplicated parent destinations while preserving unique children.
 - [x] Verify destination preservation and duplicate removal with focused regressions; actual shared menu opens Work queue, Investor progress and Software issues at 1280px, 740px and 390px with fictional destinations, live requests blocked and no page errors. No production changes or publishing.
