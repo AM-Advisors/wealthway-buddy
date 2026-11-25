@@ -7,10 +7,14 @@
 export type RequirementPerson = {
   id: string; name: string; role: string; ownershipPercent: number | null; signer: boolean;
   email: string | null; dobOnFile: boolean; ssnOnFile: boolean; taxFormSigner?: boolean;
+  /** Omitted means not checked (older callers); false means missing. */
+  phoneOnFile?: boolean; citizenshipOnFile?: boolean; addressOnFile?: boolean;
 };
 export type EntityRequirementInput = {
   legalName: string | null; einOnFile: boolean; responsiblePartyId: string | null; people: RequirementPerson[];
   trust?: boolean; taxIdType?: string | null;
+  /** The entity's own contact details; omitted means not checked. */
+  entityPhoneOnFile?: boolean; entityAddressOnFile?: boolean; jurisdictionOnFile?: boolean;
 };
 export type RequirementItem = { key: string; label: string; done: boolean; personId?: string };
 
@@ -28,6 +32,9 @@ export function missingPersonFields(p: RequirementPerson): string[] {
   if (!p.email?.trim()) out.push("email");
   if (!p.dobOnFile) out.push("date of birth");
   if (!p.ssnOnFile) out.push("SSN");
+  if (p.phoneOnFile === false) out.push("phone");
+  if (p.citizenshipOnFile === false) out.push("citizenship");
+  if (p.addressOnFile === false) out.push("address");
   return out;
 }
 
@@ -36,6 +43,9 @@ export function entityRequirements(input: EntityRequirementInput): RequirementIt
   const items: RequirementItem[] = [
     { key: "legal_name", label: "Entity legal name", done: Boolean(input.legalName?.trim()) },
     { key: "ein", label: input.trust ? input.taxIdType === "ssn" ? "Trustee SSN" : "Trust tax ID: trustee SSN or separate EIN" : "EIN", done: input.einOnFile },
+    ...(input.jurisdictionOnFile === undefined ? [] : [{ key: "jurisdiction", label: "State or country of formation", done: input.jurisdictionOnFile }]),
+    ...(input.entityAddressOnFile === undefined ? [] : [{ key: "entity_address", label: input.trust ? "Trust address" : "Entity address", done: input.entityAddressOnFile }]),
+    ...(input.entityPhoneOnFile === undefined ? [] : [{ key: "entity_phone", label: input.trust ? "Trust phone number" : "Entity phone number", done: input.entityPhoneOnFile }]),
     { key: "responsible_party", label: "Responsible party chosen", done: Boolean(input.responsiblePartyId && input.people.some((p) => p.id === input.responsiblePartyId)) },
     { key: "control_person", label: "At least one control person, trustee or officer", done: input.people.some((p) => ["control_person", "trustee", "officer", "manager"].includes(p.role)) },
     { key: "signer", label: "At least one signer", done: signers.length > 0 },

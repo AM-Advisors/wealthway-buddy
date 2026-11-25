@@ -42,3 +42,13 @@ describe("trustee open items are listed", () => {
     expect(open[0]?.personId).toBe("k");
   });
 });
+
+describe("trust contact details", () => {
+  it("asks each trustee for phone, citizenship and address, and the trust for its address and phone", async () => {
+    const { entityRequirements } = await import("./entity-investor-requirements");
+    const items = entityRequirements({ legalName: "T", trust: true, taxIdType: "ein", einOnFile: true, responsiblePartyId: "j", entityPhoneOnFile: false, entityAddressOnFile: false, jurisdictionOnFile: true, people: [
+      { id: "j", name: "Joe", role: "trustee", ownershipPercent: 50, signer: true, email: "j@x.com", dobOnFile: true, ssnOnFile: true, taxFormSigner: true, phoneOnFile: false, citizenshipOnFile: false, addressOnFile: false },
+    ] });
+    expect(items.filter((i) => !i.done).map((i) => i.label)).toEqual(["Trust address", "Trust phone number", "Joe: add phone, citizenship, address"]);
+  });
+});

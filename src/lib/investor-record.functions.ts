@@ -37,7 +37,7 @@ export const createInvestorFn = createServerFn({ method: "POST" }).middleware([r
   .handler(async ({ data, context }) => (await srv()).createInvestorAndInvite(context.userId, data as any));
 
 export const updateInvestorRecordFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(z.object({ onboardingId: uuid, person: person.optional(), profile: z.object({ legalName: str, details }).optional(), investment: investment.optional(), taxId: z.string().regex(/^\d{9}$/, "The tax ID must be 9 digits.").nullable().optional(), taxIdType: z.enum(["ssn", "itin", "ein"]).optional(), changeTaxIdType: z.boolean().optional(), taxIdTypeReason: z.string().max(500).nullable().optional() }).parse)
+  .validator(z.object({ onboardingId: uuid, person: person.optional(), profile: z.object({ legalName: str, details, phone: str, addressLine1: str, addressLine2: str, city: str, region: str, postalCode: str, country: str }).optional(), investment: investment.optional(), taxId: z.string().regex(/^\d{9}$/, "The tax ID must be 9 digits.").nullable().optional(), taxIdType: z.enum(["ssn", "itin", "ein"]).optional(), changeTaxIdType: z.boolean().optional(), taxIdTypeReason: z.string().max(500).nullable().optional() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/record-locks.server")).lockedSave("investor", context as any, data, async () => (await srv()).updateInvestorRecord(context.userId, data as any)));
 
 export const removeFromFundFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -144,7 +144,7 @@ export const editRelatedPartyFn = createServerFn({ method: "POST" }).middleware(
     add: relatedInput.optional(),
     link: z.object({ personId: uuid, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() }).optional(),
     update: z.object({ relationshipId: uuid, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() }).optional(),
-    details: z.object({ relationshipId: uuid, email: z.string().max(200).nullable().optional(), phone: z.string().max(40).nullable().optional(), dateOfBirth: z.string().max(10).nullable().optional(), ssn: z.string().max(20).nullable().optional() }).optional(),
+    details: z.object({ relationshipId: uuid, email: z.string().max(200).nullable().optional(), phone: z.string().max(40).nullable().optional(), dateOfBirth: z.string().max(10).nullable().optional(), ssn: z.string().max(20).nullable().optional(), citizenship: z.string().max(80).nullable().optional(), addressLine1: z.string().max(200).nullable().optional(), addressLine2: z.string().max(200).nullable().optional(), city: z.string().max(100).nullable().optional(), region: z.string().max(100).nullable().optional(), postalCode: z.string().max(20).nullable().optional(), country: z.string().max(80).nullable().optional() }).optional(),
     taxFormSignerId: uuid.optional(),
     responsiblePartyId: uuid.optional(),
     removeId: uuid.optional(),

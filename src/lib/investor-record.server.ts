@@ -111,7 +111,7 @@ export type InvestmentInput = {
   unitCount?: number | null; sourceReferral?: string | null; managerNotes?: string | null; internalNotes?: string | null;
 };
 export type RelatedInput = { firstName: string; lastName: string; email?: string | null; role: string; ownershipPercent?: number | null; isSigner?: boolean; phone?: string | null; dateOfBirth?: string | null; ssn?: string | null };
-export type RelatedPersonDetails = { email?: string | null; phone?: string | null; dateOfBirth?: string | null; ssn?: string | null };
+export type RelatedPersonDetails = { email?: string | null; phone?: string | null; dateOfBirth?: string | null; ssn?: string | null; citizenship?: string | null; addressLine1?: string | null; addressLine2?: string | null; city?: string | null; region?: string | null; postalCode?: string | null; country?: string | null };
 
 /**
  * Fills a related person's contact, birth date and SSN. The SSN is encrypted
@@ -119,7 +119,7 @@ export type RelatedPersonDetails = { email?: string | null; phone?: string | nul
  * only and never change a signed-in person's email; staff may correct.
  */
 async function writeRelatedPersonDetails(personId: string, d: RelatedPersonDetails, actor: OnboardingActor, base: { offeringId: string; onboardingId: string; source: EntrySource }) {
-  const { data: cur } = await db().from("persons").select("id, user_id, email, phone, date_of_birth, tax_id_last4").eq("id", personId).maybeSingle();
+  const { data: cur } = await db().from("persons").select("id, user_id, email, phone, date_of_birth, tax_id_last4, citizenship_country, address_line1, address_line2, city, region, postal_code, country").eq("id", personId).maybeSingle();
   if (!cur) fail("That person couldn't be found.");
   const changes: Change[] = []; const apply: Record<string, unknown> = {};
   const canSet = (current: unknown) => actor.isStaff || current == null || String(current).trim() === "";
@@ -132,6 +132,12 @@ async function writeRelatedPersonDetails(personId: string, d: RelatedPersonDetai
   }
   const phone = d.phone?.trim();
   if (phone && phone !== cur.phone && canSet(cur.phone)) apply["phone"] = phone;
+  // Citizenship and address: fill blanks; staff may correct. Every change is logged below.
+  const extra: [keyof RelatedPersonDetails, string][] = [["citizenship", "citizenship_country"], ["addressLine1", "address_line1"], ["addressLine2", "address_line2"], ["city", "city"], ["region", "region"], ["postalCode", "postal_code"], ["country", "country"]];
+  for (const [k, col] of extra) {
+    const v = String(d[k] ?? "").trim().slice(0, 200);
+    if (v && v !== (cur as any)[col] && canSet((cur as any)[col])) apply[col] = v;
+  }
   const dob = d.dateOfBirth?.trim();
   if (dob && dob !== cur.date_of_birth) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dob) || new Date(dob) > new Date()) fail("Enter a valid date of birth.");
@@ -489,7 +495,7 @@ const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "regio
  * retain review. Later changes become reviewer suggestions.
  */
 export async function updateInvestorRecord(userId: string, input: {
-  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null; taxIdType?: ProfileTaxIdType; changeTaxIdType?: boolean; taxIdTypeReason?: string | null;
+  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown>; phone?: string | null; addressLine1?: string | null; addressLine2?: string | null; city?: string | null; region?: string | null; postalCode?: string | null; country?: string | null }; investment?: InvestmentInput; taxId?: string | null; taxIdType?: ProfileTaxIdType; changeTaxIdType?: boolean; taxIdTypeReason?: string | null;
   preparerId?: string | null;
 }) {
   const { actor, row, role, preparer, participant } = await recordAccess(userId, input.onboardingId, input.preparerId);
@@ -545,9 +551,17 @@ export async function updateInvestorRecord(userId: string, input: {
   }
 
   if (input.profile && row.investment_profile_id) {
-    const { data: cur } = await db().from("investment_profiles").select("legal_name, display_label, details, status").eq("id", row.investment_profile_id).maybeSingle();
+    const { data: cur } = await db().from("investment_profiles").select("legal_name, display_label, details, status, phone, address_line1, address_line2, city, region, postal_code, country").eq("id", row.investment_profile_id).maybeSingle();
     if (cur?.status === "locked") fail("This investing profile is locked.");
     const apply: Record<string, unknown> = {};
+    const pp = input.profile as Record<string, unknown>;
+    for (const [k, col] of [["phone", "phone"], ["addressLine1", "address_line1"], ["addressLine2", "address_line2"], ["city", "city"], ["region", "region"], ["postalCode", "postal_code"], ["country", "country"]] as const) {
+      if (pp[k] === undefined) continue;
+      const v = String(pp[k] ?? "").trim().slice(0, 200) || null;
+      if (sameValue((cur as any)?.[col] ?? null, v)) continue;
+      apply[col] = v;
+      changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: col, from: (cur as any)?.[col] ?? null, to: v, source, actor: actor.userId });
+    }
     if (input.profile.legalName !== undefined && !sameValue(cur?.legal_name, input.profile.legalName)) {
       apply['legal_name'] = input.profile.legalName;
       changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "legal_name", from: cur?.legal_name ?? null, to: input.profile.legalName, source, actor: actor.userId });
@@ -891,8 +905,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   const staff = role === "staff";
   const [{ data: person }, { data: profile }, { data: rel }, { data: changes }, { data: sugg }, { data: offering }] = await Promise.all([
     row.person_id ? db().from("persons").select("*").eq("id", row.person_id).maybeSingle() : db().from("persons").select("*").eq("user_id", row.investor_user_id).maybeSingle(),
-    row.investment_profile_id ? db().from("investment_profiles").select("id, profile_type, display_label, legal_name, details, entry_source, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle() : { data: null },
-    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, is_tax_form_signer, status, persons:person_id(legal_first_name, legal_last_name, email, phone, date_of_birth, tax_id_last4, user_id)").eq("profile_id", row.investment_profile_id).neq("status", "removed") : { data: [] },
+    row.investment_profile_id ? db().from("investment_profiles").select("id, profile_type, display_label, legal_name, details, entry_source, tax_id_last4, tax_id_type, phone, address_line1, address_line2, city, region, postal_code, country").eq("id", row.investment_profile_id).maybeSingle() : { data: null },
+    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, is_tax_form_signer, status, persons:person_id(legal_first_name, legal_last_name, email, phone, date_of_birth, tax_id_last4, user_id, citizenship_country, address_line1, city, region, postal_code, country)").eq("profile_id", row.investment_profile_id).neq("status", "removed") : { data: [] },
     db().from("investor_record_changes").select("field, source, subject_table, created_at, manager_visible, old_value, new_value").eq("onboarding_id", row.id).order("created_at", { ascending: false }).limit(100),
     db().from("investor_record_suggestions").select("*").eq("onboarding_id", row.id).in("status", ["open", "review_later"]).order("created_at", { ascending: false }),
     db().from("offerings").select("id, name").eq("id", row.offering_id).maybeSingle(),
@@ -931,10 +945,11 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     viewer: role, fund: offering,
     overview: { name: personName(person) ?? profile?.display_label ?? profile?.legal_name ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at), investorUserId: actor.isStaff ? row.investor_user_id ?? null : null },
     person: safePerson,
-    profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null, taxIdType: profile.tax_id_type ?? null } : null,
+    profile: profile ? { phone: profile.phone ?? null, addressLine1: profile.address_line1 ?? null, addressLine2: profile.address_line2 ?? null, city: profile.city ?? null, region: profile.region ?? null, postalCode: profile.postal_code ?? null, country: profile.country ?? null, id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null, taxIdType: profile.tax_id_type ?? null } : null,
     related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, personId: r.person_id ?? null, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status,
       // Managers see whether DOB/SSN are on file, never the values; Harmonious also sees the last four.
       email: r.persons?.email ?? null, phone: r.persons?.phone ?? null, hasAccount: Boolean(r.persons?.user_id),
+      phoneOnFile: Boolean(r.persons?.phone), citizenship: r.persons?.citizenship_country ?? null, citizenshipOnFile: Boolean(r.persons?.citizenship_country), addressOnFile: Boolean(r.persons?.address_line1 && r.persons?.city), address: [r.persons?.address_line1, r.persons?.city, r.persons?.region, r.persons?.postal_code, r.persons?.country].filter(Boolean).join(", ") || null,
       dobOnFile: Boolean(r.persons?.date_of_birth), ssnOnFile: Boolean(r.persons?.tax_id_last4), ...(staff ? { dateOfBirth: r.persons?.date_of_birth ?? null, ssnLast4: r.persons?.tax_id_last4 ?? null } : {}),
       taxFormSigner: Boolean(r.is_tax_form_signer), responsibleParty: (profile?.details as any)?.responsiblePartyRelationshipId === r.id })),
     investment: {
