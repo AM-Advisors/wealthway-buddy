@@ -50,7 +50,7 @@ import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
 import { opsQuickSearchFn } from "@/lib/ops-quick-search.functions";
 import { opsWorkAreas, type OpsCapability } from "@/lib/ops-capabilities";
-import { dedupeNav, extraGrantItems } from "@/lib/ops-nav-registry";
+import { consolidateOpsMenus, dedupeNav, extraGrantItems, navUrlIsActive } from "@/lib/ops-nav-registry";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -94,8 +94,8 @@ function useSectionOpen(id: string, containsActive: boolean) {
 
 const ACTIVE_CLS = "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_2px_0_0_var(--color-sidebar-primary)]";
 
-function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActive, compactGroups = false }: {
-  id: string; label: string; items: NavItem[]; pathname: string; collapsed: boolean; onNavigate: () => void; isActive: (item: NavItem) => boolean; compactGroups?: boolean;
+export function NavSection({ id, label, items, pathname, search = "", collapsed, onNavigate, isActive, compactGroups = false }: {
+  id: string; label: string; items: NavItem[]; pathname: string; search?: string; collapsed: boolean; onNavigate: () => void; isActive: (item: NavItem) => boolean; compactGroups?: boolean;
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   useEffect(() => {
@@ -103,7 +103,7 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
       const current = items.find((item) => isActive(item));
       return current?.sub?.length ? { ...x, [current.id]: true } : x;
     });
-  }, [pathname, compactGroups]);
+  }, [pathname, search, compactGroups]);
   const containsActive = items.some((i) => isActive(i) || i.sub?.some((s) => pathname.startsWith(s.url)));
   const [open, toggle] = useSectionOpen(id, containsActive);
   if (!items.length) return null;
@@ -113,10 +113,10 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
       <SidebarSeparator />
       <SidebarGroup>
         {!collapsed && (
-          <button type="button" onClick={toggle} aria-expanded={open} className="flex w-full items-center justify-between rounded px-2 py-1 text-xs font-medium uppercase tracking-wide text-sidebar-foreground/70 hover:text-sidebar-foreground">
+          <Button variant="ghost" onClick={toggle} aria-expanded={open} className="h-auto w-full justify-between rounded px-2 py-1 text-xs font-medium uppercase tracking-wide text-sidebar-foreground/70 hover:text-sidebar-foreground">
             <span>{label}</span>
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "" : "-rotate-90"}`} />
-          </button>
+          </Button>
         )}
         {show && (
           <SidebarGroupContent>
@@ -138,8 +138,8 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                     {!collapsed && item.sub && item.sub.length > 0 && (compactGroups ? (expanded[item.id] ?? active) : (active || item.sub.some((s) => pathname.startsWith(s.url)))) && (
                       <div className="ml-6 border-l border-sidebar-border pl-3">
                         {item.sub.map((s) => (
-                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={(compactGroups ? pathname === s.url || (s.url !== "/marketing/studio" && pathname.startsWith(`${s.url}/`)) : pathname.startsWith(s.url.split("?")[0] ?? s.url) && !s.url.includes("?")) ? "page" : undefined}
-                            className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">{s.title}</Link>
+                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={navUrlIsActive(s.url, pathname, search) ? "page" : undefined}
+                            className="block whitespace-normal break-words py-1.5 text-sm text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">{s.title}</Link>
                         ))}
                       </div>
                     )}
@@ -163,6 +163,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed" && !isMobile;
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const search = useRouterState({ select: (r) => r.location.searchStr });
   const inbox = useInboxUnread();
   const { session } = useClientWorkspace();
   const sections = getNavigation(session as never, "operations", pathname).operations;
@@ -313,7 +314,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const navKey = `${staffRoles.join(",")}|${capabilities.length}|${navGrants.map((g) => g.url).join(",")}|${salesOnly}`;
   // One home per screen across the whole menu; recomputed only when roles or grants change.
   const groups = useMemo(() => {
-    const deduped = dedupeNav([
+    const deduped = dedupeNav(consolidateOpsMenus([
       { id: "commercial", label: "Connected workflow", items: canSee("commercial", staffRoles) ? [{ id: "commercial-workflow", title: "Client and revenue workflow", url: "/ops/commercial", icon: "briefcase" }] : [] },
       { id: "operations", label: "Operations", items: opsItems },
       { id: "roas-billing", label: "ROAS client billing", items: roasItems },
@@ -323,7 +324,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
       { id: "marketing", label: "Marketing", items: mkItems },
       { id: "team", label: "Team", items: teamItems },
       { id: "leadership", label: "Leadership", items: leadershipItems },
-    ]);
+    ]));
     const byId = Object.fromEntries(deduped.map((g) => [g.id, g.items as NavItem[]])) as Record<string, NavItem[]>;
     return { byId, extra: extraGrantItems(deduped, navGrants) as NavItem[] };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -331,7 +332,8 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const G = (id: string) => groups.byId[id] ?? [];
 
   const exact = (i: NavItem) => pathname === i.url;
-  const opsActive = (i: NavItem) => ROAS_URLS.includes(pathname) ? pathname === i.url : i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
+  const specificOpsItem = G("operations").find((i) => navUrlIsActive(i.url, pathname, search) || i.sub?.some((s) => navUrlIsActive(s.url, pathname, search)));
+  const opsActive = (i: NavItem) => specificOpsItem ? i.id === specificOpsItem.id : ROAS_URLS.includes(pathname) ? pathname === i.url : i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
 
 
   const close = () => {
@@ -454,14 +456,14 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarGroup>
             )}
             <SidebarFavorites collapsed={collapsed} onNavigate={close} />
-            <NavSection id="operations" label="Operations" items={G("operations")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
+            <NavSection id="operations" label="Operations" items={G("operations")} pathname={pathname} search={search} collapsed={collapsed} onNavigate={close} compactGroups isActive={opsActive} />
             <NavSection id="roas-billing" label="ROAS client billing" items={G("roas-billing")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => pathname === i.url} />
             <NavSection id="finance" label="Accounting & Finance" items={G("finance")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="commercial" label="Connected workflow" items={G("commercial")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="sales" label="Sales" items={G("sales")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={G("account-management")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="marketing" label="Marketing" items={G("marketing")} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.url === "/marketing" ? pathname === i.url : (() => { const hit = mkSectionFor(pathname); return hit ? hit.section.tabs.some(([to]) => to === i.url) : pathname === i.url || pathname.startsWith(`${i.url}/`); })()} />
-            <NavSection id="team" label="Team" items={G("team")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : pathname === i.url} />
+            <NavSection id="team" label="Team" items={G("team")} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : navUrlIsActive(i.url, pathname) || !!i.sub?.some((s) => navUrlIsActive(s.url, pathname))} />
             <NavSection id="extra-access" label="Extra access" items={groups.extra} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="leadership" label="Leadership" items={G("leadership")} pathname={pathname} collapsed={collapsed} onNavigate={close}
               isActive={(i) => i.sub ? i.sub.some((x) => pathname === x.url) : pathname === i.url} />

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Operations navigation overlap (2026-11-25)
+- [x] Combine work and approvals, investor progress/checks, dashboard shortcuts and software work into existing-context menus; retain all entitled destinations, alert counts and old links. Fix duplicated parent destinations while preserving unique children.
+- [x] Verify destination preservation and duplicate removal with focused regressions; actual shared menu opens Work queue, Investor progress and Software issues at 1280px, 740px and 390px with fictional destinations, live requests blocked and no page errors. No production changes or publishing.
+- Sandbox validated; production verification pending. Real staff menu/session and destination-page reads were not exercised.
+
 ## Verified EIN and individual SSN capture (2026-11-25)
 - [x] Save explicitly verified full US EINs and SSNs to exact-party encrypted storage when blank; atomic first-only saves preserve existing numbers, trust tax choices and signed history. Conflicts open number-free staff review notices, never direct replacement.
 - [x] 143 fictional tax-number, identity and approval regressions pass, including secure save/read-back, repeat completion, same-last-four conflicts, exact session links, evidence redaction and locked trust choices; preview build OK. Save is confirmed server-only; no production records changed and not published.
