@@ -37,7 +37,7 @@ export function AuditHistoryTab({ fundId }: { fundId: string }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-lg font-semibold">Audit History</h2>
+          <h2 className="text-lg font-semibold">History</h2>
           <p className="text-sm text-muted-foreground">Who submitted, changed or reviewed what on this fund, and when. Entries can't be edited or deleted.</p>
         </div>
         <Input placeholder="Search person, action or value" value={filter} onChange={(e) => setFilter(e.target.value)} className="max-w-xs" />

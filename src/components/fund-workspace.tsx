@@ -1,3 +1,5 @@
+import { FundOpenItems } from "@/components/fund-open-items";
+import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { ForecastWorkspace, useForecastAccess } from "@/components/forecast-workspace";
 import { setupDisplay } from "@/lib/fund-launch-summary";
 import { fundOriginLabel, migrationApplies } from "@/lib/fund-origin";
@@ -68,7 +70,7 @@ export function EinField({ fundId }: { fundId: string }) {
   return <div><dt className="text-xs text-muted-foreground">EIN</dt><dd>{body}</dd></div>;
 }
 
-export const FUND_TABS = ["overview", "setup", "activity", "forecasts", "formation", "record", "approvals", "requests", "calendar", "distributions", "services", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory", "audit"] as const;
+export const FUND_TABS = ["overview", "setup", "activity", "forecasts", "formation", "record", "approvals", "requests", "calendar", "distributions", "services", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory", "audit", "open"] as const;
 export type FundTab = (typeof FUND_TABS)[number];
 type Tab = FundTab;
 export type FundWorkspaceMode = "client" | "harmonious";
@@ -228,6 +230,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
         <TabsContent value="approvals">{tab === "approvals" && <FundApprovalsHub fundId={fundId} staff={staff} initial="approvals" />}</TabsContent>
         <TabsContent value="requests">{tab === "requests" && <FundApprovalsHub fundId={fundId} staff={staff} initial="requests" />}</TabsContent>
+        <TabsContent value="open">{tab === "open" && <FundOpenItems fundId={fundId} mode={mode} />}</TabsContent>
         <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
         <TabsContent value="documents"><FundDocumentsHub fundId={fundId} staff={staff} /></TabsContent>
         <TabsContent value="audit"><AuditHistoryTab fundId={fundId} /></TabsContent>
@@ -235,7 +238,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
 
         <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>
 
-        <TabsContent value="investors" className="space-y-4"><ManagerFundInvestors fundId={fundId} moreSections={<>{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<CapitalTieReport offeringId={fundId} /></>} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4"><ManagerFundInvestors fundId={fundId} moreSections={<>{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></>} /></TabsContent>
 
 
         <TabsContent value="accounting"><AccountingWorkspace fundId={fundId} staff={staff} extra={<AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} />} /></TabsContent>

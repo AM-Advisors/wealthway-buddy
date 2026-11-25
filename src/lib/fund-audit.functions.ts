@@ -28,7 +28,7 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
   .validator(z.object({ fundId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/fund-tabs.server");
-    await s.assertFund(context.userId, data.fundId);
+    const { staff } = await s.assertFund(context.userId, data.fundId);
     const d: any = await s.db();
     const id = data.fundId;
     const setupRead = await d.from("fund_setups").select("id").eq("offering_id", id);
@@ -46,6 +46,19 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
       d.from("fund_setup_proposals").select("id,field,value,source_kind,source_file_name").eq("offering_id", id).limit(500),
     ]);
     assertDiagnosticReads([audit, subs, names, events, reminders, proposals]);
+    const closeIdsRead = await d.from("fund_close_requests").select("id").eq("offering_id", id);
+    assertDiagnosticReads([closeIdsRead]);
+    const closeIds = ((closeIdsRead.data ?? []) as { id: string }[]).map((x) => x.id);
+    let reqEvQ = d.from("fund_request_events").select("id,kind,actor_user_id,client_visible,created_at").eq("fund_id", id).order("created_at", { ascending: false }).limit(300);
+    if (!staff) reqEvQ = reqEvQ.eq("client_visible", true);
+    const [regEv, closeEv, reqEv, stateEv, invRem] = await Promise.all([
+      d.from("fund_regulatory_events").select("id,kind,actor_id,created_at").eq("offering_id", id).order("created_at", { ascending: false }).limit(300),
+      closeIds.length ? d.from("fund_close_request_events").select("id,from_status,to_status,actor_id,created_at").in("close_request_id", closeIds).limit(300) : Promise.resolve({ data: [], error: null }),
+      reqEvQ,
+      d.from("fund_state_filing_events").select("id,state,kind,filing_year,filed_on,actor,created_at").eq("offering_id", id).limit(300),
+      d.from("investor_reminders").select("id,step,sent_by,delivery,created_at").eq("offering_id", id).order("created_at", { ascending: false }).limit(300),
+    ]);
+    assertDiagnosticReads([regEv, closeEv, reqEv, stateEv, invRem]);
     const propMap = new Map<string, any>(((proposals.data ?? []) as any[]).map((p) => [p.id, p]));
     const decisionRead = propMap.size
       ? await d.from("fund_setup_proposal_decisions").select("id,proposal_id,decision,decided_by,decided_at").in("proposal_id", [...propMap.keys()])
@@ -60,6 +73,10 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
     for (const r of events.data ?? []) if (r.actor_user_id) userIds.add(r.actor_user_id);
     for (const r of reminders.data ?? []) if (r.sent_by) userIds.add(r.sent_by);
     for (const r of decisions) if (r.decided_by) userIds.add(r.decided_by);
+    for (const r of [...(regEv.data ?? []), ...(closeEv.data ?? [])] as any[]) if (r.actor_id) userIds.add(r.actor_id);
+    for (const r of (reqEv.data ?? []) as any[]) if (r.actor_user_id) userIds.add(r.actor_user_id);
+    for (const r of (stateEv.data ?? []) as any[]) if (r.actor) userIds.add(r.actor);
+    for (const r of (invRem.data ?? []) as any[]) if (r.sent_by) userIds.add(r.sent_by);
     const emails = new Map<string, string>();
     if (userIds.size) {
       const profileRead = await d.from("profiles").select("id,email").in("id", [...userIds]);
@@ -113,6 +130,11 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
       status: r.to_status ? `${r.from_status ? `${nice(r.from_status)} → ` : ""}${nice(r.to_status)}` : null, source: "Fund setup",
       details: flat(r.detail),
     });
+    for (const r of (regEv.data ?? []) as any[]) out.push({ id: `rg-${r.id}`, at: r.created_at, who: who(r.actor_id), role: null, action: nice(r.kind), status: null, source: "Compliance", details: [] });
+    for (const r of (closeEv.data ?? []) as any[]) out.push({ id: `ce-${r.id}`, at: r.created_at, who: who(r.actor_id), role: null, action: "Close status changed", status: `${r.from_status ? `${nice(r.from_status)} → ` : ""}${nice(r.to_status)}`, source: "Close", details: [] });
+    for (const r of (reqEv.data ?? []) as any[]) out.push({ id: `rq-${r.id}`, at: r.created_at, who: who(r.actor_user_id), role: null, action: nice(r.kind), status: null, source: "Request", details: [] });
+    for (const r of (stateEv.data ?? []) as any[]) out.push({ id: `sf-${r.id}`, at: r.created_at, who: who(r.actor), role: null, action: `${r.state} ${nice(r.kind)}`, status: r.filed_on ? `Filed ${r.filed_on}` : null, source: "State filing", details: r.filing_year ? [{ label: "Year", value: String(r.filing_year) }] : [] });
+    for (const r of (invRem.data ?? []) as any[]) out.push({ id: `ir-${r.id}`, at: r.created_at, who: who(r.sent_by), role: null, action: `Reminded an investor about ${nice(r.step)}`, status: r.delivery ? nice(r.delivery) : null, source: "Investor reminder", details: [] });
     out.sort((a, b) => (a.at < b.at ? 1 : -1));
     return { entries: out, canNote: !!(await s.isStaff(context.userId)) };
   });

@@ -3,7 +3,6 @@ import { FundRequests } from "@/components/fund-requests";
 import { ManagerFundReviews } from "@/components/manager-fund-reviews";
 import { SideLetterNeeds } from "@/components/side-letter-needs";
 import { AccreditationReviews } from "@/components/accreditation-reviews";
-import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { FundSetupReviews } from "@/components/fund-setup-reviews";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -30,6 +29,5 @@ export function FundApprovalsHub({ fundId, staff, initial = "approvals" }: { fun
   }
   return <section className="space-y-8">
     <Section title="Open requests"><FundRequests fundId={fundId} /></Section>
-    <Section title="Fund updates"><FundUpdatesPanel fundId={fundId} /></Section>
   </section>;
 }

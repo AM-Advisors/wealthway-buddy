@@ -1,5 +1,5 @@
 /**
- * Fund page tab layout: eleven top tabs (Close and Compliance on their own), each with at most one row of sub-views,
+ * Fund page tab layout: ten top tabs (Requests and Activity combined) (Close and Compliance on their own), each with at most one row of sub-views,
  * so every fund detail is at most two clicks away. Old tab addresses map to
  * their single new home so bookmarks and emailed links keep working.
  */
@@ -11,24 +11,23 @@ export const FUND_TOP_TABS: FundTopTab[] = [
   { value: "investors", label: "Investors", group: ["investors"] },
   { value: "documents", label: "Documents", group: ["documents"] },
   { value: "approvals", label: "Approvals", group: ["approvals"] },
-  { value: "requests", label: "Requests", group: ["requests"] },
   { value: "banking", label: "Banking", group: ["banking"] },
   { value: "closes", label: "Close", group: ["closes"] },
   { value: "regulatory", label: "Compliance", group: ["regulatory"] },
   { value: "accounting", label: "Accounting", group: ["accounting", "distributions", "assets", "services", "forecasts"] },
-  { value: "activity", label: "Activity", group: ["audit", "calendar", "record"] },
+  { value: "activity", label: "Activity & requests", group: ["open", "requests", "audit", "calendar", "record"] },
 ];
 
 export const FUND_SUB_LABEL: Record<string, string> = {
   setup: "Setup steps", formation: "Formation & EIN",
-  approvals: "Approvals", requests: "Requests",
+  approvals: "Approvals", open: "Open items", requests: "Requests",
   accounting: "Accounting", closes: "Closes", distributions: "Distributions", assets: "Assets", services: "Services", forecasts: "Forecasts",
-  audit: "Audit history", calendar: "Calendar", regulatory: "Compliance", record: "Record",
+  audit: "History", calendar: "Calendar", regulatory: "Compliance", record: "Record",
 };
 
 /** Old or shorthand tab values → the one place that detail now lives. */
 const REDIRECT: Record<string, string> = {
-  details: "setup", team: "setup", todos: "overview", activity: "audit", capital: "distributions", payments: "accounting",
+  details: "setup", team: "setup", todos: "overview", activity: "open", capital: "distributions", payments: "accounting",
 };
 
 export function normalizeFundTab(tab: string | null | undefined): string {
