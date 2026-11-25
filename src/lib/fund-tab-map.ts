@@ -1,5 +1,5 @@
 /**
- * Fund page tab layout: nine top tabs, each with at most one row of sub-views,
+ * Fund page tab layout: eleven top tabs (Close and Compliance on their own), each with at most one row of sub-views,
  * so every fund detail is at most two clicks away. Old tab addresses map to
  * their single new home so bookmarks and emailed links keep working.
  */
@@ -13,15 +13,17 @@ export const FUND_TOP_TABS: FundTopTab[] = [
   { value: "approvals", label: "Approvals", group: ["approvals"] },
   { value: "requests", label: "Requests", group: ["requests"] },
   { value: "banking", label: "Banking", group: ["banking"] },
-  { value: "accounting", label: "Accounting", group: ["accounting", "closes", "distributions", "assets", "services", "forecasts"] },
-  { value: "activity", label: "Activity", group: ["audit", "calendar", "regulatory", "record"] },
+  { value: "closes", label: "Close", group: ["closes"] },
+  { value: "regulatory", label: "Compliance", group: ["regulatory"] },
+  { value: "accounting", label: "Accounting", group: ["accounting", "distributions", "assets", "services", "forecasts"] },
+  { value: "activity", label: "Activity", group: ["audit", "calendar", "record"] },
 ];
 
 export const FUND_SUB_LABEL: Record<string, string> = {
   setup: "Setup steps", formation: "Formation & EIN",
   approvals: "Approvals", requests: "Requests",
   accounting: "Accounting", closes: "Closes", distributions: "Distributions", assets: "Assets", services: "Services", forecasts: "Forecasts",
-  audit: "Audit history", calendar: "Calendar", regulatory: "Regulatory", record: "Record",
+  audit: "Audit history", calendar: "Calendar", regulatory: "Compliance", record: "Record",
 };
 
 /** Old or shorthand tab values → the one place that detail now lives. */
