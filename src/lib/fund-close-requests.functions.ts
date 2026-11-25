@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 import { canFinalizeCloseRequest, closeStatusForIntent } from "@/lib/fund-close-request-model";
 import { estimateCloseFilingCosts, stateCode } from "@/lib/blue-sky-fees";
+import { closeInvestorTerms, closeManagementFee } from "@/lib/close-investor-terms";
 
 async function filedBlueSkyStates(db: any, fundId: string): Promise<string[]> {
   const { data } = await db.from("fund_regulatory_filings").select("state").eq("offering_id", fundId).eq("filing_type", "blue_sky").is("removed_at", null);
@@ -31,12 +32,19 @@ async function canViewFund(db: any, uid: string, fundId: string) {
 }
 
 async function sideLetterPricing(db: any, fundId: string, onboardingIds: string[]) {
-  const { data: letters, error } = await db.from("side_letters").select("id, onboarding_id, status, fee_payment_id").eq("offering_id", fundId);
+  const { data: letters, error } = await db.from("side_letters").select("id, offering_id, onboarding_id, status, fee_payment_id, terms, effective_date, expiry_date, current_version, document_reference").eq("offering_id", fundId);
   if (error) throw new Error("Side letters couldn't be counted.");
   const payIds = [...new Set(((letters ?? []) as any[]).map((l) => l.fee_payment_id).filter(Boolean))];
   const { data: pays } = payIds.length ? await db.from("fund_payments").select("id, status").in("id", payIds).in("status", ["paid", "used"]) : { data: [] };
   const { closeSideLetterPricing } = await import("@/lib/close-side-letter-pricing");
-  return closeSideLetterPricing(onboardingIds, (letters ?? []) as any[], ((pays ?? []) as any[]).map((p) => p.id));
+  return { ...closeSideLetterPricing(onboardingIds, (letters ?? []) as any[], ((pays ?? []) as any[]).map((p) => p.id)), letters: (letters ?? []) as any[] };
+}
+
+async function closeTermRows(db: any, fundId: string, ids: string[], letters: any[]) {
+  if (!ids.length) return [];
+  const { data: obs, error } = await db.from("investor_onboardings").select("id, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, persons(legal_first_name, legal_last_name, preferred_name), investment_profiles(legal_name)").eq("offering_id", fundId).in("id", ids);
+  if (error) throw new Error("Investor close terms couldn't be loaded.");
+  return ((obs ?? []) as any[]).map(o => ({ id: o.id as string, name: o.investment_profiles?.legal_name || [o.persons?.legal_first_name, o.persons?.legal_last_name].filter(Boolean).join(" ") || "Unnamed investor", amountCents: (o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null) as number | null, terms: closeInvestorTerms(fundId, o.id, letters) }));
 }
 
 const fundInput = (d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d);
@@ -118,6 +126,7 @@ export const getCloseCandidates = createServerFn({ method: "GET" })
         amountCents: o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null,
         openItems: open[o.id] ?? [],
         sideLetters: sl.perInvestor[o.id] ?? 0,
+        terms: closeInvestorTerms(data.fundId, o.id, sl.letters),
         state: stateCode(o.investment_profiles?.region) ?? stateCode(o.persons?.region),
       };
     });
@@ -134,7 +143,11 @@ export const listFundCloseRequests = createServerFn({ method: "GET" })
     const { data: rows } = await db.from("fund_close_requests")
       .select("id, offering_id, target_date, notes, onboarding_ids, status, staff_note, created_at, updated_at, details")
       .eq("offering_id", data.fundId).order("created_at", { ascending: false });
-    return (rows ?? []) as any[];
+    const requests = (rows ?? []) as any[];
+    const ids = [...new Set(requests.flatMap(r => r.onboarding_ids ?? []))] as string[];
+    const sl = await sideLetterPricing(db, data.fundId, ids);
+    const terms = await closeTermRows(db, data.fundId, ids, sl.letters);
+    return requests.map(r => ({ ...r, investorTerms: r.status !== "draft" && Array.isArray(r.details?.investorTerms) ? r.details.investorTerms : terms.filter(i => (r.onboarding_ids ?? []).includes(i.id)) }));
   });
 
 export const createFundCloseRequest = createServerFn({ method: "POST" })
@@ -163,6 +176,11 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       if ((obs ?? []).length !== onboardingIds.length) throw new Error("Some selected investors aren't in this fund.");
     }
 
+    const sl = await sideLetterPricing(db, data.fundId, onboardingIds);
+    const investorTerms = await closeTermRows(db, data.fundId, onboardingIds, sl.letters);
+    if (data.intent === "submit" && investorTerms.some(i => i.terms.error)) throw new Error("Review the selected investors' conflicting side-letter terms before sending.");
+    const managementFeeCents = data.details ? closeManagementFee(investorTerms, data.details.managementFeePct) : null;
+
     let rowId = data.id ?? null;
     let previousStatus: string | null = null;
     let previousDetails: Record<string, any> = {};
@@ -188,8 +206,7 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
     }
 
     // Server-recomputed side-letter estimate; client totals are never trusted.
-    const sl = await sideLetterPricing(db, data.fundId, onboardingIds);
-    const sideLetterDetails = { sideLetterCount: sl.count, sideLetterPaidCount: sl.paidCount, sideLetterFeeCents: sl.feeCents, sideLetterUnitCents: sl.unitCents };
+    const sideLetterDetails = { sideLetterCount: sl.count, sideLetterPaidCount: sl.paidCount, sideLetterFeeCents: sl.feeCents, sideLetterUnitCents: sl.unitCents, investorTerms };
     if (data.details) {
       const det = data.details;
       let paPath: string | null = typeof previousDetails["purchaseAgreementPath"] === "string" ? previousDetails["purchaseAgreementPath"] : null;
@@ -217,7 +234,7 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       const filing = estimateCloseFilingCosts({ investorStates: await investorStatesFor(db, data.fundId, onboardingIds), filedStates: await filedBlueSkyStates(db, data.fundId) });
       rest.investorStates = filing.lines.map((l) => l.state);
       const { error: detailsError } = await db.from("fund_close_requests").update({
-        details: { ...rest, purchaseAgreementPath: paPath, purchaseAgreementName: paName, formDFeeCents: filing.formDCents, blueSkyLines: filing.lines, filingTotalCents: filing.totalCents, ...sideLetterDetails, feesAreEstimate: true },
+        details: { ...rest, managementFeeCents, purchaseAgreementPath: paPath, purchaseAgreementName: paName, formDFeeCents: filing.formDCents, blueSkyLines: filing.lines, filingTotalCents: filing.totalCents, ...sideLetterDetails, feesAreEstimate: true },
       }).eq("id", rowId);
       if (detailsError) throw new Error("The close details couldn't be saved. Please try again.");
     } else {

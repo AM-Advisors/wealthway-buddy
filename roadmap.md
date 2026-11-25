@@ -1,5 +1,10 @@
 # Roadmap
 
+## Close investor side letters and editing (2026-11-25)
+- [x] Show exact-investor side-letter terms and apply active fee exceptions to new close estimates, retaining version references and submitted snapshots; conflicting terms block submission rather than falling back to default fees.
+- [x] Add an explicit Edit close details button to existing editable close drafts; reset fee confirmation when investor selection changes. Nineteen focused regressions pass; fictional manager and Operations views both show 0% fee/carry and quarterly reporting with version 2. Preview build passes; durable save/read-back remains unverified without isolated QA.
+- [ ] Extend editing through the manager-signed close summary and recorded outgoing wire cutoff. Blocked: the Close request currently has no canonical summary-signature or outgoing-wire association; submitted copies stay protected instead of inferring these events.
+
 ## Clarify Attention Needed Status draft refresh
 - [x] Restore draft-only setup attention changes and combine all six shared paths with the latest app updates; verification reports no dropped paths.
 - [x] Retain separate Banking sub-views, standalone Close/Compliance, connected setup attention and newer Activity & requests/Open items plus close-draft behavior. Newer shared Accounting sections retain the draft's Summary default and removal of bank records.

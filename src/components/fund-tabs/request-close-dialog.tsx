@@ -16,6 +16,8 @@ import { fileToBase64, toCents, toPct, usd } from "./shared";
 import { SIDE_LETTER_FEE_CENTS } from "@/lib/side-letter-fee";
 import { Switch } from "@/components/ui/switch";
 import { estimateCloseFilingCosts } from "@/lib/blue-sky-fees";
+import { closeManagementFee } from "@/lib/close-investor-terms";
+import { CloseInvestorTerms } from "@/components/close-investor-terms";
 
 const NEW = "__new";
 
@@ -78,20 +80,22 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const activeFeePct = tq.data?.activeFee?.management_fee_pct ?? null;
   const pctStr = feePct ?? (activeFeePct != null ? String(activeFeePct) : "");
   const selectedCents = rows.filter((r) => picked.has(r.id)).reduce((s, r) => s + (r.amountCents ?? 0), 0);
-  const feeCents = toPct(pctStr) != null ? Math.round((selectedCents * (toPct(pctStr) as number)) / 100) : null;
+  const feeCents = closeManagementFee(rows.filter(r => picked.has(r.id)), toPct(pctStr));
   const notReady = rows.filter((r) => picked.has(r.id) && r.openItems.length > 0).length;
   const sideLetterCount = rows.filter((r) => picked.has(r.id)).reduce((s, r) => s + (r.sideLetters ?? 0), 0);
   const pickedRows = rows.filter((r) => picked.has(r.id));
   const filing = useMemo(() => estimateCloseFilingCosts({ investorStates: pickedRows.map((r) => r.state), filedStates }), [pickedRows.map((r) => r.id).join(), filedStates.join()]);
   const noAddress = pickedRows.filter((r) => !r.state);
   const isNew = assetSel === NEW || (assets.length === 0 && assetSel === "");
-  const toggle = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggle = (id: string) => { setFeeOk(false); setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
 
   async function onSave(intent: "draft" | "submit") {
+    if (!cq.data || cq.error) { toast.error("Wait for investor terms to load before saving."); return; }
     if (intent === "submit" && !canSend) { toast.error("The fund manager sends saved close details for review."); return; }
     if (intent === "submit" && picked.size === 0) { toast.error("Pick at least one investor before sending for review."); return; }
     if (intent === "submit" && isNew && asset.name.trim().length < 2) { toast.error("Add the asset name."); return; }
     if (intent === "submit" && !feeOk) { toast.error("Confirm the management fee."); return; }
+    if (intent === "submit" && pickedRows.some(r => r.terms.error)) { toast.error("Review the conflicting side-letter terms before sending."); return; }
     setBusy(intent);
     try {
       const purchaseAgreement = pa ? { fileName: pa.name, contentType: pa.type || "application/pdf", base64: await fileToBase64(pa) } : null;
@@ -128,7 +132,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{request ? "Continue close details" : "Prepare fund close"}</DialogTitle>
+          <DialogTitle>{request ? "Edit close details" : "Prepare fund close"}</DialogTitle>
           <DialogDescription>Save what you know without sending it. Only Send for review starts Harmonious review; saving never finalizes a close, files anything or moves money.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 text-sm">
@@ -181,9 +185,11 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
           <div className={section}>
             <p className="font-medium">Fees</p>
             <div className="grid items-end gap-2 sm:grid-cols-2">
-              <div className="space-y-1"><Label>Management fee %</Label><Input inputMode="decimal" value={pctStr} onChange={(e) => { setFeePct(e.target.value); setFeeOk(false); }} /></div>
+              <div className="space-y-1"><Label>Default management fee %</Label><Input inputMode="decimal" value={pctStr} onChange={(e) => { setFeePct(e.target.value); setFeeOk(false); }} /></div>
               <p>Amount on selected investors: <span className="font-semibold">{usd(feeCents)}</span></p>
             </div>
+            <p className="text-xs text-muted-foreground">Applicable investor side letters override this default only for that investor. This is an estimate, not a charge.</p>
+            <CloseInvestorTerms investors={pickedRows.map(r => ({ id: r.id, name: r.profileName || r.name, terms: r.terms }))} />
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="space-y-1"><Label>Bank name</Label><Input value={extra.feeBank} onChange={(e) => setExtra({ ...extra, feeBank: e.target.value })} /></div>
               <div className="space-y-1"><Label>Address</Label><Input value={extra.feeAddress} onChange={(e) => setExtra({ ...extra, feeAddress: e.target.value })} /></div>

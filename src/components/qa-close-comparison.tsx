@@ -1,4 +1,5 @@
 import { CloseRequestCard } from "@/components/close-request-review";
+import { closeInvestorTerms } from "@/lib/close-investor-terms";
 
 const QA_CLOSE_REQUEST = {
   id: "qa-close-request",
@@ -10,6 +11,7 @@ const QA_CLOSE_REQUEST = {
   notes: "Fictional request used to compare the manager and Operations screens.",
   staff_note: "Fictional review note visible in both views.",
   details: {
+    investorTerms: [{ id: "qa-investor-one", name: "Fictional Family Trust", terms: closeInvestorTerms("qa-fund", "qa-investor-one", [{ id: "qa-letter", offering_id: "qa-fund", onboarding_id: "qa-investor-one", status: "active", effective_date: null, expiry_date: null, current_version: 2, terms: [{ category: "fee_discount", value: "0%", description: "Management fee" }, { category: "carry_reduction", value: "0%", description: "Carried interest" }, { category: "information_rights", value: "Quarterly", description: "Reporting" }] }]) }],
     assetMode: "new",
     asset: { name: "Juniper House", issuer: "Juniper House LLC", type: "Real estate", amountCents: 75000000, notes: "Fictional asset details." },
     managementFeePct: 2,

@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { CloseFilingsPanel } from "@/components/close-filings-panel";
 import { approveFundCloseRequest } from "@/lib/close-filings.functions";
 import { updateFundCloseRequestStatus } from "@/lib/fund-close-requests.functions";
+import { CloseInvestorTerms } from "@/components/close-investor-terms";
+import { Pencil } from "lucide-react";
 
 const LABEL: Record<string, string> = {
   draft: "Draft: not sent for review",
@@ -52,7 +54,8 @@ export function CloseDetailsSummary({ r }: { r: any }) {
         <Field k="Purchase agreement" v={d.purchaseAgreementName || "Not attached"} />
       </Group>
       <Group title="Fees">
-        <Field k="Management fees" v={d.managementFeePct == null ? null : `${d.managementFeePct}% · ${money(d.managementFeeCents)}`} />
+        <Field k="Recorded management fee total" v={d.managementFeeCents == null ? null : money(d.managementFeeCents)} />
+        <Field k="Default management fee" v={d.managementFeePct == null ? null : `${d.managementFeePct}% before investor exceptions`} />
         <Field k="Bank name" v={d.feeBankName} />
         <Field k="Address" v={d.feeAddress} />
       </Group>
@@ -107,9 +110,10 @@ export function CloseRequestCard({ r, onContinue, operations = false, showFund =
       <CardContent className="space-y-3 text-sm">
         {r.notes && <p>{r.notes}</p>}
         <CloseDetailsSummary r={r} />
+        {Array.isArray(r.investorTerms ?? r.details?.investorTerms) && <CloseInvestorTerms investors={r.investorTerms ?? r.details.investorTerms} />}
         {r.details?.sideLetterCount != null && <p>Side letters (estimate): {r.details.sideLetterCount} × ${((r.details.sideLetterUnitCents ?? 150000) / 100).toLocaleString("en-US")}{r.details.sideLetterPaidCount ? `, ${r.details.sideLetterPaidCount} already paid` : ""} = <span className="font-semibold">${(r.details.sideLetterFeeCents / 100).toLocaleString("en-US")}</span></p>}
         {r.staff_note && <p className="text-xs text-muted-foreground">Harmonious: {r.staff_note}</p>}
-        {r.status === "draft" && onContinue && <Button size="sm" variant="outline" onClick={onContinue}>Continue details</Button>}
+        {r.status === "draft" && onContinue && <Button size="sm" variant="outline" onClick={onContinue}><Pencil className="mr-2 h-4 w-4" />Edit close details</Button>}
         {operations && <CloseRequestOperations r={r} />}
       </CardContent>
     </Card>
