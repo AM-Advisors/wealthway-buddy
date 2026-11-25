@@ -211,11 +211,12 @@ export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, en
             <p className="text-sm"><span className="font-medium">Trust uses:</span> {taxIdType === "ssn" ? "Trustee’s SSN" : "Separate trust EIN"} · Locked</p>
             {staff ? <Button size="sm" variant="link" className="h-auto p-0" onClick={() => { if (window.confirm("Change this trust's tax ID type? The new number replaces the one on file, and the change is logged.")) setUnlocking(true); }}>Change tax ID type</Button> : <p className="text-xs text-muted-foreground">Ask Harmonious if the trust's tax ID type needs to change.</p>}
           </div> : trust ? <div className="space-y-2">
-            <Label htmlFor="ir-tax-type">Trust uses</Label>
-            <Select value={selected} disabled={busy} onValueChange={(v) => { if (v === "ssn" || v === "ein") { setChoice(v); setTin(""); } }}>
-              <SelectTrigger id="ir-tax-type" className="max-w-xs"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="ssn">Trustees’ SSNs</SelectItem><SelectItem value="ein">Separate trust EIN</SelectItem></SelectContent>
-            </Select>
+            <p className="text-sm font-medium" id="ir-tax-type">Does the trust have its own EIN?</p>
+            <div className="flex gap-2" role="radiogroup" aria-labelledby="ir-tax-type">
+              {([["ein", "Yes"], ["ssn", "No, it uses the trustees' SSNs"]] as const).map(([v, label]) => (
+                <Button key={v} type="button" size="sm" role="radio" aria-checked={selected === v} variant={selected === v ? "default" : "outline"} disabled={busy} onClick={() => { setChoice(v); setTin(""); }}>{label}</Button>
+              ))}
+            </div>
             <p className="text-xs text-muted-foreground">Use the number appropriate for the trust’s tax treatment. Confirm with your tax adviser if unsure.</p>
           </div> : null}
           {unlocking ? <div className="space-y-1"><Label htmlFor="ir-tax-reason">Reason for changing the type</Label><Input id="ir-tax-reason" value={reason} onChange={(e) => setReason(e.target.value)} className="max-w-md" /></div> : null}
