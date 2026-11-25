@@ -38,7 +38,7 @@ async function recordAccess(userId: string, onboardingId: string, preparerId?: s
   const p = await activePreparer(userId, preparerId, onboardingId);
   const { data: row } = await db().from("investor_onboardings").select("*").eq("id", onboardingId).maybeSingle();
   if (!row) fail("That investment was not found.");
-  if (!(await investorEditWindow(row))) forbid("signing or funding has started; the investor's details can no longer be changed by a preparer.");
+  if (!(await investorEditWindow(row, { allowAfterFunding: true }))) forbid("signing has started; the investor's details can no longer be changed by a preparer.");
   const actor: OnboardingActor = { userId: p.userId, isStaff: false, managedOfferingIds: [row.offering_id] };
   return { actor, row, role: "manager" as const, preparer: true, participant: p.participant as { email?: string | null } };
 }

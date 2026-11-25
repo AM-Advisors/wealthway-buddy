@@ -166,7 +166,7 @@ export async function preparerWorkspace(userId: string, token: string) {
   const { data: full } = await db().from("investor_onboardings").select("*").eq("id", participant.onboarding_id).maybeSingle();
   return {
     participantId: participant.id, onboardingId: participant.onboarding_id, fundName: String((row as any)?.offerings?.name ?? "Fund"),
-    editable: Boolean(full && await investorEditWindow(full)),
+    editable: Boolean(full && await investorEditWindow(full, { allowAfterFunding: true })),
     // Helpers learn only whether the investor's email still needs adding; the address and account link stay private.
     person: (({ user_id: _u, email: _e, ...rest }: any) => rest)((row as any)?.persons ?? {}),
     investorEmailNeeded: !String((row as any)?.persons?.email ?? "").trim() && !(row as any)?.persons?.user_id && !full?.investor_user_id,
@@ -209,8 +209,8 @@ export async function changeInvestingAs(userId: string, input: { onboardingId: s
   if (!row.investment_profile_id) fail("Choose how they are investing first.");
   const { data: full } = await db().from("investor_onboardings").select("*").eq("id", row.id).maybeSingle();
   const { investorEditWindow, exclusiveRecord } = await import("@/lib/manager-edit-window.server");
-  if (!actor.isStaff && !(await investorEditWindow(full) && await exclusiveRecord(full, "investment_profile_id"))) forbid("signing or funding has started, or this profile is used elsewhere; ask Harmonious.");
-  if (actor.isStaff && !(await investorEditWindow(full))) forbid("signing or funding has started; this can't be changed now.");
+  if (!actor.isStaff && !(await investorEditWindow(full, { allowAfterFunding: true }) && await exclusiveRecord(full, "investment_profile_id"))) forbid("signing has started, or this profile is used elsewhere; ask Harmonious.");
+  if (actor.isStaff && !(await investorEditWindow(full, { allowAfterFunding: true }))) forbid("signing has started; this can't be changed now.");
   const { data: pr } = await db().from("investment_profiles").select("id, profile_type, legal_name, display_label, status").eq("id", row.investment_profile_id).maybeSingle();
   if (!pr) fail("Profile not found.");
   if (pr.status === "locked") fail("This investing profile is locked.");

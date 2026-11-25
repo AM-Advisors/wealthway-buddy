@@ -1113,7 +1113,8 @@ async function assertTeamPreparer(userId: string, onboardingId: string) {
   }
   if (row.removed_at || ["closed", "declined", "cancelled"].includes(String(row.stage))) fail("This investment can no longer be changed.");
   const { investorEditWindow } = await import("@/lib/manager-edit-window.server");
-  if (!(await investorEditWindow(row))) fail("This investor has already signed or sent money, so answers can't be filled in for them.");
+  // Money already received does not block preparing paperwork; only an investor signature does.
+  if (!(await investorEditWindow(row, { allowAfterFunding: true }))) fail("This investor has already signed, so answers can't be filled in for them.");
   return { actor, row, role };
 }
 
