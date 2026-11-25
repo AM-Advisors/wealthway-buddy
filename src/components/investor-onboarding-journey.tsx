@@ -1,3 +1,4 @@
+import { TrustPeopleCard } from "@/components/trust-people-card";
 import { useEffect, useRef, useState } from "react";
 import { newProfilePrefill } from "@/lib/known-person-facts";
 import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
@@ -344,6 +345,7 @@ export function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: stri
             <Link to="/profile" className="underline">Add them to this profile</Link>.
           </p>
         ) : null}
+        {owners && owners.state !== "not_applicable" && d.investmentProfileId ? <TrustPeopleCard onboardingId={onboardingId} mode="investor" /> : null}
 
         <div className="flex flex-wrap items-end gap-3">
           <div>

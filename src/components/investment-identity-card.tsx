@@ -12,7 +12,7 @@ import {
   confirmPersonIdUploadFn, investmentIdentityFn, personIdCardUrlFn, revealFullTaxNumberFn, startPersonIdUploadFn,
 } from "@/lib/person-id-cards.functions";
 
-function Reveal({ onboardingId, personId, entity, last4, label }: { onboardingId: string; personId?: string; entity?: boolean; last4: string | null; label: string }) {
+export function Reveal({ onboardingId, personId, entity, last4, label }: { onboardingId: string; personId?: string; entity?: boolean; last4: string | null; label: string }) {
   const reveal = useServerFn(revealFullTaxNumberFn);
   const [shown, setShown] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -34,7 +34,7 @@ function Reveal({ onboardingId, personId, entity, last4, label }: { onboardingId
   );
 }
 
-function UploadId({ onboardingId, personId, onDone }: { onboardingId: string; personId: string; onDone: () => void }) {
+export function UploadId({ onboardingId, personId, onDone }: { onboardingId: string; personId: string; onDone: () => void }) {
   const start = useServerFn(startPersonIdUploadFn);
   const confirm = useServerFn(confirmPersonIdUploadFn);
   const [type, setType] = useState<"drivers_license" | "state_id" | "passport">("drivers_license");

@@ -56,7 +56,6 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
   };
   const scrollTo = (id: string) => { const el = document.getElementById(id); el?.scrollIntoView({ behavior: "smooth", block: "center" }); (el as HTMLElement | null)?.focus?.(); };
 
-  const partyFor = (r: Related) => (parties.data?.parties ?? []).find((p: any) => (r.personId && p.personId === r.personId) || p.name === r.name);
 
   const inputFor = (key: string, personId?: string) => {
     if (!editable) return null;
@@ -115,24 +114,6 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
         ))}
       </ul>
       <div className="space-y-2 border-t pt-3">
-        <p className="text-sm font-medium">Owners and signers</p>
-        {owners.map((r) => {
-          const pid = r.id;
-          const d = drafts[pid] ?? { email: "", dob: "", ssn: "" };
-          const set = (patch: Partial<typeof d>) => setDrafts((st) => ({ ...st, [pid]: { ...d, ...patch } }));
-          const ready = (d.email.trim() || d.dob || d.ssn.length === 9) && (d.ssn === "" || d.ssn.length === 9);
-          return (
-            <div key={pid} className="grid gap-2 rounded-md border bg-background p-3 sm:grid-cols-4 sm:items-end">
-              <div className="sm:col-span-4 text-sm"><span className="font-medium">{r.name}</span><span className="text-muted-foreground"> · {r.role.replace(/_/g, " ")}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}</span></div>
-              <label className="space-y-1 text-xs">Email{r.email ? <p className="h-9 py-2 text-sm">{r.email}</p> : <Input type="email" disabled={!editable} className="h-9" value={d.email} onChange={(e) => set({ email: e.target.value })} />}</label>
-              <label className="space-y-1 text-xs">Date of birth{r.dobOnFile ? <p className="h-9 py-2 text-sm text-muted-foreground">On file</p> : <Input type="date" disabled={!editable} className="h-9" value={d.dob} onChange={(e) => set({ dob: e.target.value })} />}</label>
-              <label className="space-y-1 text-xs">SSN{r.ssnOnFile ? <p className="h-9 py-2 text-sm text-muted-foreground">On file, encrypted</p> : <Input inputMode="numeric" autoComplete="off" data-private placeholder="9 digits" disabled={!editable} className="h-9" value={d.ssn} onChange={(e) => set({ ssn: digits(e.target.value) })} />}</label>
-              {editable ? <Button size="sm" disabled={busy || !ready} onClick={async () => {
-                if (await run({ details: { relationshipId: pid, email: d.email.trim() || null, phone: null, dateOfBirth: d.dob || null, ssn: d.ssn || null } }, `${r.name} details saved`)) setDrafts((st) => ({ ...st, [pid]: { email: "", dob: "", ssn: "" } }));
-              }}>Save</Button> : null}
-            </div>
-          );
-        })}
         {editable ? (
           <div className="grid gap-2 rounded-md border border-dashed bg-background p-3 sm:grid-cols-4 sm:items-end">
             <p className="text-sm font-medium sm:col-span-4">Add an owner or signer</p>
@@ -169,25 +150,6 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
       </div>
       <p className="text-xs text-muted-foreground">Owners with 25% or more, control persons, trustees and signers need name, email, date of birth and SSN. SSNs are stored encrypted. Every save is recorded.</p>
 
-      {owners.length ? (
-        <div className="space-y-2 border-t pt-3">
-          <p className="text-sm font-medium">Activity</p>
-          {owners.map((r) => {
-            const p: any = partyFor(r);
-            return (
-              <details key={r.id} className="rounded-md border bg-background p-2 text-sm">
-                <summary className="cursor-pointer">
-                  <span className="font-medium">{r.name}</span>
-                  <span className="text-muted-foreground"> · {p ? `${p.login} · ${p.accessLabel}${p.activity?.[0] ? ` · last: ${new Date(p.activity[0].at).toLocaleDateString()}` : " · no activity yet"}` : parties.isLoading ? "loading" : "no login yet"}</span>
-                </summary>
-                {p?.activity?.length ? <ul className="mt-1 space-y-0.5">{p.activity.map((a: any, k: number) => <li key={k}>{new Date(a.at).toLocaleString()} · {a.text}</li>)}</ul>
-                  : <p className="mt-1 text-muted-foreground">No recorded activity yet.</p>}
-              </details>
-            );
-          })}
-          <p className="text-xs text-muted-foreground">Shows recorded events only, never whether someone is online.</p>
-        </div>
-      ) : null}
     </div>
   );
 }
