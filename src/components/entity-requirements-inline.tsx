@@ -105,7 +105,7 @@ export function EntityRequirementsInline({ onboardingId, legalName, einOnFile, r
     <div className="space-y-3 rounded-md border bg-muted/40 p-3 sm:col-span-2">
       <p className="text-sm font-medium">{open.length ? `${open.length} required item${open.length === 1 ? "" : "s"} left` : "All required entity details are on file"}</p>
       <ul className="space-y-2 text-sm">
-        {items.filter((i) => !i.personId).map((i) => (
+        {items.filter((i) => !i.personId || !i.done).map((i) => (
           <li key={i.key} className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span aria-hidden className={i.done ? "text-primary" : "text-destructive"}>{i.done ? "✓" : "○"}</span>
             <span className={`min-w-[14rem] ${i.done ? "text-muted-foreground" : ""}`}>{i.label}</span>

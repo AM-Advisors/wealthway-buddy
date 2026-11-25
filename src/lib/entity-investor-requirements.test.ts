@@ -29,3 +29,16 @@ describe("entity investor requirements", () => {
     expect(r.filter((i) => !i.done).map((i) => i.key)).toEqual(["ein", "responsible_party"]);
   });
 });
+
+describe("trustee open items are listed", () => {
+  it("counts a trustee's missing SSN as an open, person-specific item", async () => {
+    const { entityRequirements } = await import("./entity-investor-requirements");
+    const items = entityRequirements({ legalName: "Girardi Trust", trust: true, taxIdType: "ein", einOnFile: true, responsiblePartyId: "j", people: [
+      { id: "j", name: "Joe", role: "trustee", ownershipPercent: 50, signer: true, email: "j@x.com", dobOnFile: true, ssnOnFile: true, taxFormSigner: true },
+      { id: "k", name: "Kim", role: "beneficial_owner", ownershipPercent: 50, signer: true, email: "k@x.com", dobOnFile: true, ssnOnFile: false },
+    ] });
+    const open = items.filter((i) => !i.done);
+    expect(open.map((i) => i.label)).toEqual(["Kim: add SSN"]);
+    expect(open[0]?.personId).toBe("k");
+  });
+});

@@ -181,8 +181,9 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         } })}>{data.detailsEditMode === "suggest" ? "Submit investment changes" : "Save investment"}</Button>
       </CardContent></Card>
 
-      <div className="space-y-4">
-        <Card ref={contactRef} className="scroll-mt-4"><CardHeader><CardTitle className="text-base">Investor details</CardTitle>
+      <div className="flex flex-col gap-4">
+        <Card ref={contactRef} className={`scroll-mt-4 ${data.profile && (data.profile.type === "entity" || data.profile.type === "trust") ? "order-last" : ""}`}><CardHeader><CardTitle className="text-base">{data.profile && (data.profile.type === "entity" || data.profile.type === "trust") ? "Account login (who signs in)" : "Investor details"}</CardTitle>
+          {data.profile && (data.profile.type === "entity" || data.profile.type === "trust") ? <p className="text-sm text-muted-foreground">This person signs in to the portal. The {data.profile.typeLabel.toLowerCase()} above is the investor; its trustees and signers are listed in "{data.profile.typeLabel} &amp; people".</p> : null}
           {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
             : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {entrySourceLabel(data.overview.enteredBy)}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
         </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
@@ -199,7 +200,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           const isEntity = data.profile.type === "entity" || data.profile.type === "trust";
           const editableProfile = !data.overview.removed && (data as any).profileEditMode === "direct";
           return <>
-            <Card><CardHeader><CardTitle className="text-base">{isEntity ? `${data.profile.typeLabel} details` : `Investment Profile · ${data.profile.typeLabel}`}</CardTitle>
+            <Card><CardHeader><CardTitle className="text-base">{isEntity ? `Investor details · ${data.profile.typeLabel}` : `Investment Profile · ${data.profile.typeLabel}`}</CardTitle>
               {isEntity ? <p className="text-sm text-muted-foreground">The {data.profile.typeLabel.toLowerCase()} is the investor. Fields marked <span className="text-destructive">*</span> are required.</p> : null}
             </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
               {isEntity ? <EntityRequirementsInline onboardingId={onboardingId} legalName={data.profile.legalName} einOnFile={Boolean((data.profile as any).taxIdLast4)} trust={data.profile.type === "trust"} taxIdType={data.profile.taxIdType} related={data.related as any} editable={editableProfile} onChanged={refresh} /> : null}
