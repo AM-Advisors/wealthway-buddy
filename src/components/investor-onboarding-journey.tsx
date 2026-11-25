@@ -1,4 +1,5 @@
 import { TrustPeopleCard } from "@/components/trust-people-card";
+import { whatsLeftBeforeSigning } from "@/lib/stalled-investors-model";
 import { useEffect, useRef, useState } from "react";
 import { newProfilePrefill } from "@/lib/known-person-facts";
 import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
@@ -140,6 +141,19 @@ export function InvestorOnboardingJourney({
       </header>
 
       <RecentlyCompleted labels={recentSteps} />
+
+      {(() => {
+        const left = whatsLeftBeforeSigning((d.requirements ?? []) as any[]);
+        if (!left.length || h.complete) return null;
+        return (
+          <Card>
+            <CardContent className="space-y-2 pt-6">
+              <p className="text-base font-semibold">What's left before you can sign ({left.length})</p>
+              <ul className="list-disc space-y-1 pl-5 text-sm">{left.map((x) => <li key={x}>{x}</li>)}</ul>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       <Card>
         <CardContent className="space-y-5 pt-6">
