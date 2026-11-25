@@ -119,6 +119,27 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
               </tbody>
             </table>
           </div>
+          {!testScope && (q.data?.contactsNoLogin ?? []).length > 0 && (
+            <div className="space-y-2 pt-4">
+              <h2 className="text-lg font-semibold">Client contacts with no login yet</h2>
+              <p className="text-sm text-muted-foreground">Listed on a client but not signed up. Being listed gives them no access. Send an invite from the client's Contacts.</p>
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Name</th><th className="p-3">Client</th><th className="p-3">Roles</th><th className="p-3">Added</th></tr></thead>
+                  <tbody className="divide-y">
+                    {(q.data?.contactsNoLogin ?? []).filter((c: any) => !search || `${c.name} ${c.email} ${c.clientName}`.toLowerCase().includes(search.toLowerCase())).map((c: any) => (
+                      <tr key={c.id}>
+                        <td className="p-3"><div className="font-medium">{c.name || c.email}</div><div className="text-xs text-muted-foreground">{c.email}{c.title ? ` · ${c.title}` : ""}</div><Badge variant="secondary" className="mt-1">No login yet</Badge></td>
+                        <td className="p-3">{c.clientName}</td>
+                        <td className="p-3 text-xs">{c.designations.join(", ")}</td>
+                        <td className="whitespace-nowrap p-3">{insightTime(c.addedAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
           {tab === "invited" && <p className="text-xs text-muted-foreground">Resend emails a fresh one-time link; the old link stops working.</p>}
         </section>
       )}

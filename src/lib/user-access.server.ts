@@ -121,12 +121,19 @@ export async function directory(viewer: string) {
     ...((fi.data ?? []) as any[]).map((i) => ({ table: "fund_invitations", id: i.id, email: i.email, name: i.invited_name, type: String(i.invite_role ?? i.role ?? "").includes("investor") ? "Investor" : "Fund Manager", invitedBy: names.get(i.invited_by) ?? "", sentAt: i.created_at, lastSent: i.last_sent_at ?? i.created_at, isTestDemo: i.is_test_demo })),
   ];
   const { data: clients } = await db.from("clients").select("id, name, status, is_test_demo").order("name");
+  // Listed client contacts with no login yet: shown as "No login yet", display only, no access granted.
+  const { data: noLogin } = await db.from("client_contacts").select("id, client_id, full_name, email, title, designations, created_at").is("user_id", null).is("deactivated_at", null).eq("status", "active").limit(5000);
+  const loginEmails = new Set(users.map((u: any) => String(u.email ?? "").toLowerCase()));
+  const clientName = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name]));
+  const contactsNoLogin = ((noLogin ?? []) as any[])
+    .filter((c) => !c.email || !loginEmails.has(String(c.email).toLowerCase()))
+    .map((c) => ({ id: c.id as string, name: String(c.full_name ?? ""), email: String(c.email ?? ""), title: c.title ?? null, clientName: clientName.get(c.client_id) ?? "", designations: (c.designations ?? []) as string[], addedAt: c.created_at as string }));
   const canManage = (await rolesOf(db, viewer)).some((x) => ACCESS_MANAGERS.includes(x));
   const { directoryInsights } = await import("@/lib/user-insights.server");
   const insights = await directoryInsights(db, people);
   const fiFund = new Map(((fi.data ?? []) as any[]).map((i) => [i.id, OFF.get(i.offering_id) ?? ""]));
   const pending = insights.invitations.filter((i: any) => i.table !== "client_contacts" && (i.status === "pending" || i.status === "accepted" && insights.people.some((p: any) => String(p.email).toLowerCase() === i.email && !p.lastSignIn)));
-  return { canManage, providerError: insights.providerError, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", fundName: fiFund.get(i.id) || null, sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [], fundOptions: ((off.data ?? []) as any[]).map((o) => ({ id: o.id, name: String(o.name ?? "") })).filter((o) => o.name).sort((a, b) => a.name.localeCompare(b.name)) };
+  return { canManage, contactsNoLogin, providerError: insights.providerError, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", fundName: fiFund.get(i.id) || null, sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [], fundOptions: ((off.data ?? []) as any[]).map((o) => ({ id: o.id, name: String(o.name ?? "") })).filter((o) => o.name).sort((a, b) => a.name.localeCompare(b.name)) };
 }
 
 /** Quick status lookup for list pages (by emails). */
