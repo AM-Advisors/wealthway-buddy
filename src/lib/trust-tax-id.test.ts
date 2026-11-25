@@ -17,4 +17,10 @@ describe("trust tax ID choice", () => {
   it("keeps other businesses EIN-only", () => {
     expect(() => profileTaxIdType("entity", "ssn", null, "100001234")).toThrow("EIN");
   });
+  it("locks a saved trust choice against switching", () => {
+    expect(() => profileTaxIdType("trust", "ein", "ssn", "123456789", { locked: true })).toThrow("locked");
+  });
+  it("still allows replacing the number with the same locked type", () => {
+    expect(profileTaxIdType("trust", "ssn", "ssn", "123456789", { locked: true })).toBe("ssn");
+  });
 });

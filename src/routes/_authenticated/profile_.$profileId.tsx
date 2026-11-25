@@ -115,7 +115,7 @@ function BasicsCard({ data, onSaved }: { data: any; onSaved: () => void }) {
         <Field label="Legal name" value={f.legal_name ?? ""} onChange={set("legal_name")} />
         <Field label="Phone number" type="tel" value={f.phone ?? ""} onChange={set("phone")} />
         <div className="sm:col-span-2">
-          {trust ? <div className="mb-3 space-y-1"><Label htmlFor="profile-trust-tax-type">Trust uses</Label>
+          {trust && p.tax_id_last4 && (p.tax_id_type === "ssn" || p.tax_id_type === "ein") ? <p className="mb-3 text-sm"><span className="font-medium">Trust uses:</span> {p.tax_id_type === "ssn" ? "Trustee’s SSN" : "Separate trust EIN"} · Locked. Ask Harmonious if this needs to change.</p> : trust ? <div className="mb-3 space-y-1"><Label htmlFor="profile-trust-tax-type">Trust uses</Label>
             <Select value={f.tax_id_type ?? "ein"} onValueChange={(v) => { setF((x: any) => ({ ...x, tax_id_type: v, tax_id: "" })); }}>
               <SelectTrigger id="profile-trust-tax-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ssn">Trustee’s SSN</SelectItem><SelectItem value="ein">Separate trust EIN</SelectItem></SelectContent>
             </Select></div> : null}

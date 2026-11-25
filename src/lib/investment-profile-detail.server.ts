@@ -84,7 +84,7 @@ export async function saveBasics(userId: string, d: ProfileBasics) {
   const tin = (d.tax_id ?? "").replace(/\D/g, "");
   if (tin) {
     if (tin.length !== 9) throw new Error("The EIN or SSN must be 9 digits.");
-    const type = profileTaxIdType(profile.profile_type, d.tax_id_type, profile.tax_id_type, tin);
+    const type = profileTaxIdType(profile.profile_type, d.tax_id_type, profile.tax_id_type, tin, { locked: Boolean(profile.tax_id_last4) });
     const enc = await encryptTin(tin);
     const { error } = await db.rpc("store_profile_tax_id", {
       _profile: d.profileId, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: userId,

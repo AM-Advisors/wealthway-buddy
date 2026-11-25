@@ -489,7 +489,7 @@ const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "regio
  * retain review. Later changes become reviewer suggestions.
  */
 export async function updateInvestorRecord(userId: string, input: {
-  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null; taxIdType?: ProfileTaxIdType;
+  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null; taxIdType?: ProfileTaxIdType; changeTaxIdType?: boolean; taxIdTypeReason?: string | null;
   preparerId?: string | null;
 }) {
   const { actor, row, role, preparer, participant } = await recordAccess(userId, input.onboardingId, input.preparerId);
@@ -580,7 +580,10 @@ export async function updateInvestorRecord(userId: string, input: {
     if (!profileDirect) forbid("this investor has signed or funded; ask Harmonious to update the tax ID.");
     const { data: pr } = await db().from("investment_profiles").select("profile_type, tax_id_type, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle();
     if (!pr) fail("The investing profile was not found.");
-    const taxType = profileTaxIdType(pr.profile_type, input.taxIdType, pr.tax_id_type, tin);
+    const unlock = Boolean(input.changeTaxIdType && actor.isStaff);
+    if (input.changeTaxIdType && !actor.isStaff) forbid("only Harmonious can change a trust's tax ID type.");
+    if (unlock && !String(input.taxIdTypeReason ?? "").trim()) fail("Give a reason for changing the tax ID type.");
+    const taxType = profileTaxIdType(pr.profile_type, input.taxIdType, pr.tax_id_type, tin, { locked: Boolean(pr.tax_id_last4) && !unlock });
     const { encryptTin } = await import("@/lib/irs-forms.server");
     const enc = await encryptTin(tin);
     const { error: te } = await db().rpc("store_profile_tax_id", { _profile: row.investment_profile_id, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId } as any);
@@ -588,6 +591,7 @@ export async function updateInvestorRecord(userId: string, input: {
     const { error: typeError } = await db().from("investment_profiles").update({ tax_id_type: taxType, tax_id_last4: tin.slice(-4) } as any).eq("id", row.investment_profile_id);
     if (typeError) fail("The tax-ID type couldn't be saved. Please try again.");
     if (pr.tax_id_type !== taxType) changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id_type", from: pr.tax_id_type ?? null, to: taxType, source, actor: actor.userId });
+    if (unlock && pr.tax_id_type !== taxType) changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id_type_change_reason", from: null, to: String(input.taxIdTypeReason).trim().slice(0, 500), source, actor: actor.userId });
     changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id", from: pr?.tax_id_last4 ? `•••${pr.tax_id_last4}` : null, to: `•••${tin.slice(-4)}`, source, actor: actor.userId });
     await (await import("@/lib/account-connect.server")).recordProfileTin(row.investment_profile_id, tin, { offeringId: row.offering_id, onboardingId: row.id }).catch((e) => console.error("[investor-record] tax ID match skipped", (e as Error).message));
   }

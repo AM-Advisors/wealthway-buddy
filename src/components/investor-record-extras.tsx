@@ -190,12 +190,15 @@ export function RelatedPartiesEditor({ onboardingId, related, editable, onChange
 }
 
 /** Tax ID entry: only the last four digits are ever shown back. */
-export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, entity = false, trust = false, taxIdType }: { onboardingId: string; last4: string | null; editable: boolean; onChanged: () => void; entity?: boolean; trust?: boolean; taxIdType?: string | null }) {
+export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, entity = false, trust = false, taxIdType, staff = false }: { onboardingId: string; last4: string | null; editable: boolean; onChanged: () => void; entity?: boolean; trust?: boolean; taxIdType?: string | null; staff?: boolean }) {
   const update = useServerFn(updateInvestorRecordFn);
   const [tin, setTin] = useState("");
   const [choice, setChoice] = useState<"ssn" | "ein" | null>(null);
   const selected = choice ?? (taxIdType === "ssn" ? "ssn" : "ein");
   const [busy, setBusy] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
+  const [reason, setReason] = useState("");
+  const locked = trust && Boolean(last4) && (taxIdType === "ssn" || taxIdType === "ein") && !unlocking;
   return (
     <Card>
       <CardHeader>
@@ -204,7 +207,10 @@ export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, en
       </CardHeader>
       <CardContent className="space-y-2">
         {editable ? <>
-          {trust ? <div className="space-y-2">
+          {locked ? <div className="space-y-1">
+            <p className="text-sm"><span className="font-medium">Trust uses:</span> {taxIdType === "ssn" ? "Trustee’s SSN" : "Separate trust EIN"} · Locked</p>
+            {staff ? <Button size="sm" variant="link" className="h-auto p-0" onClick={() => { if (window.confirm("Change this trust's tax ID type? The new number replaces the one on file, and the change is logged.")) setUnlocking(true); }}>Change tax ID type</Button> : <p className="text-xs text-muted-foreground">Ask Harmonious if the trust's tax ID type needs to change.</p>}
+          </div> : trust ? <div className="space-y-2">
             <Label htmlFor="ir-tax-type">Trust uses</Label>
             <Select value={selected} disabled={busy} onValueChange={(v) => { if (v === "ssn" || v === "ein") { setChoice(v); setTin(""); } }}>
               <SelectTrigger id="ir-tax-type" className="max-w-xs"><SelectValue /></SelectTrigger>
@@ -212,12 +218,13 @@ export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, en
             </Select>
             <p className="text-xs text-muted-foreground">Use the number appropriate for the trust’s tax treatment. Confirm with your tax adviser if unsure.</p>
           </div> : null}
+          {unlocking ? <div className="space-y-1"><Label htmlFor="ir-tax-reason">Reason for changing the type</Label><Input id="ir-tax-reason" value={reason} onChange={(e) => setReason(e.target.value)} className="max-w-md" /></div> : null}
           <Label htmlFor="ir-tin">{trust ? selected === "ssn" ? "Trustee’s SSN (9 digits)" : "Trust EIN (9 digits)" : entity ? "Entity EIN (9 digits)" : "SSN, ITIN or EIN (9 digits)"}</Label>
           <div className="flex flex-wrap gap-2">
             <Input id="ir-tin" inputMode="numeric" autoComplete="off" data-private disabled={busy} value={tin} onChange={(e) => setTin(e.target.value.replace(/\D/g, "").slice(0, 9))} className="max-w-xs" />
-            <Button disabled={busy || tin.length !== 9} onClick={async () => {
+            <Button disabled={busy || tin.length !== 9 || (unlocking && !reason.trim())} onClick={async () => {
               setBusy(true);
-              try { await update({ data: { onboardingId, taxId: tin, ...(trust ? { taxIdType: selected } : {}) } }); toast.success("Tax ID saved"); setTin(""); setChoice(null); onChanged(); }
+              try { await update({ data: { onboardingId, taxId: tin, ...(trust ? { taxIdType: selected } : {}), ...(unlocking ? { changeTaxIdType: true, taxIdTypeReason: reason.trim() } : {}) } }); toast.success("Tax ID saved"); setTin(""); setChoice(null); setUnlocking(false); setReason(""); onChanged(); }
               catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
             }}>{last4 ? "Replace" : "Save"}</Button>
           </div>
