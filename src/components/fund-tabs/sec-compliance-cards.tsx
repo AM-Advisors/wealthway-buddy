@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { fundComplianceFn, saveSecIdentifiersFn, revealCccFn, saveSecFilingFn, saveComplianceLinkFn, uploadComplianceFileFn, openComplianceFileFn, removeComplianceItemFn } from "@/lib/fund-sec-compliance.functions";
 import { EFD_URL, edgarCompanyUrl, REG_LABEL, FORMS_FOR, type RegType } from "@/lib/sec-form-model";
 import { usd, fmtDate } from "./shared";
+import formIdSetup from "@/assets/sec-form-id-setup.eis.asset.json";
+import { Download } from "lucide-react";
 
 const toB64 = (f: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(f); });
 
@@ -51,6 +53,12 @@ export function SecComplianceCards({ fundId }: { fundId: string }) {
       <Card>
         <CardHeader><CardTitle>SEC identifiers</CardTitle><CardDescription>The fund's EDGAR numbers. Offering type: {REG_LABEL[c.regType as RegType] ?? "Not recorded"}.</CardDescription></CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2 border-b pb-4">
+            <p className="font-medium">CIK application · Form ID</p>
+            <p className="text-sm text-muted-foreground">Blank company application setup for a new CIK. Includes applicant information, company details, account administrators, contact, attachments and signature sections. Complete and submit through EDGAR Filer Management, then record the assigned CIK here.</p>
+            <Button variant="outline" asChild><a href={formIdSetup.url} download="SECFormID.EIS"><Download className="mr-2 h-4 w-4" />Download Form ID setup (.EIS)</a></Button>
+            <p className="text-xs text-muted-foreground">This is a saved application setup file, not a PDF or proof of an assigned CIK. Nothing is submitted automatically.</p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2 text-base">
             <div><p className="text-sm text-muted-foreground">CIK</p><p className="font-medium">{c.cik ?? "Not saved"}</p></div>
             <div><p className="text-sm text-muted-foreground">CCC (access code)</p><p className="font-medium">{shownCcc ?? (c.cccLast2 ? `••••••${c.cccLast2}` : "Not saved")}</p>

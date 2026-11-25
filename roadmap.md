@@ -1,5 +1,10 @@
 # Roadmap
 
+## CIK Form ID setup (2026-11-25)
+- [x] Add the supplied blank company ID-NEWCIK application setup beside SEC identifiers for both staff and managers; preserve the original .EIS and separate setup from assigned identifiers and submission.
+- [x] Download verified byte-for-byte against the original, with ID-NEWCIK and all six application sections retained; preview build passes. No identifiers, access, signatures or submissions changed; not published.
+- Authenticated fund display remains unverified without isolated QA.
+
 ## Official Form D paperwork (2026-11-25)
 - [x] Use the supplied unchanged SEC Form D PDF on Compliance and in Form D preparation; keep the recorded-data worksheet separate and preserve manual submission.
 - [x] Served PDF is byte-for-byte identical to the supplied 18-page original; seven focused tests and preview build pass. Original first page visually inspected without issues; no regenerated or filled PDF produced.
