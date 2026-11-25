@@ -170,7 +170,9 @@ export async function outsideSubscriptionStates(db: any, onboardingIds: string[]
     const marked = latest?.action === "marked";
     const copy = docs.find((d) => d.onboarding_id === id && !replaced.has(d.id) && !withdrawn.has(d.id));
     const copyLoaded = Boolean(copy);
-    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, copyLoadedBy: copy ? (copy.uploaded_by_role === "harmonious" ? "Harmonious" : "Fund manager") : null, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: copyLoaded && (marked || sig.get(copy.id)?.state === "complete"), signature: copy ? sig.get(copy.id) ?? null : null } as any);
+    // A signed copy loaded by Harmonious is itself the record that the investor signed.
+    const harmoniousCopy = copy?.uploaded_by_role === "harmonious";
+    out.set(id, { marked, signedOn: marked ? latest.signed_on : (harmoniousCopy ? ((((copy?.signed_on as string | null) ?? String(copy?.created_at ?? "").slice(0, 10)) || null)) : null), copyLoaded, copyLoadedBy: copy ? (copy.uploaded_by_role === "harmonious" ? "Harmonious" : "Fund manager") : null, copySignedOn: (copy?.signed_on as string | null) ?? null, complete: copyLoaded && (marked || harmoniousCopy || sig.get(copy.id)?.state === "complete"), signature: copy ? sig.get(copy.id) ?? null : null } as any);
   }
   return out;
 }
