@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, forbid } from "@/lib/investor-onboarding.server";
 import { allowsMultipleContacts, canAssignParticipant, participantRoleLabel, type ParticipantRole } from "@/lib/onboarding-participants-model";
-import { visibleParticipantAssignment } from "@/lib/participant-home-model";
+import { eligibleParticipantInvitation } from "@/lib/participant-home-model";
 
 // Server-only. People who help complete an investment for the investor:
 // a preparer (fills details, uploads, owners/signers) and the named signer.
@@ -29,16 +29,26 @@ async function userEmail(userId: string) {
 }
 
 /** Read-only discovery of existing helper/contact entry points, scoped to the authenticated email. */
-export async function myParticipantAssignments(userId: string) {
-  const email = await userEmail(userId);
+export async function liveParticipantInvitations(email: string) {
   if (!email) return [];
   const { data, error } = await db().from("onboarding_participants")
-    .select("id, onboarding_id, role, email, status, removed_at, token, investor_onboardings(stage, removed_at, merged_into_onboarding_id, offerings(name), investment_profiles(legal_name, display_label))")
+    .select("id, onboarding_id, role, email, status, removed_at, token")
     .eq("email", email).in("role", ["preparer", "contact"]).in("status", ["invited", "active"]).is("removed_at", null).limit(50);
   if (error) fail("Your assigned investments could not be loaded. Please try again.");
-  return ((data ?? []) as any[]).filter((p) => visibleParticipantAssignment(p, email)
-    && p.investor_onboardings && !p.investor_onboardings.removed_at && !p.investor_onboardings.merged_into_onboarding_id
-    && !["declined", "cancelled"].includes(p.investor_onboardings.stage)).map((p) => ({
+  if (!data?.length) return [];
+  // The legacy participant table has no FK: resolve its recorded IDs explicitly instead of a failing embedded join.
+  const { data: investments, error: investmentError } = await db().from("investor_onboardings")
+    .select("id, stage, removed_at, merged_into_onboarding_id, offerings(name), investment_profiles(legal_name, display_label)")
+    .in("id", [...new Set((data as any[]).map((p) => p.onboarding_id))]);
+  if (investmentError) fail("Your assigned investments could not be loaded. Please try again.");
+  const byId = new Map(((investments ?? []) as any[]).map((row) => [row.id, row]));
+  return (data as any[]).map((p) => ({ ...p, investor_onboardings: byId.get(p.onboarding_id) ?? null }))
+    .filter((p) => eligibleParticipantInvitation(p, email));
+}
+
+export async function myParticipantAssignments(userId: string) {
+  const email = await userEmail(userId);
+  return (await liveParticipantInvitations(email)).map((p) => ({
       id: String(p.id), onboardingId: String(p.onboarding_id),
       fundName: String(p.investor_onboardings.offerings?.name ?? "Fund"),
       investingAs: String(p.investor_onboardings.investment_profiles?.legal_name || p.investor_onboardings.investment_profiles?.display_label || "Investor"),

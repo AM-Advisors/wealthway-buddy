@@ -1,5 +1,11 @@
 # Roadmap
 
+## Joe’s Erebor invitation (2026-11-25)
+- [x] Recognize exact-email live preparer/contact invitations for account creation and portal entry; resolve recorded investment IDs without the legacy table’s missing FK, retaining investment-scoped authority
+- [x] Keep helper/contact invitation destinations through account creation; 20 regressions pass and Joe’s email returns eligible through the actual registration form with account creation/confirmation email blocked
+- [ ] Assign Joe as Kimberly’s preparer through the existing authorized action; blocked by requester second-step sign-in
+- Not published; Joe has no account yet, his saved Erebor contact invitation remains view-only, and his own sign-up/sign-in is unverified
+
 ## Trust tax-ID choice (2026-11-24)
 - [x] Add trustee SSN / separate EIN choices to trust details using existing encrypted profile storage and recorded tax-ID type, without changing existing trusts or signed documents
 - [x] 104 regressions passed; both choices saved and read back in a fictional form at 740px with real requests blocked, no overflow or page errors; preview build OK

@@ -16,6 +16,10 @@ describe("portal hold screen", () => {
   it("a person given fund team access gets in", () => {
     expect(portalAllowed({ ...none, sharedFundGrants: 1 })).toBe(true);
   });
+  it("a live paperwork assignment passes the hold screen without fund or staff grants", () => {
+    expect(portalAllowed({ ...none, participantAssignments: 1 })).toBe(true);
+    expect(portalAllowed({ ...none, participantAssignments: 0 })).toBe(false);
+  });
 });
 
 import { emptyFacts, resolveDestination } from "./session-resolution";

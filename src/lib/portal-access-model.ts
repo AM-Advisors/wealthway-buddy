@@ -13,9 +13,11 @@ export type PortalAccessFacts = {
   fundTeamEntries: number;
   /** Active Fund Team Access grants to this login. */
   sharedFundGrants: number;
+  /** Exact-email, live paperwork helper/contact assignments, never fund-wide authority. */
+  participantAssignments?: number;
 };
 
 export function portalAllowed(f: PortalAccessFacts): boolean {
   return f.roles.length > 0 || f.fundAccessRows > 0 || f.applications > 0
-    || f.clientMemberships > 0 || f.fundTeamEntries > 0 || f.sharedFundGrants > 0;
+    || f.clientMemberships > 0 || f.fundTeamEntries > 0 || f.sharedFundGrants > 0 || (f.participantAssignments ?? 0) > 0;
 }

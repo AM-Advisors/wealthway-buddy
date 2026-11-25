@@ -55,6 +55,10 @@ export const checkInviteEligibility = createServerFn({ method: "POST" })
     if (exact(team.data as any[]) || exact(contacts.data as any[]) || exact(grants.data as any[], "grantee_email")) return { eligible: true };
     if ((clientInv.data ?? []).some((r: any) => String(r.email).toLowerCase() === email && (!r.expires_at || new Date(r.expires_at) > new Date()))) return { eligible: true };
 
+    // Paperwork helpers and view-only contacts create their own accounts; this grants no investor or manager role.
+    const { liveParticipantInvitations } = await import("@/lib/onboarding-participants.server");
+    if ((await liveParticipantInvitations(email)).length > 0) return { eligible: true };
+
     // Someone who already has a profile with access (added manually by an admin).
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -134,9 +138,12 @@ export const getPortalAccess = createServerFn({ method: "GET" })
       db.from("client_contacts").select("id").eq("user_id", userId).eq("status", "active").is("deactivated_at", null).not("added_for_offering_id", "is", null).limit(1),
     ]);
     const { portalAllowed } = await import("@/lib/portal-access-model");
+    const { liveParticipantInvitations } = await import("@/lib/onboarding-participants.server");
+    const participants = email ? await liveParticipantInvitations(email) : [];
     const allowed = portalAllowed({
       roles, fundAccessRows: (access ?? []).length, applications: (apps ?? []).length,
       clientMemberships: (members ?? []).length, fundTeamEntries: (team ?? []).length + (fundContacts ?? []).length, sharedFundGrants: (grants ?? []).length,
+      participantAssignments: participants.length,
     });
 
     return { allowed, email, roles, pending_invite: false };
