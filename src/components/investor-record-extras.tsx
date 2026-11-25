@@ -128,7 +128,7 @@ export function RelatedPartiesEditor({ onboardingId, related, editable, onChange
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="font-medium">{r.name}</p>
-                    <p className="text-xs text-muted-foreground">{relatedRoleLabel(r.role)}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}{r.taxFormSigner ? " · signs the W-9" : ""}{r.responsibleParty ? " · responsible party" : ""}</p>
+                    <p className="text-xs text-muted-foreground">{relatedRoleLabel(r.role)}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}{r.taxFormSigner ? " · signs the W-9" : ""}{r.responsibleParty ? " · responsible party" : ""}{(r as any).hasAccount ? " · same person as their login account" : ""}</p>
                     {r.underReview ? <p className="text-xs text-muted-foreground">{RELATED_REVIEW_MESSAGE}</p> : null}
                   </div>
                   <span className={`rounded-full px-2 py-0.5 text-xs ${missing.length ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{missing.length ? `Needs ${missing.join(", ")}` : "Details complete"}</span>
