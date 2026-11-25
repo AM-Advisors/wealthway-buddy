@@ -54,6 +54,18 @@ export async function managerInvestorTodos(userId: string, fundId: string) {
     )
     .filter((x: any) => x.countersign || x.approve)
     .map((x: any) => ({ onboardingId: x.onboardingId as string, countersign: x.countersign as boolean }));
+  // Recorded fund-manager signature requests still waiting count as countersign work even when the
+  // review reader has no matching document row, so Approvals and to-dos never disagree.
+  const { data: fmSigners } = await d
+    .from("document_signature_signers")
+    .select("application_id")
+    .eq("offering_id", fundId)
+    .eq("role_key", "fund_manager")
+    .eq("status", "sent");
+  for (const s of (fmSigners ?? []) as any[]) {
+    const ob = obByApplication.get(s.application_id);
+    if (ob && !signaturePending.some((x: any) => x.onboardingId === ob && x.countersign)) signaturePending.push({ onboardingId: ob, countersign: true });
+  }
   // Signing windows the investor opened that the signing service never saw load.
   const { windowNeverLoaded } = await import("@/lib/signing-window");
   const { data: opened } = await d
@@ -85,6 +97,7 @@ export async function managerInvestorTodos(userId: string, fundId: string) {
       kyc: (p?.kyc_status ?? "not_started") as string | null,
       aml: (p?.aml_status ?? "not_started") as string | null,
       questionnaireSubmitted: Boolean(r.questionnaire_submitted_at),
+      stage: (r.stage ?? null) as string | null,
     };
   });
   const items = buildInvestorTodos({

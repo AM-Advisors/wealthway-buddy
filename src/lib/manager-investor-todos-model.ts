@@ -17,7 +17,7 @@ export const KIND_LABELS: Record<string, string> = {
   accreditation_proof: "accreditation proof",
 };
 
-export type ManagerTodoKind = "signing_window" | "accreditation" | "document_copy" | "signature" | "countersign" | "verification" | "questionnaire";
+export type ManagerTodoKind = "signing_window" | "accreditation" | "document_copy" | "signature" | "countersign" | "admission" | "verification" | "questionnaire";
 export type ManagerInvestorTodo = {
   onboardingId: string;
   investorName: string;
@@ -33,9 +33,11 @@ export type ManagerInvestorTodoInput = {
   kyc: string | null;
   aml: string | null;
   questionnaireSubmitted: boolean;
+  /** Recorded investment stage; harmonious_review means the investor signed and awaits the manager's approval. */
+  stage?: string | null;
 };
 
-const KIND_ORDER: ManagerTodoKind[] = ["signing_window", "accreditation", "document_copy", "signature", "countersign", "verification", "questionnaire"];
+const KIND_ORDER: ManagerTodoKind[] = ["countersign", "signature", "admission", "signing_window", "accreditation", "document_copy", "verification", "questionnaire"];
 
 /** Pure: turns recorded states into one list of manager to-dos. */
 export function buildInvestorTodos(args: {
@@ -70,6 +72,7 @@ export function buildInvestorTodos(args: {
     if (inv.applicationId && args.accreditationPendingApplicationIds.has(inv.applicationId)) push("accreditation", "Review accreditation");
     if (countersign.has(inv.onboardingId)) push("countersign", "Countersign the signed subscription");
     else if (approve.has(inv.onboardingId)) push("signature", "Approve the signed subscription");
+    else if (inv.stage === "harmonious_review") push("admission", "Approve the signed investor", "They signed; approval releases wire instructions");
     if (inv.started) {
       const v = identityScreeningSummary(inv.kyc, inv.aml);
       if (!v.ok) push("verification", v.label);

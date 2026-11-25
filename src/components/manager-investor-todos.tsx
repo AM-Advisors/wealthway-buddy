@@ -9,7 +9,7 @@ import type { ManagerInvestorTodo } from "@/lib/manager-investor-todos-model";
 import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 
 /** Everything waiting on a fund's investors, in one list the manager can work through. */
-export function ManagerInvestorTodoList({ fundId }: { fundId: string }) {
+export function ManagerInvestorTodoList({ fundId, title, hideWhenEmpty = false }: { fundId: string; title?: string; hideWhenEmpty?: boolean }) {
   const load = useServerFn(managerInvestorTodosFn);
   const recordTo = useInvestorRecordRoute();
   const q = useQuery({
@@ -25,12 +25,17 @@ export function ManagerInvestorTodoList({ fundId }: { fundId: string }) {
     list.push(it);
     byInvestor.set(it.investorName, list);
   }
+  if (hideWhenEmpty && !q.isLoading && !q.isError && items.length === 0) return null;
+  const toSign = items.filter((it) => it.kind === "countersign" || it.kind === "signature" || it.kind === "admission").length;
   return (
     <Card>
       <CardHeader className="gap-1">
         <CardTitle className="flex items-center justify-between gap-2 text-base">
-          To dos across investors
-          {items.length > 0 ? <Badge variant="secondary">{items.length} open</Badge> : null}
+          {title ?? "To dos across investors"}
+          <span className="flex gap-1">
+            {toSign > 0 ? <Badge>{toSign} to sign or approve</Badge> : null}
+            {items.length > 0 ? <Badge variant="secondary">{items.length} open</Badge> : null}
+          </span>
         </CardTitle>
         <CardDescription>
           Everything waiting on this fund's investors, in one list. Open an investor to take care of it.

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stat } from "@/components/dashboard-primitives";
+import { ManagerInvestorTodoList } from "@/components/manager-investor-todos";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { AttentionCenter } from "@/components/attention-center";
 import { InvestorDashboard, useInvestorDashboard } from "@/components/investor-dashboard";
@@ -218,6 +219,10 @@ function RoleHome() {
             ))}
           </div>
         )}
+
+        {!data.roles.admin && data.manager!.funds.slice(0, 10).map((fund) => (
+          <ManagerInvestorTodoList key={`todo-${fund.offeringId}`} fundId={fund.offeringId} title={`Documents to sign and approve: ${fund.fundName}`} hideWhenEmpty />
+        ))}
 
         <QuickLinks
           links={[

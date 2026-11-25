@@ -32,6 +32,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getClientFund, getFundCapTable } from "@/lib/fund-cap-table.functions";
 import { getFundTabsData, listFundCloseRequests } from "@/lib/fund-close-requests.functions";
 import { TodosTab } from "@/components/fund-tabs/todos-tab";
+import { ManagerInvestorTodoList } from "@/components/manager-investor-todos";
 import { TeamTab } from "@/components/fund-tabs/team-tab";
 import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 import { CapitalTieReport } from "@/components/investor-share-panel";
@@ -228,6 +229,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
           <FundChangeSummary fundId={fundId} onNavigate={onTab} />
           {tab === "overview" && <FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} />}
           {staff && <HarmoniousTodos steps={steps as any} onSetup={() => onTab("setup")} />}
+          <ManagerInvestorTodoList fundId={fundId} title="Waiting on you: investors" />
           <TodosTab steps={steps.filter((s) => s.owner === "You" && (!s.done || s.section === "economics"))} hasApprovedTerms={cap?.hasApprovedTerms ?? false} onNavigate={onTab} />
         </TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>

@@ -99,3 +99,23 @@ describe("signing window that never loaded", () => {
     expect(items).toEqual([]);
   });
 });
+
+describe("signed investors awaiting the manager", () => {
+  it("lists an investor who signed and awaits approval", async () => {
+    const { buildInvestorTodos } = await import("./manager-investor-todos-model");
+    const items = buildInvestorTodos({
+      investors: [{ onboardingId: "o1", investorName: "Fictional Trust", applicationId: null, started: false, kyc: null, aml: null, questionnaireSubmitted: true, stage: "harmonious_review" }],
+      newDocs: [], accreditationPendingApplicationIds: new Set(), signaturePending: [],
+    });
+    expect(items.map((i) => i.kind)).toEqual(["admission"]);
+  });
+  it("countersign wins over approval and comes first", async () => {
+    const { buildInvestorTodos } = await import("./manager-investor-todos-model");
+    const items = buildInvestorTodos({
+      investors: [{ onboardingId: "o1", investorName: "B", applicationId: null, started: false, kyc: null, aml: null, questionnaireSubmitted: true, stage: "harmonious_review" }],
+      newDocs: [{ onboardingId: "o1", docKind: "accreditation_proof" }], accreditationPendingApplicationIds: new Set(), signaturePending: [{ onboardingId: "o1", countersign: true }],
+    });
+    expect(items[0]?.kind).toBe("countersign");
+    expect(items.some((i) => i.kind === "admission")).toBe(false);
+  });
+});
