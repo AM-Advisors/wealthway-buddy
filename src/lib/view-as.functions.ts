@@ -30,6 +30,11 @@ export const activeViewAsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await va()).activeViewAs(context.userId, sid(context.claims)));
 
+export const clientPerspectiveMenuFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ environment: z.enum(["sandbox", "live"]) }).parse)
+  .handler(async ({ data, context }) => (await import("./client-perspective-menu.server")).clientPerspectiveMenu(context.userId, sid(context.claims), data.environment));
+
 export const viewAsInvestmentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await va()).viewAsInvestment(context.userId, sid(context.claims)));

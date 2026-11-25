@@ -31,6 +31,7 @@ import { PortalFooter } from "@/components/portal-footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { EditContextBanner, useActiveViewAs } from "@/components/view-as";
 import { isExactFundClientPreview } from "@/lib/view-as";
+import { usesClientPerspectiveMenu } from "@/lib/client-perspective-menu";
 import { PlanAccessContent } from "@/components/plan-access-content";
 import { logSecurityEvent } from "@/lib/account-security.functions";
 
@@ -147,7 +148,8 @@ function EntitlementGate({ children }: { children: ReactNode }) {
 function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { activeId, session, applicationSurface } = useClientWorkspace();
-  const { shell } = getNavigation(session as never, activeId, pathname, applicationSurface);
+  const preview = useActiveViewAs(session?.operations === true);
+  const shell = usesClientPerspectiveMenu(pathname, session?.operations === true, preview.data) ? "client" : getNavigation(session as never, activeId, pathname, applicationSurface).shell;
   return <SidebarProvider className={`workspace-${shell}`} data-application={shell}>
     <div className="flex min-h-screen w-full bg-background">{children}</div>
   </SidebarProvider>;
@@ -164,7 +166,8 @@ function Menu({ onSignOut }: { onSignOut: () => void }) {
   // One canonical projection decides the shell. Hostname and pathname only
   // pick a layout; Operations still requires resolved staff facts.
   const { activeId, session, applicationSurface } = useClientWorkspace();
-  const { shell } = getNavigation(session as never, activeId, pathname, applicationSurface);
+  const preview = useActiveViewAs(session?.operations === true);
+  const shell = usesClientPerspectiveMenu(pathname, session?.operations === true, preview.data) ? "client" : getNavigation(session as never, activeId, pathname, applicationSurface).shell;
   if (shell === "ops") return <OpsSidebar onSignOut={onSignOut} />;
   return <ClientSidebar onSignOut={onSignOut} />;
 }

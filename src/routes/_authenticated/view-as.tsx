@@ -3,12 +3,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { InvestorDashboard, useInvestorDashboard } from "@/components/investor-dashboard";
 import { FundReadiness } from "@/components/investment-readiness";
 import { NoActiveViewAs, ViewAsBanner, useActiveViewAs } from "@/components/view-as";
-import { clientNavigation } from "@/lib/client-navigation";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Badge } from "@/components/ui/badge";
-import { viewAsInvestorAttentionFn, viewAsPageFn } from "@/lib/view-as.functions";
+import { clientPerspectiveMenuFn, viewAsInvestorAttentionFn, viewAsPageFn } from "@/lib/view-as.functions";
+import { clientPerspectiveDestination, clientPerspectiveLinks } from "@/lib/client-perspective-menu";
+import { getStripeEnvironment } from "@/lib/stripe";
 import { SetupCard } from "@/components/setup-card";
 import { AttentionCenter } from "@/components/attention-center";
 
@@ -31,14 +32,23 @@ export const Route = createFileRoute("/_authenticated/view-as")({
 function ViewAsPage() {
   const q = useActiveViewAs();
   const { page } = Route.useSearch();
+  const loadMenu = useServerFn(clientPerspectiveMenuFn);
+  const menu = useQuery({
+    queryKey: ["view-as", "menu", q.data?.perspective, q.data?.offeringId, q.data?.onboardingId],
+    queryFn: () => loadMenu({ data: { environment: getStripeEnvironment() } }), enabled: Boolean(q.data), retry: false,
+  });
   if (q.isPending) return <Skeleton className="m-6 h-40" />;
   const ctx = q.data as any;
   if (!ctx) return <NoActiveViewAs />;
   // Fund managers have one view: the same fund page they use, shown read-only.
-  if (ctx.perspective === "fund_manager" && ctx.offeringId) return <Navigate to="/manager/fund/$fundId" params={{ fundId: ctx.offeringId }} replace />;
+  if (ctx.perspective === "fund_manager" && ctx.offeringId && !page) return <Navigate to="/manager/fund/$fundId" params={{ fundId: ctx.offeringId }} replace />;
   // Every page in the client's own menu; display only, never grants access.
-  const pages = clientNavigation(ctx.perspective === "investor" ? "investor" : "fund_manager");
-  const current = pages.find((p) => p.url === page) ?? pages[0]!;
+  if (menu.isPending) return <Skeleton className="m-6 h-40" />;
+  if (menu.isError || !menu.data) return <p role="alert" className="p-6 text-sm text-muted-foreground">The client’s menu could not be loaded.</p>;
+  const menuData = menu.data;
+  const pages = clientPerspectiveLinks(menuData);
+  const current = pages.find((p) => p.url === page) ?? pages[0];
+  if (!current) return <NoActiveViewAs />;
   const isHome = current === pages[0];
   return (
     <div>
@@ -46,7 +56,7 @@ function ViewAsPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6 md:flex-row" aria-readonly="true">
         <nav className="flex shrink-0 flex-row flex-wrap gap-1 md:w-52 md:flex-col" aria-label="Client pages">
           {pages.map((p) => (
-            <Link key={p.url} to="/view-as" search={{ page: p.url }}
+            <Link key={p.url} {...clientPerspectiveDestination(menuData, p.url)}
               className={cn("rounded-md px-3 py-2 text-sm", p === current ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted")}>
               {p.title}
             </Link>

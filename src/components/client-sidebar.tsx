@@ -57,6 +57,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listMySharedFunds } from "@/lib/fund-team-access.functions";
 import { useInboxUnread } from "@/components/unified-inbox";
+import { useActiveViewAs } from "@/components/view-as";
+import { clientPerspectiveMenuFn } from "@/lib/view-as.functions";
+import { clientPerspectiveDestination, clientPerspectiveLinks, usesClientPerspectiveMenu } from "@/lib/client-perspective-menu";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -86,7 +89,16 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const previewPage = useRouterState({ select: (r) => r.location.search as { page?: string } });
   const { session, options, activeId, applicationSurface } = useClientWorkspace();
+  const preview = useActiveViewAs(session?.operations === true);
+  const inClientView = usesClientPerspectiveMenu(pathname, session?.operations === true, preview.data);
+  const previewMenuFn = useServerFn(clientPerspectiveMenuFn);
+  const previewMenu = useQuery({
+    queryKey: ["view-as", "menu", preview.data?.perspective, preview.data?.offeringId, preview.data?.onboardingId],
+    queryFn: () => previewMenuFn({ data: { environment: getStripeEnvironment() } }),
+    enabled: inClientView, retry: false,
+  });
 
   const navigation = getNavigation(session as never, activeId, pathname, applicationSurface);
   const capFn = useServerFn(getMyCapTables);
@@ -104,7 +116,9 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   // Areas staff switched off for this client are hidden completely.
   // Optional services (Wealth & services, Report Cards) only show for people who have them.
   const services = useServiceMenu();
-  const items = filterByServiceMenu(filterByHiddenTabs(filterByEntitlements(base, ents.data ?? null), hidden.data ?? []), services);
+  const items = inClientView
+    ? previewMenu.data ? clientPerspectiveLinks(previewMenu.data) : []
+    : filterByServiceMenu(filterByHiddenTabs(filterByEntitlements(base, ents.data ?? null), hidden.data ?? []), services);
   const active = (options ?? []).find((o) => o.id === activeId);
   const brand = useClientBrand(active?.kind === "company");
   const sharedFn = useServerFn(listMySharedFunds);
@@ -113,6 +127,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const inbox = useInboxUnread();
 
   const isActive = (url: string) => {
+    if (inClientView) return pathname === "/view-as" ? url === (previewPage.page ?? "/home") : url === "/manager";
     const base = url.split("?")[0] ?? url;
     if (base === "/client") {
       // Settings covers every client-portal page except Funds and Cap Table.
@@ -154,21 +169,22 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
                       tooltip={item.title}
                       className="data-[active=true]:border-l-2 data-[active=true]:border-sidebar-primary data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium"
                     >
-                      <Link to={item.url as never} className="flex items-center gap-2">
+                      <Link {...(inClientView && previewMenu.data ? clientPerspectiveDestination(previewMenu.data, item.url) : { to: item.url as never })} className="flex items-center gap-2">
                         <Icon className="h-4 w-4 shrink-0" />
                         {!collapsed && <span className="truncate">{item.title}</span>}
                       </Link>
                     </SidebarMenuButton>
-                    {!collapsed && <FavoriteStar url={item.url} label={item.title} className="absolute right-1 top-1/2 hidden -translate-y-1/2 group-hover/item:block" />}
+                    {!collapsed && !inClientView && <FavoriteStar url={item.url} label={item.title} className="absolute right-1 top-1/2 hidden -translate-y-1/2 group-hover/item:block" />}
                   </SidebarMenuItem>
                 );
               })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarFavorites collapsed={collapsed} allowed={(u) => !/^\/(ops|admin|sales|marketing|account-manager)(\/|$)/.test(u)} />
+        {inClientView && previewMenu.isError && <p role="alert" className="px-4 text-sm text-muted-foreground">The client’s menu could not be loaded.</p>}
+        {!inClientView && <SidebarFavorites collapsed={collapsed} allowed={(u) => !/^\/(ops|admin|sales|marketing|account-manager)(\/|$)/.test(u)} />}
 
-        <SidebarGroup>
+        {!inClientView && <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {hasShared && (
@@ -200,10 +216,10 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup>}
       </SidebarContent>
 
-      <SidebarAccountFooter workspaceLabel={active?.label ?? "Your workspace"} onSignOut={onSignOut} />
+      <SidebarAccountFooter workspaceLabel={inClientView ? preview.data?.fundName ?? "Client perspective" : active?.label ?? "Your workspace"} onSignOut={onSignOut} />
     </Sidebar>
   );
 }

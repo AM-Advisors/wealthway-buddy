@@ -1364,6 +1364,7 @@
 - [ ] Verify in Kelby’s live account after publishing: no authorized Kelby session available
 
 ## Investor flow plan (approved Nov 25)
+- [x] Match the surrounding Client perspective menu to the viewed client's services; 23 focused tests and isolated desktop/mobile checks passed, live verification pending, no access changes or publishing
 - [x] Where investors are stuck page (/ops/stalled-investors), display only
 - [ ] Send reminder from stalled list (needs confirmation design)
 - [ ] One "What's left" checklist per person shared by investor, manager and signing check
