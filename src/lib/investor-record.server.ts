@@ -610,6 +610,23 @@ export async function updateInvestorRecord(userId: string, input: {
     await (await import("@/lib/account-connect.server")).recordProfileTin(row.investment_profile_id, tin, { offeringId: row.offering_id, onboardingId: row.id }).catch((e) => console.error("[investor-record] tax ID match skipped", (e as Error).message));
   }
 
+  // Trust files under its trustees' SSNs: record the choice without retyping a number; each trustee's SSN lives on their own row.
+  if (!tin && input.taxIdType === "ssn" && row.investment_profile_id) {
+    if (!profileDirect) forbid("this investor has signed or funded; ask Harmonious to update the tax ID.");
+    const { data: pr } = await db().from("investment_profiles").select("profile_type, tax_id_type, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle();
+    if (!pr || pr.profile_type !== "trust") fail("Only a trust can use its trustees' SSNs.");
+    if (pr.tax_id_type !== "ssn") {
+      const unlock = Boolean(input.changeTaxIdType && actor.isStaff);
+      if (input.changeTaxIdType && !actor.isStaff) forbid("only Harmonious can change a trust's tax ID type.");
+      if (pr.tax_id_last4 && !unlock) fail("This trust's tax ID type is locked. Ask Harmonious to change it.");
+      if (unlock && !String(input.taxIdTypeReason ?? "").trim()) fail("Give a reason for changing the tax ID type.");
+      const { error: e } = await db().from("investment_profiles").update({ tax_id_type: "ssn" } as any).eq("id", row.investment_profile_id);
+      if (e) fail("The tax-ID type couldn't be saved. Please try again.");
+      changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id_type", from: pr.tax_id_type ?? null, to: "ssn", source, actor: actor.userId });
+      if (unlock) changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id_type_change_reason", from: null, to: String(input.taxIdTypeReason).trim().slice(0, 500), source, actor: actor.userId });
+    }
+  }
+
   if (input.investment) {
     if (["closed", "declined", "cancelled"].includes(String(row.stage))) fail("This investment can no longer be changed.");
     const patch = investmentRow(input.investment, actor);

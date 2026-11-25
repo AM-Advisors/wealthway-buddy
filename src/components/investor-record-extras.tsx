@@ -214,11 +214,20 @@ export function InvestorTaxIdCard({ onboardingId, last4, editable, onChanged, en
             <Label htmlFor="ir-tax-type">Trust uses</Label>
             <Select value={selected} disabled={busy} onValueChange={(v) => { if (v === "ssn" || v === "ein") { setChoice(v); setTin(""); } }}>
               <SelectTrigger id="ir-tax-type" className="max-w-xs"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="ssn">Trustee’s SSN</SelectItem><SelectItem value="ein">Separate trust EIN</SelectItem></SelectContent>
+              <SelectContent><SelectItem value="ssn">Trustees’ SSNs</SelectItem><SelectItem value="ein">Separate trust EIN</SelectItem></SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">Use the number appropriate for the trust’s tax treatment. Confirm with your tax adviser if unsure.</p>
           </div> : null}
           {unlocking ? <div className="space-y-1"><Label htmlFor="ir-tax-reason">Reason for changing the type</Label><Input id="ir-tax-reason" value={reason} onChange={(e) => setReason(e.target.value)} className="max-w-md" /></div> : null}
+          {trust && selected === "ssn" ? <div className="space-y-2 rounded-md border bg-muted/40 p-3">
+            <p className="text-sm">Each trustee's SSN is saved once, on their own row under <span className="font-medium">Trust &amp; people</span>. Both trustees can add theirs; no need to type it again here.</p>
+            {taxIdType !== "ssn" || unlocking ? <Button size="sm" disabled={busy || (unlocking && !reason.trim())} onClick={async () => {
+              setBusy(true);
+              try { await update({ data: { onboardingId, taxIdType: "ssn", ...(unlocking ? { changeTaxIdType: true, taxIdTypeReason: reason.trim() } : {}) } }); toast.success("Trust will use its trustees' SSNs"); setChoice(null); setUnlocking(false); setReason(""); onChanged(); }
+              catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+            }}>Use trustees' SSNs</Button> : null}
+            <p className="text-xs text-muted-foreground">Optional: enter the one SSN the trust reports under below.</p>
+          </div> : null}
           <Label htmlFor="ir-tin">{trust ? selected === "ssn" ? "Trustee’s SSN (9 digits)" : "Trust EIN (9 digits)" : entity ? "Entity EIN (9 digits)" : "SSN, ITIN or EIN (9 digits)"}</Label>
           <div className="flex flex-wrap gap-2">
             <Input id="ir-tin" inputMode="numeric" autoComplete="off" data-private disabled={busy} value={tin} onChange={(e) => setTin(e.target.value.replace(/\D/g, "").slice(0, 9))} className="max-w-xs" />

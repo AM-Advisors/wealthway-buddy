@@ -52,3 +52,14 @@ describe("trust contact details", () => {
     expect(items.filter((i) => !i.done).map((i) => i.label)).toEqual(["Trust address", "Trust phone number", "Joe: add phone, citizenship, address"]);
   });
 });
+
+describe("trust using trustees' SSNs", () => {
+  const base = { legalName: "Trust", trust: true, taxIdType: "ssn", einOnFile: false, responsiblePartyId: "a" } as const;
+  const t = (id: string, ssnOnFile: boolean) => ({ id, name: id, role: "trustee", ownershipPercent: 50, signer: true, email: "x@y.co", dobOnFile: true, ssnOnFile });
+  it("is covered when both trustees have their own SSN saved", () => {
+    expect(entityRequirements({ ...base, people: [t("a", true), t("b", true)] }).find((i) => i.key === "ein")?.done).toBe(true);
+  });
+  it("stays open while one trustee's SSN is missing", () => {
+    expect(entityRequirements({ ...base, people: [t("a", true), t("b", false)] }).find((i) => i.key === "ein")?.done).toBe(false);
+  });
+});

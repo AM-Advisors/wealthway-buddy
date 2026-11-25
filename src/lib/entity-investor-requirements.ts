@@ -40,9 +40,12 @@ export function missingPersonFields(p: RequirementPerson): string[] {
 
 export function entityRequirements(input: EntityRequirementInput): RequirementItem[] {
   const signers = input.people.filter((p) => p.signer);
+  const trustees = input.people.filter((p) => p.role === "trustee" || p.signer);
+  // A trust that files under its trustees' SSNs is covered once every trustee/signer has their own SSN saved.
+  const trusteeSsnsDone = Boolean(input.trust && input.taxIdType === "ssn" && trustees.length > 0 && trustees.every((p) => p.ssnOnFile));
   const items: RequirementItem[] = [
     { key: "legal_name", label: "Entity legal name", done: Boolean(input.legalName?.trim()) },
-    { key: "ein", label: input.trust ? input.taxIdType === "ssn" ? "Trustee SSN" : "Trust tax ID: trustee SSN or separate EIN" : "EIN", done: input.einOnFile },
+    { key: "ein", label: input.trust ? input.taxIdType === "ssn" ? "Trustees' SSNs (each saved on their own row)" : "Trust tax ID: trustees' SSNs or separate EIN" : "EIN", done: input.einOnFile || trusteeSsnsDone },
     ...(input.jurisdictionOnFile === undefined ? [] : [{ key: "jurisdiction", label: "State or country of formation", done: input.jurisdictionOnFile }]),
     ...(input.entityAddressOnFile === undefined ? [] : [{ key: "entity_address", label: input.trust ? "Trust address" : "Entity address", done: input.entityAddressOnFile }]),
     ...(input.entityPhoneOnFile === undefined ? [] : [{ key: "entity_phone", label: input.trust ? "Trust phone number" : "Entity phone number", done: input.entityPhoneOnFile }]),
