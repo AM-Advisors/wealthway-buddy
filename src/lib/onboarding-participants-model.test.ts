@@ -26,3 +26,19 @@ describe("points of contact", () => {
   });
   it("contacts are labeled view only", () => { expect(prl("contact")).toBe("Point of contact (view only)"); });
 });
+
+import { participantCanPrepare as canPrep } from "./onboarding-participants-model";
+describe("trustees and owners complete paperwork", () => {
+  it("a listed trustee on a trust can prepare even as a contact", () => {
+    expect(canPrep({ role: "contact", profileType: "trust", listedOnInvestment: true })).toBe(true);
+  });
+  it("an unlisted contact stays view only", () => {
+    expect(canPrep({ role: "contact", profileType: "trust", listedOnInvestment: false })).toBe(false);
+  });
+  it("a listed owner on an LLC can prepare", () => {
+    expect(canPrep({ role: "contact", profileType: "llc", listedOnInvestment: true })).toBe(true);
+  });
+  it("an assigned preparer always can", () => {
+    expect(canPrep({ role: "preparer", profileType: "individual", listedOnInvestment: false })).toBe(true);
+  });
+});

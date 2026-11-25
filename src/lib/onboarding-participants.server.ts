@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, forbid } from "@/lib/investor-onboarding.server";
-import { allowsMultipleContacts, canAssignParticipant, participantRoleLabel, type ParticipantRole } from "@/lib/onboarding-participants-model";
+import { allowsMultipleContacts, canAssignParticipant, participantCanPrepare, participantRoleLabel, type ParticipantRole } from "@/lib/onboarding-participants-model";
 import { eligibleParticipantInvitation } from "@/lib/participant-home-model";
 
 // Server-only. People who help complete an investment for the investor:
@@ -46,14 +46,33 @@ export async function liveParticipantInvitations(email: string) {
     .filter((p) => eligibleParticipantInvitation(p, email));
 }
 
+/** Is this login a trustee/owner/signer listed on the investment's trust or entity? */
+async function listedOnInvestment(userId: string, email: string, onboardingId: string) {
+  const { data: row } = await db().from("investor_onboardings").select("investment_profile_id, investment_profiles(profile_type)").eq("id", onboardingId).maybeSingle();
+  const profileType = (row as any)?.investment_profiles?.profile_type ?? null;
+  if (!row?.investment_profile_id) return { profileType, listed: false };
+  const { data: rel } = await db().from("investment_profile_relationships").select("status, persons(user_id, email)").eq("profile_id", row.investment_profile_id).neq("status", "removed");
+  const listed = ((rel ?? []) as any[]).some((r) => r.persons?.user_id === userId || (!!email && String(r.persons?.email ?? "").trim().toLowerCase() === email));
+  return { profileType, listed };
+}
+
+async function canPrepare(userId: string, email: string, p: any) {
+  if (p.role === "preparer") return true;
+  if (p.role !== "contact") return false;
+  const { profileType, listed } = await listedOnInvestment(userId, email, p.onboarding_id);
+  return participantCanPrepare({ role: p.role, profileType, listedOnInvestment: listed });
+}
+
 export async function myParticipantAssignments(userId: string) {
   const email = await userEmail(userId);
-  return (await liveParticipantInvitations(email)).map((p) => ({
+  const rows = await liveParticipantInvitations(email);
+  const prepares = await Promise.all(rows.map((p) => canPrepare(userId, email, p)));
+  return rows.map((p, i) => ({
       id: String(p.id), onboardingId: String(p.onboarding_id),
       fundName: String(p.investor_onboardings.offerings?.name ?? "Fund"),
       investingAs: String(p.investor_onboardings.investment_profiles?.legal_name || p.investor_onboardings.investment_profiles?.display_label || "Investor"),
-      role: p.role as "preparer" | "contact", roleLabel: participantRoleLabel(p.role),
-      href: `/onboard/${p.role === "preparer" ? "prepare" : "contact"}/${p.token}`,
+      role: (prepares[i] ? "preparer" : p.role) as "preparer" | "contact", roleLabel: prepares[i] && p.role !== "preparer" ? "Trustee or owner · completes paperwork" : participantRoleLabel(p.role),
+      href: `/onboard/${prepares[i] ? "prepare" : "contact"}/${p.token}`,
     }));
 }
 
@@ -127,10 +146,11 @@ export async function removeParticipant(userId: string, participantId: string) {
 /** The signed-in user must be this exact, still-active preparer (matched by email). */
 export async function activePreparer(userId: string, participantId: string, onboardingId?: string) {
   const { data: p } = await db().from("onboarding_participants").select("*").eq("id", participantId).maybeSingle();
-  if (!p || p.role !== "preparer" || p.status === "removed") forbid("this preparer access has ended.");
+  if (!p || (p.role !== "preparer" && p.role !== "contact") || p.status === "removed" || p.removed_at) forbid("this preparer access has ended.");
   if (onboardingId && p.onboarding_id !== onboardingId) forbid("that is not the investment you were assigned.");
   const email = await userEmail(userId);
   if (!email || email !== String(p.email).toLowerCase()) forbid(`sign in as ${p.email} to use this page.`);
+  if (!(await canPrepare(userId, email, p))) forbid("this preparer access has ended.");
   if (p.status === "invited" || !p.user_id) await db().from("onboarding_participants").update({ status: "active", user_id: userId }).eq("id", p.id);
   return { userId, participant: p };
 }

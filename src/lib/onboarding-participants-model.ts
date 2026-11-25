@@ -17,3 +17,11 @@ export function allowsMultipleContacts(profileType: string | null | undefined) {
 export const PREPARER_CAN = { enterDetails: true, ownersAndSigners: true, uploadDocuments: true, passVerification: false, sign: false, approveFunding: false, changeAmount: false } as const;
 /** Points of contact only view. */
 export const CONTACT_CAN = { view: true, enterDetails: false, sign: false, approveFunding: false, changeAmount: false } as const;
+/**
+ * A trustee, owner or signer listed on a trust/entity investment may fill in its paperwork
+ * even when someone else is also assigned "Prepares details". Verification, signing and money stay unchanged.
+ */
+export function participantCanPrepare(input: { role: string; profileType: string | null | undefined; listedOnInvestment: boolean }) {
+  if (input.role === "preparer") return true;
+  return input.role === "contact" && input.listedOnInvestment && allowsMultipleContacts(input.profileType) && String(input.profileType) !== "joint";
+}
