@@ -13,6 +13,14 @@ const originOf = () => {
 
 const engine = () => import("@/lib/onboarding-compliance.server");
 
+/** Every investor answer save refreshes the shared readiness so manager and Harmonious views match the investor's. */
+async function reconciledSave<T>(onboardingId: string, userId: string, trigger: string, run: Promise<T>): Promise<T> {
+  const out = await run;
+  const { reconcileAfter } = await import("@/lib/investor-onboarding.server");
+  await reconcileAfter([onboardingId], { actorUserId: userId, trigger });
+  return out;
+}
+
 export const investorComplianceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ onboardingId: z.string().uuid() }).parse)
@@ -50,7 +58,7 @@ export const submitBadActorFn = createServerFn({ method: "POST" })
       certifiedName: z.string().trim().min(2).max(200),
     }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).submitBadActor(context.userId, data));
+  .handler(async ({ data, context }) => reconciledSave(data.onboardingId, context.userId, "submitBadActor", (await engine()).submitBadActor(context.userId, data)));
 
 export const certifyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -61,7 +69,7 @@ export const certifyFn = createServerFn({ method: "POST" })
       certifiedName: z.string().trim().min(2).max(200),
     }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).certify(context.userId, data));
+  .handler(async ({ data, context }) => reconciledSave(data.onboardingId, context.userId, "certify", (await engine()).certify(context.userId, data)));
 
 const taxAnswers = z.object({
   usPerson: z.enum(["yes", "no", "unsure"]).optional(),
@@ -75,7 +83,7 @@ const taxAnswers = z.object({
 export const submitTaxFactsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ onboardingId: z.string().uuid(), answers: taxAnswers }).parse)
-  .handler(async ({ data, context }) => (await engine()).submitTaxFacts(context.userId, data));
+  .handler(async ({ data, context }) => reconciledSave(data.onboardingId, context.userId, "submitTaxFacts", (await engine()).submitTaxFacts(context.userId, data)));
 
 export const previewTaxFormFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -105,12 +113,12 @@ export const submitAmlFn = createServerFn({ method: "POST" })
       certifiedName: z.string().trim().min(2).max(200),
     }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).submitAml(context.userId, data));
+  .handler(async ({ data, context }) => reconciledSave(data.onboardingId, context.userId, "submitAml", (await engine()).submitAml(context.userId, data)));
 
 export const submitDemographicsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ onboardingId: z.string().uuid(), answers: z.record(z.string().max(40), z.string().max(60)) }).parse)
-  .handler(async ({ data, context }) => (await engine()).submitDemographics(context.userId, data));
+  .handler(async ({ data, context }) => reconciledSave(data.onboardingId, context.userId, "submitDemographics", (await engine()).submitDemographics(context.userId, data)));
 
 export const submitEligibilityFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -122,7 +130,7 @@ export const submitEligibilityFn = createServerFn({ method: "POST" })
       certifiedName: z.string().trim().min(2).max(200),
     }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).submitEligibility(context.userId, data));
+  .handler(async ({ data, context }) => reconciledSave(data.onboardingId, context.userId, "submitEligibility", (await engine()).submitEligibility(context.userId, data)));
 
 export const staffTaxEvidenceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

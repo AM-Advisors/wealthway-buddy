@@ -63,6 +63,7 @@ export const reviewPreparedField = createServerFn({ method: "POST" })
       await db.from("investor_document_snapshots").update({ status: "stale" })
         .eq("onboarding_id", data.onboardingId).in("status", ["prepared", "reviewed", "sent_for_signature"]);
     }
+    await engine.reconcileAfter([data.onboardingId], { actorUserId: context.userId, trigger: "reviewPreparedField" });
     if (!material) return { material, requirementsUpdated: false, goTo: null };
     // Re-run the authoritative engine (it now reads the corrected value) and compare.
     const after: any = await engine.onboardPortalDetail(context.userId, data.onboardingId).catch(() => null);
@@ -115,5 +116,6 @@ export const markDocumentReviewed = createServerFn({ method: "POST" })
     if (!s || (s as any).onboarding_id !== data.onboardingId) throw new Error("That document isn't available.");
     if ((s as any).status !== "prepared") throw new Error((s as any).status === "reviewed" ? "Already reviewed." : "Document needs to be regenerated");
     await db.from("investor_document_snapshots").update({ status: "reviewed", reviewed_at: new Date().toISOString(), reviewed_by: context.userId, reviewed_fingerprint: fingerprint((s as any).merge_values) }).eq("id", data.snapshotId);
+    await (await import("@/lib/investor-onboarding.server")).reconcileAfter([data.onboardingId], { actorUserId: context.userId, trigger: "markDocumentReviewed" });
     return { ok: true };
   });

@@ -3,6 +3,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const s = () => import("@/lib/investment-profile-detail.server");
+
+/** Profile edits refresh readiness on every investment that uses this profile. */
+async function reconciledProfile<T>(profileId: string, trigger: string, run: Promise<T>): Promise<T> {
+  const out = await run;
+  const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+  await reconcileReadinessForSubjects({ investmentProfileId: profileId }, trigger).catch((e) => console.error("[readiness] profile reconcile failed", trigger, e));
+  return out;
+}
 const opt = (n: number) => z.string().trim().max(n).optional();
 const id = z.object({ profileId: z.string().uuid() });
 
@@ -18,7 +26,7 @@ export const saveProfileBasicsFn = createServerFn({ method: "POST" })
     region: opt(80), postal_code: opt(20), country: opt(60), tax_id: opt(20),
     tax_id_type: z.enum(["ssn", "itin", "ein"]).optional(),
   }).parse(d))
-  .handler(async ({ data, context }) => (await s()).saveBasics(context.userId, data));
+  .handler(async ({ data, context }) => reconciledProfile(data.profileId, "saveBasics", (await s()).saveBasics(context.userId, data)));
 
 export const saveProfileFormationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -26,7 +34,7 @@ export const saveProfileFormationFn = createServerFn({ method: "POST" })
     legal_name: z.string().trim().min(2).max(160), entity_type: opt(80), formation_jurisdiction: opt(80),
     formation_date: opt(20), trust_type: opt(80), trust_date: opt(20),
   }).parse(d))
-  .handler(async ({ data, context }) => (await s()).saveFormation(context.userId, data));
+  .handler(async ({ data, context }) => reconciledProfile(data.profileId, "saveFormation", (await s()).saveFormation(context.userId, data)));
 
 export const uploadProfileDocFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -34,14 +42,14 @@ export const uploadProfileDocFn = createServerFn({ method: "POST" })
     kind: z.enum(["formation", "accreditation"]), fileName: z.string().min(1).max(200),
     contentType: z.string().max(120), base64: z.string().max(21_000_000),
   }).parse(d))
-  .handler(async ({ data, context }) => (await s()).uploadDoc(context.userId, data));
+  .handler(async ({ data, context }) => reconciledProfile(data.profileId, "uploadDoc", (await s()).uploadDoc(context.userId, data)));
 
 export const removeProfileDocFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => id.extend({ kind: z.enum(["formation", "accreditation"]), path: z.string().max(400) }).parse(d))
-  .handler(async ({ data, context }) => (await s()).removeDoc(context.userId, data));
+  .handler(async ({ data, context }) => reconciledProfile(data.profileId, "removeDoc", (await s()).removeDoc(context.userId, data)));
 
 export const submitProfileAccreditationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => id.extend({ basis: z.string().trim().min(2).max(120), verification_method: z.string().trim().min(2).max(120) }).parse(d))
-  .handler(async ({ data, context }) => (await s()).submitAccreditation(context.userId, data));
+  .handler(async ({ data, context }) => reconciledProfile(data.profileId, "submitAccreditation", (await s()).submitAccreditation(context.userId, data)));
