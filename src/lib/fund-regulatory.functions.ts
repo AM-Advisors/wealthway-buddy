@@ -68,10 +68,10 @@ export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([r
   });
 
 export const saveFranchiseFeeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(fund.extend({ id: z.string().uuid().nullable(), state: z.string().trim().min(2).max(40), description: z.string().max(200), amountCents: z.number().int().min(0).max(1e10), dueDate: day, filedOn: day, confirmation: z.string().max(100) }).parse)
+  .validator(fund.extend({ id: z.string().uuid().nullable(), state: z.string().trim().min(2).max(40), description: z.string().max(200), amountCents: z.number().int().min(0).max(1e10), dueDate: day, filedOn: day, confirmation: z.string().max(100), linkUrl: z.string().max(1000).refine((v) => !v || /^https?:\/\//i.test(v), "Use a link starting with https://").optional() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId); const d = await s.db();
-    const row = { state: data.state.toUpperCase(), description: data.description || null, amount_cents: data.amountCents, due_date: data.dueDate, filed_on: data.filedOn, confirmation_number: data.confirmation || null };
+    const row = { state: data.state.toUpperCase(), description: data.description || null, amount_cents: data.amountCents, due_date: data.dueDate, filed_on: data.filedOn, confirmation_number: data.confirmation || null, link_url: data.linkUrl || null };
     const q = data.id
       ? d.from("fund_franchise_fees").update(row).eq("id", data.id).eq("offering_id", data.fundId).is("removed_at", null)
       : d.from("fund_franchise_fees").insert({ ...row, offering_id: data.fundId, recorded_by: context.userId });

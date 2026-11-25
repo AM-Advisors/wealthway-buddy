@@ -3165,6 +3165,13 @@
       "when": 1795594107076,
       "tag": "0451_fill_verified_tax_identifier",
       "breakpoints": true
+    },
+    {
+      "idx": 452,
+      "version": "7",
+      "when": 1795630824830,
+      "tag": "0452_fund_compliance_sec_identifiers",
+      "breakpoints": true
     }
   ]
 }

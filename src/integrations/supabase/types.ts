@@ -21506,6 +21506,56 @@ export type Database = {
           },
         ]
       }
+      fund_compliance_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          file_name: string | null
+          file_path: string | null
+          id: string
+          kind: string
+          label: string
+          offering_id: string
+          removed_at: string | null
+          removed_by: string | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          kind: string
+          label: string
+          offering_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          kind?: string
+          label?: string
+          offering_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_compliance_links_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_condition_clearances: {
         Row: {
           created_at: string
@@ -22558,8 +22608,10 @@ export type Database = {
           created_at: string
           description: string | null
           due_date: string | null
+          file_path: string | null
           filed_on: string | null
           id: string
+          link_url: string | null
           offering_id: string
           recorded_by: string
           removed_at: string | null
@@ -22572,8 +22624,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          file_path?: string | null
           filed_on?: string | null
           id?: string
+          link_url?: string | null
           offering_id: string
           recorded_by: string
           removed_at?: string | null
@@ -22586,8 +22640,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          file_path?: string | null
           filed_on?: string | null
           id?: string
+          link_url?: string | null
           offering_id?: string
           recorded_by?: string
           removed_at?: string | null
@@ -24427,10 +24483,12 @@ export type Database = {
         Row: {
           accession_number: string | null
           created_at: string
+          edgar_url: string | null
           efd_id: string | null
           filing_date: string | null
           filing_kind: string
           filing_type: string
+          form_type: string | null
           id: string
           notes: string | null
           offering_id: string
@@ -24442,10 +24500,12 @@ export type Database = {
         Insert: {
           accession_number?: string | null
           created_at?: string
+          edgar_url?: string | null
           efd_id?: string | null
           filing_date?: string | null
           filing_kind?: string
           filing_type: string
+          form_type?: string | null
           id?: string
           notes?: string | null
           offering_id: string
@@ -24457,10 +24517,12 @@ export type Database = {
         Update: {
           accession_number?: string | null
           created_at?: string
+          edgar_url?: string | null
           efd_id?: string | null
           filing_date?: string | null
           filing_kind?: string
           filing_type?: string
+          form_type?: string | null
           id?: string
           notes?: string | null
           offering_id?: string
@@ -24876,6 +24938,105 @@ export type Database = {
             columns: ["sow_id"]
             isOneToOne: false
             referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_sec_ccc_private: {
+        Row: {
+          ccc: string
+          offering_id: string
+          updated_at: string
+        }
+        Insert: {
+          ccc: string
+          offering_id: string
+          updated_at?: string
+        }
+        Update: {
+          ccc?: string
+          offering_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_sec_ccc_private_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_sec_identifier_events: {
+        Row: {
+          action: string
+          actor: string
+          created_at: string
+          id: string
+          new_cik: string | null
+          offering_id: string
+          old_cik: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          created_at?: string
+          id?: string
+          new_cik?: string | null
+          offering_id: string
+          old_cik?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          created_at?: string
+          id?: string
+          new_cik?: string | null
+          offering_id?: string
+          old_cik?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_sec_identifier_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_sec_identifiers: {
+        Row: {
+          ccc_last2: string | null
+          cik: string | null
+          offering_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ccc_last2?: string | null
+          cik?: string | null
+          offering_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ccc_last2?: string | null
+          cik?: string | null
+          offering_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_sec_identifiers_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]

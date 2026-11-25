@@ -13,6 +13,7 @@ import { fundRegulatoryFn, saveFranchiseFeeFn, removeFranchiseFeeFn } from "@/li
 import { usd, fmtDate, toCents } from "./shared";
 import { FundFilingStatusCard } from "@/components/fund-filing-status";
 import { StateFilingsCard } from "./state-filings-card";
+import { SecComplianceCards } from "./sec-compliance-cards";
 
 const statusLabel = (s: string) => ({ prepared: "Prepared", filed: "Filed", not_required: "Not required", recorded: "Recorded" } as Record<string, string>)[s] ?? s;
 
@@ -32,13 +33,14 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
 
   const submit = async () => {
     try {
-      await save({ data: { fundId, id: edit.id ?? null, state: edit.state ?? "", description: edit.description ?? "", amountCents: toCents(String(edit.amount ?? "0")) ?? 0, dueDate: edit.due_date || null, filedOn: edit.filed_on || null, confirmation: edit.confirmation_number ?? "" } });
+      await save({ data: { fundId, id: edit.id ?? null, state: edit.state ?? "", description: edit.description ?? "", amountCents: toCents(String(edit.amount ?? "0")) ?? 0, dueDate: edit.due_date || null, filedOn: edit.filed_on || null, confirmation: edit.confirmation_number ?? "", linkUrl: edit.link_url ?? "" } });
       toast.success("Saved"); setEdit(null); refresh();
     } catch (e) { toast.error((e as Error).message); }
   };
 
   return (
     <div className="space-y-5">
+      <SecComplianceCards fundId={fundId} />
       {filingStatus && (
         <Card>
           <CardHeader><CardTitle>Form D and Blue Sky status</CardTitle><CardDescription>Where this fund's filings stand. Harmonious files by hand on EDGAR and the state system; nothing is submitted or paid automatically.</CardDescription></CardHeader>
@@ -100,7 +102,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
                 {fees.map((f: any) => (
                   <tr key={f.id}>
                     <td className="py-2 font-medium">{f.state}</td><td>{f.description || "-"}</td><td>{usd(f.amount_cents)}</td>
-                    <td>{f.due_date ? fmtDate(f.due_date) : "-"}</td><td>{f.filed_on ? fmtDate(f.filed_on) : <Badge variant="outline">Not filed</Badge>}</td><td>{f.confirmation_number || "-"}</td>
+                    <td>{f.due_date ? fmtDate(f.due_date) : "-"}</td><td>{f.filed_on ? fmtDate(f.filed_on) : <Badge variant="outline">Not filed</Badge>}</td><td>{f.confirmation_number || "-"}{f.link_url && <> · <a className="text-primary underline" href={f.link_url} target="_blank" rel="noreferrer">Link</a></>}</td>
                     <td className="space-x-2 text-right whitespace-nowrap">
                       <Button size="sm" variant="ghost" onClick={() => setEdit({ ...f, amount: (f.amount_cents / 100).toFixed(2) })}>Edit</Button>
                       {!f.filed_on && <Button size="sm" variant="ghost" onClick={async () => { await remove({ data: { fundId, id: f.id } }); refresh(); }}>Remove</Button>}
@@ -124,6 +126,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
               <div><Label>Due date</Label><Input type="date" value={edit.due_date ?? ""} onChange={(e) => setEdit({ ...edit, due_date: e.target.value })} /></div>
               <div><Label>Filing date</Label><Input type="date" value={edit.filed_on ?? ""} onChange={(e) => setEdit({ ...edit, filed_on: e.target.value })} /></div>
               <div className="sm:col-span-2"><Label>Confirmation number</Label><Input value={edit.confirmation_number ?? ""} onChange={(e) => setEdit({ ...edit, confirmation_number: e.target.value })} /></div>
+              <div className="sm:col-span-2"><Label>Payment or receipt link</Label><Input placeholder="https://" value={edit.link_url ?? ""} onChange={(e) => setEdit({ ...edit, link_url: e.target.value })} /><p className="mt-1 text-xs text-muted-foreground">Attach receipts or notices under Links and files above.</p></div>
             </div>
           )}
           <DialogFooter><Button variant="outline" onClick={() => setEdit(null)}>Cancel</Button><Button onClick={submit}>Save</Button></DialogFooter>
