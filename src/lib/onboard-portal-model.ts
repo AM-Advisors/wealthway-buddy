@@ -144,3 +144,15 @@ export function safeOnboardReturnPath(path: unknown): string | null {
   if (typeof path !== "string") return null;
   return /^\/onboard\/i\/[0-9a-f-]{36}$/i.test(path) ? path : null;
 }
+
+/**
+ * Progress shown on the portal: the share of the cards on screen that are
+ * actually finished (steps plus the Fund card). Never 100% while any card,
+ * including a pending fund countersignature, is still open.
+ */
+export function portalProgressPercent(steps: PortalStepView[], fundingReceived: boolean): number {
+  const shown = steps.filter((s) => s.state !== "not_applicable");
+  const total = shown.length + 1;
+  const finished = shown.filter((s) => s.state === "complete").length + (fundingReceived ? 1 : 0);
+  return Math.round((finished / total) * 100);
+}

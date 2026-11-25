@@ -25,7 +25,7 @@ import {
 import { revealWireInstructionsFn } from "@/lib/fund-onboarding.functions";
 import { fundStepState, WIRE_FRAUD_WARNING } from "@/lib/fund-onboarding-model";
 import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-portal-model";
-import { identityCheckState } from "@/lib/onboard-portal-model";
+import { identityCheckState, portalProgressPercent } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
 import { kycFieldsFor } from "@/lib/kyc-fields";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
@@ -138,6 +138,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
   // Same progress, time estimate and next action as the portal page: both read the server's journey steps.
   const journey: JourneyStepView[] = d.journey ?? [];
   const h = investorHomeSummary(journey);
+  const progress = portalProgressPercent(steps, isReconciledFunding(d.fundingStatus));
   const left = minutesLeft(journey);
 
   return (
@@ -154,9 +155,9 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">Progress</span>
-              <span className="text-muted-foreground">{h.progressPercent}%{!h.complete && left > 0 ? ` · about ${left} min left` : ""}</span>
+              <span className="text-muted-foreground">{progress}%{progress < 100 && left > 0 ? ` · about ${left} min left` : ""}</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${h.progressPercent}%` }} /></div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div>
           </div>
 
           <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Steps">
