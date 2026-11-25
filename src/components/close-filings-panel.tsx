@@ -140,7 +140,7 @@ function FilingRow({ f, onDone }: { f: any; onDone: () => void }) {
           <p className="text-sm font-medium">{title}</p>
           <p className="text-muted-foreground">
             {f.investor_count} investor{f.investor_count === 1 ? "" : "s"} · {money(f.amount_cents)} sold · fee {money(f.fee_cents)}
-            {f.filing_type === "form_d" ? " (Harmonious fee)" : ""}
+            {f.filing_type === "form_d" ? " (Electronic Form D Filing)" : ""}
           </p>
           {f.packet?.missing?.length ? <p className="text-destructive">Missing: {f.packet.missing.join(", ")}</p> : null}
         </div>

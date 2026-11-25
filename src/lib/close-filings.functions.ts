@@ -74,7 +74,7 @@ export const generateCloseFilings = createServerFn({ method: "POST" })
       close_request_id: req.id, offering_id: req.offering_id, filing_type: "form_d", jurisdiction: "SEC",
       is_amendment: amendment, investor_count: investors.length, amount_cents: total,
       fee_cents: FORM_D_HARMONIOUS_FEE_CENTS, fee_needs_review: false, prepared_by: context.userId,
-      packet: { issuer, closeDate: req.target_date, totalSoldCents: total, investorCount: investors.length, states, missing, closeDetails: req.details ?? {}, feeLabel: "Harmonious Form D fee (Form D due 15 days after first sale)" },
+      packet: { issuer, closeDate: req.target_date, totalSoldCents: total, investorCount: investors.length, states, missing, closeDetails: req.details ?? {}, feeLabel: "Electronic Form D Filing fee (Form D due 15 days after first sale)" },
     }];
     for (const state of states) {
       const list = investors.filter((i) => i.state === state);

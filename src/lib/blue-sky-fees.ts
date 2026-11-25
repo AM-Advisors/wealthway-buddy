@@ -1,7 +1,7 @@
 /**
  * Built-in Rule 506(b)/(c) state notice fee table (initial filings), based on the NASAA EFD fee list.
  * "review" = formula, offering-size or uncertain fee: never guessed. Keep this table current; Harmonious
- * confirms every state fee on EFD before paying. Form D electronic filing is the Harmonious fee.
+ * confirms every state fee on EFD before paying. The Electronic Form D Filing fee is the Harmonious fee.
  */
 export const FORM_D_FILING_CENTS = 16000;
 

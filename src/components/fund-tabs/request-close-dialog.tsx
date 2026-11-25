@@ -219,7 +219,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
             <p className="font-medium">Form D & Blue Sky fees</p>
             <p className="text-xs text-muted-foreground">Worked out from the addresses of the investors you picked and the filings already on the Compliance tab.</p>
             <div className="divide-y rounded border">
-              <div className="flex justify-between p-2"><span>Harmonious Form D electronic filing (always included)</span><span className="font-medium">{usd(filing.formDCents)}</span></div>
+              <div className="flex justify-between p-2"><span>Electronic Form D Filing (always included)</span><span className="font-medium">{usd(filing.formDCents)}</span></div>
               {filing.lines.map((l) => (
                 <div key={l.state} className="flex justify-between p-2">
                   <span>{l.state} Blue Sky notice · {l.investors} investor{l.investors === 1 ? "" : "s"}</span>

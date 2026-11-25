@@ -70,7 +70,7 @@ export function CloseDetailsSummary({ r }: { r: any }) {
         <Field k="Due date" v={d.brokerDealerDueDate ? fmtDate(d.brokerDealerDueDate) : null} />
       </Group>
       <Group title="Form D & Blue Sky fees">
-        <Field k="Electronic Form D" v={money(d.formDFeeCents ?? 16000)} />
+        <Field k="Electronic Form D Filing" v={money(d.formDFeeCents ?? 16000)} />
         <Field k="States" v={lines.length ? lines.map((l) => l.state).join(", ") : (d.investorStates?.length ? d.investorStates.join(", ") : null)} />
         <Field k="State fees" v={lines.length ? lines.map((l) => `${l.state}: ${l.status === "filed" ? "already filed" : l.status === "review" ? "needs review" : l.status === "none" ? "no fee" : money(l.cents)}`).join(" · ") : null} />
         <Field k="Estimated total" v={d.filingTotalCents == null ? null : money(d.filingTotalCents)} />

@@ -116,7 +116,7 @@ export const prepareFundFilings = createServerFn({ method: "POST" })
     if ((!dFiled || data.amendment) && !open("form_d", "SEC")) rows.push({
       close_request_id: null, offering_id: data.fundId, filing_type: "form_d", jurisdiction: "SEC", is_amendment: dFiled,
       investor_count: investors.length, amount_cents: total, fee_cents: FORM_D_HARMONIOUS_FEE_CENTS, fee_needs_review: false, prepared_by: context.userId,
-      packet: { issuer, closeDate: off.first_sale_on, totalSoldCents: total, investorCount: investors.length, states, missing, closeDetails: {}, feeLabel: "Harmonious Form D fee (Form D due 15 days after first sale)" },
+      packet: { issuer, closeDate: off.first_sale_on, totalSoldCents: total, investorCount: investors.length, states, missing, closeDetails: {}, feeLabel: "Electronic Form D Filing fee (Form D due 15 days after first sale)" },
     });
     for (const st of states) {
       if (open("blue_sky", st) || done(st)) continue;

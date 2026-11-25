@@ -68,7 +68,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Filing history</CardTitle><CardDescription>Every Form D and Blue Sky record for this fund. The $160 Form D fee is the Harmonious Form D Filing Fee.</CardDescription></CardHeader>
+        <CardHeader><CardTitle>Filing history</CardTitle><CardDescription>Every Form D and Blue Sky record for this fund. The $160 Form D fee is the Electronic Form D Filing fee.</CardDescription></CardHeader>
         <CardContent className="overflow-x-auto">
           {filings.length === 0 ? <p className="text-sm text-muted-foreground">No filings yet.</p> : (
             <table className="w-full text-sm">
