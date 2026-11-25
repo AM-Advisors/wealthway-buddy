@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 
 type Related = {
   id: string; name: string; role: string; ownershipPercent: number | null; signer: boolean;
-  email?: string | null; dobOnFile?: boolean; ssnOnFile?: boolean; taxFormSigner?: boolean; responsibleParty?: boolean; personId?: string;
+  email?: string | null; dobOnFile?: boolean; ssnOnFile?: boolean; taxFormSigner?: boolean; responsibleParty?: boolean; personId?: string; phoneOnFile?: boolean; citizenshipOnFile?: boolean; addressOnFile?: boolean;
 };
 const selectCls = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 const digits = (v: string) => v.replace(/\D/g, "").slice(0, 9);
