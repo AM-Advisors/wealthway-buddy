@@ -1361,3 +1361,4 @@
 - [ ] EIN Yes/No question; staff investor-type change with reason
 - [ ] Duplicate-person offer when adding people
 - [ ] Fewer routine confirmations; auto-advance About you and Tax
+- [ ] Michael Smith (ALK Capital): link contact to a person record so he appears; KYC via user's sign-in
