@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { CloseFilingsPanel } from "@/components/close-filings-panel";
 import { approveFundCloseRequest } from "@/lib/close-filings.functions";
-import { updateFundCloseRequestStatus } from "@/lib/fund-close-requests.functions";
+import { openCloseAttachment, updateFundCloseRequestStatus } from "@/lib/fund-close-requests.functions";
 import { CloseInvestorTerms } from "@/components/close-investor-terms";
 import { Pencil } from "lucide-react";
 
@@ -37,6 +37,23 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   return <section className="rounded-md border p-4"><p className="mb-3 font-semibold">{title}</p><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{children}</dl></section>;
 }
 
+function CloseAttachment({ r, kind, name, path }: { r: any; kind: "purchase_agreement" | "wire_instructions"; name: string | undefined; path: string | undefined }) {
+  const openFile = useServerFn(openCloseAttachment);
+  const [busy, setBusy] = useState(false);
+  async function open() {
+    const tab = window.open("about:blank", "_blank");
+    if (tab) tab.opener = null;
+    setBusy(true);
+    try {
+      const { url } = await openFile({ data: { id: r.id, kind } });
+      if (tab) tab.location.href = url;
+      else toast.error("Allow pop-ups to open the attachment.");
+    } catch (e) { tab?.close(); toast.error(e instanceof Error ? e.message : "Couldn't open the attachment."); }
+    finally { setBusy(false); }
+  }
+  return path ? <Button size="sm" variant="link" className="h-auto max-w-full whitespace-normal break-all p-0 text-left" disabled={busy} onClick={open}>{busy ? "Opening…" : name || "Open copy"}</Button> : <>{name || "Not attached"}</>;
+}
+
 export function CloseDetailsSummary({ r }: { r: any }) {
   if (!r.details || !Object.keys(r.details).length) return null;
   const d = r.details;
@@ -51,7 +68,8 @@ export function CloseDetailsSummary({ r }: { r: any }) {
         <Field k="Close date requested" v={fmtDate(r.target_date)} />
         <Field k="Amount for close" v={d.closeAmountCents == null ? null : money(d.closeAmountCents)} />
         <Field k="Asset" v={<>{asset}{assetDetail && <span className="block text-xs font-normal text-muted-foreground">{assetDetail}</span>}</>} />
-        <Field k="Purchase agreement" v={d.purchaseAgreementName || "Not attached"} />
+        <Field k="Purchase agreement" v={<CloseAttachment r={r} kind="purchase_agreement" name={d.purchaseAgreementName} path={d.purchaseAgreementPath} />} />
+        <Field k="Signed-copy confirmation" v={d.purchaseAgreementSigned ? "Confirmed by uploader, pending review" : "Not confirmed"} />
       </Group>
       <Group title="Fees">
         <Field k="Recorded management fee total" v={d.managementFeeCents == null ? null : money(d.managementFeeCents)} />
@@ -84,6 +102,7 @@ export function CloseDetailsSummary({ r }: { r: any }) {
         <Field k="Address" v={d.wireAddress} />
         <Field k="Account number" v={wire.accountLast4 ? `Ending ${wire.accountLast4}` : null} />
         <Field k="Routing number" v={wire.routingLast4 ? `Ending ${wire.routingLast4}` : null} />
+        <Field k="Wire instructions copy" v={<CloseAttachment r={r} kind="wire_instructions" name={d.wireInstructionsName} path={d.wireInstructionsPath} />} />
       </Group>
     </div>
   );

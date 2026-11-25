@@ -6,6 +6,7 @@ import { FUND_OPERATIONS_ROLES } from "@/lib/staff-roles";
 import { canFinalizeCloseRequest, closeStatusForIntent } from "@/lib/fund-close-request-model";
 import { estimateCloseFilingCosts, stateCode } from "@/lib/blue-sky-fees";
 import { closeInvestorTerms, closeManagementFee } from "@/lib/close-investor-terms";
+import { missingCloseAttachments } from "@/lib/close-attachments";
 
 async function filedBlueSkyStates(db: any, fundId: string): Promise<string[]> {
   const { data } = await db.from("fund_regulatory_filings").select("state").eq("offering_id", fundId).eq("filing_type", "blue_sky").is("removed_at", null);
@@ -54,6 +55,8 @@ const closeDetailsSchema = z.object({
   existingAsset: z.string().max(200).default(""),
   asset: z.object({ name: z.string().max(200), issuer: z.string().max(200), type: z.string().max(100), amountCents: z.number().int().min(0).max(1e13).nullable(), notes: z.string().max(2000) }),
   purchaseAgreement: z.object({ fileName: z.string().max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).nullable(),
+  purchaseAgreementSigned: z.boolean().optional().default(false),
+  wireInstructions: z.object({ fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().min(1).max(28_000_000) }).nullable().optional().default(null),
   managementFeePct: z.number().min(0).max(100).nullable(),
   managementFeeCents: z.number().int().min(0).max(1e13).nullable(),
   feeConfirmed: z.boolean(),
@@ -190,12 +193,20 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       if (existing.status !== "draft") throw new Error("Only draft close details can be changed or sent for review.");
       previousStatus = existing.status;
       previousDetails = existing.details && typeof existing.details === "object" ? existing.details : {};
+      if (data.intent === "submit") {
+        const missing = missingCloseAttachments({ hasPurchaseAgreement: !!(data.details?.purchaseAgreement || previousDetails["purchaseAgreementPath"]), purchaseAgreementSigned: data.details?.purchaseAgreementSigned === true, hasWireInstructions: !!(data.details?.wireInstructions || previousDetails["wireInstructionsPath"]) });
+        if (missing.length) throw new Error(missing.join(" "));
+      }
       const { data: updated, error } = await db.from("fund_close_requests").update({
         target_date: data.targetDate, notes: data.notes.trim() || null,
         onboarding_ids: onboardingIds, updated_at: new Date().toISOString(),
       }).eq("id", rowId).eq("status", "draft").select("id");
       if (error || !updated?.length) throw new Error("These close details changed. Refresh and try again.");
     } else {
+      if (data.intent === "submit") {
+        const missing = missingCloseAttachments({ hasPurchaseAgreement: !!data.details?.purchaseAgreement, purchaseAgreementSigned: data.details?.purchaseAgreementSigned === true, hasWireInstructions: !!data.details?.wireInstructions });
+        if (missing.length) throw new Error(missing.join(" "));
+      }
       const { data: off } = await db.from("offerings").select("client_id").eq("id", data.fundId).maybeSingle();
       const { data: row, error } = await db.from("fund_close_requests").insert({
         offering_id: data.fundId, client_id: off?.client_id ?? null, requested_by: uid, status: "draft",
@@ -211,13 +222,32 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       const det = data.details;
       let paPath: string | null = typeof previousDetails["purchaseAgreementPath"] === "string" ? previousDetails["purchaseAgreementPath"] : null;
       let paName: string | null = typeof previousDetails["purchaseAgreementName"] === "string" ? previousDetails["purchaseAgreementName"] : null;
+      let wirePath: string | null = typeof previousDetails["wireInstructionsPath"] === "string" ? previousDetails["wireInstructionsPath"] : null;
+      let wireName: string | null = typeof previousDetails["wireInstructionsName"] === "string" ? previousDetails["wireInstructionsName"] : null;
       if (det.purchaseAgreement) {
         const bytes = Buffer.from(det.purchaseAgreement.base64, "base64");
-        if (bytes.byteLength > 20 * 1024 * 1024) throw new Error("The purchase agreement must be 20 MB or smaller.");
+        if (!bytes.byteLength || bytes.byteLength > 20 * 1024 * 1024) throw new Error("The purchase agreement must be a nonempty file, 20 MB or smaller.");
         paPath = `close-requests/${data.fundId}/${rowId}/${Date.now()}-${det.purchaseAgreement.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
         const { error: upErr } = await db.storage.from("manager-uploads").upload(paPath, bytes, { contentType: det.purchaseAgreement.contentType || "application/pdf", upsert: false });
         if (upErr) throw new Error("The purchase agreement couldn't be saved. Please try again.");
         paName = det.purchaseAgreement.fileName;
+      }
+      if (det.wireInstructions) {
+        const bytes = Buffer.from(det.wireInstructions.base64, "base64");
+        if (!bytes.byteLength || bytes.byteLength > 20 * 1024 * 1024) throw new Error("The wire instructions must be a nonempty file, 20 MB or smaller.");
+        wirePath = `close-requests/${data.fundId}/${rowId}/wire-${Date.now()}-${det.wireInstructions.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
+        const { error } = await db.storage.from("manager-uploads").upload(wirePath, bytes, { contentType: det.wireInstructions.contentType || "application/pdf", upsert: false });
+        if (error) throw new Error("The wire instructions couldn't be saved. Please try again.");
+        wireName = det.wireInstructions.fileName;
+      }
+      if (data.intent === "submit") {
+        const missing = missingCloseAttachments({ hasPurchaseAgreement: !!paPath, purchaseAgreementSigned: det.purchaseAgreementSigned, hasWireInstructions: !!wirePath });
+        if (missing.length) throw new Error(missing.join(" "));
+        for (const path of [paPath, wirePath]) {
+          if (!path || !path.startsWith(`close-requests/${data.fundId}/${rowId}/`)) throw new Error("Close attachments must belong to this close request.");
+          const { data: signed, error } = await db.storage.from("manager-uploads").createSignedUrl(path, 60);
+          if (error || !signed?.signedUrl) throw new Error("A required close attachment is unavailable. Upload it again before sending.");
+        }
       }
       // A proposed asset is created only on explicit submission, never by saving draft details.
       if (data.intent === "submit" && det.assetMode === "new" && det.asset.name.trim()) {
@@ -229,12 +259,12 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
         if (assetError) throw new Error("The asset details couldn't be saved. Please try again.");
       }
       // Only the last four digits of bank numbers are kept here; full instructions are verified by Harmonious.
-      const { purchaseAgreement: _pa, ...rest } = det;
+      const { purchaseAgreement: _pa, wireInstructions: _wi, ...rest } = det;
       // Blue Sky states come from investor addresses and the fund's Compliance filings, recomputed here.
       const filing = estimateCloseFilingCosts({ investorStates: await investorStatesFor(db, data.fundId, onboardingIds), filedStates: await filedBlueSkyStates(db, data.fundId) });
       rest.investorStates = filing.lines.map((l) => l.state);
       const { error: detailsError } = await db.from("fund_close_requests").update({
-        details: { ...rest, managementFeeCents, purchaseAgreementPath: paPath, purchaseAgreementName: paName, formDFeeCents: filing.formDCents, blueSkyLines: filing.lines, filingTotalCents: filing.totalCents, ...sideLetterDetails, feesAreEstimate: true },
+        details: { ...rest, managementFeeCents, purchaseAgreementPath: paPath, purchaseAgreementName: paName, purchaseAgreementSignedConfirmedBy: det.purchaseAgreementSigned && paPath ? uid : null, purchaseAgreementSignedConfirmedAt: det.purchaseAgreementSigned && paPath ? new Date().toISOString() : null, wireInstructionsPath: wirePath, wireInstructionsName: wireName, formDFeeCents: filing.formDCents, blueSkyLines: filing.lines, filingTotalCents: filing.totalCents, ...sideLetterDetails, feesAreEstimate: true },
       }).eq("id", rowId);
       if (detailsError) throw new Error("The close details couldn't be saved. Please try again.");
     } else {
@@ -253,6 +283,22 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "close_request", title: "Fund close request submitted", offeringId: data.fundId, submittedBy: uid, ref: rowId, path: "/ops/close-requests" });
     }
     return { id: rowId as string, status: nextStatus };
+  });
+
+/** Exact-close authorized private document reader; never accepts arbitrary storage paths. */
+export const openCloseAttachment = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), kind: z.enum(["purchase_agreement", "wire_instructions"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: row } = await db.from("fund_close_requests").select("offering_id, details").eq("id", data.id).maybeSingle();
+    if (!row || !(await canViewFund(db, context.userId, row.offering_id))) throw new Error("You don't have access to this close.");
+    const path = data.kind === "purchase_agreement" ? row.details?.purchaseAgreementPath : row.details?.wireInstructionsPath;
+    if (typeof path !== "string" || !path.startsWith(`close-requests/${row.offering_id}/${data.id}/`)) throw new Error("Attachment not found for this close.");
+    const { data: result, error } = await db.storage.from("manager-uploads").createSignedUrl(path, 300);
+    if (error || !result?.signedUrl) throw new Error("Couldn't open the close attachment.");
+    return { url: result.signedUrl as string };
   });
 
 /** Operations queue (staff only). */

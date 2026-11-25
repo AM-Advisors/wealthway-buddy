@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { estimateCloseFilingCosts } from "@/lib/blue-sky-fees";
 import { closeManagementFee } from "@/lib/close-investor-terms";
 import { CloseInvestorTerms } from "@/components/close-investor-terms";
+import { missingCloseAttachments } from "@/lib/close-attachments";
 
 const NEW = "__new";
 
@@ -37,6 +38,8 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const [assetSel, setAssetSel] = useState<string>("");
   const [asset, setAsset] = useState({ name: "", issuer: "", type: "", amount: "", notes: "" });
   const [pa, setPa] = useState<File | null>(null);
+  const [paSigned, setPaSigned] = useState(false);
+  const [wireFile, setWireFile] = useState<File | null>(null);
   const [feePct, setFeePct] = useState<string | null>(null);
   const [feeOk, setFeeOk] = useState(false);
   const [wire, setWire] = useState({ method: "wire" as "wire" | "ach", beneficiary: "", bankName: "", routingLast4: "", accountLast4: "", reference: "", amount: "" });
@@ -57,6 +60,8 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
       amount: d.asset?.amountCents == null ? "" : String(d.asset.amountCents / 100), notes: d.asset?.notes ?? "",
     });
     setPa(null);
+    setWireFile(null);
+    setPaSigned(d.purchaseAgreementSigned === true);
     setFeePct(d.managementFeePct == null ? null : String(d.managementFeePct));
     setFeeOk(d.feeConfirmed === true);
     setWire({
@@ -86,6 +91,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const pickedRows = rows.filter((r) => picked.has(r.id));
   const filing = useMemo(() => estimateCloseFilingCosts({ investorStates: pickedRows.map((r) => r.state), filedStates }), [pickedRows.map((r) => r.id).join(), filedStates.join()]);
   const noAddress = pickedRows.filter((r) => !r.state);
+  const missingAttachments = missingCloseAttachments({ hasPurchaseAgreement: !!(pa || request?.details?.purchaseAgreementPath), purchaseAgreementSigned: paSigned, hasWireInstructions: !!(wireFile || request?.details?.wireInstructionsPath) });
   const isNew = assetSel === NEW || (assets.length === 0 && assetSel === "");
   const toggle = (id: string) => { setFeeOk(false); setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
 
@@ -96,6 +102,8 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
     if (intent === "submit" && isNew && asset.name.trim().length < 2) { toast.error("Add the asset name."); return; }
     if (intent === "submit" && !feeOk) { toast.error("Confirm the management fee."); return; }
     if (intent === "submit" && pickedRows.some(r => r.terms.error)) { toast.error("Review the conflicting side-letter terms before sending."); return; }
+    if (intent === "submit" && missingAttachments.length) { toast.error(missingAttachments.join(" ")); return; }
+    if ([pa, wireFile].some(f => f && (!f.size || f.size > 20 * 1024 * 1024))) { toast.error("Each attachment must be a nonempty file, 20 MB or smaller."); return; }
     setBusy(intent);
     try {
       const purchaseAgreement = pa ? { fileName: pa.name, contentType: pa.type || "application/pdf", base64: await fileToBase64(pa) } : null;
@@ -106,6 +114,8 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
           assetMode: isNew ? "new" : "existing", existingAsset: isNew ? "" : assetSel,
           asset: { name: asset.name, issuer: asset.issuer, type: asset.type, amountCents: toCents(asset.amount), notes: asset.notes },
           purchaseAgreement,
+          purchaseAgreementSigned: paSigned,
+          wireInstructions: wireFile ? { fileName: wireFile.name, contentType: wireFile.type || "application/pdf", base64: await fileToBase64(wireFile) } : null,
           managementFeePct: toPct(pctStr), managementFeeCents: feeCents, feeConfirmed: feeOk,
           wire: { method: wire.method, beneficiary: wire.beneficiary, bankName: wire.bankName, routingLast4: wire.routingLast4.slice(-4), accountLast4: wire.accountLast4.slice(-4), reference: wire.reference, amountCents: toCents(wire.amount) },
           investorStates: filing.lines.map((l) => l.state),
@@ -179,7 +189,8 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
                 <p className="text-xs text-muted-foreground sm:col-span-2">This asset will be added to your Assets list for Harmonious to confirm.</p>
               </div>
             )}
-            <div className="space-y-1"><Label>Purchase agreement</Label><Input type="file" onChange={(e) => setPa(e.target.files?.[0] ?? null)} />{request?.details?.purchaseAgreementName && !pa && <p className="text-xs text-muted-foreground">On file: {request.details.purchaseAgreementName}. Choose a file only to replace it.</p>}</div>
+            <div className="space-y-1"><Label htmlFor="signed-purchase-agreement">Signed purchase agreement (required to send)</Label><Input id="signed-purchase-agreement" type="file" onChange={(e) => { setPa(e.target.files?.[0] ?? null); setPaSigned(false); }} />{request?.details?.purchaseAgreementName && !pa && <p className="text-xs text-muted-foreground">On file: {request.details.purchaseAgreementName}. Choose a file only to replace it.</p>}</div>
+            <label className="flex items-start gap-2"><Checkbox checked={paSigned} onCheckedChange={v => setPaSigned(v === true)} />I checked that this purchase agreement copy contains the required signatures.</label>
           </div>
 
           <div className={section}>
@@ -253,15 +264,17 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
               <div className="space-y-1"><Label>Account number (last 4)</Label><Input maxLength={4} value={wire.accountLast4} onChange={(e) => setWire({ ...wire, accountLast4: e.target.value.replace(/\D/g, "") })} /></div>
               <div className="space-y-1 sm:col-span-2"><Label>Reference / memo</Label><Input value={wire.reference} onChange={(e) => setWire({ ...wire, reference: e.target.value })} /></div>
             </div>
-            <p className="text-xs text-muted-foreground">Attach the full instructions to the purchase agreement or send them to Harmonious. Harmonious verifies instructions by phone before any money moves; nothing is sent from here.</p>
+            <div className="space-y-1"><Label htmlFor="close-wire-instructions">Wire instructions copy (required to send)</Label><Input id="close-wire-instructions" type="file" onChange={e => setWireFile(e.target.files?.[0] ?? null)} />{request?.details?.wireInstructionsName && !wireFile && <p className="text-xs text-muted-foreground">On file: {request.details.wireInstructionsName}.</p>}</div>
+            <p className="text-xs text-muted-foreground">Upload the full instructions separately. Uploading is not bank approval; Harmonious verifies instructions before any money moves.</p>
           </div>
 
           <div className="space-y-1"><Label htmlFor="close-notes">Notes (optional)</Label><Textarea id="close-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} /></div>
         </div>
         <DialogFooter>
+          {missingAttachments.length > 0 && <p className="text-xs text-destructive">{missingAttachments.join(" ")} Drafts can still be saved.</p>}
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy !== null}>Cancel</Button>
           <Button variant="secondary" onClick={() => onSave("draft")} disabled={busy !== null}>{busy === "draft" ? "Saving…" : "Save details"}</Button>
-          {canSend ? <Button onClick={() => onSave("submit")} disabled={busy !== null || picked.size === 0}>{busy === "submit" ? "Sending…" : "Send for review"}</Button> : <p className="max-w-xs text-right text-xs text-muted-foreground">The fund manager sends saved details for review. Operations can then review them on this same tab.</p>}
+          {canSend ? <Button onClick={() => onSave("submit")} disabled={busy !== null || picked.size === 0 || missingAttachments.length > 0}>{busy === "submit" ? "Sending…" : "Send for review"}</Button> : <p className="max-w-xs text-right text-xs text-muted-foreground">The fund manager sends saved details for review. Operations can then review them on this same tab.</p>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

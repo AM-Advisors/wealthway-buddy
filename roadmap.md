@@ -1,5 +1,9 @@
 # Roadmap
 
+## Required close attachments (2026-11-25)
+- [x] Require a signed purchase agreement copy with uploader confirmation and a separate wire-instructions file before submission; incomplete drafts remain saveable. Shared browser/server gate blocks missing details and unconfirmed copies; saved exact-close files can be reused.
+- [x] Keep both files private and openable from the shared close view; 21 offline tests pass, including real handler upload/save/submission with mocked storage and authorization denials. Fictional manager and Operations views show both attachment details; preview build passes. Sandbox validated; production verification pending. No production records, emails, money or publishing touched; live upload/send/read-back remains unverified.
+
 ## Close investor side letters and editing (2026-11-25)
 - [x] Show exact-investor side-letter terms and apply active fee exceptions to new close estimates, retaining version references and submitted snapshots; conflicting terms block submission rather than falling back to default fees.
 - [x] Add an explicit Edit close details button to existing editable close drafts; reset fee confirmation when investor selection changes. Nineteen focused regressions pass; fictional manager and Operations views both show 0% fee/carry and quarterly reporting with version 2. Preview build passes; durable save/read-back remains unverified without isolated QA.

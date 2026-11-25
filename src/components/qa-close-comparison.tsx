@@ -20,6 +20,8 @@ const QA_CLOSE_REQUEST = {
     wire: { method: "wire", amountCents: 1516000, beneficiary: "Example Fund Manager LLC", bankName: "Fictional Bank", routingLast4: "1234", accountLast4: "6789", reference: "Close 2026-12" },
     investorStates: ["CO", "TX"],
     purchaseAgreementName: "fictional-purchase-agreement.pdf",
+    purchaseAgreementSigned: true,
+    wireInstructionsName: "fictional-wire-instructions.pdf",
     legalFeesCents: 250000,
     legalFeesDetail: "Fictional legal review",
     brokerDealerFeesCents: null,
