@@ -39,7 +39,7 @@ import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 import { CapitalTieReport } from "@/components/investor-share-panel";
 import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { AuditHistoryTab } from "@/components/fund-tabs/audit-history-tab";
-import { BankingTab } from "@/components/fund-tabs/banking-tab";
+import { BankingTab, BankStatementsSection, BankTransactionsSection } from "@/components/fund-tabs/banking-tab";
 import { AccountingWorkspace } from "@/components/fund-tabs/accounting-workspace";
 import { RequestCloseDialog } from "@/components/fund-tabs/request-close-dialog";
 import { fundRegulatoryFn } from "@/lib/fund-regulatory.functions";
@@ -70,7 +70,7 @@ export function EinField({ fundId }: { fundId: string }) {
   return <div><dt className="text-xs text-muted-foreground">EIN</dt><dd>{body}</dd></div>;
 }
 
-export const FUND_TABS = ["overview", "setup", "activity", "forecasts", "formation", "record", "approvals", "requests", "calendar", "distributions", "services", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory", "audit", "open"] as const;
+export const FUND_TABS = ["overview", "setup", "activity", "forecasts", "formation", "record", "approvals", "requests", "calendar", "distributions", "services", "todos", "details", "team", "investors", "documents", "banking", "statements", "transactions", "accounting", "assets", "closes", "regulatory", "audit", "open"] as const;
 export type FundTab = (typeof FUND_TABS)[number];
 type Tab = FundTab;
 export type FundWorkspaceMode = "client" | "harmonious";
@@ -222,7 +222,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
       </div>
 
           <FundChangeSummary fundId={fundId} onNavigate={onTab} />
-          {tab === "overview" && <FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} />}
+          {tab === "overview" && <FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} setupTodos={steps.filter((s) => s.owner === "You" && (!s.done || s.section === "economics")).flatMap((s) => { const st = fundTodoState(s, cap?.hasApprovedTerms ?? false); return st.complete ? [] : [{ id: s.id, label: s.section === "economics" ? "Fees & terms" : s.label, description: s.description ?? null, dueDate: s.dueDate ?? null, target: st.action.target, actionLabel: st.action.label, review: st.review }]; })} />}
           {staff && <HarmoniousTodos steps={steps as any} onSetup={() => onTab("setup")} />}
           <ManagerInvestorTodoList fundId={fundId} title="Waiting on you: investors" />
           <TodosTab steps={steps.filter((s) => s.owner === "You" && (!s.done || s.section === "economics"))} hasApprovedTerms={cap?.hasApprovedTerms ?? false} onNavigate={onTab} />
@@ -237,6 +237,8 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 
         <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>
+        <TabsContent value="statements">{tab === "statements" && <BankStatementsSection fundId={fundId} staff={staff} />}</TabsContent>
+        <TabsContent value="transactions">{tab === "transactions" && <BankTransactionsSection fundId={fundId} staff={staff} />}</TabsContent>
 
         <TabsContent value="investors" className="space-y-4"><ManagerFundInvestors fundId={fundId} moreSections={<>{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></>} /></TabsContent>
 

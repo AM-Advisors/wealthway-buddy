@@ -24,14 +24,6 @@ const NONE = "__none";
 /** The fund's banking home: how to share the account, the statements and transactions on it, and the receiving details. */
 export function BankingTab({ fundId, staff = false }: { fundId: string; staff?: boolean }) {
   const [mode, setMode] = useState<"upload" | "connect">("upload");
-  const load = useServerFn(fundBooksFn);
-  const q = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
-  const d = q.data as any;
-  const books = q.isPending
-    ? <p className="text-sm text-muted-foreground">Loading bank records…</p>
-    : q.error || !d
-      ? <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the bank records."}</p>
-      : null;
   return (
     <div className="space-y-5">
       <Card>
@@ -53,15 +45,6 @@ export function BankingTab({ fundId, staff = false }: { fundId: string; staff?: 
           <CardContent><BankFeedPanel fundId={fundId} /></CardContent>
         </Card>
       )}
-      {books ?? (
-        <>
-          <StatementUpload fundId={fundId} investors={d.investors ?? []} canEnter={staff} />
-          <div className="space-y-5">
-            <Transactions fundId={fundId} d={d} />
-            {staff && <ManualTransactionForm fundId={fundId} investors={d.investors ?? []} />}
-          </div>
-        </>
-      )}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Wire instructions</CardTitle>
@@ -70,6 +53,37 @@ export function BankingTab({ fundId, staff = false }: { fundId: string; staff?: 
         <CardContent><WireFromBankForm fundId={fundId} allowPrefill={mode === "connect"} /></CardContent>
       </Card>
       <FundBankingReview offeringId={fundId} />
+    </div>
+  );
+}
+
+/** Statements and transactions live under Banking, beside the account they came from. Records only. */
+function useBooks(fundId: string) {
+  const load = useServerFn(fundBooksFn);
+  return useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
+}
+
+function booksProblem(q: { error: unknown }) {
+  return <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the fund's bank records."}</p>;
+}
+
+export function BankStatementsSection({ fundId, staff }: { fundId: string; staff: boolean }) {
+  const q = useBooks(fundId);
+  const d = q.data as any;
+  if (q.isPending) return <p className="text-sm text-muted-foreground">Loading bank statements…</p>;
+  if (q.error || !d) return booksProblem(q);
+  return <StatementUpload fundId={fundId} investors={d.investors ?? []} canEnter={staff} />;
+}
+
+export function BankTransactionsSection({ fundId, staff }: { fundId: string; staff: boolean }) {
+  const q = useBooks(fundId);
+  const d = q.data as any;
+  if (q.isPending) return <p className="text-sm text-muted-foreground">Loading bank transactions…</p>;
+  if (q.error || !d) return booksProblem(q);
+  return (
+    <div className="space-y-5">
+      <Transactions fundId={fundId} d={d} />
+      {staff && <ManualTransactionForm fundId={fundId} investors={d.investors ?? []} />}
     </div>
   );
 }

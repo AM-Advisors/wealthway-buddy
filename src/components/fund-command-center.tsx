@@ -32,7 +32,9 @@ function Card({ title, children, className, action }: { title: string; children:
 }
 const Empty = ({ title, body }: { title: string; body: string }) => <div className="text-sm"><p className="font-medium text-foreground">{title}</p><p className="text-muted-foreground">{body}</p></div>;
 
-export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }: { fundId: string; onNavigate?: (t: CommandTarget) => void; nextActionOnly?: boolean }) {
+export type SetupAttentionItem = { id: string; label: string; description: string | null; dueDate: string | null; target: string; actionLabel: string; review: boolean };
+
+export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false, setupTodos = [] }: { fundId: string; onNavigate?: (t: CommandTarget) => void; nextActionOnly?: boolean; setupTodos?: SetupAttentionItem[] }) {
   const load = useServerFn(getCommandCenter);
   const q = useQuery({ queryKey: ["fund-command-center", fundId], queryFn: () => load({ data: { fundId } }) });
   const [filter, setFilter] = useState<ResponsibilityStatus | null>(null);
@@ -78,7 +80,7 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
         <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-7">
           <div><dt className="text-xs text-muted-foreground">Next report</dt><dd>{d.nextReport ? `${d.nextReport.title} · ${fmtDate(d.nextReport.due)}` : "None scheduled"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Next major deadline</dt><dd>{nextDeadline ? `${nextDeadline.title} · ${fmtDate(nextDeadline.due)}` : "None scheduled"}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Open fund tasks</dt><dd>{d.openCount}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Open fund tasks</dt><dd>{d.openCount + setupTodos.length}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Approvals / Information</dt><dd>{Math.max(d.counts.CLIENT_APPROVAL_REQUIRED, d.approvalsAwaiting.length)} / {d.counts.CLIENT_INFORMATION_REQUIRED}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Open requests</dt><dd>{onNavigate ? <button className="underline" onClick={() => onNavigate("requests")}>{d.requests.open}</button> : d.requests.open}</dd></div>
         </dl>
@@ -88,8 +90,17 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
       <div className="grid gap-4 lg:grid-cols-3">
         {/* 1. Your attention */}
         <Card title="Your attention" className="lg:col-span-2">
-          {d.toSign?.length || d.approvalsAwaiting.length || d.attention.length ? (
+          {d.toSign?.length || d.approvalsAwaiting.length || d.attention.length || setupTodos.length ? (
             <ul className="divide-y">
+              {setupTodos.map((t) => (
+                <li key={`setup-${t.id}`} className="flex flex-wrap items-center gap-2 py-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium">Setup: {t.label}</span>
+                    <p className="text-xs text-muted-foreground">{t.review ? "Awaiting approval" : t.description || "Fund setup item waiting on you"}{t.dueDate ? ` · ${dueText(t.dueDate, d.today)}` : ""}</p>
+                  </div>
+                  {onNavigate && <Button size="sm" onClick={() => onNavigate(t.target as CommandTarget)}>{t.actionLabel}</Button>}
+                </li>
+              ))}
               {(d.toSign ?? []).map((sg) => (
                 <li key={sg.id} className="flex flex-wrap items-center gap-2 py-2">
                   <div className="min-w-0 flex-1">

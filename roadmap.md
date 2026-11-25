@@ -1,5 +1,11 @@
 # Roadmap
 
+## Clarify Attention Needed Status draft refresh
+- [x] Restore draft-only setup attention changes and combine all six shared paths with the latest app updates; verification reports no dropped paths.
+- [x] Retain separate Banking sub-views, standalone Close/Compliance, connected setup attention and newer Activity & requests/Open items plus close-draft behavior. Newer shared Accounting sections retain the draft's Summary default and removal of bank records.
+- [x] 29 focused navigation, banking, setup to-do and command-health tests pass; preview build OK. The newer combined Activity & requests supersedes the draft's standalone Requests tab; the retired unused FundBooks duplicate stays removed.
+- Fund-page visual verification remains pending behind required second-step sign-in; the earlier statement that every view was clicked and loaded was not supported. No publishing or production changes.
+
 ## CIK Form ID setup (2026-11-25)
 - [x] Add the supplied blank company ID-NEWCIK application setup beside SEC identifiers for both staff and managers; preserve the original .EIS and separate setup from assigned identifiers and submission.
 - [x] Download verified byte-for-byte against the original, with ID-NEWCIK and all six application sections retained; preview build passes. No identifiers, access, signatures or submissions changed; not published.

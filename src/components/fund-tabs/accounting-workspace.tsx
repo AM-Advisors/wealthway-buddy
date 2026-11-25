@@ -26,7 +26,8 @@ export function requestFundPaymentsSection() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(OPEN_PAYMENTS_EVENT));
 }
 
-/** Fund → Accounting: where Harmonious enters the fund's real records. Records only; nothing moves money. */
+/** Fund → Accounting: Summary, Fund bills and Harmonious fees only.
+ * Bank records render once in their Banking sub-views. Records only; nothing moves money. */
 export function AccountingWorkspace({ fundId, staff, extra }: { fundId: string; staff: boolean; extra?: React.ReactNode }) {
   const [section, setSection] = useState<Section>(DEFAULT_ACCOUNTING_SECTION);
   const [scrollToPayments, setScrollToPayments] = useState(false);
@@ -58,8 +59,8 @@ export function AccountingWorkspace({ fundId, staff, extra }: { fundId: string; 
         ))}
       </nav>
       <p className="text-xs text-muted-foreground">Everything here is a record only. Nothing is paid, collected or moved, and postings need a second person's approval. Bank statements and bank transactions are on the {staff
-        ? <Link to="/ops/fund/$fundId" params={{ fundId }} search={{ tab: "banking" }} resetScroll={false} className="underline hover:text-foreground">Banking tab</Link>
-        : <Link to="/client/funds/$fundId" params={{ fundId }} search={{ tab: "banking" }} resetScroll={false} className="underline hover:text-foreground">Banking tab</Link>}.</p>
+        ? <Link to="/ops/fund/$fundId" params={{ fundId }} search={{ tab: "statements" }} resetScroll={false} className="underline hover:text-foreground">Banking tab</Link>
+        : <Link to="/client/funds/$fundId" params={{ fundId }} search={{ tab: "statements" }} resetScroll={false} className="underline hover:text-foreground">Banking tab</Link>}.</p>
 
       {section === "bills" && (staff ? <FundAccountingPanel offeringId={fundId} defaultTab="expenses" /> : <p className="text-sm text-muted-foreground">Harmonious enters and approves the fund's bills. Ask your Harmonious team for a copy of any bill.</p>)}
       {section === "fees" && staff && (
