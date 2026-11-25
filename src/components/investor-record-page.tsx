@@ -11,6 +11,7 @@ import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
+import { PersonSections } from "@/components/person-sections";
 import { TrustPeopleCard } from "@/components/trust-people-card";
 import { EntityRequirementsInline } from "@/components/entity-requirements-inline";
 import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
@@ -224,6 +225,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       {tab === "actions" ? <>
       <h3 id="ir-sec-actions" className="scroll-mt-28 pt-2 text-lg font-semibold">Verification &amp; actions</h3>
       <div className="space-y-4">
+      <PersonSections onboardingId={onboardingId} variant="actions" staff={staff} />
       {staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} investorName={[p?.firstName, p?.middleName, p?.lastName].filter(Boolean).join(" ")} investorEmail={p?.email ?? undefined} /> : null}
       {staff && !data.overview.investorUserId ? <Card><CardHeader><CardTitle className="text-base">Identity & compliance screening</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
         <div className="flex flex-wrap gap-2">
@@ -256,6 +258,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
 
       {tab === "activity" ? <>
       <h3 id="ir-sec-activity" className="scroll-mt-28 pt-2 text-lg font-semibold">Activity</h3>
+      <PersonSections onboardingId={onboardingId} variant="activity" staff={staff} />
       <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} />
       {staff ? <InvestorSessionActivity onboardingId={onboardingId} /> : null}
       <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card>
