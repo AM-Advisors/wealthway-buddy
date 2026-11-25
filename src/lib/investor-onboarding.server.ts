@@ -2574,6 +2574,7 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
           approvedToFund: Boolean(row.approved_to_fund_at),
           investorReportsSent: Boolean(row.investor_reports_sent_at),
           acceptedAt: row.accepted_at,
+          paperworkComplete: outstandingRequirements(facts.requirements).length === 0,
         }),
         fundingStatus: row.funding_status,
         fundingLabel: managerFundingLabel({

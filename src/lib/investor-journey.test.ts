@@ -186,6 +186,18 @@ describe("manager statuses", () => {
     expect(managerInvestorStatus({ stage: "accepted", approvedToFund: true, acceptedAt: NOW })).toBe("Admitted");
     expect(managerInvestorStatus({ stage: "funded", fundingStatus: "funded" })).toBe("Funded");
   });
+  it("received money never waives open paperwork", () => {
+    expect(managerInvestorStatus({ stage: "funded", fundingStatus: "funded", paperworkComplete: false })).toBe("Investor action required");
+    expect(managerInvestorStatus({ stage: "funded", fundingStatus: "funded", paperworkComplete: true })).toBe("Funded");
+    const rr = (key: any, state: any) => ({ key, label: key, state });
+    const open = [rr("investment_profile", "valid"), rr("account", "valid"), rr("identity_verification", "valid"), rr("aml", "valid"), rr("subscription_questionnaire", "missing"), rr("signature", "missing")] as any;
+    const funded = journeySteps(open, { stage: "funded", approvedToFund: true, fundingStatus: "funded", investorReportsSent: false });
+    expect(funded.find((s) => s.key === "fund")!.message).toBe("Received. Your paperwork is still required before your investment is complete.");
+    expect(funded.find((s) => s.key === "sign")!.state).toBe("action_required");
+    const done = open.map((r: any) => ({ ...r, state: "valid" }));
+    const complete = journeySteps(done, { stage: "funded", approvedToFund: true, fundingStatus: "funded", investorReportsSent: false });
+    expect(complete.find((s) => s.key === "fund")!.message).toBe("Received. Your investment is complete.");
+  });
 });
 
 describe("Action Center deep links", () => {

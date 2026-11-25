@@ -99,7 +99,11 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   let fundMessage = "Funding opens once Harmonious has reviewed and accepted your subscription.";
   if (isReconciledFunding(facts.fundingStatus)) {
     fund = "complete";
-    fundMessage = "Received. Your investment is complete.";
+    // Money received never waives paperwork: details and signing are still required.
+    const paperworkOpen = about !== "complete" || verify !== "complete" || sign !== "complete";
+    fundMessage = paperworkOpen
+      ? "Received. Your paperwork is still required before your investment is complete."
+      : "Received. Your investment is complete.";
   } else if (facts.approvedToFund && verify === "complete") {
     if (facts.investorReportsSent || ["bank_transaction_detected", "reconciliation_pending", "partially_funded"].includes(String(facts.fundingStatus))) {
       fund = "in_progress";
@@ -309,12 +313,16 @@ export function managerInvestorStatus(input: {
   approvedToFund?: boolean;
   investorReportsSent?: boolean;
   acceptedAt?: string | null;
+  /** False when any requirement (details, verification, signing) is still open. Received money never waives it. */
+  paperworkComplete?: boolean;
 }): ManagerInvestorStatus {
   const stage = String(input.stage ?? "");
   if (!stage) return "Invited";
   if (stage === "declined" || stage === "cancelled") return "Declined";
   if (stage === "closed") return "Closed";
-  if (isReconciledFunding(input.fundingStatus) || stage === "funded") return "Funded";
+  if (isReconciledFunding(input.fundingStatus) || stage === "funded") {
+    return input.paperworkComplete === false ? "Investor action required" : "Funded";
+  }
   if (input.approvedToFund || ["approved_to_fund", "awaiting_funds", "accepted"].includes(stage)) {
     if (input.investorReportsSent || ["bank_transaction_detected", "reconciliation_pending", "partially_funded"].includes(String(input.fundingStatus))) {
       return "Funding pending";
