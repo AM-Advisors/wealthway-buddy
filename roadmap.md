@@ -2,7 +2,9 @@
 
 ## Kimberly’s trust signing authorization (2026-11-25)
 - [x] Read-only checks confirm Kimberly is an active authorized trustee with approved identity/background checks; the trust side letter is already recorded as signed, and no current subscription signing request is recorded
-- [ ] Identify the exact remaining authorization message; blocked pending the requested screenshot identifying the document and message. No signing or access rules changed
+- [x] Reproduced missing trustee name/title in signing preparation: this trust has no sent prepared draft or document review snapshot, and the merge reader omitted its recorded authorized trustee
+- [x] Reuse only the exact investment's active authorized trustee name and recorded Trustee role; retain prepared answers, review gates, verification and signed history. 89 regressions pass; preview build OK
+- [ ] Kimberly's actual signing ceremony remains unverified: requires independently isolated authenticated signing QA and an authorized release; no production records changed and not published
 
 ## Joe’s old view-only invitation (2026-11-25)
 - [x] Investigate Joe’s Home-page entry and helper/contact labels and entry paths; user confirmed Home page, not the original email link

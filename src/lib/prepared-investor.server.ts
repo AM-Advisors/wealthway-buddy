@@ -99,6 +99,29 @@ export async function docContext(userId: string, onboardingId: string) {
   const { accountContactFor } = await import("@/lib/account-contact.server");
   const contactEmail = (me as any)?.email || (ob.investor_user_id ? (await accountContactFor(db as any, ob.investor_user_id)).email : null);
   if (contactEmail) profile["email"] = contactEmail;
+  // Trust documents reuse the investment's own recorded trustee, never the
+  // login label, a co-trustee picked by row order or someone from another trust.
+  // This supplies merge facts only; verification and signing authority stay
+  // with the existing server gates, and prepared answers below keep precedence.
+  if (pt === "trust" && investment.investment_profile_id && investment.person_id) {
+    const { data: trustee, error: trusteeError } = await db.from("investment_profile_relationships")
+      .select("persons:person_id(legal_first_name, legal_last_name)")
+      .eq("profile_id", investment.investment_profile_id)
+      .eq("person_id", investment.person_id)
+      .eq("role", "trustee")
+      .eq("status", "active")
+      .eq("is_authorized_signer", true)
+      .maybeSingle();
+    if (trusteeError) throw new Error("Recorded trustee details couldn't be checked. Please try again.");
+    const trusteePerson = (trustee as any)?.persons;
+    const trusteeName = [trusteePerson?.legal_first_name, trusteePerson?.legal_last_name]
+      .map((value: unknown) => typeof value === "string" ? value.trim() : "")
+      .filter(Boolean).join(" ");
+    if (trusteeName) {
+      profile["authorized_signer_name"] = trusteeName;
+      profile["signer_title"] = "Trustee";
+    }
+  }
   for (const [k, p] of Object.entries(prov)) profile[k] = p.currentValue;
   profile["profile_type"] = pt;
   const profileType = pt;
