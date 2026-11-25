@@ -1346,7 +1346,7 @@ export async function approvalsInbox(context: Ctx) {
     shown: items.length,
     stalled: items.filter((i) => isStalledApproval(i.at, now)).length,
     items: items.map((i) => ({
-      id: i.id, title: i.title, reason: i.reason, requiredAction: i.requiredAction,
+      id: i.id, source: i.source, title: i.title, reason: i.reason, requiredAction: i.requiredAction,
       fundId: i.fundId ?? null, fundName: i.fundName ?? null, clientName: i.clientName ?? null,
       investorName: i.investorName ?? null, assignedToName: i.assignedToName ?? null, at: i.at ?? null,
       days: waitingDays(i.at, now), stalled: isStalledApproval(i.at, now), destination: destinationFor(i),

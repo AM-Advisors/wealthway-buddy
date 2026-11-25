@@ -8,7 +8,7 @@ import { PartialResultsNotice } from "@/components/partial-results-notice";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { matchesSearch } from "@/lib/approvals-inbox";
+import { APPROVAL_CATEGORY_LABELS, approvalCategory, matchesSearch, type ApprovalCategory } from "@/lib/approvals-inbox";
 
 export const Route = createFileRoute("/_authenticated/ops/approvals")({
   head: () => ({
@@ -29,8 +29,14 @@ function ApprovalsInbox() {
   const q = useApprovalsInbox();
   const [search, setSearch] = useState("");
   const [stalledOnly, setStalledOnly] = useState(false);
+  const [category, setCategory] = useState<ApprovalCategory | "all">("all");
   const items = q.data?.items ?? [];
-  const shown = useMemo(() => items.filter((i) => matchesSearch(i, search) && (!stalledOnly || i.stalled)), [items, search, stalledOnly]);
+  const counts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const i of items) { const k = approvalCategory(i.source); c[k] = (c[k] ?? 0) + 1; }
+    return c;
+  }, [items]);
+  const shown = useMemo(() => items.filter((i) => matchesSearch(i, search) && (!stalledOnly || i.stalled) && (category === "all" || approvalCategory(i.source) === category)), [items, search, stalledOnly, category]);
   const groups = useMemo(() => {
     const m = new Map<string, typeof shown>();
     for (const i of shown) {
@@ -55,6 +61,14 @@ function ApprovalsInbox() {
           Waiting 3+ days ({q.data?.stalled ?? 0})
         </button>
       </div>
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Kind of review">
+        {(["all", "investor", "documents", "fund", "other"] as const).map((k) => (
+          <button key={k} type="button" role="tab" aria-selected={category === k} onClick={() => setCategory(k)}
+            className={`h-11 rounded-full border px-4 text-sm font-medium ${category === k ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
+            {k === "all" ? "All" : APPROVAL_CATEGORY_LABELS[k]} ({k === "all" ? items.length : (counts[k] ?? 0)})
+          </button>
+        ))}
+      </div>
       <PartialResultsNotice partial={q.data?.partial} failedAreas={q.data?.failedAreas} />
       {q.isLoading ? <p className="text-muted-foreground">Loading…</p> :
        q.error ? <LoadError error={q.error} what="Approvals" onRetry={() => q.refetch()} /> :
@@ -64,12 +78,13 @@ function ApprovalsInbox() {
           <h2 className="text-base font-semibold">{name} <span className="font-normal text-muted-foreground">({rows.length})</span></h2>
           <Card><CardContent className="divide-y p-0">
             {rows.map((i) => (
-              <Link key={i.id} to={i.destination as never} className="flex flex-wrap items-center gap-3 px-4 py-4 hover:bg-muted">
+              <Link key={i.id} to={i.destination as never} className="flex flex-wrap items-center gap-3 px-4 py-5 hover:bg-muted">
                 <Badge variant={i.requiredAction === "approve" ? "default" : "secondary"}>{i.requiredAction === "approve" ? "Approve" : "Review"}</Badge>
                 <div className="min-w-0 flex-1">
                   <p className="text-base font-medium">{i.title}</p>
                   <p className="text-sm text-muted-foreground">{[i.investorName, i.reason, i.assignedToName ? `Owner: ${i.assignedToName}` : "No owner yet"].filter(Boolean).join(" · ")}</p>
                 </div>
+                <span className="text-sm font-medium text-primary">{i.requiredAction === "approve" ? "Open to approve →" : "Open to review →"}</span>
                 {i.stalled ? <Badge variant="destructive">Waiting {i.days} days</Badge> : <span className="text-sm text-muted-foreground">{i.days === 0 ? "Today" : `${i.days}d`}</span>}
               </Link>
             ))}

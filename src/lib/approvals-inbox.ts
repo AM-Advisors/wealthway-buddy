@@ -43,3 +43,21 @@ export function matchesSearch(i: InboxItem, q: string) {
 export function sortOldestFirst<T extends InboxItem>(items: T[]) {
   return [...items].sort((a, b) => new Date(a.at ?? 0).getTime() - new Date(b.at ?? 0).getTime());
 }
+
+export type ApprovalCategory = "investor" | "documents" | "fund" | "other";
+
+export const APPROVAL_CATEGORY_LABELS: Record<ApprovalCategory, string> = {
+  investor: "Investor details & ID",
+  documents: "Signed documents",
+  fund: "Fund setup & documents",
+  other: "Everything else",
+};
+
+/** Groups an inbox item by where it came from; display only, grants nothing. */
+export function approvalCategory(source: string | null | undefined): ApprovalCategory {
+  const s = String(source ?? "");
+  if (s.startsWith("onboarding.")) return "investor";
+  if (s.startsWith("documents.")) return "documents";
+  if (s.startsWith("funds.")) return "fund";
+  return "other";
+}

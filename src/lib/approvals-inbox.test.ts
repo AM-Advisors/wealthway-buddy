@@ -28,3 +28,11 @@ describe("approvals inbox", () => {
     expect(out[0]!.id).toBe("old");
   });
 });
+
+import { approvalCategory } from "./approvals-inbox";
+describe("approvalCategory", () => {
+  it("puts ID and investor checks under investor details", () => { expect(approvalCategory("onboarding.kyc")).toBe("investor"); });
+  it("puts document reviews under signed documents", () => { expect(approvalCategory("documents.review")).toBe("documents"); });
+  it("puts fund requests under fund setup", () => { expect(approvalCategory("funds.request")).toBe("fund"); });
+  it("leaves money items in everything else", () => { expect(approvalCategory("capital.call")).toBe("other"); });
+});
