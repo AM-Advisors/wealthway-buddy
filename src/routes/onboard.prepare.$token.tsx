@@ -74,7 +74,7 @@ function PreparePage() {
         <>
           <div><h1 className="text-2xl font-semibold">Investor details for {w.fundName}</h1>
             <p className="text-sm text-muted-foreground">You're preparing these details for the investor. You can also run their identity check with a photo of their ID. Signing and funding stay with the investor and their signer. Every change is recorded.</p></div>
-          {!w.editable ? <Card><CardContent className="p-6 text-sm">Signing or funding has started, so details can no longer be changed here.</CardContent></Card> : (
+          {!w.editable ? <Card><CardContent className="p-6 text-sm">The investor has signed, so details can no longer be changed here.</CardContent></Card> : (
             <>
               <Card><CardHeader><CardTitle className="text-base">Investor</CardTitle></CardHeader>
                 <CardContent className="grid gap-3 sm:grid-cols-2">

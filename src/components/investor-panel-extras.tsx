@@ -69,8 +69,8 @@ export function InvestorHelpers({ onboardingId }: { onboardingId: string }) {
     onError: (e) => toast.error((e as Error).message),
   });
   const remove = useMutation({ mutationFn: (id: string) => removeFn({ data: { participantId: id } }), onSuccess: () => { toast.success("Access ended. Their history is kept."); qc.invalidateQueries({ queryKey: key }); }, onError: (e) => toast.error((e as Error).message) });
-  const active = (q.data?.participants ?? []).filter((p) => p.status !== "removed" && p.role !== "contact");
-  const preparers = active.filter((p) => p.role === "preparer"); const signer = active.find((p) => p.role === "signer");
+  const active = (q.data?.participants ?? []).filter((p) => p.status !== "removed" && (p.role !== "contact" || p.canPrepare));
+  const preparers = active.filter((p) => p.canPrepare); const signer = active.find((p) => p.role === "signer");
   return (
     <section className="rounded-lg border p-3">
       <h4 className="font-medium">Completed by</h4>

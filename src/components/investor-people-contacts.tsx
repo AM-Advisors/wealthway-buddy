@@ -29,7 +29,7 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
 
   const addContact = useMutation({
     mutationFn: () => assignFn({ data: { onboardingId, role: "contact", fullName: contact!.fullName, email: contact!.email, title: contact!.title || null } }),
-    onSuccess: (r) => { r.emailSent ? toast.success("Added and emailed a view link.") : toast.warning("Added, but the email couldn't be sent."); setContact(null); refresh(); },
+    onSuccess: (r) => { r.emailSent ? toast.success(r.canPrepare ? "Added and emailed a paperwork link." : "Added and emailed a view link.") : toast.warning("Added, but the email couldn't be sent."); setContact(null); refresh(); },
     onError: (e) => toast.error((e as Error).message),
   });
   const remove = useMutation({ mutationFn: (id: string) => removeFn({ data: { participantId: id } }), onSuccess: () => { toast.success("Access ended. Their history is kept."); refresh(); }, onError: (e) => toast.error((e as Error).message) });
@@ -50,14 +50,14 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
   });
 
   const d = q.data;
-  const contacts = (d?.participants ?? []).filter((p) => p.role === "contact" && p.status !== "removed");
+  const contacts = (d?.participants ?? []).filter((p) => p.role === "contact" && !p.canPrepare && p.status !== "removed");
   const individual = d ? !d.multipleContacts : false;
 
   return (
     <section className="rounded-lg border p-3 space-y-3">
       <div>
         <h4 className="font-medium">People on this investment</h4>
-        <p className="text-xs text-muted-foreground">Joint accounts, entities and trusts can have several points of contact who sign in and see the investment (view only). Anyone added as an owner or signer runs their own identity check.</p>
+        <p className="text-xs text-muted-foreground">Points of contact can follow the investment. Listed trustees, owners and signers on a trust or company can also prepare details. Verification, signatures and funding keep their separate requirements.</p>
       </div>
       {q.isError && <p className="text-xs text-destructive">Couldn't load. <button className="underline" onClick={() => q.refetch()}>Retry</button></p>}
 

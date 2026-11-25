@@ -1,5 +1,15 @@
 # Roadmap
 
+## Kimberly’s trust signing authorization (2026-11-25)
+- [x] Read-only checks confirm Kimberly is an active authorized trustee with approved identity/background checks; the trust side letter is already recorded as signed, and no current subscription signing request is recorded
+- [ ] Identify the exact remaining authorization message; blocked pending the requested screenshot identifying the document and message. No signing or access rules changed
+
+## Joe’s old view-only invitation (2026-11-25)
+- [x] Investigate Joe’s Home-page entry and helper/contact labels and entry paths; user confirmed Home page, not the original email link
+- [x] Redirect old contact links to an existing exact-person, exact-investment live paperwork assignment; never restore removed access or grant signing/money authority
+- [x] 72 regressions pass; fictional Home entry, phone save/read-back and old-link recovery checked on desktop/phone with real requests blocked; updated printable trustee guide and preview build OK
+- Sandbox validated; production verification pending. Joe’s own screen remains unverified, no production records changed and not published
+
 ## Trust side-letter fee summary (2026-11-25)
 - [x] Apply exact-investment active, effective side-letter fee/carry values to investor summary and new fee acceptance snapshots; preserve fund defaults, past acceptances and signed history
 - [x] 21 fee regressions pass; actual fee card shows 0% fee/carry on desktop, 740px and 390px screens with fictional data and real requests blocked; preview build OK

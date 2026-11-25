@@ -1,4 +1,5 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,14 +33,20 @@ const lbl = (s: string | null | undefined) => (s ?? "not started").replace(/_/g,
 
 function ContactPage() {
   const { token } = Route.useParams();
+  const navigate = useNavigate();
   const load = useServerFn(contactWorkspaceFn);
   const q = useQuery({ queryKey: ["contact-workspace", token], queryFn: () => load({ data: { token } }) });
   const d = q.data;
+  const prepareToken = d?.prepareToken;
+  useEffect(() => {
+    if (prepareToken) void navigate({ to: "/onboard/prepare/$token", params: { token: prepareToken }, replace: true });
+  }, [prepareToken, navigate]);
+  if (prepareToken) return <p className="p-6 text-sm text-muted-foreground">Opening your paperwork…</p>;
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-6">
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.isError ? (
         <Card><CardContent className="space-y-2 p-6"><p className="text-sm text-destructive">{(q.error as Error).message}</p><Button size="sm" variant="outline" onClick={() => q.refetch()}>Try again</Button></CardContent></Card>
-      ) : d && (
+      ) : d?.kind === 'contact' && (
         <>
           <div>
             <h1 className="text-2xl font-semibold">{d.fundName}</h1>

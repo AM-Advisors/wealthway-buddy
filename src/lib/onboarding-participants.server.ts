@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, forbid } from "@/lib/investor-onboarding.server";
 import { allowsMultipleContacts, canAssignParticipant, participantCanPrepare, participantRoleLabel, type ParticipantRole } from "@/lib/onboarding-participants-model";
-import { eligibleParticipantInvitation } from "@/lib/participant-home-model";
+import { eligibleParticipantInvitation, visibleParticipantAssignment } from "@/lib/participant-home-model";
 
 // Server-only. People who help complete an investment for the investor:
 // a preparer (fills details, uploads, owners/signers) and the named signer.
@@ -32,7 +32,7 @@ async function userEmail(userId: string) {
 export async function liveParticipantInvitations(email: string) {
   if (!email) return [];
   const { data, error } = await db().from("onboarding_participants")
-    .select("id, onboarding_id, role, email, status, removed_at, token")
+    .select("id, onboarding_id, role, email, status, removed_at, user_id, token")
     .eq("email", email).in("role", ["preparer", "contact"]).in("status", ["invited", "active"]).is("removed_at", null).limit(50);
   if (error) fail("Your assigned investments could not be loaded. Please try again.");
   if (!data?.length) return [];
@@ -65,7 +65,7 @@ async function canPrepare(userId: string, email: string, p: any) {
 
 export async function myParticipantAssignments(userId: string) {
   const email = await userEmail(userId);
-  const rows = await liveParticipantInvitations(email);
+  const rows = (await liveParticipantInvitations(email)).filter(p => !p.user_id || p.user_id === userId);
   const prepares = await Promise.all(rows.map((p) => canPrepare(userId, email, p)));
   return rows.map((p, i) => ({
       id: String(p.id), onboardingId: String(p.onboarding_id),
@@ -80,12 +80,18 @@ async function event(row: any, ev: string, userId: string, actorRole: string, de
   await db().from("investor_onboarding_events").insert({ onboarding_id: row.id, offering_id: row.offering_id, event: ev, detail, actor_user_id: userId, actor_role: actorRole });
 }
 
+export async function participantDisplay(p: any) {
+  const email = String(p.email ?? '').trim().toLowerCase();
+  const prepares = visibleParticipantAssignment(p, email) && await canPrepare(String(p.user_id ?? ''), email, p);
+  return { canPrepare: prepares, roleLabel: prepares ? 'Prepares details' : participantRoleLabel(p.role) };
+}
+
 export async function listParticipants(userId: string, onboardingId: string) {
   const row = await onboarding(onboardingId);
   await access(userId, row);
-  const { data } = await db().from("onboarding_participants").select("id, role, full_name, email, title, status, assigned_by_role, created_at, removed_at").eq("onboarding_id", onboardingId).order("created_at");
+  const { data } = await db().from("onboarding_participants").select("id, onboarding_id, role, full_name, email, user_id, title, status, assigned_by_role, created_at, removed_at").eq("onboarding_id", onboardingId).order("created_at");
   const { data: pr } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
-  return { profileType: (pr?.profile_type ?? null) as string | null, multipleContacts: allowsMultipleContacts(pr?.profile_type), participants: ((data ?? []) as any[]).map((p) => ({ id: p.id, role: p.role as ParticipantRole, roleLabel: participantRoleLabel(p.role), name: p.full_name, email: p.email, title: p.title, status: p.status, assignedBy: p.assigned_by_role, createdAt: p.created_at, removedAt: p.removed_at })) };
+  return { profileType: (pr?.profile_type ?? null) as string | null, multipleContacts: allowsMultipleContacts(pr?.profile_type), participants: await Promise.all(((data ?? []) as any[]).map(async p => ({ id: p.id, role: p.role as ParticipantRole, ...await participantDisplay(p), name: p.full_name, email: p.email, title: p.title, status: p.status, assignedBy: p.assigned_by_role, createdAt: p.created_at, removedAt: p.removed_at }))) };
 }
 
 export async function assignParticipant(userId: string, input: { onboardingId: string; role: ParticipantRole; fullName: string; email: string; title?: string | null | undefined }) {
@@ -110,11 +116,12 @@ export async function assignParticipant(userId: string, input: { onboardingId: s
   // Email the assignment. Preparers get their own page; signers are told what they will sign; contacts get a view link.
   const fund = String(row.offerings?.name ?? "the fund");
   const investor = `${row.persons?.legal_first_name ?? ""} ${row.persons?.legal_last_name ?? ""}`.trim() || "an investor";
+  const prepares = await canPrepare('', email, { role: input.role, onboarding_id: row.id });
   const { ONBOARD_ORIGIN } = await import("@/lib/onboard-portal-model");
-  const subject = input.role === "preparer" ? `You've been asked to help complete an investment in ${fund}`
+  const subject = prepares ? `You've been asked to help complete an investment in ${fund}`
     : input.role === "contact" ? `You've been added as a point of contact for an investment in ${fund}`
     : `You've been named signer for an investment in ${fund}`;
-  const body = input.role === "preparer"
+  const body = prepares
     ? `${investor} has asked you to fill in their investor details for ${fund}. Sign in with this email address to start:\n\n${ONBOARD_ORIGIN}/onboard/prepare/${token}\n\nYou can enter details, owners and signers, and upload documents. Identity checks, signing and funding stay with the investor and their signer.`
     : input.role === "contact"
     ? `You've been added as a point of contact for ${investor}'s investment in ${fund}. Sign in with this email address to see the investment and its progress:\n\n${ONBOARD_ORIGIN}/onboard/contact/${token}\n\nThis access is view only.`
@@ -127,7 +134,7 @@ export async function assignParticipant(userId: string, input: { onboardingId: s
   } catch (e) { note = (e as Error).message.slice(0, 300); }
   const { logInvestorEmail } = await import("@/lib/investor-emails.server");
   await logInvestorEmail({ onboardingId: row.id, offeringId: row.offering_id, kind: `${input.role}_invite`, subject, recipient: email, messageId, sentBy: userId, outcome: note ? "failed" : "sent", note });
-  return { id: p.id, emailSent: !note };
+  return { id: p.id, emailSent: !note, canPrepare: prepares };
 }
 
 export async function removeParticipant(userId: string, participantId: string) {
@@ -146,10 +153,13 @@ export async function removeParticipant(userId: string, participantId: string) {
 /** The signed-in user must be this exact, still-active preparer (matched by email). */
 export async function activePreparer(userId: string, participantId: string, onboardingId?: string) {
   const { data: p } = await db().from("onboarding_participants").select("*").eq("id", participantId).maybeSingle();
-  if (!p || (p.role !== "preparer" && p.role !== "contact") || p.status === "removed" || p.removed_at) forbid("this preparer access has ended.");
+  if (!p || (p.role !== "preparer" && p.role !== "contact")) forbid("this preparer access has ended.");
   if (onboardingId && p.onboarding_id !== onboardingId) forbid("that is not the investment you were assigned.");
   const email = await userEmail(userId);
-  if (!email || email !== String(p.email).toLowerCase()) forbid(`sign in as ${p.email} to use this page.`);
+  if (!email || email !== String(p.email).trim().toLowerCase() || (p.user_id && p.user_id !== userId)) forbid("sign in with the account this invitation belongs to.");
+  const { data: investment, error } = await db().from("investor_onboardings").select("id, stage, removed_at, merged_into_onboarding_id").eq("id", p.onboarding_id).maybeSingle();
+  if (error) fail("Your assigned investment could not be loaded. Please try again.");
+  if (!eligibleParticipantInvitation({ ...p, investor_onboardings: investment }, email)) forbid("this preparer access has ended.");
   if (!(await canPrepare(userId, email, p))) forbid("this preparer access has ended.");
   if (p.status === "invited" || !p.user_id) await db().from("onboarding_participants").update({ status: "active", user_id: userId }).eq("id", p.id);
   return { userId, participant: p };
@@ -178,9 +188,26 @@ export async function preparerWorkspace(userId: string, token: string) {
 /** Signed-in point of contact (matched by email) sees a read-only summary of the investment. */
 export async function contactWorkspace(userId: string, token: string) {
   const { data: p } = await db().from("onboarding_participants").select("*").eq("token", token).maybeSingle();
-  if (!p || p.role !== "contact" || p.status === "removed") forbid("this access has ended.");
+  if (!p || (p.role !== "contact" && p.role !== "preparer")) forbid("this access has ended.");
   const email = await userEmail(userId);
-  if (!email || email !== String(p.email).toLowerCase()) forbid(`sign in as ${p.email} to see this investment.`);
+  if (!email || email !== String(p.email).trim().toLowerCase() || (p.user_id && p.user_id !== userId)) forbid("sign in with the account this invitation belongs to.");
+  const { data: investment, error: investmentError } = await db().from("investor_onboardings").select("id, stage, removed_at, merged_into_onboarding_id").eq("id", p.onboarding_id).maybeSingle();
+  if (investmentError) fail("Your assigned investment could not be loaded. Please try again.");
+  // An old link is only a locator. A separate, current same-person/same-investment
+  // assignment must authorize preparation; a revoked invitation never grants it.
+  const { data: current, error: assignmentError } = await db().from("onboarding_participants")
+    .select("id, onboarding_id, role, email, status, removed_at, user_id, token")
+    .eq("onboarding_id", p.onboarding_id).eq("email", email).in("role", ["preparer", "contact"])
+    .in("status", ["invited", "active"]).is("removed_at", null);
+  if (assignmentError) fail("Your assigned investment could not be loaded. Please try again.");
+  const candidates = ((current ?? []) as any[]).filter(c => (!c.user_id || c.user_id === userId)
+    && eligibleParticipantInvitation({ ...c, investor_onboardings: investment }, email));
+  const prepares = await Promise.all(candidates.map(c => canPrepare(userId, email, c)));
+  const destinations = candidates.filter((_c, i) => prepares[i]);
+  if (destinations.length === 1) return { kind: 'preparer' as const, prepareToken: String(destinations[0].token) };
+  if (destinations.length > 1) fail("More than one paperwork invitation is active. Ask the fund manager to confirm the correct one.");
+  if (!visibleParticipantAssignment(p, email) || !eligibleParticipantInvitation({ ...p, investor_onboardings: investment }, email)) forbid("this access has ended.");
+  if (p.role !== "contact") forbid("this access has ended.");
   if (p.status === "invited" || !p.user_id) await db().from("onboarding_participants").update({ status: "active", user_id: userId }).eq("id", p.id);
   const { data: row } = await db().from("investor_onboardings").select("id, stage, funding_status, commitment_amount_cents, requested_amount_cents, funded_amount_cents, investment_profile_id, removed_at, persons(legal_first_name, legal_last_name, kyc_status, aml_status), offerings(name)").eq("id", p.onboarding_id).maybeSingle();
   if (!row || row.removed_at) fail("That investment is no longer available.");
@@ -189,6 +216,8 @@ export async function contactWorkspace(userId: string, token: string) {
   const { data: contacts } = await db().from("onboarding_participants").select("full_name, role, status").eq("onboarding_id", row.id).neq("status", "removed");
   const per: any = row.persons ?? {};
   return {
+    kind: 'contact' as const,
+    prepareToken: null,
     fundName: String((row as any).offerings?.name ?? "Fund"),
     investingAs: profile?.legal_name || profile?.display_label || `${per.legal_first_name ?? ""} ${per.legal_last_name ?? ""}`.trim(),
     profileType: profile?.profile_type ?? null,

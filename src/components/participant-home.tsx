@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import { myParticipantAssignmentsFn } from "@/lib/participant-home.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { LoadError } from "@/components/load-error";
 
 export function useParticipantAssignments() {
   const load = useServerFn(myParticipantAssignmentsFn);
-  return useQuery({ queryKey: ["my-participant-assignments"], queryFn: () => load(), retry: false, refetchInterval: 60_000 });
+  return useQuery({ queryKey: ["my-participant-assignments"], queryFn: () => load(), retry: false, staleTime: 0, refetchOnMount: "always", refetchOnWindowFocus: true, refetchInterval: 60_000 });
 }
 
 export function ParticipantHome() {
@@ -18,7 +18,7 @@ export function ParticipantHome() {
   if (q.isPending) return <p className="text-sm text-muted-foreground">Loading assigned investments…</p>;
   if (!q.data?.length) return null;
   return <section className="space-y-3" aria-label="Investments you help with">
-    <h2 className="text-xl font-semibold">Investments you help with</h2>
+    <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">Investments you help with</h2><Button size="icon" variant="ghost" aria-label="Refresh assigned investments" title="Refresh assigned investments" disabled={q.isFetching} onClick={() => void q.refetch()}><RefreshCw className="size-4" /></Button></div>
     <ul className="divide-y rounded-lg border">
       {q.data.map((p) => <li key={p.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
         <div className="min-w-0 space-y-1"><p className="break-words text-base font-semibold">{p.fundName}</p>

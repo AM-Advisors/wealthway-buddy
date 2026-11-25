@@ -23,11 +23,13 @@ export async function investorPerspective(userId: string, input: { onboardingId:
   const [{ result, facts }, { data: offering, error: offeringError }, { data: participants, error: participantError }, { data: events, error: eventError }] = await Promise.all([
     computeReadinessFor(row),
     db.from("offerings").select("name").eq("id", row.offering_id).maybeSingle(),
-    db.from("onboarding_participants").select("id, full_name, role, status, removed_at").eq("onboarding_id", row.id).in("status", ["invited", "active"]).is("removed_at", null),
+    db.from("onboarding_participants").select("id, onboarding_id, full_name, role, email, user_id, status, removed_at").eq("onboarding_id", row.id).in("status", ["invited", "active"]).is("removed_at", null),
     db.from("investor_onboarding_events").select("id, event, actor_user_id, actor_role, created_at").eq("onboarding_id", row.id).eq("offering_id", row.offering_id).in("event", Object.keys(COMPLETION_EVENTS)).order("created_at", { ascending: false }).limit(100),
   ]);
   if (offeringError || participantError || eventError) throw new Error("This investor view could not be loaded. Please try again.");
-  const selected = input.participantId ? (participants ?? []).find((p: any) => p.id === input.participantId) : null;
+  const { participantDisplay } = await import('./onboarding-participants.server');
+  const effectiveParticipants = await Promise.all(((participants ?? []) as any[]).map(async p => ({ ...p, role: (await participantDisplay(p)).canPrepare ? 'preparer' : p.role })));
+  const selected = input.participantId ? effectiveParticipants.find(p => p.id === input.participantId) : null;
   if (input.participantId && (!selected || !["preparer", "contact", "signer"].includes(selected.role))) throw new Error("That person's assignment is no longer available.");
   const readDetails = canReadDetails && (!selected || selected.role === "preparer" || selected.role === "signer");
   const { data: questionRows, error: questionError } = row.questionnaire_version && readDetails
@@ -53,7 +55,7 @@ export async function investorPerspective(userId: string, input: { onboardingId:
     items: safe.items.map(i => ({ key: i.key, label: i.label, status: i.status, owner: i.owner })),
     canReadDetails: readDetails,
     questions: readDetails ? questions.filter(q => questionAppliesToProfile(q, facts.profile?.profile_type) && questionVisible(q, answers) && q.type !== "document" && safePerspectiveQuestion(q.key, q.label) && !SENSITIVE_TITLE.test(`${q.key} ${q.label}`)).map(q => ({ key: q.key, label: q.label, answer: display(answers[q.key]) })) : [],
-    participants: (participants ?? []).map((p: any) => ({ id: p.id, name: p.full_name, role: p.role, status: p.status })),
+    participants: effectiveParticipants.map(p => ({ id: p.id, name: p.full_name, role: p.role, status: p.status })),
     selectedParticipant: selected ? { id: selected.id, name: selected.full_name, role: selected.role } : null,
     person: readDetails ? [{ label: "Investor", value: investorName }, { label: "Investing as", value: facts.profile?.display_label ?? "Not selected" }, { label: "Address", value: [person.address_line1, person.city, person.region, person.postal_code, person.country].filter(Boolean).join(", ") || "Not provided" }] : [],
     documents: (facts.documents ?? []).map((d: any) => ({ id: String(d.id), title: d.title ?? "Fund document", status: d.signed ? "Signed" : investorSigned.has(String(d.id)) ? "Investor signed, waiting on fund countersignature" : d.requiresAcknowledgment ? (d.acknowledged ? "Acknowledged" : "Acknowledgment pending") : d.requiresSignature ? "Awaiting signatures" : "Available" })),

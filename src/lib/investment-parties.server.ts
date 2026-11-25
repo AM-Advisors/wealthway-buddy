@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { ACCESS_LABELS, partyAccess, partyNextAction } from "@/lib/investment-parties";
+import { participantCanPrepare } from "@/lib/onboarding-participants-model";
 
 const db = () => supabaseAdmin as any;
 const fail = (m: string): never => { throw new Error(m); };
@@ -42,7 +43,7 @@ export async function investmentParties(userId: string, onboardingId: string) {
     const e = entries.get(p.id)!;
     const email = String(p.email ?? "").toLowerCase() || null;
     const myParts = ((parts ?? []) as any[]).filter((x) => email && String(x.email).toLowerCase() === email);
-    const access = partyAccess({ isInvestorLogin: Boolean(p.user_id && p.user_id === ob.investor_user_id), participantRoles: myParts.map((x) => String(x.role)) });
+    const access = partyAccess({ isInvestorLogin: Boolean(p.user_id && p.user_id === ob.investor_user_id), participantRoles: myParts.map(x => participantCanPrepare({ role: String(x.role), profileType: ip?.profile_type, listedOnInvestment: true }) ? 'preparer' : String(x.role)) });
     let lastSignIn: string | null = null;
     if (p.user_id) { const { data: u } = await db().auth.admin.getUserById(p.user_id).catch(() => ({ data: null })); lastSignIn = (u as any)?.user?.last_sign_in_at ?? null; }
     const mySigs = ((sigs ?? []) as any[]).filter((s) => email && String(s.signer_email).toLowerCase() === email && s.role_key !== "fund_manager");

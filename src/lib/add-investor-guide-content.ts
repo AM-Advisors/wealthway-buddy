@@ -327,7 +327,7 @@ export const ADD_ENTITY_INVESTOR_GUIDE: AddInvestorGuide = {
         title: "Add colleagues who only need to follow along",
         paragraphs: [
           "Under Points of contact, select Add point of contact, enter their Full name, Email and Title, then select Add and email view link.",
-          "Points of contact sign in and see the investment and its progress. Their access is view only. You can add up to 10.",
+          "Points of contact sign in and see the investment and its progress. Listed trustees, owners and signers on a trust or company can also prepare details. Other contacts remain view only. You can add up to 10.",
         ],
         labels: ["Points of contact", "Add point of contact", "Add and email view link"],
         mock: "contacts-panel",
@@ -377,7 +377,7 @@ export const ADD_ENTITY_INVESTOR_GUIDE: AddInvestorGuide = {
     },
     {
       title: "Point of contact",
-      body: "Signs in to see the investment and its progress. View only: can't enter details, sign or send money.",
+      body: "Signs in to follow the investment. Listed trustees, owners and signers on a trust or company can also prepare details. Signing and money actions require their own authorization.",
       labels: ["Point of contact (view only)"],
     },
   ] },
