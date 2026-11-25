@@ -21,11 +21,11 @@ import { InvestmentTaskList } from "@/components/investment-task-list";
 
 const WAITING: Record<string, string> = { harmonious: "Harmonious is reviewing: nothing needed from you right now.", fund_manager: "Waiting on the fund manager: nothing needed from you right now." };
 
-function Steps({ step }: { step: number }) {
+function Steps({ step, stepsDone }: { step: number; stepsDone?: boolean[] }) {
   return (
     <ol className="grid grid-cols-4 gap-1" aria-label="Your progress">
       {CLIENT_STEPS.map((s, i) => {
-        const done = i < step, current = i === step;
+        const done = stepsDone?.[i] ?? i < step, current = !done && i === step;
         return (
           <li key={s} className="text-center" aria-current={current ? "step" : undefined}>
             <div className={`h-1.5 rounded ${done || current ? "bg-primary" : "bg-muted"}`} />
@@ -87,7 +87,7 @@ export function InvestorDashboard({ viewAs = false }: { viewAs?: boolean } = {})
             <div><dt className="text-xs text-muted-foreground">Amount</dt><dd className="font-medium">{p.amountCents ? money(p.amountCents) : "Not set yet"}</dd></div>
             <div><dt className="text-xs text-muted-foreground">Funding</dt><dd><Badge variant={p.fundingState === "funded" ? "default" : "outline"}>{FUNDING_STATE_LABELS[p.fundingState as FundingState]}</Badge></dd></div>
           </dl>
-          <Steps step={p.step} />
+          <Steps step={p.step} stepsDone={p.stepsDone} />
         </CardContent>
       </Card>
 

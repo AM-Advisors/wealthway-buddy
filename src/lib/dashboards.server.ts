@@ -205,6 +205,8 @@ export async function investorDashboard(userId: string) {
       nextAction: investorAction, waitingOn: home.waitingOn, complete: funnelStageOf(fact) === "complete",
       // The step Continue opens, so other home lists point to the same place.
       nextStep: nextJourneyStep(steps),
+      // Per-step done flags from the same steps as the investment page, so out-of-order signing shows as done.
+      stepsDone: steps.slice(0, 4).map((st) => st.state === "complete"),
       outstandingTasks: investorOutstandingTasks(requirements, steps),
     };
   });
