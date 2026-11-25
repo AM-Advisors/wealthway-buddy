@@ -18,7 +18,7 @@ import { SIDE_LETTER_FEE_CENTS } from "@/lib/side-letter-fee";
 const FORM_D_CENTS = 16000;
 const NEW = "__new";
 
-export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request }: { fundId: string; open: boolean; onOpenChange: (o: boolean) => void; onDone: () => void; request: any | null }) {
+export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request, canSend }: { fundId: string; open: boolean; onOpenChange: (o: boolean) => void; onDone: () => void; request: any | null; canSend: boolean }) {
   const qc = useQueryClient();
   const loadCandidates = useServerFn(getCloseCandidates);
   const loadBooks = useServerFn(fundBooksFn);
@@ -79,6 +79,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
   const toggle = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   async function onSave(intent: "draft" | "submit") {
+    if (intent === "submit" && !canSend) { toast.error("The fund manager sends saved close details for review."); return; }
     if (intent === "submit" && picked.size === 0) { toast.error("Pick at least one investor before sending for review."); return; }
     if (intent === "submit" && isNew && asset.name.trim().length < 2) { toast.error("Add the asset name."); return; }
     if (intent === "submit" && !feeOk) { toast.error("Confirm the management fee."); return; }
@@ -209,7 +210,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone, request
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy !== null}>Cancel</Button>
           <Button variant="secondary" onClick={() => onSave("draft")} disabled={busy !== null}>{busy === "draft" ? "Saving…" : "Save details"}</Button>
-          <Button onClick={() => onSave("submit")} disabled={busy !== null || picked.size === 0}>{busy === "submit" ? "Sending…" : "Send for review"}</Button>
+          {canSend ? <Button onClick={() => onSave("submit")} disabled={busy !== null || picked.size === 0}>{busy === "submit" ? "Sending…" : "Send for review"}</Button> : <p className="max-w-xs text-right text-xs text-muted-foreground">The fund manager sends saved details for review. Operations can then review them on this same tab.</p>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

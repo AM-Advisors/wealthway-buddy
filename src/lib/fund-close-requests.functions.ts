@@ -106,7 +106,7 @@ export const listFundCloseRequests = createServerFn({ method: "GET" })
     const db = supabaseAdmin as any;
     if (!(await canViewFund(db, context.userId, data.fundId))) throw new Error("You don't have access to this Fund.");
     const { data: rows } = await db.from("fund_close_requests")
-      .select("id, target_date, notes, onboarding_ids, status, staff_note, created_at, updated_at, details")
+      .select("id, offering_id, target_date, notes, onboarding_ids, status, staff_note, created_at, updated_at, details")
       .eq("offering_id", data.fundId).order("created_at", { ascending: false });
     return (rows ?? []) as any[];
   });

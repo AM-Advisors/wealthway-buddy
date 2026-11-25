@@ -1,5 +1,9 @@
 # Roadmap
 
+## Shared fund Close experience (2026-11-25)
+- [x] Use the same manager close data, cards and detail editor for Operations, with Operations-only review and filing controls added; the shared reader also returns the exact fund id needed to refresh Operations decisions.
+- [x] Fictional desktop and mobile checks confirm 15 identical details in both views and no Operations controls in the manager view; no page errors, 10 focused tests pass, typecheck and preview build pass. No production records, authority changes or publishing.
+
 ## Close detail drafts (2026-11-25)
 - [x] Save and reopen incomplete close details without sending them for review or finalizing; drafts stay visible to the fund manager and Harmonious, outside the review queue.
 - [x] Keep finalization with the currently authorized roles and retain approval and filing gates; five focused rules and code checks pass.

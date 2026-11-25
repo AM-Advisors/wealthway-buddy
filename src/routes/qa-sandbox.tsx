@@ -39,6 +39,7 @@ import { SecurityGate } from "@/components/security-gate";
 import { createQaMfaAuth, QA_MFA_CODE, type QaMfaScenario } from "@/lib/qa-sandbox/mfa-fixture";
 import { Suspense } from "react";
 import { QaAccreditationPage, QaFundDocumentsPage, QaInvestorHomePage, QaInvestorJourneyLauncher, QaJourneyPage, QaInvestorTasksPage, QaNotificationsTasksPage } from "@/components/qa-investor-journey";
+import { QaCloseComparison } from "@/components/qa-close-comparison";
 
 export const Route = createFileRoute("/qa-sandbox")({
   head: () => ({
@@ -159,7 +160,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey" | "foundation" | "shared" | "custom" | "poa" | "signatures">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents" | "fund" | "tax" | "questionnaire" | "portfolio" | "signin" | "journey" | "foundation" | "shared" | "custom" | "poa" | "signatures" | "closes">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -190,9 +191,10 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "custom" ? "default" : "outline"} onClick={() => setTab("custom")}>Custom services</Button>
             <Button size="sm" variant={tab === "poa" ? "default" : "outline"} onClick={() => setTab("poa")}>Power of attorney</Button>
             <Button size="sm" variant={tab === "signatures" ? "default" : "outline"} onClick={() => setTab("signatures")}>Signatures</Button>
+            <Button size="sm" variant={tab === "closes" ? "default" : "outline"} onClick={() => setTab("closes")}>Shared Close</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
-          {tab === "investor" ? (
+          {tab === "closes" ? <QaCloseComparison /> : tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
           ) : tab === "signatures" ? <section aria-label="Signatures"><p className="mb-3 text-sm text-muted-foreground">Fictional fund manager Dana Rowe: side letters, subscription agreements and an operating agreement on invented funds. Switch to Harmonious staff to see every fund.</p><SignatureCenter key={state.role} surface={state.role === "staff" ? "ops" : "client"} everything={state.role === "staff"} /></section> : tab === "custom" ? <QaCustomServicesArea /> : tab === "foundation" ? <QaFoundationArea /> : tab === "shared" ? <QaSharedFundReview key={formKey} /> : tab === "journey" ? <QaInvestorJourneyLauncher /> : tab === "signin" ? <QaSignInCheck key={formKey} /> : tab === "portfolio" ? <section aria-label="Consolidated portfolio"><p className="mb-3 text-sm text-muted-foreground">Fictional owner John Smith: a family trust that owns 40% of a holding company, one platform fund and one outside venture fund.</p><Suspense fallback={<p>Loading…</p>}><WealthPortfolio /></Suspense></section> : tab === "poa" ? <section aria-label="Power of attorney"><p className="mb-3 text-sm text-muted-foreground">Fictional investor John Smith: four invented powers of attorney, one person waiting to accept, one active, one with no account yet, and one still needing review.</p><PowerOfAttorneyCard subject={{ kind: "investment_profile", id: QA_POA_PROFILE }} /></section> : tab === "questionnaire" ? <section aria-label="Investor questionnaire"><h2 className="text-lg font-semibold">Investor questionnaire</h2><FinancialBackgroundPanel onboardingId="qa-financial-investment" done={() => {}} /></section> : tab === "tax" ? <TaxSignPanel onboardingId="qa-tax-investment" done={() => {}} /> : tab === "fund" ? <QaSelfServeFund key={formKey} /> : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>

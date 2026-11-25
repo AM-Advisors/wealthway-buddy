@@ -20,9 +20,8 @@ import { FundCalendar } from "@/components/fund-calendar";
 import { FundApprovalsHub } from "@/components/fund-approvals-hub";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
-import { CloseDetailsSummary, CloseRequestReview } from "@/components/close-request-review";
+import { CloseRequestCard } from "@/components/close-request-review";
 import { FundDistributions } from "@/components/fund-distributions";
-import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -79,15 +78,6 @@ const usd = (c: number | null | undefined) =>
   typeof c === "number" ? (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) : "-";
 const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Not recorded";
-
-const CLOSE_STATUS: Record<string, string> = {
-  draft: "Draft: not sent for review",
-  submitted: "Submitted: Harmonious reviewing",
-  in_review: "In review",
-  completed: "Completed",
-  returned: "Returned",
-  approved: "Approved: filings in progress",
-};
 
 export function FundTabBar({ fundId, mode, tab, extraTabs }: { fundId: string; mode: FundWorkspaceMode; tab: string; extraTabs: ExtraTab[] }) {
   // Eight top tabs; each sub-view is one more click. Sub-views only show when this fund has them.
@@ -297,40 +287,24 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
         </TabsContent>
 
         <TabsContent value="closes" className="space-y-4">
-          {staff && <StaffCloses fundId={fundId} />}
-          {!staff && <Card>
+          <Card>
             <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
               <div>
                 <CardTitle className="text-base">Closes</CardTitle>
-                <CardDescription>Save close details as a draft without sending or finalizing anything. Harmonious reviews only after you send the request.</CardDescription>
+                <CardDescription>Save close details as a draft without sending or finalizing anything. Harmonious reviews only after the fund manager sends the request.</CardDescription>
               </div>
               <Button size="sm" onClick={() => openClose()}>Prepare Fund Close</Button>
             </CardHeader>
-            <CardContent>
-              {crq.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
-               !crq.data?.length ? <Empty text="No close drafts or requests yet." /> : (
-                <div className="divide-y rounded-md border">
-                  {crq.data.map((c: any) => (
-                    <div key={c.id} className="space-y-1 p-3 text-sm">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium">{c.status === "draft" ? "Saved" : "Requested"} {fmtDate(c.created_at)} · {c.onboarding_ids.length} investor{c.onboarding_ids.length === 1 ? "" : "s"}</p>
-                        <Badge variant={c.status === "completed" ? "default" : c.status === "returned" ? "destructive" : "secondary"}>{CLOSE_STATUS[c.status] ?? c.status}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Target close date: {c.target_date ? fmtDate(c.target_date) : "Not set"}</p>
-                      <CloseDetailsSummary r={c} />
-                      {c.status === "draft" && <Button size="sm" variant="outline" onClick={() => openClose(c)}>Continue details</Button>}
-                      {c.notes && <p className="text-xs">{c.notes}</p>}
-                      {c.staff_note && <p className="text-xs text-muted-foreground">Harmonious: {c.staff_note}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>}
+          </Card>
+          {crq.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : crq.error ? <p className="text-sm text-destructive">{(crq.error as Error).message}</p> :
+           !crq.data?.length ? <Empty text="No close drafts or requests yet." /> : crq.data.map((c: any) => (
+            <CloseRequestCard key={c.id} r={c} operations={staff} onContinue={() => openClose(c)} />
+          ))}
+          {staff && <p className="text-sm text-muted-foreground">Operations additions appear inside each request above. Nothing is submitted automatically, and completion keeps its existing authorization and filing checks.</p>}
         </TabsContent>
       </Tabs>
 
-      <RequestCloseDialog fundId={fundId} open={closeOpen} onOpenChange={setCloseOpen} onDone={() => onTab("closes")} request={closeDraft} />
+      <RequestCloseDialog fundId={fundId} open={closeOpen} onOpenChange={setCloseOpen} onDone={() => onTab("closes")} request={closeDraft} canSend={!staff} />
     </div>
   );
 }
@@ -352,19 +326,6 @@ function HarmoniousTodos({ steps, onSetup }: { steps: { label: string; owner: st
         ))}
       </CardContent>
     </Card>
-  );
-}
-
-function StaffCloses({ fundId }: { fundId: string }) {
-  const load = useServerFn(listAllCloseRequests);
-  const q = useQuery({ queryKey: ["ops-close-requests"], queryFn: () => load() });
-  const rows = ((q.data ?? []) as any[]).filter((r) => r.offering_id === fundId);
-  return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Drafts are saved details only, with no approval or completion action. After a manager sends a close, approve it, generate its Form D and state filing packets, then file them yourself and record the confirmation. Nothing is submitted automatically.</p>
-      {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
-       !rows.length ? <Empty text="No close requests for this fund yet." /> : rows.map((r) => <CloseRequestReview key={r.id} r={r} />)}
-    </div>
   );
 }
 
