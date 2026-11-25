@@ -1,5 +1,10 @@
 # Roadmap
 
+## Trust side-letter fee summary (2026-11-25)
+- [x] Apply exact-investment active, effective side-letter fee/carry values to investor summary and new fee acceptance snapshots; preserve fund defaults, past acceptances and signed history
+- [x] 21 fee regressions pass; actual fee card shows 0% fee/carry on desktop, 740px and 390px screens with fictional data and real requests blocked; preview build OK
+- Sandbox validated; production verification pending. No production records changed and not published
+
 ## Joe’s Erebor invitation (2026-11-25)
 - [x] Recognize exact-email live preparer/contact invitations for account creation and portal entry; resolve recorded investment IDs without the legacy table’s missing FK, retaining investment-scoped authority
 - [x] Keep helper/contact invitation destinations through account creation; 20 regressions pass and Joe’s email returns eligible through the actual registration form with account creation/confirmation email blocked

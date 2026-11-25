@@ -6,6 +6,7 @@
 import { assertFund, db } from "@/lib/fund-tabs.server";
 import { loadProfileDocumentEvidence } from "./profile-document-evidence.server";
 import { profileDocumentRequirements } from "./profile-document-requirements";
+import { investorFeeSummary } from "./investor-economics-model";
 
 export const ONBOARDING_DOC_KINDS = [
   { value: "identification", label: "Government ID" },
@@ -151,7 +152,7 @@ export async function deleteDoc(userId: string, onboardingId: string, id: string
 }
 
 export type FeeStatus = {
-  terms: null | { id: string; managementFeePct: number | null; basis: string | null; carryPct: number | null; hurdlePct: number | null; notes: string | null };
+  terms: null | { id: string; managementFeePct: number | null; basis: string | null; carryPct: number | null; hurdlePct: number | null; notes: string | null; source?: string };
   accepted: null | { at: string; name: string };
   sideLetters: string[];
 };
@@ -160,6 +161,15 @@ async function activeTerms(d: any, offeringId: string) {
   const { data } = await d.from("fund_fee_terms").select("id, management_fee_pct, management_fee_basis, carry_pct, hurdle_pct, notes")
     .eq("offering_id", offeringId).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
   return data as any;
+}
+
+async function investmentFeeSummary(d: any, ob: { id: string; offering_id: string }, t: any) {
+  const { data: letters, error } = await d.from("side_letters")
+    .select("id, offering_id, onboarding_id, status, effective_date, expiry_date, terms")
+    .eq("offering_id", ob.offering_id).eq("onboarding_id", ob.id);
+  if (error) throw new Error("Your side letter fees could not be loaded. Please try again.");
+  const summary = investorFeeSummary({ fee: t.management_fee_pct, carry: t.carry_pct }, letters ?? [], { offeringId: ob.offering_id, onboardingId: ob.id });
+  return { summary, letters: letters ?? [] };
 }
 
 /** Investor-facing side letter labels: plain status only, never storage paths; drafts hidden. */
@@ -173,14 +183,14 @@ export async function feeStatus(userId: string, onboardingId: string): Promise<F
   const { d, ob } = await ownOnboarding(userId, onboardingId);
   const t = await activeTerms(d, ob.offering_id);
   if (!t) return { terms: null, accepted: null, sideLetters: [] };
-  const [{ data: acc }, { data: sl }] = await Promise.all([
+  const [{ data: acc }, { summary, letters }] = await Promise.all([
     d.from("investor_fee_acceptances").select("accepted_at, accepted_name").eq("onboarding_id", ob.id).eq("fee_terms_id", t.id).maybeSingle(),
-    d.from("side_letters").select("status, document_reference").eq("onboarding_id", ob.id).limit(20),
+    investmentFeeSummary(d, ob, t),
   ]);
   return {
-    terms: { id: String(t.id), managementFeePct: t.management_fee_pct, basis: t.management_fee_basis, carryPct: t.carry_pct, hurdlePct: t.hurdle_pct, notes: null },
+    terms: { id: String(t.id), managementFeePct: summary.fee, basis: t.management_fee_basis, carryPct: summary.carry, hurdlePct: t.hurdle_pct, notes: null, source: summary.source },
     accepted: acc ? { at: String((acc as any).accepted_at), name: String((acc as any).accepted_name) } : null,
-    sideLetters: investorSideLetterLabels((sl ?? []) as any[]),
+    sideLetters: investorSideLetterLabels(letters),
   };
 }
 
@@ -188,9 +198,10 @@ export async function acceptFees(userId: string, onboardingId: string, termsId: 
   const { d, ob } = await ownOnboarding(userId, onboardingId);
   const t = await activeTerms(d, ob.offering_id);
   if (!t || String(t.id) !== termsId) throw new Error("The fund's fees changed. Please review the current fees.");
+  const { summary } = await investmentFeeSummary(d, ob, t);
   const { error } = await d.from("investor_fee_acceptances").insert({
     onboarding_id: ob.id, offering_id: ob.offering_id, fee_terms_id: t.id, accepted_by: userId, accepted_name: name,
-    terms: { management_fee_pct: t.management_fee_pct, management_fee_basis: t.management_fee_basis, carry_pct: t.carry_pct, hurdle_pct: t.hurdle_pct, notes: t.notes },
+    terms: { management_fee_pct: summary.fee, management_fee_basis: t.management_fee_basis, carry_pct: summary.carry, hurdle_pct: t.hurdle_pct, notes: t.notes },
   });
   if (error && !String(error.message).includes("duplicate")) throw new Error(error.message);
   const { reconcileAfter } = await import("./investor-onboarding.server");

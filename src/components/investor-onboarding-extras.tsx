@@ -101,24 +101,30 @@ export function FeeAcceptanceCard({ onboardingId }: { onboardingId: string }) {
   const [name, setName] = useState("");
   const [agree, setAgree] = useState(false);
   const m = useMutation({
-    mutationFn: () => accept({ data: { onboardingId, termsId: q.data!.terms!.id, name: name.trim() } }),
+    mutationFn: () => {
+      const terms = q.data?.terms;
+      if (!terms) throw new Error("Your fees could not be loaded. Please try again.");
+      return accept({ data: { onboardingId, termsId: terms.id, name: name.trim() } });
+    },
     onSuccess: () => { toast.success("Fees accepted."); qc.invalidateQueries({ queryKey: ["fee-status", onboardingId] }); },
     onError: (e: Error) => { toast.error(e.message); qc.invalidateQueries({ queryKey: ["fee-status", onboardingId] }); },
   });
   const t = q.data?.terms;
+  if (q.isError) return <p className="text-sm text-destructive">{q.error.message}</p>;
   if (!q.data || !t) return null;
   const pct = (n: number | null) => (n == null ? "None" : `${n}%`);
 
   return (
     <div className="space-y-3 rounded-md border p-4">
-      <p className="text-sm font-medium">Fund fees</p>
+      <p className="text-sm font-medium">Your fees</p>
+      {t.source === "Side letter" && <p className="text-sm text-muted-foreground">Your active side letter is reflected in these fees.</p>}
       <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
         <div><dt className="text-xs text-muted-foreground">Management fee</dt><dd>{pct(t.managementFeePct)}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Charged on</dt><dd>{t.basis ?? "Not stated"}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Carried interest</dt><dd>{pct(t.carryPct)}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Hurdle</dt><dd>{pct(t.hurdlePct)}</dd></div>
       </dl>
-      {q.data.sideLetters.length > 0 && <p className="text-sm">Your side letter terms also apply: {q.data.sideLetters.join("; ")}.</p>}
+      {q.data.sideLetters.length > 0 && <p className="text-sm">{q.data.sideLetters.join("; ")}.</p>}
       {q.data.accepted ? (
         <p className="text-sm text-muted-foreground">Accepted by {q.data.accepted.name} on {fmtDate(q.data.accepted.at)}.</p>
       ) : (
