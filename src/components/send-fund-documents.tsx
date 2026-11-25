@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { Download, Send } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -87,6 +87,9 @@ export function SendFundDocuments({ offeringId, onOpenTab }: { offeringId: strin
 
   return (
     <div className="space-y-4">
+    <Button asChild variant="outline" className="h-auto min-h-11 whitespace-normal text-left">
+      <a href="/downloads/Harmonious-Send-Investor-Documents-Guide.pdf" download><Download className="mr-2 h-4 w-4 shrink-0" aria-hidden />Instructions: email documents to investors</a>
+    </Button>
     <AddInvestorDocument
       offeringId={offeringId}
       onOpenTab={onOpenTab}

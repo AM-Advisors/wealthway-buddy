@@ -1,5 +1,9 @@
 # Roadmap
 
+## Investor document email instruction sheet (2026-11-25)
+- [x] Create a one-page fund manager guide for adding custom updates and emailing selected investors; distinguish fund-wide availability, reviewed agreements and private investor versions. Single-investor versions without an active fund document do not appear in the bulk sender; the guide names this limit rather than recommending fund-wide exposure.
+- [x] Sheet downloadable from Documents, Send to investors; all PDF content visually inspected without clipping, exact served download verified, 14 existing privacy/follow-up regressions pass and preview build OK. No emails, access changes or publishing; live signed-in sending remains unverified.
+
 ## Client helper instruction sheet (2026-11-25)
 - [x] Create a one-page printable client guide using the actual helper controls and existing access limits; include it in the subscription packet index, instructions and optional checklist, with a standalone download on Documents.
 - [x] Seven fictional packet regressions pass; internal page links remain valid, standalone and packet helper pages visually inspected without clipping, exact PDF download verified. No production writes, invitations, access changes or publishing; production verification pending.
