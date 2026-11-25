@@ -38,6 +38,22 @@ function Page() {
         ))}
         {data.stages.length === 0 && <p className="p-4">Nobody is waiting.</p>}
       </CardContent></Card>
+      <h2 className="text-xl font-semibold">What's left, per investor</h2>
+      <p className="text-muted-foreground">What each stuck investor still needs before they can sign. Longest waiting first.</p>
+      <div className="space-y-3">
+        {data.people.map((p) => (
+          <Card key={p.id}><CardContent className="space-y-2 p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <a href={`/investment/${p.id}`} className="text-lg font-medium underline">{p.name}</a>
+              <span className="text-muted-foreground">{p.fund} · last activity {new Date(p.lastActivityAt).toLocaleDateString()}</span>
+            </div>
+            {p.left.length === 0
+              ? <p>Nothing left before signing. Waiting on signing, money or countersignature.</p>
+              : <ul className="list-disc space-y-1 pl-5">{p.left.map((l) => <li key={l}>{l}</li>)}</ul>}
+          </CardContent></Card>
+        ))}
+        {data.people.length === 0 && <p>Nobody is waiting.</p>}
+      </div>
       <h2 className="text-xl font-semibold">By fund</h2>
       <Card><CardContent className="divide-y p-0">
         {data.funds.map((f) => (

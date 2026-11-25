@@ -3528,3 +3528,21 @@ export async function staffCatchUpSignedInvestments(userId: string) {
   await reconcileAfter(pick, { actorUserId: userId, trigger: "staff_signed_catch_up" });
   return { checked: candidates.length, rechecked: pick.length };
 }
+
+/** Staff display: per-investor "what's left before signing" for a small batch of stalled investments. */
+export async function whatsLeftForStalled(rows: any[]) {
+  const { whatsLeftBeforeSigning } = await import("@/lib/stalled-investors-model");
+  if (rows.length === 0) return [];
+  const I = await loadReadinessInputs(rows);
+  const out: { id: string; offeringId: string; stage: string; lastActivityAt: string; name: string; left: string[] }[] = [];
+  for (const row of rows) {
+    try {
+      const f: any = await gatherFacts(row, I);
+      const name = f.profile?.legal_name || f.person?.full_name || f.person?.legal_name || "Investor";
+      out.push({ id: row.id, offeringId: row.offering_id, stage: row.stage, lastActivityAt: row.last_activity_at, name, left: whatsLeftBeforeSigning(f.requirements) });
+    } catch {
+      out.push({ id: row.id, offeringId: row.offering_id, stage: row.stage, lastActivityAt: row.last_activity_at, name: "Investor", left: ["Could not read this investment's checklist"] });
+    }
+  }
+  return out;
+}

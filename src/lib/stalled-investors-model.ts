@@ -29,3 +29,16 @@ export function groupStalled(rows: StallRow[], now: Date) {
   }
   return [...by.values()].sort((a, b) => b.stalled - a.stalled);
 }
+
+import type { RequirementResult } from "@/lib/investor-onboarding-model";
+const AFTER_SIGNING = new Set(["subscription_documents", "signature", "funding"]);
+const STATE_WORDS: Record<string, string> = {
+  missing: "not started", refresh_required: "needs updating", review_required: "in review",
+  rejected: "not accepted", expired: "expired",
+};
+/** What one investor still needs before they can sign, in plain words. Display only. */
+export function whatsLeftBeforeSigning(reqs: RequirementResult[]): string[] {
+  return reqs
+    .filter((r) => !AFTER_SIGNING.has(r.key) && r.state !== "valid" && r.state !== "not_applicable")
+    .map((r) => `${r.label}: ${r.reason ?? STATE_WORDS[r.state] ?? r.state}`);
+}

@@ -10,3 +10,16 @@ describe("stalled investors", () => {
     expect(groupStalled([row({ stage: "funded" }), row({ is_test_investor: true }), row({ merged_into_onboarding_id: "x" })], now)).toEqual([]);
   });
 });
+import { whatsLeftBeforeSigning } from "./stalled-investors-model";
+describe("what's left before signing", () => {
+  it("lists open pre-signing items and skips signing, funding and finished items", () => {
+    const left = whatsLeftBeforeSigning([
+      { key: "tax_documentation", label: "Tax ID", state: "missing" },
+      { key: "aml", label: "Compliance screening", state: "valid" },
+      { key: "accreditation", label: "Accreditation", state: "not_applicable" },
+      { key: "signature", label: "Signature", state: "missing" },
+      { key: "funding", label: "Funding", state: "missing" },
+    ] as any);
+    expect(left).toEqual(["Tax ID: not started"]);
+  });
+});
