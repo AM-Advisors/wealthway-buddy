@@ -89,6 +89,12 @@ export async function applyAccountDecision(c: any, decision: Record<string, any>
   if (!isSessionDecisionFor(c, decision)) return c; // never let a non-result payload change the check
   const { normalizeDiditDecision, evaluateDocumentExpiry } = await import("@/lib/kyc-verification");
   const n = normalizeDiditDecision(decision);
+  // A later data update can add a verified number without changing an already
+  // approved check. Preserve the decision and fill only the exact person's vault.
+  if (c.status === 'approved' && c.person_id && c.session_id && n.providerStatus === 'approved') {
+    const { captureVerifiedTaxIdentifiers } = await import('@/lib/verified-tax-identifier.server');
+    await captureVerifiedTaxIdentifiers({ decision, sessionId: String(c.session_id), personId: c.person_id, identityApproved: true });
+  }
   try {
     const { buildReviewDetails } = await import("@/lib/kyc-review-model");
     const rd = buildReviewDetails(decision);

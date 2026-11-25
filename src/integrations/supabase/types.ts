@@ -53566,6 +53566,20 @@ export type Database = {
           status: string
         }[]
       }
+      fill_verified_tax_identifier: {
+        Args: {
+          _actor?: string
+          _ciphertext: string
+          _id: string
+          _iv: string
+          _key_version: number
+          _kind: string
+          _last4: string
+          _session: string
+          _subject: string
+        }
+        Returns: string
+      }
       find_verified_user_by_email: { Args: { _email: string }; Returns: string }
       foundation_component_released: {
         Args: { _component: string; _dimension: string }

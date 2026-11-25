@@ -586,6 +586,12 @@ async function applyDecision(input: ApplyInput): Promise<SyncResult> {
     });
 
     await refreshOnboardingState(personId);
+    // Only a freshly fetched, recorded exact-person session supplies tax evidence.
+    // Email fallback application matching and callback-only data never supply SSNs.
+    if (decision.kyc === 'approved' && input.source === 'provider_api' && verification.person_id === personId && verification.session_id && normalized.sessionId === verification.session_id) {
+      const { captureVerifiedTaxIdentifiers } = await import('@/lib/verified-tax-identifier.server');
+      await captureVerifiedTaxIdentifiers({ decision: input.decision, sessionId: verification.session_id, personId, actorUserId: input.actorUserId, identityApproved: true });
+    }
   }
 
   // 6. A review requirement becomes an exception a human can work.

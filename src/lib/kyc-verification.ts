@@ -7,6 +7,7 @@
  * and nothing a browser sends can move a check forward.
  */
 import { unresolvedAmlHits } from "@/lib/aml-match-model";
+import { redactTaxIdentifierEvidence } from '@/lib/verified-tax-identifier';
 
 export type CheckStatus = "not_started" | "pending" | "review" | "approved" | "declined";
 
@@ -143,6 +144,7 @@ const DOC_NUMBER_KEY = /(document_number|personal_number|id_number|licence_numbe
  * anything is persisted. Document numbers are reduced to their last 4 digits.
  */
 export function sanitizeProviderPayload(value: unknown, depth = 0): unknown {
+  if (depth === 0) value = redactTaxIdentifierEvidence(value);
   if (depth > 8) return null;
   if (typeof value === "string") return TEMP_URL.test(value.trim()) ? "[redacted-url]" : value;
   if (Array.isArray(value)) return value.map((item) => sanitizeProviderPayload(item, depth + 1));

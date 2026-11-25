@@ -1,5 +1,10 @@
 # Roadmap
 
+## Verified EIN and individual SSN capture (2026-11-25)
+- [x] Save explicitly verified full US EINs and SSNs to exact-party encrypted storage when blank; atomic first-only saves preserve existing numbers, trust tax choices and signed history. Conflicts open number-free staff review notices, never direct replacement.
+- [x] 143 fictional tax-number, identity and approval regressions pass, including secure save/read-back, repeat completion, same-last-four conflicts, exact session links, evidence redaction and locked trust choices; preview build OK. Save is confirmed server-only; no production records changed and not published.
+- [ ] Durable verification-provider callback and signed-in read-back require independently isolated QA. Only explicitly verified full numbers returned by a configured check can be captured; ordinary ID checks/partial numbers cannot supply an SSN or EIN.
+
 ## Kimberly’s trust signing authorization (2026-11-25)
 - [x] Read-only checks confirm Kimberly is an active authorized trustee with approved identity/background checks; the trust side letter is already recorded as signed, and no current subscription signing request is recorded
 - [x] Reproduced missing trustee name/title in signing preparation: this trust has no sent prepared draft or document review snapshot, and the merge reader omitted its recorded authorized trustee

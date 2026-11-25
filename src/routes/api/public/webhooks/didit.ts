@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { redactTaxIdentifierEvidence } from '@/lib/verified-tax-identifier';
 import {
   collectEmails,
   fetchDiditSessionDecision,
@@ -63,7 +64,7 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           webhook_type: webhookType,
           session_id: sessionId,
           status,
-          payload: body,
+          payload: redactTaxIdentifierEvidence(body) as Record<string, any>,
         });
         if (insertError) {
           if (insertError.code === "23505") {

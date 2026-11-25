@@ -47,8 +47,8 @@ export function extractDiditDetails(d: any) {
 export async function autoApplyDiditForOnboarding(onboardingId: string, actorUserId: string | null = null) {
   const { data: ob } = await db().from("investor_onboardings")
     .select("id, offering_id, person_id, investment_profile_id, questionnaire_didit_session_id")
-    .eq("id", onboardingId).maybeSingle();
-  if (!ob?.person_id || !ob.questionnaire_didit_session_id) return { applied: false, reason: "no linked identity check" };
+    .eq("id", onboardingId).is("removed_at", null).maybeSingle();
+  if (!ob?.questionnaire_didit_session_id) return { applied: false, reason: "no linked identity check" };
   const decision = await fetchDiditSessionDecision(ob.questionnaire_didit_session_id);
   if (!decision) return { applied: false, reason: "identity-check result unavailable" };
   const x = extractDiditDetails(decision);
@@ -59,6 +59,13 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   await notifyVerificationConfirmation({ ...notice, check: "KYC", status: normalized.providerStatus });
   await notifyVerificationConfirmation({ ...notice, check: "AML", status: normalized.aml.status });
   if (!x.sessionApproved) return { applied: false, reason: `identity-check status ${(decision as any).status ?? "unknown"}` };
+
+  const { captureVerifiedTaxIdentifiers } = await import("@/lib/verified-tax-identifier.server");
+  if (decision['session_kind'] === 'business') {
+    const tax = await captureVerifiedTaxIdentifiers({ decision, sessionId: ob.questionnaire_didit_session_id, onboardingId: ob.id, actorUserId });
+    return { applied: true, changed: tax.filled };
+  }
+  if (!ob.person_id) return { applied: false, reason: "no linked person" };
 
   const { data: person } = await db().from("persons").select("*").eq("id", ob.person_id).maybeSingle();
   if (!person) return { applied: false, reason: "person not found" };
@@ -90,10 +97,14 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
     if (x.amlStatus === "approved") update.aml_screened_at = now;
     changes.push({ field: "aml_status", from: person.aml_status, to: x.amlStatus });
   }
-  if (!changes.length) return { applied: true, changed: 0 };
+  if (!changes.length) {
+    const tax = await captureVerifiedTaxIdentifiers({ decision, sessionId: ob.questionnaire_didit_session_id, personId: person.id, actorUserId, identityApproved: x.idApproved && person.kyc_status === 'approved' });
+    return { applied: true, changed: tax.filled };
+  }
   update.updated_at = now;
   const { error } = await db().from("persons").update(update).eq("id", person.id);
   if (error) throw new Error(error.message);
+  await captureVerifiedTaxIdentifiers({ decision, sessionId: ob.questionnaire_didit_session_id, personId: person.id, actorUserId, identityApproved: x.idApproved && (update.kyc_status ?? person.kyc_status) === 'approved' });
   await db().from("investor_record_changes").insert(changes.map((c) => ({
     offering_id: ob.offering_id, onboarding_id: ob.id, subject_table: "persons", subject_id: person.id, field: c.field,
     old_value: c.from, new_value: c.to, source: "provider", actor_user_id: actorUserId,
@@ -190,10 +201,16 @@ export async function applyApprovedAccountCheck(
     } catch (e) { console.error("[didit-auto] login email", (e as Error).message); }
   }
   const fields = Object.keys(update);
-  if (!fields.length) return { applied: true, changed: 0 };
+  const captureTax = async () => {
+    if (!decision || !x?.sessionApproved || !x.idApproved) return { filled: 0 };
+    const { captureVerifiedTaxIdentifiers } = await import('@/lib/verified-tax-identifier.server');
+    return captureVerifiedTaxIdentifiers({ decision, sessionId, personId, actorUserId, identityApproved: (kyc ?? person.kyc_status) === 'approved' });
+  };
+  if (!fields.length) return { applied: true, changed: (await captureTax()).filled };
   update.updated_at = now;
   const { error } = await db().from("persons").update(update).eq("id", personId);
   if (error) throw new Error(error.message);
+  await captureTax();
   const logged = fields.filter((f) => !["kyc_verified_at", "identity_verified_at", "aml_screened_at"].includes(f));
   if (logged.length) {
     await db().from("investor_record_changes").insert(logged.map((f) => ({

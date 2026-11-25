@@ -1022,6 +1022,7 @@ export async function resolveSuggestion(userId: string, input: { id: string; act
   if (s.status === "accepted" || s.status === "rejected") return { status: s.status };
   if (s.field === "account_link" && input.action === "accept") return linkPreparedAccount(userId, s.id);
   if (s.field === "account_link" && input.action === "update") fail("Account links can only be accepted or rejected.");
+  if (s.field === "tax_id_verification_conflict" && ["accept", "update"].includes(input.action)) fail("Review the original verification and correct the number using the protected tax-number form. This notice cannot replace a tax number.");
   // Update: the reviewer corrects the suggested value and applies the correction. The original
   // suggestion stays as proposed; the change log records the corrected value and who applied it.
   let applied: unknown = s.proposed_value;
