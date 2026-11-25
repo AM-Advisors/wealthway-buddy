@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Compliance spreadsheet import (2026-11-25)
-- [ ] Read the supplied Google Sheet, match CIK, Form D and Blue Sky records to exact funds, and import only unambiguous applicable records through the existing compliance model.
-- [ ] Verify saved records read back correctly and report unmatched or conflicting rows without guessing.
+- [x] Imported 33 exact-fund CIKs (logged), 22 confirmed Form D accessions and 16 Blue Sky states with confirmed receipt or charge evidence; unverified notices were left out.
+- [x] Read back all counts. Not imported because no single exact fund matched: ControlQore SPV 1, Mountain Crest Fund 1, Gymble, Chapter 7, ETHZilla, Eurus, SpaceCraft and Satschel.
 
 ## Shared fund Close experience (2026-11-25)
 - [x] Use the same manager close data, cards and detail editor for Operations, with Operations-only review and filing controls added; the shared reader also returns the exact fund id needed to refresh Operations decisions.
