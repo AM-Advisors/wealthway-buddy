@@ -547,6 +547,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       role: String(r.role),
       personId: r.person_id as string | null,
       kycStatus: String(r.verification_status ?? ""),
+      signer: Boolean(r.is_authorized_signer),
     }));
 
   const { resolveStage2 } = await import("@/lib/onboarding-compliance.server");

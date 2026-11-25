@@ -15,3 +15,17 @@ describe("trust under a trustee's SSN", () => {
     expect(trustUsesPersonalSsn("llc", "ssn")).toBe(false);
   });
 });
+
+import { trustSignerVerified } from "@/lib/investor-onboarding-model";
+describe("trust verified through one signer", () => {
+  const now = "2026-11-25T00:00:00Z";
+  it("one verified signer is enough even when another trustee is unverified", () => {
+    expect(trustSignerVerified("trust", [{ signer: true, kycStatus: "approved" }, { signer: false, kycStatus: "not_started" }], now)).toBe(true);
+  });
+  it("an unverified signer is not enough", () => {
+    expect(trustSignerVerified("trust", [{ signer: true, kycStatus: "not_started" }, { signer: false, kycStatus: "approved" }], now)).toBe(false);
+  });
+  it("does not apply to companies", () => {
+    expect(trustSignerVerified("llc", [{ signer: true, kycStatus: "approved" }], now)).toBe(false);
+  });
+});

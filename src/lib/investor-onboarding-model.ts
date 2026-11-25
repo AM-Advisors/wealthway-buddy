@@ -271,7 +271,7 @@ export interface ProfileFacts {
   entityAmlStatus?: string | null;
   entityVerificationExpiresAt?: string | null;
   /** Gating related people (control persons, trustees, signers, beneficial owners). */
-  relatedPeople?: { role: string; personId?: string | null; kycStatus?: string | null }[];
+  relatedPeople?: { role: string; personId?: string | null; kycStatus?: string | null; signer?: boolean }[];
   accreditationStatus?: string | null;
   accreditationExpiresAt?: string | null;
   accreditationMethod?: string | null;
@@ -280,6 +280,11 @@ export interface ProfileFacts {
   taxClassification?: string | null;
   isForeign?: boolean;
   jurisdiction?: string | null;
+}
+
+/** A trust is verified through one verified authorized signer; other trustees need no check of their own. */
+export function trustSignerVerified(profileType: unknown, people: { kycStatus?: string | null; signer?: boolean }[], nowIso: string): boolean {
+  return profileType === "trust" && people.some((p) => p.signer && reuseState(p.kycStatus, null, nowIso) === "valid");
 }
 
 /** Trusts that run off a trustee's SSN need no separate business check. */
@@ -404,6 +409,8 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
       );
     } else if (gating.length === 0) {
       add("beneficial_owners", "missing", "We still need the people who own or control this entity.");
+    } else if (trustSignerVerified(profileType, gating, nowIso)) {
+      add("beneficial_owners", "valid");
     } else {
       const unverified = gating.filter(
         (p) => reuseState(p.kycStatus, null, nowIso) !== "valid",
