@@ -179,7 +179,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
                       {s.label}
                     </span>
                     <span className="mt-1 text-xs text-muted-foreground">
-                      {s.state === "not_applicable" ? "Not needed" : done ? "Done" : s.state === "in_review" ? "In review" : s.state === "locked" ? "Later" : "To do"}
+                      {s.state === "not_applicable" ? "Not needed" : done ? "Done" : s.state === "in_review" ? (s.waitingOnFund ? "Waiting on fund" : "In review") : s.state === "locked" ? "Later" : "To do"}
                     </span>
                   </button>
                 </li>

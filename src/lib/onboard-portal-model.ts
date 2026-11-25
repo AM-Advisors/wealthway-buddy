@@ -39,7 +39,7 @@ export const PORTAL_STEP_REQUIREMENTS: Record<PortalStep, readonly RequirementKe
 
 export type PortalStepState = "complete" | "not_applicable" | "action_required" | "in_review" | "locked";
 
-export type PortalStepView = { key: PortalStep; label: string; state: PortalStepState };
+export type PortalStepView = { key: PortalStep; label: string; state: PortalStepState; waitingOnFund?: boolean };
 
 function stateOf(results: RequirementResult[]): PortalStepState {
   if (results.length === 0 || results.every((r) => r.state === "not_applicable")) return "not_applicable";
@@ -75,7 +75,10 @@ export function portalSteps(requirements: RequirementResult[]): PortalStepView[]
   const verification = hasProfile ? stateOf(pick("verification")) : "action_required";
   let accreditation = stateOf(pick("accreditation"));
   if (accreditation !== "not_applicable" && !done(verification) && verification !== "in_review") accreditation = "locked";
-  let documents = stateOf(pick("documents"));
+  // Investor signed everything; only the fund's countersignature is left. Not done, but nothing for the investor to do.
+  const docReqs = pick("documents");
+  const waitingOnFund = docReqs.some((r) => r.key === "signature" && r.awaitingCountersign === true);
+  let documents = stateOf(docReqs.map((r) => (r.key === "signature" && r.awaitingCountersign ? { ...r, state: "review_required" as const } : r)));
   if (!done(documents) && (!hasProfile || !verificationAllowsSigning(requirements)
     || !pick("verification").every(signingRequirementSatisfied))) documents = "locked";
   const out: [PortalStep, PortalStepState][] = [
@@ -83,7 +86,8 @@ export function portalSteps(requirements: RequirementResult[]): PortalStepView[]
     ["accreditation", accreditation],
     ["documents", documents],
   ];
-  return out.map(([key, state]) => ({ key, label: PORTAL_STEP_LABELS[key], state }));
+  return out.map(([key, state]) => ({ key, label: PORTAL_STEP_LABELS[key], state,
+    ...(key === "documents" && waitingOnFund && state === "in_review" ? { waitingOnFund: true } : {}) }));
 }
 
 export type PortalView = PortalStep | "completed";
