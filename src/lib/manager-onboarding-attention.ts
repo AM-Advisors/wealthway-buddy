@@ -25,9 +25,31 @@ export function onboardingInvestorName(profile: ProfileLite, person: PersonLite)
 /** Plain step wording, e.g. "Waiting on the investor to finish the ID check". */
 export function onboardingWaitingStatus(stage: string | null | undefined): string {
   const s = String(stage ?? "");
-  if (s === "harmonious_review") return "Harmonious is reviewing this investor";
+  if (s === "harmonious_review") return "Investor signed. Approve and countersign under Approvals";
   const step = STAGE_ACTION[s];
   if (step && step.owner === "Investor") return `Waiting on the investor to ${step.action.replace(/^Investor needs to /, "")}`;
   if (step) return step.action;
   return "Waiting on the investor to continue";
+}
+
+/** The investor has signed and only the fund's approval/countersignature is left. */
+export function managerOnboardingFundTurn(stage: string | null | undefined, investorSigned: boolean): boolean {
+  const s = String(stage ?? "");
+  return s === "harmonious_review" || (investorSigned && s === "signature");
+}
+
+/**
+ * One shared rule for every manager/ops work queue (attention cards, investor
+ * to-dos): only live, real investments belong there. Excludes finished or
+ * withdrawn stages, closed, removed or merged records, and test investors.
+ */
+export type QueueOnboardingLite = {
+  stage?: string | null;
+  closed_at?: string | null;
+  removed_at?: string | null;
+  merged_into_onboarding_id?: string | null;
+  is_test_investor?: boolean | null;
+};
+export function belongsInWorkQueue(o: QueueOnboardingLite): boolean {
+  return isOpenOnboardingStage(o.stage) && !o.closed_at && !o.removed_at && !o.merged_into_onboarding_id && o.is_test_investor !== true;
 }

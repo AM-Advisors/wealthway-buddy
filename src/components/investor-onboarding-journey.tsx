@@ -854,7 +854,7 @@ export function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; 
         }
         return (
           <div className="space-y-3">
-            <p className="text-sm">Everything is done. Confirm who signed to send your subscription to Harmonious.</p>
+            <p className="text-sm">Everything is done. Confirm who signed to send your subscription to the fund manager.</p>
             <div className="max-w-sm">
               <Label htmlFor="signer">Signer's full legal name</Label>
               <Input id="signer" value={signer} onChange={(e) => setSigner(e.target.value)} />

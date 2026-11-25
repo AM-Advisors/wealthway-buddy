@@ -17,7 +17,9 @@ export function SideLetterNeeds({ offeringId }: { offeringId: string }) {
   const qc = useQueryClient();
   const [paying, setPaying] = useState<string | null>(null);
   const q = useQuery({ queryKey: ["side-letter-needs", offeringId], queryFn: () => load({ data: { offeringId } }) });
-  if (!q.data?.investors.length) return null;
+  // Active side letters are done: keep them on the Side Letters tab, not in this "needed" list.
+  const pending = (q.data?.investors ?? []).filter((i) => i.sideLetter?.status !== "active");
+  if (!q.data || !pending.length) return null;
   const { minimumCents, feeCents } = q.data;
   return (
     <Card>
@@ -27,7 +29,7 @@ export function SideLetterNeeds({ offeringId }: { offeringId: string }) {
       </CardHeader>
       <CardContent>
         <ul className="divide-y">
-          {q.data.investors.map((i) => (
+          {pending.map((i) => (
             <li key={i.onboardingId} className="flex flex-wrap items-center justify-between gap-2 py-3">
               <div>
                 <p className="text-sm font-medium">{i.name}</p>
@@ -36,7 +38,7 @@ export function SideLetterNeeds({ offeringId }: { offeringId: string }) {
               <div className="flex flex-wrap items-center gap-2">
                 {i.sideLetter ? (
                   <>
-                    <Badge variant="secondary">{i.sideLetter.status === "active" ? "Side letter active" : "Side letter generated: awaiting approval"}</Badge>
+                    <Badge variant="secondary">Side letter generated: awaiting approval</Badge>
                     {i.sideLetter.hasDocument ? (
                       <Button size="sm" variant="outline" onClick={async () => {
                         try { const r = await openDoc({ data: { sideLetterId: i.sideLetter!.id } }); window.open(r.url, "_blank", "noopener"); }

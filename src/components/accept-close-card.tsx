@@ -22,7 +22,7 @@ export function AcceptCloseCard({ onboardingId }: { onboardingId: string }) {
   const [signer, setSigner] = useState("");
   const [capacity, setCapacity] = useState("");
   const q = useQuery({ queryKey: ["onboarding-review", onboardingId], queryFn: () => detailFn({ data: { onboardingId } }) });
-  const dq = useQuery({ queryKey: ["onboarding-review", onboardingId, "deposits"], queryFn: () => depositsFn({ data: { onboardingId } }) });
+  const dq = useQuery({ queryKey: ["onboarding-review", onboardingId, "deposits"], queryFn: () => depositsFn({ data: { onboardingId } }).catch(() => ({ deposits: [] })) });
   const refresh = () => qc.invalidateQueries({ predicate: (x) => ["onboarding-review", "onboarding-queue", "fund-investor", "fund-investor-records", "investor-record", "investment-readiness", "onboarding"].includes(String(x.queryKey[0])) });
   const err = (e: unknown) => toast.error(String((e as Error)?.message ?? e).replace(/^Forbidden:\s*/, ""));
   const match = useMutation({

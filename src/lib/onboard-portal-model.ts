@@ -112,7 +112,7 @@ export const MANAGER_PORTAL_STATUSES = [
   "Verification",
   "Accreditation",
   "Documents",
-  "Harmonious review",
+  "Investor signed: awaiting fund countersignature",
   "Complete",
 ] as const;
 export type ManagerPortalStatus = (typeof MANAGER_PORTAL_STATUSES)[number];
@@ -130,7 +130,7 @@ export function managerPortalStatus(input: {
   const steps = portalSteps(input.requirements);
   const needs = steps.find((s) => s.state === "action_required" || s.state === "locked");
   if (needs) return PORTAL_STEP_LABELS[needs.key] as ManagerPortalStatus;
-  return "Harmonious review";
+  return "Investor signed: awaiting fund countersignature";
 }
 
 /** The single emailed entry point. Only the opaque invitation reference is in the URL. */

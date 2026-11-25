@@ -203,7 +203,7 @@ describe("funds already received", () => {
     const a = r.items.find((i) => i.key === "approved_to_fund")!;
     expect(a.label).toBe("Capital already received");
     expect(a.status).toBe("complete");
-    expect(r.items.find((i) => i.key === "manager_approval")?.label).toBe("Fund manager approved the investor");
+    expect(r.items.find((i) => i.key === "manager_approval")).toBeUndefined();
   });
 });
 
@@ -213,7 +213,7 @@ describe("investor signed, only the fund countersignature is left", () => {
     const sig = item(computeReadiness(input({}, r)), "signature");
     expect(sig.status).toBe("needs_fund_manager");
     expect(sig.owner).toBe("fund_manager");
-    expect(sig.action).toBe("Investor signed, waiting on fund countersignature");
+    expect(sig.action).toBe("Investor signed: awaiting fund countersignature");
   });
   it("still asks the investor when they have not signed", () => {
     expect(item(computeReadiness(input({}, reqs({ sig: false }))), "signature").owner).toBe("investor");

@@ -11,6 +11,8 @@ export type InvestmentRowLite = {
   investor_reports_sent_at?: string | null;
   /** From the shared wire-release rule; undefined means unknown (treated as not yet available). */
   instructions_available?: boolean;
+  /** Present once the investor has e-signed (same signed fact as manager lists). */
+  executed_snapshot?: unknown;
 };
 
 export function investmentAttentionStep(
@@ -30,6 +32,7 @@ export function investmentAttentionStep(
         : { step: "fund", status: "Approved. Waiting for the fund's banking to be released. No action needed from you yet.", waiting: true };
   }
   if (stage === "harmonious_review") return { step: "sign", status: "Waiting on your fund manager to approve and sign. No action needed from you.", waiting: true };
+  if (stage === "signature" && row.executed_snapshot) return { step: "sign", status: "Signed by you. Waiting on your fund manager to approve and countersign. No action needed from you.", waiting: true };
   if (stage === "signature" || stage === "subscription") return { step: "sign", status: "Documents to review and sign", waiting: false };
   if (["verification", "eligibility", "tax"].includes(stage)) return { step: "verify", status: "Verification to complete", waiting: false };
   return { step: "about", status: "Tell us who is investing", waiting: false };

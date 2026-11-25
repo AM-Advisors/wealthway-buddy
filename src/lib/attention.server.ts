@@ -528,7 +528,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
 
   const fundName = (id: string | null) => (id ? (n.funds.get(id) ?? null) : null);
 
-  const { CLOSED_ONBOARDING_STAGES, isOpenOnboardingStage, onboardingInvestorName, onboardingWaitingStatus } = await import(
+  const { CLOSED_ONBOARDING_STAGES, belongsInWorkQueue, onboardingInvestorName, onboardingWaitingStatus, managerOnboardingFundTurn } = await import(
     "@/lib/manager-onboarding-attention"
   );
   const onboardings = (
@@ -536,8 +536,9 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
       rows(
         await s
           .from("investor_onboardings")
-          .select("id, offering_id, stage, funding_status, person_id, investment_profile_id, last_activity_at, updated_at")
+          .select("id, offering_id, application_id, stage, funding_status, person_id, investment_profile_id, executed_snapshot, last_activity_at, updated_at")
           .in("offering_id", fundIds)
+          .eq("is_test_investor", false)
           .is("closed_at", null)
           .is("removed_at", null)
           .is("merged_into_onboarding_id", null)
@@ -545,7 +546,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
           .limit(LIMIT),
       ),
     )
-  ).filter((o: any) => isOpenOnboardingStage(o.stage));
+  ).filter((o: any) => belongsInWorkQueue(o));
   // Names for investors in funds this reader manages (rows above are already
   // limited to those funds); managers have no direct read on person records.
   const personIds = [...new Set((onboardings as any[]).map((o) => o.person_id).filter(Boolean))];
@@ -568,19 +569,23 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
       /* names are display-only; fall back below */
     }
   }
+  const signedApplicationIds = new Set<string>();
   for (const o of onboardings as any[]) {
     const stage = String(o.stage ?? "");
-    const withHarmonious = stage === "harmonious_review";
+    // One source of truth: the investment's own record. Once the investor has
+    // signed (executed snapshot saved), the next move is the fund's, never the investor's.
+    const fundTurn = managerOnboardingFundTurn(stage, o.executed_snapshot != null);
+    if (fundTurn && o.application_id) signedApplicationIds.add(String(o.application_id));
     out.push(
       buildAttentionItem({
         id: `manager-onboarding:${o.id}`,
         source: "manager.onboarding",
         workspace: "fund_manager",
-        group: withHarmonious ? "harmonious_working" : "waiting_third_party",
-        severity: "info",
+        group: fundTurn ? "needs_you" : "waiting_third_party",
+        severity: fundTurn ? "action" : "info",
         title: onboardingInvestorName(profiles.get(o.investment_profile_id), people.get(o.person_id)),
         workflowState: stage,
-        status: onboardingWaitingStatus(stage),
+        status: fundTurn ? (await import("@/lib/investment-lifecycle")).SIGNING_PHASE_LABEL.awaiting_countersign : onboardingWaitingStatus(stage),
         sourceTable: "investor_onboardings",
         sourceId: o.id,
         href: `/manager/fund/${o.offering_id}/investor/${o.id}`,
@@ -776,6 +781,10 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   const { managerApprovedSigned } = await import("@/lib/investor-document-review.server");
   for (const c of countersign as any[]) {
     if (!managedIds.has(c.offering_id)) continue;
+    if (c.application_id && signedApplicationIds.has(String(c.application_id))) {
+      const ob = (onboardings as any[]).find((o) => String(o.application_id) === String(c.application_id));
+      if (ob) { const i = out.findIndex((x) => x.id === `manager-onboarding:${ob.id}`); if (i >= 0) out.splice(i, 1); }
+    }
     // Approve or decline first; the countersignature opens only after approval.
     const approved = await (async () => { try {
       const { data: inv } = await (adminDb as any).from("document_signature_signers").select("signed_at").eq("signature_id", c.signature_id).eq("role_key", "investor").maybeSingle();

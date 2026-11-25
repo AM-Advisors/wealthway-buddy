@@ -16,12 +16,14 @@ export async function managerInvestorTodos(userId: string, fundId: string) {
   const d = await admin();
   const [{ data: obs }, { data: docsRaw }] = await Promise.all([
     d.from("investor_onboardings")
-      .select("id, stage, application_id, person_id, investment_profile_id, investor_user_id, questionnaire_submitted_at")
+      .select("id, stage, application_id, person_id, investment_profile_id, investor_user_id, questionnaire_submitted_at, closed_at, removed_at, merged_into_onboarding_id, is_test_investor")
       .eq("offering_id", fundId)
       .is("removed_at", null),
     d.from("investor_documents").select("id, onboarding_id, application_id, doc_kind").eq("offering_id", fundId).eq("review_status", "new"),
   ]);
-  const rows = (obs ?? []) as any[];
+  // Same queue rule as the attention cards: no finished, merged or test investments.
+  const { belongsInWorkQueue } = await import("@/lib/manager-onboarding-attention");
+  const rows = ((obs ?? []) as any[]).filter(belongsInWorkQueue);
   const personIds = [...new Set(rows.map((r) => r.person_id).filter(Boolean))];
   const profileIds = [...new Set(rows.map((r) => r.investment_profile_id).filter(Boolean))];
   const appIds = [...new Set(rows.map((r) => r.application_id).filter(Boolean))];
@@ -44,9 +46,11 @@ export async function managerInvestorTodos(userId: string, fundId: string) {
   }));
   // Signature approvals and countersignatures reuse the existing manager review reader.
   const reviews = await (await import("@/lib/investor-document-review.server")).listDocumentReviews(userId, fundId);
+  const openIds = new Set(rows.map((r) => r.id as string));
   const signaturePending = (reviews.investors ?? [])
+    .filter((inv: any) => openIds.has(inv.onboardingId))
     .flatMap((inv: any) =>
-      (inv.documents ?? []).map((doc: any) => ({
+      (inv.documents ?? []).filter((doc: any) => !doc.signed?.fullyExecuted).map((doc: any) => ({
         onboardingId: inv.onboardingId as string,
         countersign: Boolean(doc.hasPendingFundSignature) && !doc.decision,
         approve: Boolean(doc.signed) && !doc.decision && !doc.hasPendingFundSignature,

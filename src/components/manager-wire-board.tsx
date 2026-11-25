@@ -1,3 +1,4 @@
+import { WIRE_STATUS_LABEL } from "@/lib/investment-lifecycle";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,15 +38,7 @@ function day(value: string | null) {
   return new Date(value).toLocaleDateString(undefined, { dateStyle: "medium" });
 }
 
-const FUNDING_LABEL: Record<string, string> = {
-  not_started: "Not started",
-  awaiting_wire: "Waiting on the wire",
-  processing: "In transit",
-  settled: "Funds received",
-  failed: "Failed",
-  returned: "Returned",
-  cancelled: "Cancelled",
-};
+const FUNDING_LABEL: Record<string, string> = WIRE_STATUS_LABEL;
 
 function FundingBadge({ status, confirmedAt }: { status: string; confirmedAt: string | null }) {
   const label = FUNDING_LABEL[status] ?? status;

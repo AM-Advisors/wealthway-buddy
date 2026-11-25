@@ -39,7 +39,7 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
     const links = await import('@/lib/investor-onboarding.server')
     let cur: any = await links.getPersonalLink(actorId, ob.id)
     if (!cur.link) { await links.createPersonalLink(actorId, ob.id); cur = await links.getPersonalLink(actorId, ob.id) }
-    if (!cur.link || ['disabled', 'expired'].includes(cur.link.state)) throw new Error('This invitation is unavailable. Ask Harmonious to replace it.')
+    if (!cur.link || cur.link.state === 'disabled') throw new Error('This invitation is turned off. Ask Harmonious to replace it.')
     invitationUrl = cur.link.url
     if (cur.link.state !== 'claimed') { const sent = await links.sendPersonalLink(actorId, ob.id); invited = Boolean(sent.emailSent) }
   } else {

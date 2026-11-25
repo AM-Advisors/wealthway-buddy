@@ -1,3 +1,4 @@
+import { SIGNING_PHASE_LABEL } from "@/lib/investment-lifecycle";
 /**
  * Investment Readiness - one canonical checklist per Investment (investor_onboardings row),
  * projected from the existing requirement engine (determineOnboardingRequirements),
@@ -199,7 +200,7 @@ function fromRequirement(r: RequirementResult): Pick<ReadinessItem, "status" | "
   if (s === "refresh_required") return { status: "needs_investor", owner: "investor", action: `Update ${r.label.toLowerCase()}` };
   if (r.key === "subscription_documents") return { status: "in_progress", owner: null, action: null };
   // The investor already signed; the step stays open only for the fund's countersignature.
-  if (r.key === "signature" && r.awaitingCountersign) return { status: "needs_fund_manager", owner: "fund_manager", action: "Investor signed, waiting on fund countersignature" };
+  if (r.key === "signature" && r.awaitingCountersign) return { status: "needs_fund_manager", owner: "fund_manager", action: SIGNING_PHASE_LABEL.awaiting_countersign };
   if (HARMONIOUS_WHEN_MISSING.has(r.key)) {
     return { status: "needs_harmonious", owner: "harmonious", action: "Complete compliance screening" };
   }
@@ -331,7 +332,9 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
   });
   const funded = isReconciledFunding(input.fundingStatus);
   // Funds arrived before approval: admission still needs the fund manager's approval (or countersignature).
-  if (funded && !input.approvedToFundAt && !input.priorSubscription) {
+  // Funds arrived before approval: Accept & admit records the approval too, so only surface a
+  // separate approval step while earlier steps are still open (never alongside Accept & admit).
+  if (funded && !input.approvedToFundAt && !input.priorSubscription && !preFundingDone) {
     items.push({
       ...cr,
       key: "manager_approval",
@@ -350,7 +353,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     ...((input.acceptedAt && (input.acceptedAmountCents ?? 0) > 0) || input.priorSubscription
       ? { status: "complete" as const, owner: null, action: null }
       : funded
-        ? { status: "needs_harmonious" as const, owner: "harmonious" as const, action: "Accept & admit" }
+        ? { status: "needs_fund_manager" as const, owner: "fund_manager" as const, action: "Accept & admit" }
         : { status: "not_started" as const, owner: null, action: null }),
   });
   if (input.closeAmountCents != null) {

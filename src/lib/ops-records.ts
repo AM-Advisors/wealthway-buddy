@@ -282,7 +282,7 @@ const STAGE_LABEL: Record<string, string> = {
   tax: "Tax documentation",
   subscription: "Subscription",
   signature: "Signature",
-  harmonious_review: "Harmonious review",
+  harmonious_review: "Investor signed: awaiting fund countersignature",
   approved_to_fund: "Approved to fund",
   awaiting_funds: "Awaiting funds",
   funded: "Funded",

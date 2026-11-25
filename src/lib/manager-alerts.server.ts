@@ -1,3 +1,4 @@
+import { WIRE_STATUS_LABEL } from "@/lib/investment-lifecycle";
 // Server-only: drains the notification_events outbox and emails the fund's
 // managers (plus admins) about application status changes, new applications
 // and submitted wire confirmations.
@@ -36,12 +37,12 @@ const VALUE_LABELS: Record<string, string> = {
   review: "In review",
   approved: "Approved",
   declined: "Declined",
-  awaiting_wire: "Awaiting wire",
-  processing: "Processing",
-  settled: "Settled",
-  failed: "Failed",
-  returned: "Returned",
-  cancelled: "Cancelled",
+  awaiting_wire: WIRE_STATUS_LABEL["awaiting_wire"]!,
+  processing: WIRE_STATUS_LABEL["processing"]!,
+  settled: WIRE_STATUS_LABEL["settled"]!,
+  failed: WIRE_STATUS_LABEL["failed"]!,
+  returned: WIRE_STATUS_LABEL["returned"]!,
+  cancelled: WIRE_STATUS_LABEL["cancelled"]!,
 };
 
 function label(value: string | null | undefined) {

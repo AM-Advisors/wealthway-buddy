@@ -156,6 +156,15 @@ export async function investorDeskActor(userId: string, offeringId: string): Pro
   forbid("you do not manage that fund.");
 }
 
+/** Accept & admit: Harmonious staff or a manager of this exact fund, never on their own investment. */
+async function assertAdmitter(userId: string, onboardingId: string): Promise<OnboardingActor & { role: "harmonious" | "fund_manager" }> {
+  const actor = await onboardingActor(userId);
+  const row = await onboardingRow(onboardingId);
+  if (!actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) forbid("Only Harmonious or this fund's manager may accept and admit investors.");
+  if (row.investor_user_id && row.investor_user_id === actor.userId) forbid("Another authorized reviewer must accept your own investment.");
+  return { ...actor, role: actor.isStaff ? "harmonious" : "fund_manager" };
+}
+
 export async function assertStaff(userId: string): Promise<OnboardingActor> {
   const actor = await onboardingActor(userId);
   if (!actor.isStaff) forbid("Harmonious investor operations authority is required.");
@@ -637,7 +646,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
     const waitingFund = obligations.needsSignature.filter((d) => !signedIds.has(d.id));
     if (waitingFund.length && waitingFund.every((d) => investorSide.has(String(d.id)))) {
       sigReqRow.awaitingCountersign = true;
-      sigReqRow.reason = "Investor signed, waiting on fund countersignature.";
+      sigReqRow.reason = "Investor signed: awaiting fund countersignature.";
     }
   }
   const ackedIds = new Set((obligations.needsAck.length || retained.retainedIds.length ? ackList : []).map((a) => a.documentId));
@@ -1840,7 +1849,7 @@ export async function reviewQueue(
 
 /** One consolidated page: everything Harmonious needs to decide. */
 export async function reviewDetail(userId: string, onboardingId: string) {
-  await assertStaff(userId);
+  await assertAdmitter(userId, onboardingId);
   const row = await onboardingRow(onboardingId);
   const facts = await gatherFacts(row);
   const exceptions = await openExceptions(row.id);
@@ -2382,7 +2391,7 @@ export async function acceptSubscription(
   userId: string,
   input: { onboardingId: string; signerName: string; capacity: string },
 ) {
-  const actor = await assertStaff(userId);
+  const actor = await assertAdmitter(userId, input.onboardingId);
   const row = await onboardingRow(input.onboardingId);
   if (row.funding_status !== "funded") fail("The subscription can only be accepted once funds are reconciled.");
   const problem = stageTransitionError(row.stage, "accepted");
@@ -2393,6 +2402,8 @@ export async function acceptSubscription(
     accepted_by: actor.userId,
     accepted_at: nowIso(),
     acceptance_capacity: `${input.signerName} · ${input.capacity}`,
+    // Funds arrived before approval: admitting is the fund's approval, recorded once with the same actor.
+    ...(row.approved_to_fund_at ? {} : { approved_to_fund_by: actor.userId, approved_to_fund_at: nowIso() }),
   });
   await recordEvent({
     onboardingId: row.id,
@@ -2405,7 +2416,7 @@ export async function acceptSubscription(
       documentTemplateVersion: row.document_template_version,
     },
     actorUserId: actor.userId,
-    actorRole: "harmonious",
+    actorRole: actor.role,
   });
   await syncInvitation(row);
   const { onInvestmentAccepted } = await import("@/lib/drive.server");
@@ -2427,7 +2438,7 @@ async function minimumSideLetterMissing(row: any, offering: any): Promise<boolea
 }
 
 export async function closeInvestment(userId: string, input: { onboardingId: string; closingDate?: string }) {
-  const actor = await assertStaff(userId);
+  const actor = await assertAdmitter(userId, input.onboardingId);
   const row = await onboardingRow(input.onboardingId);
   const facts = await gatherFacts(row);
   const exceptions = await openExceptions(row.id);
@@ -2521,7 +2532,7 @@ export async function closeInvestment(userId: string, input: { onboardingId: str
     subjectId: positionId,
     detail: { closedAmountCents: amount, closingDate },
     actorUserId: actor.userId,
-    actorRole: "harmonious",
+    actorRole: actor.role,
   });
   await syncInvitation(row);
   return { closed: true, positionId };
@@ -3371,7 +3382,7 @@ async function linkView(row: any) {
   const { data: inv } = await db().from("fund_invitations").select("id, token, status, expires_at, last_sent_at, accepted_at, created_at").eq("id", row.invitation_id).maybeSingle();
   if (!inv) return null;
   const expired = inv.expires_at && inv.expires_at < nowIso();
-  return { url: onboardInvitationUrl(String(inv.token)), createdAt: inv.created_at, expiresAt: inv.expires_at, lastSentAt: inv.last_sent_at, claimed: Boolean(row.investor_user_id || inv.accepted_at), state: inv.status === "revoked" || inv.status === "disabled" ? "disabled" : expired ? "expired" : row.investor_user_id || inv.accepted_at ? "claimed" : "active" };
+  return { url: onboardInvitationUrl(String(inv.token)), createdAt: inv.created_at, expiresAt: inv.expires_at, lastSentAt: inv.last_sent_at, claimed: Boolean(row.investor_user_id || inv.accepted_at), state: inv.status === "revoked" || inv.status === "disabled" ? "disabled" : row.investor_user_id || inv.accepted_at ? "claimed" : expired ? "expired" : "active" };
 }
 /** Personal links: staff, this fund's managers, or a fund team member with "Manage investors". */
 async function managerOrStaff(userId: string, offeringId: string) {
@@ -3387,7 +3398,7 @@ export async function getPersonalLink(userId: string, onboardingId: string) {
   const link = await linkView(row);
   const { personalLinkPermissions } = await import("@/lib/personal-investment-link-model");
   const perms = personalLinkPermissions({ isInvestor, hasLink: Boolean(link), linkActive: link?.state === "active", hasEmail: Boolean(row.persons?.email) });
-  return { link, launched, hasEmail: Boolean(row.persons?.email), canCreate: perms.canCreate, canSend: perms.canSend };
+  return { link, launched, hasEmail: Boolean(row.persons?.email), canCreate: perms.canCreate, canSend: perms.canSend, canRenew: !isInvestor && link?.state === "expired" && Boolean(row.persons?.email) };
 }
 export async function createPersonalLink(userId: string, onboardingId: string) {
   const row = await personalLinkRow(onboardingId);
@@ -3414,12 +3425,31 @@ export async function sendPersonalLink(userId: string, onboardingId: string) {
   const actor = await managerOrStaff(userId, row.offering_id);
   if (!row.invitation_id) fail("Create the personal link first.");
   const { data: inv } = await db().from("fund_invitations").select("*").eq("id", row.invitation_id).maybeSingle();
-  if (!inv || (inv.expires_at && inv.expires_at < nowIso())) fail("This link has expired. Ask Harmonious to replace it.");
+  if (!inv) fail("This invitation was not found.");
+  let current: any = inv;
+  if (inv.status === "revoked" || inv.status === "disabled") fail("This invitation is turned off. Harmonious needs to replace it.");
+  if (inv.expires_at && inv.expires_at < nowIso() && !inv.accepted_at) {
+    // Expired, never accepted: the authorized manager/team or Harmonious renews it with a fresh token before emailing.
+    const { data: renewed, error: renewErr } = await db().from("fund_invitations").update({ token: crypto.randomUUID().replace(/-/g, ""), expires_at: new Date(Date.now() + 30 * 86_400_000).toISOString(), status: "pending" })
+      .eq("id", inv.id).lt("expires_at", nowIso()).is("accepted_at", null).select("*").maybeSingle();
+    if (renewErr) fail(renewErr.message);
+    if (!renewed) fail("This invite changed. Check status and try again.");
+    current = renewed;
+    await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_renewed", subjectTable: "fund_invitations", subjectId: inv.id, detail: { previousExpiry: inv.expires_at }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
+  }
   const { data: offering } = await db().from("offerings").select("*").eq("id", row.offering_id).maybeSingle();
   // A fund team member's own name never appears as the inviting manager.
-  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId, { onboardingId, fundNameAsSender: actor.viaTeam });
-  await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_emailed", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: sent }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
+  const sent = await sendOnboardInvitationEmail(current, offering, actor.userId, { onboardingId, fundNameAsSender: actor.viaTeam });
+  await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_emailed", subjectTable: "fund_invitations", subjectId: current.id, detail: { emailSent: sent }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
   return { emailSent: Boolean(sent) };
+}
+/** Expired (never disabled or claimed) personal link: fund managers/team or Harmonious renew it 30 days with a fresh token, then email it. */
+export async function renewAndSendPersonalLink(userId: string, onboardingId: string) {
+  const row = await personalLinkRow(onboardingId);
+  await managerOrStaff(userId, row.offering_id);
+  const link = await linkView(row);
+  if (link?.state !== "expired") fail("Only an expired invite can be renewed.");
+  return sendPersonalLink(userId, onboardingId);
 }
 /**
  * The investor's own invitation, sent once a helper or the fund manager's team adds the first

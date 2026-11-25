@@ -34,9 +34,9 @@ describe("buildInvestorTodos", () => {
       accreditationPendingApplicationIds: new Set<string>(),
     };
     const approve = buildInvestorTodos({ ...base, signaturePending: [{ onboardingId: "ob1", countersign: false }] });
-    expect(approve.map((i) => i.label)).toEqual(["Approve the signed subscription"]);
+    expect(approve.map((i) => i.label)).toEqual(["Investor signed: awaiting your approval"]);
     const counter = buildInvestorTodos({ ...base, signaturePending: [{ onboardingId: "ob1", countersign: true }] });
-    expect(counter.map((i) => i.label)).toEqual(["Countersign the signed subscription"]);
+    expect(counter.map((i) => i.label)).toEqual(["Investor signed: awaiting fund countersignature"]);
   });
 
   it("summarizes verification in one plain line and skips investors who never started", () => {

@@ -120,8 +120,13 @@ export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }
                 </li>
               ))}
             </ul>
+          ) : d.requests.attention > 0 ? (
+            <div className="py-2">
+              <p className="font-medium">{d.requests.attention === 1 ? "1 request needs your attention" : `${d.requests.attention} requests need your attention`}</p>
+              {onNavigate && <Button size="sm" className="mt-2" onClick={() => onNavigate("requests")}>Open requests</Button>}
+            </div>
           ) : <Empty title="No action required" body="Your Harmonious team is handling all current administration items." />}
-          {d.requests.attention > 0 && onNavigate && <Button size="sm" variant="outline" className="mt-2" onClick={() => onNavigate("requests")}>{d.requests.attention} request(s) need your attention</Button>}
+          {(d.toSign?.length || d.approvalsAwaiting.length || d.attention.length) && d.requests.attention > 0 && onNavigate ? <Button size="sm" variant="outline" className="mt-2" onClick={() => onNavigate("requests")}>{d.requests.attention === 1 ? "1 request needs your attention" : `${d.requests.attention} requests need your attention`}</Button> : null}
         </Card>
 
         {/* 2. Fund health */}

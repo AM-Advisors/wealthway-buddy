@@ -322,7 +322,7 @@ describe("Harmonious-only controls", () => {
     await expect(
       server.acceptSubscription(INV1, { onboardingId: OB1, signerName: "Me", capacity: "self" }),
     ).rejects.toThrow(/Forbidden/);
-    await expect(server.closeInvestment(MANAGER_A, { onboardingId: OB1 })).rejects.toThrow(/Forbidden/);
+    await expect(server.closeInvestment(MANAGER_B, { onboardingId: OB1 })).rejects.toThrow(/Forbidden/);
     expect(writes.filter((w) => w.table === "investor_positions")).toHaveLength(0);
   });
 

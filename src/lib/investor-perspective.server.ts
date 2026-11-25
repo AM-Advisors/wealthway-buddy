@@ -58,7 +58,7 @@ export async function investorPerspective(userId: string, input: { onboardingId:
     participants: effectiveParticipants.map(p => ({ id: p.id, name: p.full_name, role: p.role, status: p.status })),
     selectedParticipant: selected ? { id: selected.id, name: selected.full_name, role: selected.role } : null,
     person: readDetails ? [{ label: "Investor", value: investorName }, { label: "Investing as", value: facts.profile?.display_label ?? "Not selected" }, { label: "Address", value: [person.address_line1, person.city, person.region, person.postal_code, person.country].filter(Boolean).join(", ") || "Not provided" }] : [],
-    documents: (facts.documents ?? []).map((d: any) => ({ id: String(d.id), title: d.title ?? "Fund document", status: d.signed ? "Signed" : investorSigned.has(String(d.id)) ? "Investor signed, waiting on fund countersignature" : d.requiresAcknowledgment ? (d.acknowledged ? "Acknowledged" : "Acknowledgment pending") : d.requiresSignature ? "Awaiting signatures" : "Available" })),
+    documents: (facts.documents ?? []).map((d: any) => ({ id: String(d.id), title: d.title ?? "Fund document", status: d.signed ? "Signed" : investorSigned.has(String(d.id)) ? "Investor signed: awaiting fund countersignature" : d.requiresAcknowledgment ? (d.acknowledged ? "Acknowledged" : "Acknowledgment pending") : d.requiresSignature ? "Awaiting signatures" : "Available" })),
     missing: readDetails ? perspectiveMissingFields({ person: { ...person, tax_id_last4: person.tax_id_last4 ?? null }, profile: facts.profile ?? null, amountCents: investmentAmountCents(row) }) : [],
     editor: readDetails && !selected ? editor : null,
     history: (events ?? []).flatMap((e: any) => {

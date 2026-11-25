@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isOpenOnboardingStage, onboardingInvestorName, onboardingWaitingStatus } from "./manager-onboarding-attention";
+import { managerOnboardingFundTurn, isOpenOnboardingStage, onboardingInvestorName, onboardingWaitingStatus } from "./manager-onboarding-attention";
 
 describe("manager onboarding attention cards", () => {
   it("names the investing party before the person", () => {
@@ -21,5 +21,12 @@ describe("manager onboarding attention cards", () => {
   it("names the step in plain words", () => {
     expect(onboardingWaitingStatus("verification")).toBe("Waiting on the investor to finish the ID check");
     expect(onboardingWaitingStatus("signature")).toBe("Waiting on the investor to sign the subscription documents");
+  });
+});
+describe("fund turn after investor signs", () => {
+  it("signed investor at signature stage is the fund's turn, not waiting on investor", () => {
+    expect(managerOnboardingFundTurn("signature", true)).toBe(true);
+    expect(managerOnboardingFundTurn("signature", false)).toBe(false);
+    expect(managerOnboardingFundTurn("harmonious_review", false)).toBe(true);
   });
 });

@@ -63,7 +63,7 @@ describe("authorized investor perspective reads", () => {
   });
   it("uses investor-side signature evidence while countersignature is outstanding", async () => {
     const view = await investorPerspective("manager", { onboardingId: onb.id });
-    expect(view.documents[0]?.status).toBe("Investor signed, waiting on fund countersignature");
+    expect(view.documents[0]?.status).toBe("Investor signed: awaiting fund countersignature");
   });
   it("shows system attribution separately from the triggering account", async () => {
     events = [{ id: "event-one", event: "signature_completed", actor_role: "system", actor_user_id: "staff", created_at: "2026-11-24T11:00:00Z" }];

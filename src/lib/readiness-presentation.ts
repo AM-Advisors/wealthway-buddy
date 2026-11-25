@@ -1,3 +1,4 @@
+import { SIGNING_PHASE_LABEL } from "@/lib/investment-lifecycle";
 /**
  * Pure presentation helpers for readiness screens. They map the canonical
  * nine-status model to plain wording; they never compute readiness.
@@ -79,7 +80,7 @@ export function waitingDetail(i: any, items: any[] = []): string | null {
     case "bsa_aml": return qDone ? "Financial background answers still missing in the questionnaire" : "Financial background questions in the questionnaire not answered yet";
     case "certifications": return "Investor confirms the final certifications before signing";
     case "bad_actor": return "Compliance questions in the questionnaire not answered yet";
-    case "signature": return "Waiting for investor e-signature, or staff loads an outside signed copy";
+    case "signature": return i.status === "needs_fund_manager" ? SIGNING_PHASE_LABEL.awaiting_countersign : `${SIGNING_PHASE_LABEL.investor_to_sign}, or staff loads an outside signed copy`;
     case "signature_docs":
     case "subscription_documents": return taxDone ? "Documents are ready to prepare" : "Prepares automatically once the tax form is signed";
     case "aml": return "Compliance screening has no cleared result yet";

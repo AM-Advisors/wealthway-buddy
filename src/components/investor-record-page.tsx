@@ -26,6 +26,7 @@ import { approveToFundFn } from "@/lib/investor-onboarding.functions";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
 import { CLAIM_STATE_LABELS, SOURCE_LABELS, entrySourceLabel, type EntrySource } from "@/lib/investor-record-model";
 import { prettyStatus, statusTone } from "@/lib/status";
+import { onboardingSigningLabel } from "@/lib/investment-lifecycle";
 import { verificationLabel } from "@/lib/verification-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
     if (t.kind === "ops_onboarding") {
       // Open issues and acceptance both resolve right here on this investor's page.
       if (staff && key === "exceptions") setResolvingIssues(true);
-      else if (staff && key === "acceptance") {
+      else if (key === "acceptance") {
         setTab("overview");
         setTimeout(() => {
           const card = document.getElementById("accept-admit-card");
@@ -146,7 +147,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         <div className="min-w-0">
           {onOps ? <Link to="/ops/fund/$fundId" params={{ fundId }} className="-ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><ArrowLeft className="h-4 w-4 shrink-0" />{data.fund?.name ?? "Fund"}</Link> : <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="-ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><ArrowLeft className="h-4 w-4 shrink-0" />{data.fund?.name ?? "Fund"} investors</Link>}
           <h2 className="mt-3 text-2xl">{data.overview.name}</h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {entrySourceLabel(data.overview.enteredBy)}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
+          <p className="mt-1.5 text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {onboardingSigningLabel(data.overview.stage, Boolean((data.overview as any).executedSnapshot ?? (data.overview as any).investorSigned)) ?? prettyStatus(data.overview.stage)} · Entered by {entrySourceLabel(data.overview.enteredBy)}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
           {!data.overview.removed ? <FillForInvestorButton onboardingId={onboardingId} name={data.overview.name} /> : null}
           {!data.overview.removed ? <Button size="sm" variant="outline" onClick={correctDetails}><Pencil className="mr-2 h-4 w-4" />Correct investor details</Button> : null}
@@ -167,7 +168,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} initialAccreditationReview={initial === "accreditation"} /></CardContent></Card>
         {data.profile?.id ? <PowerOfAttorneyCard subject={{ kind: "investment_profile", id: data.profile.id }} /> : null}
         {staff && !data.overview.removed ? <ManualReceiptCard onboardingId={onboardingId} /> : null}
-        {staff && !data.overview.removed ? <AcceptCloseCard onboardingId={onboardingId} /> : null}
+        {(staff || data.viewer === "manager") && !data.overview.removed ? <AcceptCloseCard onboardingId={onboardingId} /> : null}
         {staff && data.suggestions.length ? <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Information conflicts & suggested updates</CardTitle></CardHeader><CardContent className="divide-y">
           {data.suggestions.map((s) => <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? entrySourceLabel(s.source)}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>

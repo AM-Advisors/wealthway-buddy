@@ -1,3 +1,4 @@
+import { SIGNING_PHASE_LABEL } from "@/lib/investment-lifecycle";
 import { isEntityProfile } from "@/lib/profile-kind";
 /**
  * Fund page tabs (To dos, Team, Documents, Banking, Investors, close details).
@@ -34,7 +35,9 @@ export async function assertFund(uid: string, fundId: string) {
 const personName = (p: any) => (p ? p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") : "") || "Unnamed investor";
 
 export function docStatus(o: any, outside?: { marked: boolean; complete: boolean } | null) {
-  if (o.executed_snapshot || SIGNED_STAGES.has(o.stage)) return "Signed";
+  if (SIGNED_STAGES.has(o.stage) && o.stage !== "harmonious_review") return "Signed";
+  // Investor signed, fund countersignature still to come (shared lifecycle wording).
+  if (o.executed_snapshot || o.stage === "harmonious_review") return SIGNING_PHASE_LABEL.awaiting_countersign;
   if (outside?.complete) return "Signed (outside platform)";
   if (outside?.marked) return "Signed outside: copy pending";
   if (o.stage === "signature") return "Out for signature";
@@ -43,7 +46,7 @@ export function docStatus(o: any, outside?: { marked: boolean; complete: boolean
 
 export async function anyInvestorSigned(fundId: string) {
   const { data } = await (await db()).from("investor_onboardings").select("stage, executed_snapshot").eq("offering_id", fundId).is("removed_at", null);
-  return ((data ?? []) as any[]).some((o) => docStatus(o) === "Signed");
+  return ((data ?? []) as any[]).some((o) => ["Signed", SIGNING_PHASE_LABEL.awaiting_countersign].includes(docStatus(o)));
 }
 
 /* ---------------- Investors ---------------- */
@@ -134,7 +137,7 @@ export async function investorGrid(fundId: string, onlyOnboardingId?: string) {
       docs,
       wiring: CANONICAL_FUNDING_LABELS[funding],
       steps: investorSteps({ stage: o.stage, claimed: !!o.investor_user_id, profileChosen: !!o.investment_profiles?.profile_type, questionnaireDone: completions.get(o.id)?.complete === true || docs === "Signed (outside platform)",
-        kyc, aml, signed: docs === "Signed" || docs === "Signed (outside platform)", outForSignature: docs === "Out for signature", funding }),
+        kyc, aml, signed: docs === "Signed" || docs === SIGNING_PHASE_LABEL.awaiting_countersign || docs === "Signed (outside platform)", outForSignature: docs === "Out for signature", funding }),
       lastActivity: o.last_activity_at ?? o.updated_at ?? null,
       stage: o.stage as string,
       applicationId: o.application_id ?? null,

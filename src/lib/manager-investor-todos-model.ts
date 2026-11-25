@@ -1,3 +1,4 @@
+import { SIGNING_PHASE_LABEL } from "@/lib/investment-lifecycle";
 /**
  * Pure projection for the fund manager's cross-investor to-do list. No database,
  * no authorization: the reader in manager-investor-todos.server.ts supplies
@@ -70,8 +71,8 @@ export function buildInvestorTodos(args: {
       else if ((MANAGER_REVIEW_KINDS as readonly string[]).includes(kind)) push("document_copy", `Review uploaded ${KIND_LABELS[kind] ?? "document"}`);
     }
     if (inv.applicationId && args.accreditationPendingApplicationIds.has(inv.applicationId)) push("accreditation", "Review accreditation");
-    if (countersign.has(inv.onboardingId)) push("countersign", "Countersign the signed subscription");
-    else if (approve.has(inv.onboardingId)) push("signature", "Approve the signed subscription");
+    if (countersign.has(inv.onboardingId)) push("countersign", SIGNING_PHASE_LABEL.awaiting_countersign);
+    else if (approve.has(inv.onboardingId)) push("signature", SIGNING_PHASE_LABEL.awaiting_approval);
     else if (inv.stage === "harmonious_review") push("admission", "Approve the signed investor", "They signed; approval releases wire instructions");
     if (inv.started) {
       const v = identityScreeningSummary(inv.kyc, inv.aml);

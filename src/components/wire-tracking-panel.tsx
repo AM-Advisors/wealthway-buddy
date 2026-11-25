@@ -1,3 +1,4 @@
+import { WIRE_STATUS_LABEL } from "@/lib/investment-lifecycle";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,14 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const STAGE_LABEL: Record<string, string> = {
-  not_started: "No wire yet",
-  awaiting_wire: "Waiting on investor",
-  submitted: "Confirmation to review",
-  processing: "With the bank",
-  received: "Funds received",
-  problem: "Needs attention",
-};
+const STAGE_LABEL: Record<string, string> = WIRE_STATUS_LABEL;
 
 const STAGE_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   not_started: "outline",
@@ -77,9 +71,9 @@ export function WireTrackingPanel({ offeringId }: { offeringId?: string } = {}) 
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          <Tally label="Waiting on investor" value={totals.awaiting} />
+          <Tally label="Waiting on investor wire" value={totals.awaiting} />
           <Tally label="To review" value={totals.submitted} />
-          <Tally label="With the bank" value={totals.processing} />
+          <Tally label="Wire in transit" value={totals.processing} />
           <Tally label="Received" value={totals.received} />
           <Tally label="Needs attention" value={totals.problem} />
         </div>

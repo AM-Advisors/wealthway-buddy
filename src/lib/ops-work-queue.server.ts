@@ -1,3 +1,4 @@
+import { onboardingSigningLabel } from "@/lib/investment-lifecycle";
 import { exceptionReason } from "@/lib/onboarding-exception-reason";
 import { STALL_DAYS, isStalled, waitingLabel } from "@/lib/stalled-items";
 import { canonicalizeApplications } from "@/lib/verification-status";
@@ -165,7 +166,7 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
   let q = s
     .from("investor_onboardings")
     .select(
-      "id, offering_id, investor_user_id, investment_profile_id, stage, funding_status, assigned_to, last_activity_at, updated_at",
+      "id, offering_id, investor_user_id, investment_profile_id, stage, funding_status, assigned_to, executed_snapshot, last_activity_at, updated_at",
     )
     .in("stage", ["verification", "eligibility", "subscription", "signature", "harmonious_review"])
     .is("closed_at", null)
@@ -198,9 +199,8 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         title: `${lookup.people.get(o.investor_user_id) ?? "Investor"} | onboarding`,
         reason: declinedPast
           ? `At the ${o.stage.replace(/_/g, " ")} step, but their identity check was declined. Review before they continue`
-          : o.stage === "harmonious_review"
-            ? "Submitted for Harmonious review"
-            : `Waiting at the ${o.stage.replace(/_/g, " ")} step`,
+          : onboardingSigningLabel(o.stage, o.executed_snapshot != null)
+            ?? `Waiting at the ${o.stage.replace(/_/g, " ")} step`,
         workflowState: o.stage,
         requiredAction: o.stage === "harmonious_review" || declinedPast ? "review" : "prepare",
         fundId: o.offering_id,
@@ -1418,12 +1418,14 @@ async function stalledWorkItems(context: Ctx) {
   }
   if (can(capabilities, "onboarding", "see") || can(capabilities, "investors", "see")) {
     const cutoff = new Date(now.getTime() - INVESTOR_STALL_DAYS * 86_400_000).toISOString();
-    const obs = (await safely(async () => rows(await s.from("investor_onboardings").select("id, offering_id, stage, funding_status, person_id, last_activity_at, updated_at").is("removed_at", null).lt("updated_at", cutoff).limit(SOURCE_LIMIT)))) as any[];
+    const obs = (await safely(async () => rows(await s.from("investor_onboardings").select("id, offering_id, stage, funding_status, person_id, executed_snapshot, last_activity_at, updated_at").is("removed_at", null).lt("updated_at", cutoff).limit(SOURCE_LIMIT)))) as any[];
     const pids = [...new Set(obs.map((o) => o.person_id).filter(Boolean))];
     const people = pids.length ? ((await safely(async () => rows(await s.from("persons").select("id, preferred_name, legal_first_name, legal_last_name").in("id", pids)))) as any[]) : [];
     const name = new Map(people.map((p) => [p.id, p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ")]));
     for (const o of obs) {
-      const step = investorStageAction(o.stage);
+      const base = investorStageAction(o.stage);
+      const signedLabel = onboardingSigningLabel(o.stage, o.executed_snapshot != null);
+      const step = base && signedLabel ? { action: signedLabel, owner: signedLabel === "Waiting on investor signature" ? "Investor" : "Fund manager" } : base;
       const since = o.last_activity_at ?? o.updated_at;
       if (!step || ["funded", "settled"].includes(String(o.funding_status)) || (daysWaiting(since, now) ?? 0) < INVESTOR_STALL_DAYS) continue;
       out.push({ id: `investor:${o.id}`, kind: "investor", fundId: o.offering_id, fundName: lookup.funds.get(o.offering_id)?.name ?? null, investorName: name.get(o.person_id) || "Unnamed investor", action: step.action, owner: step.owner, days: daysWaiting(since, now), href: `/ops/fund/${o.offering_id}/investor/${o.id}` });

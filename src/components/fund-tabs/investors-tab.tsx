@@ -418,7 +418,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem, 
           </section>
           {(() => {
             const items = ([
-              ["subscription", "Subscription Agreement", d.docs === "Signed" || d.docs === "Signed (outside platform)"],
+              ["subscription", "Subscription Agreement", d.docs === "Signed" || d.docs.startsWith("Investor signed") || d.docs === "Signed (outside platform)"],
               ["tax_form", "W-9 / tax form", (d.reviewEvidence?.taxForms ?? []).length > 0],
               ["accreditation", "Accreditation proof", !!d.reviewEvidence?.accreditation?.verifiedAt],
               ["fund_documents", "Fund documents", false],

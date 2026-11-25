@@ -9,3 +9,4 @@ export const createPersonalInvestmentLink = createServerFn({ method: "POST" }).m
 export const sendPersonalInvestmentLink = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(id).handler(async ({ data, context }) => (await s()).sendPersonalLink(context.userId, data.onboardingId));
 export const recordPersonalInvestmentLinkCopy = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(id).handler(async ({ data, context }) => (await s()).recordPersonalLinkCopy(context.userId, data.onboardingId));
 export const getMyPersonalInvestmentLinks = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => (await s()).myPersonalLinks(context.userId));
+export const renewPersonalInvestmentLink = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(id).handler(async ({ data, context }) => (await s()).renewAndSendPersonalLink(context.userId, data.onboardingId));

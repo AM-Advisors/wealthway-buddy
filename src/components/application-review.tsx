@@ -379,9 +379,9 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
             <div className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
-              <Row label="KYC provider" value={(d?.kyc as any)?.provider} />
-              <Row label="ID document" value={((d?.kyc as any)?.result?.id_document_type ?? "").toString().replace(/_/g, " ")} />
-              <Row label="AML provider" value={(d?.aml as any)?.provider} />
+              {(d?.kyc as any)?.provider ? <Row label="KYC method" value={(d?.kyc as any)?.provider === "manual" ? "Recorded by Harmonious" : "Automated check"} /> : null}
+              {(d?.kyc as any)?.result?.id_document_type ? <Row label="ID document" value={((d?.kyc as any)?.result?.id_document_type ?? "").toString().replace(/_/g, " ")} /> : null}
+              {(d?.aml as any)?.provider ? <Row label="Screening method" value={(d?.aml as any)?.provider === "manual" ? "Recorded by Harmonious" : "Automated screening"} /> : null}
               <Row
                 label="Watchlist hits"
                 value={(d?.aml as any)?.matches?.flagged ? "Flagged: manual review" : "No hits"}

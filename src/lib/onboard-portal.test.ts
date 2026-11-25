@@ -71,7 +71,7 @@ describe("manager status is progress-only", () => {
     expect(managerPortalStatus({ invitedOnly: true, requirements: [] })).toBe("Invitation sent");
     expect(managerPortalStatus({ requirements: base() })).toBe("Verification");
     expect(managerPortalStatus({ requirements: base({ identity_verification: "valid", aml: "valid" }) })).toBe("Accreditation");
-    expect(managerPortalStatus({ requirements: base({ identity_verification: "review_required", aml: "valid", accreditation: "review_required", subscription_documents: "valid", signature: "valid" }) })).toBe("Harmonious review");
+    expect(managerPortalStatus({ requirements: base({ identity_verification: "review_required", aml: "valid", accreditation: "review_required", subscription_documents: "valid", signature: "valid" }) })).toBe("Investor signed: awaiting fund countersignature");
     expect(managerPortalStatus({ requirements: base(), acceptedAt: "2026-01-01" })).toBe("Complete");
   });
 });

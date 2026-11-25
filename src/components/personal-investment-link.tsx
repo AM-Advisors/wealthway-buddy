@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createPersonalInvestmentLink, getMyPersonalInvestmentLinks, getPersonalInvestmentLink, recordPersonalInvestmentLinkCopy, sendPersonalInvestmentLink } from "@/lib/personal-investment-link.functions";
+import { createPersonalInvestmentLink, getMyPersonalInvestmentLinks, getPersonalInvestmentLink, recordPersonalInvestmentLinkCopy, sendPersonalInvestmentLink, renewPersonalInvestmentLink } from "@/lib/personal-investment-link.functions";
 import { personalLinkStatus } from "@/lib/personal-investment-link-model";
 
 /** Fund manager / Harmonious: the investor's own personal link for this investment. */
 export function PersonalInvestmentLinkCard({ onboardingId, email }: { onboardingId: string; email?: string | undefined }) {
-  const load = useServerFn(getPersonalInvestmentLink), create = useServerFn(createPersonalInvestmentLink), send = useServerFn(sendPersonalInvestmentLink), copied = useServerFn(recordPersonalInvestmentLinkCopy), qc = useQueryClient();
+  const load = useServerFn(getPersonalInvestmentLink), create = useServerFn(createPersonalInvestmentLink), send = useServerFn(sendPersonalInvestmentLink), copied = useServerFn(recordPersonalInvestmentLinkCopy), renew = useServerFn(renewPersonalInvestmentLink), qc = useQueryClient();
   const key = ["personal-investment-link", onboardingId];
   const { data, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
   const [busy, setBusy] = useState(false);
@@ -26,10 +26,11 @@ export function PersonalInvestmentLinkCard({ onboardingId, email }: { onboarding
           <span>{data.link.lastSentAt ? `Last emailed ${new Date(data.link.lastSentAt).toLocaleString()}` : "Not emailed"}</span>
           {data.link.expiresAt ? <span>Expires {new Date(data.link.expiresAt).toLocaleDateString()}</span> : null}</div>
         {data.link.state === "claimed" && <p className="text-muted-foreground">The investor has connected their account. No new invite is needed.</p>}
-        {!status.usable && <p className="text-muted-foreground">This invite cannot be used. Harmonious needs to replace it before sending another.</p>}
+        {data.link.state === "expired" ? <p className="text-muted-foreground">This invite has expired. Renew it to email the investor a fresh link that works for 30 days.</p> : !status.usable && <p className="text-muted-foreground">This invite cannot be used. Harmonious needs to replace it before sending another.</p>}
         <div className="flex flex-wrap gap-2">
           {status.usable && <Button variant="outline" onClick={() => { if (data.link) void copy(data.link.url); }}>Copy investor link</Button>}
           {data.canSend && <Button disabled={busy} onClick={() => run(async () => { const result = await send({ data: { onboardingId } }); if (!result.emailSent) throw new Error("The invite email wasn't sent. Please try again."); }, "Invite email sent")}>{busy ? "Sending…" : data.link.lastSentAt ? "Resend invite" : "Send invite"}</Button>}
+          {data.canRenew && <Button disabled={busy} onClick={() => run(async () => { const result = await renew({ data: { onboardingId } }); if (!result.emailSent) throw new Error("The invite was renewed but the email wasn't sent. Please try Resend."); }, "New invite email sent")}>{busy ? "Sending…" : "Renew & resend invite"}</Button>}
           <Button variant="ghost" disabled={busy || checking} onClick={async () => {
             setChecking(true);
             try {
@@ -78,6 +79,7 @@ export function PersonalLinkCopyButton({ onboardingId }: { onboardingId: string 
         d = await qc.fetchQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }), staleTime: 0 });
       }
       if (!d.link) return;
+      if (d.link.state === "expired") { toast.error("This invite has expired. Use Renew & resend invite."); return; }
       await navigator.clipboard?.writeText(d.link.url).catch(() => undefined);
       toast.success("Personal link copied", { description: d.link.url });
       void copied({ data: { onboardingId } }).catch(() => null);
@@ -106,7 +108,7 @@ export function InviteInvestorButton({ onboardingId, compact = false }: { onboar
         qc.invalidateQueries({ queryKey: key });
       } catch (e) { toast.error((e as Error).message); }
       finally { setBusy(false); }
-    }}>{busy ? "Sending…" : data.link?.lastSentAt ? "Resend invite" : "Invite investor"}</Button>
+    }}>{busy ? "Sending…" : data.link?.state === "expired" ? "Renew & resend invite" : data.link?.lastSentAt ? "Resend invite" : "Invite investor"}</Button>
     {data.link?.lastSentAt && !compact ? <p className="text-xs text-muted-foreground">Last invited {new Date(data.link.lastSentAt).toLocaleDateString()}</p> : null}
   </div>;
 }
