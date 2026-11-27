@@ -30,6 +30,13 @@ describe("Manage investors on the fund team", () => {
   it("a linked team entry with Manage investors may add and invite investors", () => {
     expect(listedTeamManagesInvestors({ user_id: "brittany", removed_at: null, permissions: ["view", "investors", "documents"] }, "brittany")).toBe(true);
   });
+  it("Brittany keeps viewer access while Manage investors enables adding only", () => {
+    const row = { user_id: "brittany", removed_at: null, permissions: ["view", "investors", "documents"] };
+    const role = listedTeamViewerRole(row, "brittany");
+    expect(role).toBe("fund_viewer");
+    expect(fundRosterAccess({ ...none, teamRosterView: hasFundTeamPermission(role, "fund.roster.view") })).toBe("view");
+    expect(listedTeamManagesInvestors(row, "brittany")).toBe(true);
+  });
   it("View fund alone does not allow adding or inviting", () => {
     expect(listedTeamManagesInvestors({ user_id: "sam", removed_at: null, permissions: ["view", "documents"] }, "sam")).toBe(false);
   });

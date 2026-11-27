@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { grantRefusal, isGrantLive, isFundTeamRole, listedTeamViewerRole, fundScopedContactFund, companyViewerFunds, fundOpenMode, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
+import { grantRefusal, isGrantLive, isFundTeamRole, listedTeamViewerRole, listedTeamManagesInvestors, fundScopedContactFund, companyViewerFunds, fundOpenMode, type FundTeamRole, type FundTeamScope } from "@/lib/fund-team-access";
 
 /**
  * Fund Team Access server functions. Every call re-checks, on the server, that
@@ -354,9 +354,17 @@ export const getSharedFund = createServerFn({ method: "GET" })
       ? await db.from("persons").select("user_id, legal_first_name, legal_last_name").in("user_id", uids)
       : { data: [] };
     const nm = new Map(((ppl ?? []) as any[]).map((p) => [p.user_id, [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ")]));
+    const { data: listedTeam } = await db
+      .from("fund_team_members")
+      .select("user_id, removed_at, permissions")
+      .eq("offering_id", data.fundId)
+      .eq("user_id", context.userId)
+      .is("removed_at", null);
+    const canAddInvestors = ((listedTeam ?? []) as any[]).some((row) => listedTeamManagesInvestors(row, context.userId));
     return {
       fund: { id: off?.id ?? data.fundId, name: off?.name ?? "Fund" },
       role: grant.role as FundTeamRole,
+      canAddInvestors,
       roster: ((apps ?? []) as any[]).map((a) => ({
         id: a.id as string,
         name: (nm.get(a.user_id) as string) || "Investor",

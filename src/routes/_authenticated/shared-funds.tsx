@@ -9,6 +9,7 @@ import { z } from "zod";
 import { getSharedFund, listMySharedFunds } from "@/lib/fund-team-access.functions";
 import { fundTeamRoleLabel } from "@/lib/fund-team-access";
 import { AssistantDrafts } from "@/components/fund-team-drafts";
+import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 
 export const Route = createFileRoute("/_authenticated/shared-funds")({
   validateSearch: z.object({ fund: z.string().optional(), review: z.enum(["terms", "questions", "document", "side_letter"]).optional(), item: z.string().optional() }),
@@ -55,7 +56,7 @@ function Page() {
                 onClick={() => setSel(f.fundId)}
                 className={`rounded-md border px-3 py-1.5 text-sm ${f.fundId === fundId ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground"}`}
               >
-                {f.name} · {fundTeamRoleLabel(f.role)}
+                {f.name} · {f.fundId === fundId && fund.data?.canAddInvestors ? "Add investors" : fundTeamRoleLabel(f.role)}
               </Button>
             ))}
           </div>
@@ -63,9 +64,11 @@ function Page() {
             <section className="rounded-lg border border-border bg-card p-5">
               <h2 className="font-heading text-lg text-foreground">{fund.data.fund.name}</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Your access: {fundTeamRoleLabel(fund.data.role)}. Bank, tax ID and identity details are not shown.
+                {fund.data.canAddInvestors
+                  ? "You can add and invite investors. The fund manager changes investor records, approvals, banking and fund settings."
+                  : `Your access: ${fundTeamRoleLabel(fund.data.role)}. Bank, tax ID and identity details are not shown.`}
               </p>
-              {fund.data.roster.length === 0 ? (
+              {fund.data.canAddInvestors && fundId ? <ManagerFundInvestors fundId={fundId} /> : fund.data.roster.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No investors yet.</p>
               ) : (
                 <table className="w-full text-sm">
